@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="background_task.network_error">Ocorreu um erro de rede. Verifique o endereço do servidor ou tente mais tarde.</string>
-    <string name="background_task.unsupported_api">Server api v%1$s does not support this function.</string>
+    <string name="background_task.unsupported_api">A API do servidor v%1$s não suporta esta função.</string>
     <string name="background_task.no_network">Este aplicativo requer acesso à rede. Ligue o Wi-Fi ou a rede de dados.</string>
     <string name="background_task.not_found">Recurso não encontrado. Verifique o endereço do servidor.</string>
     <string name="background_task.parse_error">Não entendi a resposta. Verifique o endereço do servidor.</string>
@@ -49,17 +49,17 @@
     <string name="download.menu_jukebox_off">Jukebox Desligado</string>
     <string name="download.menu_jukebox_on">Jukebox Ligado</string>
     <string name="download.menu_lyrics">Letras</string>
-    <string name="download.menu_save">Salvar Playlist</string>
+    <string name="download.menu_save">Gravar Playlist</string>
     <string name="download.menu_screen_off">Ecrã Desligado</string>
     <string name="download.menu_screen_on">Ecrã Ligado</string>
-    <string name="download.menu_show_album">Mostrar Álbum</string>
+    <string name="download.menu_show_album">Ir para o Álbum</string>
     <string name="download.menu_shuffle">Misturar</string>
     <string name="download.playerstate_playing_shuffle">Tocando misturado</string>
-    <string name="download.playlist_done">Playlist salva com sucesso.</string>
-    <string name="download.playlist_error">Falha ao salvar a playlist, Tente mais tarde.</string>
+    <string name="download.playlist_done">Playlist gravada.</string>
+    <string name="download.playlist_error">Falha ao gravar a playlist, tente de novo mais tarde.</string>
     <string name="download.playlist_name">Entre o nome da playlist:</string>
-    <string name="download.playlist_saving">Salvando playlist \"%s\"…</string>
-    <string name="download.playlist_title">Salvar Playlist</string>
+    <string name="download.playlist_saving">A gravar playlist \"%s\"…</string>
+    <string name="download.playlist_title">Gravar Playlist</string>
     <string name="download.repeat_all">Repetir Tudo</string>
     <string name="download.repeat_off">Repetição Desligada</string>
     <string name="download.repeat_single">Repetir Música</string>
@@ -88,7 +88,7 @@
     <string name="main.welcome_title">Bem-vindo!</string>
     <string name="menu.about">Sobre</string>
     <string name="menu.common">Comum</string>
-    <string name="menu.deleted_playlist">Playlist apagada %s</string>
+    <string name="menu.deleted_playlist">Playlist %s apagada</string>
     <string name="menu.deleted_playlist_error">Falha ao apagar a playlist %s</string>
     <string name="menu.exit">Sair</string>
     <string name="menu.settings">Configurações</string>
@@ -280,12 +280,12 @@
     <string name="share_comment">Comentar</string>
     <string name="settings.share_expiration">Tempo até expirar</string>
     <string name="download_song_removed">\"%s\" foi removido da playlist</string>
-    <string name="download.share_playlist">Compartilhar Playlist</string>
+    <string name="download.share_playlist">Partilhar Playlist</string>
     <string name="settings.share_greeting_default">Saudação Padrão</string>
     <string name="share_default_greeting">Confira esta música que compartilhei do %s</string>
     <string name="share_via">Compartilhar músicas via</string>
     <string name="menu.share">Compartilhar</string>
-    <string name="download.menu_show_artist">Mostrar Artista</string>
+    <string name="download.menu_show_artist">Ir ao Artista</string>
     <string name="common_multiple_years">Múltiplos Anos</string>
     <string name="server_selector.label">Configured servers</string>
     <string name="server_selector.delete_confirmation">Tem a certeza de querer deletar o servidor\?</string>
@@ -305,7 +305,7 @@
         <item quantity="other">%d músicas</item>
     </plurals>
     <!-- Subsonic api errors -->
-    <string name="api.subsonic.generic">Erro de api genérico: %1$s</string>
+    <string name="api.subsonic.generic">Erro genérico de API: %1$s</string>
     <string name="api.subsonic.generic.no.message">nenhuma mensagem fornecida pelo servidor</string>
     <string name="api.subsonic.token_auth_not_supported_for_ldap">A autenticação por token não é suportada para usuários LDAP.</string>
     <string name="api.subsonic.not_authenticated">Login ou senha errada.</string>
@@ -451,4 +451,5 @@
     </plurals>
     <string name="settings.use_hw_offload_title">Usar a reprodução por hardware (experimental)</string>
     <string name="settings.use_hw_offload_description">Tenta reproduzir a mídia usando o chip decodificador de mídia do telefone. Isso pode melhorar o uso da bateria.</string>
+    <string name="settings.share_options">Opções</string>
 </resources>
