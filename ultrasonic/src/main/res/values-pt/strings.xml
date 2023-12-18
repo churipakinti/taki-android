@@ -461,4 +461,6 @@
     <string name="foreground_exception_title">A reprodução não pode ser retomada</string>
     <string name="settings.max_bitrate_pinning">Taxa Máxima de Bits - Favoritando música permanentemente</string>
     <string name="download.menu_unstar">Desfavoritar</string>
+    <string name="settings.use_hw_offload_description">Tenta reproduzir a mídia usando o chip decodificador de mídia do telefone. Isso pode melhorar o uso da bateria.</string>
+    <string name="settings.share_options">Opções</string>
 </resources>
