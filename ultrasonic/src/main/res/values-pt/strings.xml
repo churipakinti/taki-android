@@ -450,6 +450,15 @@
         <item quantity="other">%d músicas adicionadas após a atual</item>
     </plurals>
     <string name="settings.use_hw_offload_title">Usar a reprodução por hardware (experimental)</string>
-    <string name="settings.use_hw_offload_description">Tenta reproduzir a mídia usando o chip decodificador de mídia do telefone. Isso pode melhorar o uso da bateria.</string>
+    <string name="settings.use_hw_offload_description">Tente reproduzir a média usando o chip de descodificador de média no seu telefone. Isso pode melhorar o uso da bateria. Alguns utilizadores relatam falhas na reprodução quando ativam esta opção!</string>
     <string name="settings.share_options">Opções</string>
+    <string name="shortcut_play_random_songs_long">Tocar músicas aleatórias</string>
+    <string name="shortcut_play_random_songs_short">Músicas aleatórias</string>
+    <plurals name="n_songs_added_play_now">
+        <item quantity="one">%d música adicionada na fila</item>
+        <item quantity="many">%d músicas adicionadas na fila</item>
+        <item quantity="other">%d músicas adicionadas na fila</item>
+    </plurals>
+    <string name="foreground_exception_text">Pressione no botão de reprodução na notificação de média se ainda estiver presente, caso contrário, abra a app para iniciar a reprodução e reconecte a sessão ao controlador</string>
+    <string name="foreground_exception_title">A reprodução não pode ser retomada</string>
 </resources>
