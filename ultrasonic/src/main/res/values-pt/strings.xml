@@ -163,7 +163,7 @@
     <string name="settings.directory_cache_time_5">5 minutos</string>
     <string name="settings.directory_cache_time_60">1 hora</string>
     <string name="settings.disc_sort">Classificar Músicas por Álbum</string>
-    <string name="settings.disc_sort_summary">Classificar músicas pelo número do álbum e faixas.</string>
+    <string name="settings.disc_sort_summary">Classificar músicas pelo número do álbum e da faixa</string>
     <string name="settings.display_bitrate_summary">Adiciona o nome do artista com a taxa de bits e sufixo do ficheiro</string>
     <string name="settings.hide_media_summary">Esconder músicas de outros aplicativos.</string>
     <string name="settings.hide_media_title">Esconder de Outros</string>
@@ -198,10 +198,10 @@
     <string name="settings.network_title">Rede</string>
     <string name="settings.other_title">Outras Configurações</string>
     <string name="settings.playback_control_title">Configurações de Controle de Reprodução</string>
-    <string name="settings.playback.resume_on_bluetooth_device">Resume when a Bluetooth device is connected</string>
-    <string name="settings.playback.pause_on_bluetooth_device">Pause when a Bluetooth device is disconnected</string>
+    <string name="settings.playback.resume_on_bluetooth_device">Retomar ao conectar o dispositivo Bluetooth</string>
+    <string name="settings.playback.pause_on_bluetooth_device">Pausar quando o dispositivo Bluetooth desconectar</string>
     <string name="settings.playback.bluetooth_all">Todos os dispositivos Bluetooth</string>
-    <string name="settings.playback.bluetooth_a2dp">Only audio (A2DP) devices</string>
+    <string name="settings.playback.bluetooth_a2dp">Somente dispositivos de áudio (A2DP)</string>
     <string name="settings.playback.bluetooth_disabled">Disabilitando</string>
     <string name="settings.playback.resume_play_on_headphones_plug.title">Retomar ao inserir Auscultadores</string>
     <string name="settings.playback.resume_play_on_headphones_plug.summary">O aplicativo retomará a reprodução em pausa na inserção dos auscultadores no dispositivo.</string>
@@ -287,16 +287,16 @@
     <string name="menu.share">Compartilhar</string>
     <string name="download.menu_show_artist">Ir ao Artista</string>
     <string name="common_multiple_years">Múltiplos Anos</string>
-    <string name="server_selector.label">Configured servers</string>
+    <string name="server_selector.label">Servidores configurados</string>
     <string name="server_selector.delete_confirmation">Tem a certeza de querer deletar o servidor\?</string>
-    <string name="server_editor.label">Editing server</string>
+    <string name="server_editor.label">Editando servidor</string>
     <string name="server_editor.new_label">Adicionar Servidor</string>
-    <string name="server_editor.leave_confirmation">Are you sure you want to leave and lose your changes?</string>
-    <string name="server_editor.required">This field is required</string>
-    <string name="server_menu.edit">Edit</string>
+    <string name="server_editor.leave_confirmation">Tem certeza que quer sair e descartar suas alterações?</string>
+    <string name="server_editor.required">Este campo é necessário</string>
+    <string name="server_menu.edit">Editar</string>
     <string name="server_menu.delete">Apagar</string>
-    <string name="server_menu.move_up">Move up</string>
-    <string name="server_menu.move_down">Move down</string>
+    <string name="server_menu.move_up">Para cima</string>
+    <string name="server_menu.move_down">Para baixo</string>
     <string name="server_editor.authentication">Authentication</string>
     <string name="server_editor.advanced">Configurações avançadas</string>
     <plurals name="n_songs">
@@ -459,4 +459,6 @@
     </plurals>
     <string name="foreground_exception_text">Pressione no botão de reprodução na notificação de média se ainda estiver presente, caso contrário, abra a app para iniciar a reprodução e reconecte a sessão ao controlador</string>
     <string name="foreground_exception_title">A reprodução não pode ser retomada</string>
+    <string name="settings.max_bitrate_pinning">Taxa Máxima de Bits - Favoritando música permanentemente</string>
+    <string name="download.menu_unstar">Desfavoritar</string>
 </resources>
