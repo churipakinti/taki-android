@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-
     <string name="background_task.network_error">Hálózati hiba történt! Kérjük, ellenőrizze a kiszolgáló címét vagy próbálja később!</string>
     <string name="background_task.unsupported_api">A v%1$s verziójú Szerver api nem támogatja ezt a funkciót.</string>
     <string name="background_task.no_network">Az alkalmazás hálózati hozzáférést igényel. Kérjük, kapcsolja be a Wi-Fi-t vagy a mobilhálózatot!</string>
@@ -65,7 +64,7 @@
     <string name="download.playlist_done">Lejátszási lista mentése sikeres.</string>
     <string name="download.playlist_error">Lejátszási lista mentése sikertelen, próbálja később!</string>
     <string name="download.playlist_name">Lejátszási lista neve:</string>
-    <string name="download.playlist_saving">Lejátszási lista mentése \"%s\"&#8230;</string>
+    <string name="download.playlist_saving">Lejátszási lista mentése \"%s\"…</string>
     <string name="download.playlist_title">Lejátszási lista mentése</string>
     <string name="download.repeat_all">Összes ismétlése</string>
     <string name="download.repeat_off">Ismétlés ki</string>
@@ -333,7 +332,8 @@
     <string name="api.subsonic.trial_period_is_over">A próbaidő vége.</string>
     <string name="api.subsonic.upgrade_client">Nem kompatibilis verzió. Kérjük, frissítse az Ultrasonic Android alkalmazást!</string>
     <string name="api.subsonic.upgrade_server">Nem kompatibilis verzió. Kérjük, frissítse a Subsonic kiszolgálót!</string>
-
     <!-- Subsonic features  -->
     <string name="settings.five_star_rating_title">Öt csillagos értékelés használata a dalokhoz</string>
-    </resources>
+    <string name="chat.send_button">Küldés</string>
+    <string name="common.album">Album</string>
+</resources>
