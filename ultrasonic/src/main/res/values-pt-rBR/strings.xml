@@ -303,7 +303,7 @@
     <string name="settings.use_id3">Navegar Usando Etiquetas ID3</string>
     <string name="settings.use_id3_summary">Usar as etiquetas ID3 ao invés do sistema de arquivos</string>
     <string name="settings.use_id3_offline">Usar método ID3 quando offline</string>
-    <string name="settings.show_artist_picture">Mostrar Foto do Artista na Lista</string>
+    <string name="settings.show_artist_picture">Mostrar foto do artista na lista</string>
     <string name="settings.show_artist_picture_summary">Mostrar a imagem do artista na lista de artistas, se disponível</string>
     <string name="main.video" tools:ignore="UnusedResources">Vídeo</string>
     <string name="settings.wifi_required_summary">Baixar mídia somente em conexões não medidas</string>
