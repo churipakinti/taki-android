@@ -416,7 +416,7 @@
     <string name="settings.show_artist_picture">Mostar foto do artista na lista de artistas</string>
     <string name="main.video" tools:ignore="UnusedResources">Vídeo</string>
     <string name="settings.wifi_required_title">Descargar só con Wi-Fi</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Toca para escoller música</string>
     <string name="widget.sdcard_missing">Non hai tarxeta SD</string>
