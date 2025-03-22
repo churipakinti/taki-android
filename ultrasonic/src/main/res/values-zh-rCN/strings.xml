@@ -289,7 +289,7 @@
     <string name="settings.wifi_required_summary">仅未计量的网络用于下载媒体</string>
     <string name="settings.wifi_required_title">仅使用 Wi-Fi 进行下载</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">轻触选择音乐</string>
     <string name="widget.sdcard_busy">SD 卡不可用</string>
