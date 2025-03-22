@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-
     <string name="background_task.network_error">A network error occurred. Please check the server address or try again later.</string>
     <string name="background_task.unsupported_api">Server API v%1$s does not support this function.</string>
     <string name="background_task.no_network">This program requires network access. Please turn on Wi-Fi or mobile network.</string>
@@ -325,7 +324,7 @@
     <string name="settings.wifi_required_title">Download on Wi-Fi only</string>
     <string name="song_details.all" translatable="false">%1$s%2$s</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Touch to select music</string>
     <string name="widget.sdcard_busy">SD card unavailable</string>
@@ -393,13 +392,11 @@
     <string name="server_editor.advanced">Advanced settings</string>
     <string name="server_editor.disabled_feature">One or more features were disabled because the server doesn\'t support them.\nYou can run this test again anytime.</string>
     <string name="server_menu.demo">Demo Server</string>
-
     <string name="about.webpage">Visit webpage</string>
     <string name="about.report">Report a bug</string>
     <string name="about.text"><b>Ultrasonic</b> is a free and open-source music streaming Android client for Subsonic API (version 1.7.0 or higher) compatible servers.\n\nWith <b>Ultrasonic</b> you can easily stream or download music from your home computer to your Android phone using your Subsonic compatible media server. The Subsonic server software requires additional configuration separate from Ultrasonic.\n\nBy default, Ultrasonic is not configured. Once you\'ve set up your own server, please change the server configuration so that it connects to your own computer.</string>
     <string name="about.webpage.url" translatable="false">https://ultrasonic.gitlab.io/</string>
     <string name="about.report.url" translatable="false">https://gitlab.com/ultrasonic/ultrasonic/issues</string>
-
     <plurals name="n_songs">
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
@@ -432,7 +429,6 @@
         <item quantity="one">%d song inserted after current song</item>
         <item quantity="other">%d songs inserted after current song</item>
     </plurals>
-
     <!-- Subsonic api errors -->
     <string name="api.subsonic.generic">Generic API error: %1$s</string>
     <string name="api.subsonic.generic.no.message">no message given from server</string>
@@ -444,7 +440,6 @@
     <string name="api.subsonic.trial_period_is_over">Trial period is over.</string>
     <string name="api.subsonic.upgrade_client">Incompatible versions. Please upgrade Ultrasonic Android app.</string>
     <string name="api.subsonic.upgrade_server">Incompatible versions. Please upgrade Subsonic server.</string>
-
     <!-- Subsonic features  -->
     <string name="settings.use_hw_offload_title">Use hardware playback (experimental)</string>
     <string name="settings.use_hw_offload_description">Try to play the media using the media decoder chip on your phone. This can improve battery usage. Some users report glitches in playback when they activate this option!</string>
@@ -458,6 +453,4 @@
     to the controller</string>
     <string name="shortcut_play_random_songs_short">Random songs</string>
     <string name="shortcut_play_random_songs_long">Play random songs</string>
-
-
 </resources>
