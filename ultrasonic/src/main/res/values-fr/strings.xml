@@ -298,7 +298,7 @@
     <string name="settings.wifi_required_summary">Télécharger des médias uniquement sur des connexions non mesurées</string>
     <string name="settings.wifi_required_title">Téléchargement en Wifi uniquement</string>
     <string name="song_details.kbps">%d kbits/s</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">—:——</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Touchez pour sélectionner un titre</string>
     <string name="widget.sdcard_busy">Carte SD non disponible</string>
