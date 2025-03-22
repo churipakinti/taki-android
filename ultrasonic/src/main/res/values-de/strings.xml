@@ -308,7 +308,7 @@
     <string name="settings.wifi_required_summary">Medien nur über gebührenfreie Verbindungen herunterladen</string>
     <string name="settings.wifi_required_title">Nur über WLAN herunterladen</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Berühren, um Musik auszuwählen</string>
     <string name="widget.sdcard_busy">SD Karte nicht verfügbar</string>
