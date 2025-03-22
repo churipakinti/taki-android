@@ -261,7 +261,7 @@
     <string name="time_span_disabled">Avskrudd</string>
     <string name="save_as_defaults">Lagre som forvalg</string>
     <string name="main.video" tools:ignore="UnusedResources">Video</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Trykk for å velge musikk</string>
     <string name="widget.sdcard_busy">SD-kort utilgjengelig</string>
