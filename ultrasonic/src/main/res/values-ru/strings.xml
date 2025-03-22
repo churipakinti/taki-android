@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-
     <string name="background_task.network_error">Произошла ошибка сети. Пожалуйста, проверьте адрес сервера или повторите попытку позже.</string>
     <string name="background_task.unsupported_api">Серверный api версии %1$s не поддерживает эту функцию.</string>
     <string name="background_task.no_network">Эта программа требует доступа к сети. Пожалуйста, включите Wi-Fi или мобильную сеть.</string>
@@ -70,7 +69,7 @@
     <string name="download.playlist_done">Плейлист был успешно сохранен.</string>
     <string name="download.playlist_error">Не удалось сохранить плейлист, попробуйте позже.</string>
     <string name="download.playlist_name">Введите название плейлиста:</string>
-    <string name="download.playlist_saving">Сохранить плейлист \"%s\"&#8230;</string>
+    <string name="download.playlist_saving">Сохранить плейлист \"%s\"…</string>
     <string name="download.playlist_title">Сохранить плейлист</string>
     <string name="download.repeat_all">Повторить все</string>
     <string name="download.repeat_off">Выключить повтор</string>
@@ -280,7 +279,7 @@
     <string name="settings.show_artist_picture_summary">Отображает изображение исполнителя в списке исполнителей, если доступно</string>
     <string name="main.video" tools:ignore="UnusedResources">Видео</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Нажмите, чтобы выбрать музыку</string>
     <string name="widget.sdcard_busy">SD-карта недоступна</string>
@@ -338,7 +337,6 @@
     <string name="server_editor.advanced">Дополнительные настройки</string>
     <string name="server_editor.disabled_feature">Одна или несколько функций были отключены, потому что сервер их не поддерживает.\nВы можете запустить этот тест снова в любое время.</string>
     <string name="server_menu.demo">Демо-сервер</string>
-
     <plurals name="n_songs">
         <item quantity="one">%d песня</item>
         <item quantity="few">%d песни</item>
@@ -356,6 +354,6 @@
     <string name="api.subsonic.trial_period_is_over">Пробный период окончен.</string>
     <string name="api.subsonic.upgrade_client">Несовместимые версии. Пожалуйста, обновите приложение Ultrasonic для Android.</string>
     <string name="api.subsonic.upgrade_server">Несовместимые версии. Пожалуйста, обновите Subsonic сервер.</string>
-
     <!-- Subsonic features  -->
-    </resources>
+    <string name="settings.five_star_rating_title">Использовать пятизвездочный рейтинг для песен</string>
+</resources>
