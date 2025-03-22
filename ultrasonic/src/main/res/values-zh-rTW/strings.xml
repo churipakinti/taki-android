@@ -284,7 +284,7 @@
     <string name="settings.server_color">伺服器顏色</string>
     <string name="settings.server_username">用戶名</string>
     <string name="settings.theme_dark">暗色</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="settings.preload_1000">1000 首歌</string>
     <string name="settings.server_password">密碼</string>
     <string name="settings.share_days">天</string>
