@@ -250,7 +250,7 @@
     <string name="settings.use_id3_summary">Używa metod z tagów ID3 zamiast metod opartych na systemie plików</string>
     <string name="main.video" tools:ignore="UnusedResources">Wideo</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Dotknij, aby wybrać muzykę</string>
     <string name="widget.sdcard_busy">Karta SD jest niedostępna</string>
