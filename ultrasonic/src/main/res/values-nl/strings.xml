@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-
     <string name="background_task.network_error">Er is een netwerkfout opgetreden. Controleer het serveradres of probeer het later opnieuw.</string>
     <string name="background_task.unsupported_api">De server-api, v %1$s, heeft geen ondersteuning voor deze functie.</string>
     <string name="background_task.no_network">Deze app vereist netwerktoegang. Schakel wifi of mobiel internet in.</string>
@@ -77,7 +76,7 @@
     <string name="download.playlist_done">Afspeellijst is opgeslagen.</string>
     <string name="download.playlist_error">Afspeellijst kan niet worden opgeslagen. Probeer het later opnieuw.</string>
     <string name="download.playlist_name">Voer een naam in voor de afspeellijst:</string>
-    <string name="download.playlist_saving">Bezig met opslaan van afspeellijst \"%s\"&#8230;</string>
+    <string name="download.playlist_saving">Bezig met opslaan van afspeellijst \"%s\"…</string>
     <string name="download.playlist_title">Afspeellijst opslaan</string>
     <string name="download.repeat_all">Alles herhalen</string>
     <string name="download.repeat_off">Herhalen uitgeschakeld</string>
@@ -312,7 +311,7 @@
     <string name="settings.wifi_required_summary">Haal media alleen op bij gebruik van onbeperkte dataverbindingen</string>
     <string name="settings.wifi_required_title">Alleen ophalen via wifi</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="util.no_time" tools:ignore="TypographyDashes">-:--</string>
+    <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="widget.initial_text">Druk om muziek te selecteren</string>
     <string name="widget.sdcard_busy">SD-kaart niet beschikbaar</string>
@@ -379,7 +378,6 @@
     <string name="server_editor.advanced">Geavanceerde instellingen</string>
     <string name="server_editor.disabled_feature">Eén of meerdere functies zijn uitgeschakeld omdat de server ze niet ondersteunt.\nVoer deze test later opnieuw uit.</string>
     <string name="server_menu.demo">Demoserver</string>
-
     <string name="about.webpage">Website openen</string>
     <string name="about.report">Bug melden</string>
     <string name="about.text"><b>Ultrasonic</b> is een gratis, open source muziekstreamingclient voor Android, die gebruikmaakt van servers die compatibel zijn met de Subsonic-api (versie 1.7.0 of hoger).\n\nMet <b>Ultrasonic</b> kun je eenvoudig muziek streamen of downloaden van je computer naar je Android-telefoon met behulp van een met Subsonic compatibele mediaserver. Let op: de Subsonic-serversoftware vereist aanvullende configuratie.\n\nStandaard is Ultrasonic niet ingesteld. Zet je eigen server op en wijzig de serverconfiguratie in die van je eigen.</string>
@@ -411,7 +409,6 @@
         <item quantity="one">%d nummer ingevoegd na het huidige nummer</item>
         <item quantity="other">%d nummers ingevoegd na het huidige nummer</item>
     </plurals>
-
     <!-- Subsonic api errors -->
     <string name="api.subsonic.generic">Algemene API-fout: %1$s</string>
     <string name="api.subsonic.generic.no.message">Geen bericht opgegeven door server</string>
@@ -423,12 +420,11 @@
     <string name="api.subsonic.trial_period_is_over">Proefperiode is afgelopen.</string>
     <string name="api.subsonic.upgrade_client">Incompatibele versies. Werk de Ultrasonic Android-app bij.</string>
     <string name="api.subsonic.upgrade_server">Incompatibele versies. Werk je Subsonic-server bij.</string>
-
     <!-- Subsonic features  -->
+    <string name="settings.five_star_rating_title">Vijf sterren gebruiken voor nummers</string>
+    <string name="settings.five_star_rating_description">Toon vijf sterren om nummers te beoordelen in plaats van items toe te voegen aan of te verwijderen uit de favorieten.</string>
     <string name="settings.use_hw_offload_title">Hardwarematig afspelen (experimenteel)</string>
     <string name="settings.use_hw_offload_description">Probeer media af te spelen met behulp van de mediadecoder op je telefoon. Let op: hierdoor kan het accuverbruik toenemen.</string>
     <string name="list_view">Lijst</string>
     <string name="grid_view">Hoes</string>
-
-
 </resources>
