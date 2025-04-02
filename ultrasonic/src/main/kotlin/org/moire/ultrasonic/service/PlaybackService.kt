@@ -323,7 +323,11 @@ class PlaybackService :
             player.shuffleModeEnabled,
             player.currentMediaItemIndex,
             Settings.preloadCount
-        ).map { it.toTrack() }
+        ).map {
+            // These items should skip the MediaItemConverter cache.
+            // The cache contains the controller's items, which may be modified (e.g. their rating)
+            it.toTrack(false)
+        }
 
         launch {
             DownloadService.download(nextSongs, isHighPriority = true)

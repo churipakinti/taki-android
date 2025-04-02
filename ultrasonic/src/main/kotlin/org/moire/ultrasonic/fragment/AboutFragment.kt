@@ -8,13 +8,13 @@
 package org.moire.ultrasonic.fragment
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import java.util.Locale
 import org.moire.ultrasonic.R
@@ -60,13 +60,13 @@ class AboutFragment : Fragment() {
 
         webPageButton?.setOnClickListener {
             startActivity(
-                Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.about_webpage_url)))
+                Intent(Intent.ACTION_VIEW, getString(R.string.about_webpage_url).toUri())
             )
         }
 
         reportBugButton?.setOnClickListener {
             startActivity(
-                Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.about_report_url)))
+                Intent(Intent.ACTION_VIEW, getString(R.string.about_report_url).toUri())
             )
         }
     }

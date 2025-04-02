@@ -246,11 +246,6 @@ object Settings {
     @JvmStatic
     val overrideLanguage by StringSetting(getKey(R.string.setting_key_override_language), "")
 
-    var useFiveStarRating by BooleanSetting(
-        getKey(R.string.setting_key_use_five_star_rating),
-        false
-    )
-
     var useHwOffload by BooleanSetting(getKey(R.string.setting_key_hardware_offload), false)
 
     @JvmStatic

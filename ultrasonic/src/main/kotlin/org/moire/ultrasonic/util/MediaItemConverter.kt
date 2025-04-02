@@ -140,10 +140,35 @@ fun Track.toMediaItem(mediaId: String = id): MediaItem {
 }
 
 /**
+ * Convenience function to get the Track Id of the MediaItem
+ */
+fun MediaItem.getTrackId(): String {
+    return mediaId
+}
+
+/**
+ * Updates the "starred" metadata of the MediaItem
+ */
+fun MediaItem.setStarred(starred: Boolean) {
+    mediaMetadata.extras?.putBoolean("starred", starred)
+    MediaItemConverter.trackCache[mediaId]?.clear()
+    MediaItemConverter.mediaItemCache[mediaId]?.clear()
+}
+
+/**
+ * Updates the "userRating" metadata of the MediaItem
+ */
+fun MediaItem.setRating(rating: Int) {
+    mediaMetadata.extras?.putInt("userRating", rating)
+    MediaItemConverter.trackCache[mediaId]?.clear()
+    MediaItemConverter.mediaItemCache[mediaId]?.clear()
+}
+
+/**
  * Extension function to convert a MediaItem to a Track, using the cache if possible
  */
-@Suppress("ComplexMethod")
-fun MediaItem.toTrack(): Track {
+@Suppress("ComplexMethod", "LongMethod")
+fun MediaItem.toTrack(cacheResult: Boolean = true): Track {
     // Check Cache
     val cachedTrack = MediaItemConverter.trackCache[mediaId]?.get()
     if (cachedTrack != null) return cachedTrack
@@ -202,9 +227,11 @@ fun MediaItem.toTrack(): Track {
         track.starred = (mediaMetadata.userRating as HeartRating).isHeart
     }
 
-    // Add MediaItem and Track to the cache
-    MediaItemConverter.addToCache(mediaId, track)
-    MediaItemConverter.addToCache(mediaId, this)
+    if (cacheResult) {
+        // Add MediaItem and Track to the cache
+        MediaItemConverter.addToCache(mediaId, track)
+        MediaItemConverter.addToCache(mediaId, this)
+    }
 
     return track
 }

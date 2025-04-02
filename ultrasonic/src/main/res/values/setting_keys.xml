@@ -46,7 +46,6 @@
     <string name="setting_key.default_share_greeting" translatable="false">sharingDefaultGreeting</string>
     <string name="setting_key.share_on_server" translatable="false">sharingCreateOnServer</string>
     <string name="setting_key.default_share_expiration" translatable="false">sharingDefaultExpiration</string>
-    <string name="setting_key.use_five_star_rating" translatable="false">use_five_star_rating</string>
     <string name="setting_key.hardware_offload" translatable="false">use_hw_offload</string>
     <string name="setting_key.first_run_executed" translatable="false">firstRunExecuted</string>
     <string name="setting_key.resume_on_bluetooth_device" translatable="false">resumeOnBluetoothDevice</string>

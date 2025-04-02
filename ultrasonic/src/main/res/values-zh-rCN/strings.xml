@@ -393,7 +393,6 @@
     <string name="api.subsonic.upgrade_client">版本不兼容，请升级 Ultrasonic 应用。</string>
     <string name="api.subsonic.upgrade_server">版本不兼容，请升级 Subsonic 服务器。</string>
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">为歌曲使用五星评分</string>
     <string name="settings.preload_500">500 首歌</string>
     <string name="settings.use_id3_offline_summary">如果您启用此设置，它将只显示您使用 Ultrasonic 4.0 或更高版本下载的音乐。较早的下载没有下载必要的元数据。您可以在固定和保存模式之间切换，以触发缺失元数据的下载。</string>
     <string name="foreground_exception_text">如果媒体通知仍然存在，请按媒体通知中的播放按钮；否则请打开应用程序开始播放，并重新连接会话到控制器</string>
@@ -420,7 +419,6 @@
     <string name="albumArt">专辑封面</string>
     <string name="settings.show_confirmation_dialog">展示确认对话框</string>
     <string name="notification.permission_required">需要通知权限才能进行媒体播放。您可以随时在 Android 设置中授予权限。</string>
-    <string name="settings.five_star_rating_description">对歌曲使用五星评级系统，而不是简单的星标/取消星标。</string>
     <string name="settings.use_hw_offload_title">使用硬件回放(实验性)</string>
     <string name="settings.use_hw_offload_description">尝试使用手机上的媒体解码器芯片来播放媒体。这可以改善电池使用情况。部分用户报告启用该选项后播放会有问题！</string>
     <string name="list_view">列表</string>

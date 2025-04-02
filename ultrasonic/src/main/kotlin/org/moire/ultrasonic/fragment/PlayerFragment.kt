@@ -8,7 +8,6 @@
 package org.moire.ultrasonic.fragment
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color.argb
 import android.graphics.Point
@@ -18,7 +17,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.Menu
@@ -31,15 +29,12 @@ import android.view.WindowManager
 import android.view.animation.AnimationUtils
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.ViewFlipper
-import androidx.annotation.AttrRes
-import androidx.annotation.ColorInt
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.MenuHost
@@ -105,6 +100,7 @@ import org.moire.ultrasonic.util.CommunicationError
 import org.moire.ultrasonic.util.ConfirmationDialog
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
+import org.moire.ultrasonic.util.Util.themeColor
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toTrack
 import org.moire.ultrasonic.view.AutoRepeatButton
@@ -125,7 +121,6 @@ class PlayerFragment :
     private var swipeDistance = 0
     private var swipeVelocity = 0
     private var jukeboxAvailable = false
-    private var useFiveStarRating = false
     private var isEqualizerAvailable = false
 
     // Detectors & Callbacks
@@ -151,6 +146,7 @@ class PlayerFragment :
     private lateinit var fiveStar3ImageView: ImageView
     private lateinit var fiveStar4ImageView: ImageView
     private lateinit var fiveStar5ImageView: ImageView
+    private lateinit var heartRatingImageView: ImageView
     private lateinit var playlistFlipper: ViewFlipper
     private lateinit var emptyTextView: TextView
     private lateinit var emptyView: ConstraintLayout
@@ -174,10 +170,15 @@ class PlayerFragment :
     private lateinit var repeatButton: MaterialButton
     private lateinit var progressBar: SeekBar
     private lateinit var progressIndicator: CircularProgressIndicator
-    private val hollowStar = R.drawable.star_hollow_outline
-    private val fullStar = R.drawable.star_full_outline
+
+    private val hollowStar = R.drawable.rating_star_hollow_layered
+    private val fullStar = R.drawable.rating_star_full_layered
+    private val hollowHeart = R.drawable.rating_heart_hollow_layered
+    private val fullHeart = R.drawable.rating_heart_full_layered
     private lateinit var hollowStarDrawable: Drawable
     private lateinit var fullStarDrawable: Drawable
+    private lateinit var hollowHeartDrawable: Drawable
+    private lateinit var fullHeartDrawable: Drawable
 
     private var _binding: CurrentPlayingBinding? = null
 
@@ -233,6 +234,7 @@ class PlayerFragment :
         fiveStar3ImageView = view.findViewById(R.id.song_five_star_3)
         fiveStar4ImageView = view.findViewById(R.id.song_five_star_4)
         fiveStar5ImageView = view.findViewById(R.id.song_five_star_5)
+        heartRatingImageView = view.findViewById(R.id.song_rating_heart)
     }
 
     @Suppress("LongMethod")
@@ -265,7 +267,6 @@ class PlayerFragment :
             Lifecycle.State.RESUMED
         )
 
-        useFiveStarRating = Settings.useFiveStarRating
         swipeDistance = (width + height) * PERCENTAGE_OF_SCREEN_FOR_SWIPE / 100
         swipeVelocity = swipeDistance
         gestureScanner = GestureDetector(context, this)
@@ -277,19 +278,26 @@ class PlayerFragment :
         updateShuffleButtonState(mediaPlayerManager.isShufflePlayEnabled)
         updateRepeatButtonState(mediaPlayerManager.repeatMode)
 
-        val ratingLinearLayout = view.findViewById<LinearLayout>(R.id.song_rating)
-        if (!useFiveStarRating) ratingLinearLayout.isVisible = false
-
         hollowStarDrawable = ResourcesCompat.getDrawable(resources, hollowStar, null)!!
         fullStarDrawable = ResourcesCompat.getDrawable(resources, fullStar, null)!!
         setLayerDrawableColors(hollowStarDrawable as LayerDrawable)
         setLayerDrawableColors(fullStarDrawable as LayerDrawable)
+
+        hollowHeartDrawable = ResourcesCompat.getDrawable(resources, hollowHeart, null)!!
+        fullHeartDrawable = ResourcesCompat.getDrawable(resources, fullHeart, null)!!
+        setLayerDrawableColors(hollowHeartDrawable as LayerDrawable)
+        setLayerDrawableColors(
+            fullHeartDrawable as LayerDrawable,
+            RM.attr.colorAccent,
+            RM.attr.colorSurface
+        )
 
         fiveStar1ImageView.setOnClickListener { setSongRating(1) }
         fiveStar2ImageView.setOnClickListener { setSongRating(2) }
         fiveStar3ImageView.setOnClickListener { setSongRating(3) }
         fiveStar4ImageView.setOnClickListener { setSongRating(4) }
         fiveStar5ImageView.setOnClickListener { setSongRating(5) }
+        heartRatingImageView.setOnClickListener { setSongHeartRating() }
 
         albumArtImageView.setOnTouchListener { _, me ->
             gestureScanner.onTouchEvent(me)
@@ -407,6 +415,21 @@ class PlayerFragment :
             update()
             updateTitle(it.state)
             updateButtonStates(it.state)
+        }
+
+        rxBusSubscription += RxBus.ratingPublishedObservable.subscribe { update ->
+
+            // Ignore updates which are not for the current song
+            if (update.id != currentSong?.id) return@subscribe
+            // Ensure UI thread
+            launch {
+                if (update.success == false) {
+                    Toast.makeText(context, "Setting rating failed", Toast.LENGTH_SHORT)
+                        .show()
+                } else {
+                    updateSongRatingDisplay()
+                }
+            }
         }
 
         // Query the Jukebox state in an IO Context
@@ -537,38 +560,13 @@ class PlayerFragment :
         val equalizerMenuItem = menu.findItem(R.id.menu_item_equalizer)
         val shareMenuItem = menu.findItem(R.id.menu_item_share)
         val shareSongMenuItem = menu.findItem(R.id.menu_item_share_song)
-        val starMenuItem = menu.findItem(R.id.menu_item_star)
         val bookmarkMenuItem = menu.findItem(R.id.menu_item_bookmark_set)
         val bookmarkRemoveMenuItem = menu.findItem(R.id.menu_item_bookmark_delete)
-
-        // Listen to rating changes and update the UI
-        rxBusSubscription += RxBus.ratingPublishedObservable.subscribe { update ->
-
-            // Ignore updates which are not for the current song
-            if (update.id != currentSong?.id) return@subscribe
-
-            // Ensure UI thread
-            launch {
-                if (update.success == true && update.rating is HeartRating) {
-                    if (update.rating.isHeart) {
-                        starMenuItem.setIcon(fullStar)
-                        starMenuItem.setTitle(R.string.download_menu_unstar)
-                    } else {
-                        starMenuItem.setIcon(hollowStar)
-                        starMenuItem.setTitle(R.string.download_menu_star)
-                    }
-                } else if (update.success == false) {
-                    Toast.makeText(context, "Setting rating failed", Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
-        }
 
         if (isOffline()) {
             if (shareMenuItem != null) {
                 shareMenuItem.isVisible = false
             }
-            starMenuItem.isVisible = false
             if (bookmarkMenuItem != null) {
                 bookmarkMenuItem.isVisible = false
             }
@@ -587,15 +585,11 @@ class PlayerFragment :
             currentSong = track
         }
 
-        if (useFiveStarRating) starMenuItem.isVisible = false
-
         if (currentSong != null) {
-            starMenuItem.setIcon(if (currentSong!!.starred) fullStar else hollowStar)
             shareSongMenuItem.isVisible = true
             goToAlbum.isVisible = true
             goToArtist.isVisible = true
         } else {
-            starMenuItem.setIcon(hollowStar)
             shareSongMenuItem.isVisible = false
             goToAlbum.isVisible = false
             goToArtist.isVisible = false
@@ -729,16 +723,6 @@ class PlayerFragment :
                 if (mediaPlayerManager.playlistSize > 0) {
                     showSavePlaylistDialog()
                 }
-                return true
-            }
-            R.id.menu_item_star -> {
-                if (track == null) return true
-                track.starred = !track.starred
-
-                RxBus.ratingSubmitter.onNext(
-                    RatingUpdate(track.id, HeartRating(track.starred))
-                )
-
                 return true
             }
             R.id.menu_item_bookmark_set -> {
@@ -1288,29 +1272,35 @@ class PlayerFragment :
 
     private fun updateSongRatingDisplay() {
         val rating = currentSong?.userRating ?: 0
+        val isHeartSet = currentSong?.starred ?: false
 
         fiveStar1ImageView.setImageDrawable(getStarForRating(rating, 0))
         fiveStar2ImageView.setImageDrawable(getStarForRating(rating, 1))
         fiveStar3ImageView.setImageDrawable(getStarForRating(rating, 2))
         fiveStar4ImageView.setImageDrawable(getStarForRating(rating, 3))
         fiveStar5ImageView.setImageDrawable(getStarForRating(rating, 4))
+
+        if (isHeartSet) {
+            heartRatingImageView.setImageDrawable(fullHeartDrawable)
+        } else {
+            heartRatingImageView.setImageDrawable(hollowHeartDrawable)
+        }
     }
 
     private fun getStarForRating(rating: Int, position: Int): Drawable {
         return if (rating > position) fullStarDrawable else hollowStarDrawable
     }
 
-    private fun setLayerDrawableColors(drawable: LayerDrawable) {
+    private fun setLayerDrawableColors(
+        drawable: LayerDrawable,
+        innerColor: Int = RM.attr.colorSurface,
+        borderColor: Int = RM.attr.colorAccent
+    ) {
         drawable.apply {
-            getDrawable(0).setTint(requireContext().themeColor(RM.attr.colorSurface))
-            getDrawable(1).setTint(requireContext().themeColor(RM.attr.colorAccent))
+            getDrawable(0).setTint(requireContext().themeColor(innerColor))
+            getDrawable(1).setTint(requireContext().themeColor(borderColor))
         }
     }
-
-    @ColorInt
-    fun Context.themeColor(@AttrRes attrRes: Int): Int = TypedValue()
-        .apply { theme.resolveAttribute(attrRes, this, true) }
-        .data
 
     private fun setSongRating(rating: Int) {
         if (currentSong == null) return
@@ -1321,6 +1311,19 @@ class PlayerFragment :
             RatingUpdate(
                 currentSong!!.id,
                 StarRating(5, rating.toFloat())
+            )
+        )
+    }
+
+    private fun setSongHeartRating() {
+        if (currentSong == null) return
+        currentSong?.starred = !(currentSong?.starred ?: true)
+        updateSongRatingDisplay()
+
+        RxBus.ratingSubmitter.onNext(
+            RatingUpdate(
+                currentSong!!.id,
+                HeartRating(currentSong?.starred ?: false)
             )
         )
     }

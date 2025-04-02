@@ -42,7 +42,8 @@
                     a:layout_width="match_parent"
                     a:layout_height="60dip"
                     a:layout_gravity="center"
-                    a:layout_margin="10dip"
+                    a:layout_marginHorizontal="60dip"
+                    a:layout_marginVertical="10dip"
                     a:orientation="horizontal">
 
                     <ImageView
@@ -54,9 +55,8 @@
                         a:focusable="false"
                         a:gravity="center_vertical"
                         a:importantForAccessibility="no"
-                        a:padding="10dip"
                         a:scaleType="fitCenter"
-                        a:src="@drawable/star_hollow_outline" />
+                        a:src="@drawable/rating_star_hollow_layered" />
 
                     <ImageView
                         a:id="@+id/song_five_star_2"
@@ -67,9 +67,8 @@
                         a:focusable="false"
                         a:gravity="center_vertical"
                         a:importantForAccessibility="no"
-                        a:padding="10dip"
                         a:scaleType="fitCenter"
-                        a:src="@drawable/star_hollow_outline" />
+                        a:src="@drawable/rating_star_hollow_layered" />
 
                     <ImageView
                         a:id="@+id/song_five_star_3"
@@ -80,9 +79,8 @@
                         a:focusable="false"
                         a:gravity="center_vertical"
                         a:importantForAccessibility="no"
-                        a:padding="10dip"
                         a:scaleType="fitCenter"
-                        a:src="@drawable/star_hollow_outline" />
+                        a:src="@drawable/rating_star_hollow_layered" />
 
                     <ImageView
                         a:id="@+id/song_five_star_4"
@@ -93,9 +91,8 @@
                         a:focusable="false"
                         a:gravity="center_vertical"
                         a:importantForAccessibility="no"
-                        a:padding="10dip"
                         a:scaleType="fitCenter"
-                        a:src="@drawable/star_hollow_outline" />
+                        a:src="@drawable/rating_star_hollow_layered" />
 
                     <ImageView
                         a:id="@+id/song_five_star_5"
@@ -106,9 +103,23 @@
                         a:focusable="false"
                         a:gravity="center_vertical"
                         a:importantForAccessibility="no"
-                        a:padding="10dip"
                         a:scaleType="fitCenter"
-                        a:src="@drawable/star_hollow_outline" />
+                        a:src="@drawable/rating_star_hollow_layered" />
+
+                    <ImageView
+                        a:id="@+id/song_rating_heart"
+                        a:layout_width="0dip"
+                        a:layout_height="fill_parent"
+                        a:layout_weight="1"
+                        a:background="@android:color/transparent"
+                        a:focusable="false"
+                        a:gravity="center_vertical"
+                        a:importantForAccessibility="no"
+                        a:layout_marginStart="10dip"
+                        a:paddingTop="8dip"
+                        a:paddingBottom="4dip"
+                        a:scaleType="fitCenter"
+                        a:src="@drawable/rating_heart_hollow_layered" />
 
                 </LinearLayout>
 

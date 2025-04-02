@@ -430,10 +430,8 @@
     <string name="api.subsonic.trial_period_is_over">Prøveperioden er over.</string>
     <string name="api.subsonic.upgrade_client">Ukompatible versjoner. Oppgrader Ultrasonic-programmet for Android.</string>
     <string name="api.subsonic.upgrade_server">Ukompatible versjoner. Oppgrader Subsonic-tjeneren.</string>
-    <string name="settings.five_star_rating_title">Bruk femstjerners vurdering for spor</string>
     <string name="list_view">Liste</string>
     <string name="api.subsonic.not_authorized">Ikke identitetsbekreftet. Sjekk brukertilganger på Subsonic-tjeneren.</string>
-    <string name="settings.five_star_rating_description">Bruk femstjerners vurderingssystem for spor istedenfor enkel stjernemerking/opphevelse av stjernemerking av elementer.</string>
     <string name="settings.use_hw_offload_title">Bruk maskinvarebasert avspilling (eksperimentelt)</string>
     <string name="grid_view">Omslag</string>
     <string name="supported_server_features">Støttede funksjoner</string>

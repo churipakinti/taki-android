@@ -317,7 +317,6 @@
     <string name="api.subsonic.upgrade_client">Brak zgodności wersji. Uaktualnij aplikację Ultrasonic na Androida.</string>
     <string name="api.subsonic.upgrade_server">Brak zgodności wersji. Uaktualnij serwer Subsonic.</string>
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">5-gwiazdkowy system ocen utworów</string>
     <string name="settings.show_confirmation_dialog_summary">Pokaż okno potwierdzające usunięcie lub odpięcie utworów</string>
     <string name="language.en">Angielski</string>
     <string name="settings.scrobble_summary">Pamiętaj o ustawieniu nazwy użytkownika i hasła do usługi Scrobble na serwerze</string>
@@ -434,7 +433,6 @@
     <string name="server_editor.disabled_feature">Jedna lub więcej funkcji zostało wyłączonych ponieważ serwer ich nie obsługiwał.
 \nMożesz uruchomić ten test ponownie kiedykolwiek.</string>
     <string name="server_menu.demo">Serwer demonstracyjny</string>
-    <string name="settings.five_star_rating_description">Używaj 5-gwiazdkowego systemu ocen utworów zamiast zwykłego oznaczania/odznaczania utworów gwiazdką.</string>
     <string name="list_view">Lista</string>
     <string name="grid_view">Okładka</string>
     <string name="settings.use_hw_offload_description">Spróbuj odtworzyć pliki multimedialne za pomocą układu dekodującego w telefonie. Może to zmniejszyć zużycie baterii!</string>

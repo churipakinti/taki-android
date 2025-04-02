@@ -11,11 +11,11 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
-import android.net.Uri
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
 import android.view.View
 import androidx.annotation.StringRes
+import androidx.core.net.toUri
 import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
@@ -194,7 +194,7 @@ class SettingsFragment :
         }
 
         cacheLocation?.isVisible = true
-        val uri = Uri.parse(Settings.cacheLocationUri)
+        val uri = Settings.cacheLocationUri.toUri()
         cacheLocation!!.summary = uri.path
         cacheLocation!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             selectCacheLocation()
@@ -342,7 +342,7 @@ class SettingsFragment :
 
     private fun setCacheLocation(path: String) {
         if (path != "") {
-            val uri = Uri.parse(path)
+            val uri = path.toUri()
             cacheLocation!!.summary = uri.path ?: ""
         }
 

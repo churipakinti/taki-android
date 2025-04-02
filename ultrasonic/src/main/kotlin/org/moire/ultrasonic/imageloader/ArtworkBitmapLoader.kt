@@ -32,6 +32,11 @@ class ArtworkBitmapLoader : BitmapLoader, KoinComponent {
         )
     }
 
+    override fun supportsMimeType(mimeType: String): Boolean {
+        // TODO: Implement?
+        return true
+    }
+
     override fun decodeBitmap(data: ByteArray): ListenableFuture<Bitmap> {
         return executorService.submit<Bitmap> {
             decode(
@@ -44,10 +49,6 @@ class ArtworkBitmapLoader : BitmapLoader, KoinComponent {
         return executorService.submit<Bitmap> {
             load(uri)
         }
-    }
-
-    override fun loadBitmap(uri: Uri, options: BitmapFactory.Options?): ListenableFuture<Bitmap> {
-        return loadBitmap(uri)
     }
 
     private fun decode(data: ByteArray): Bitmap {

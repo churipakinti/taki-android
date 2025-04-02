@@ -316,7 +316,6 @@
     <string name="api.subsonic.upgrade_client">Versões incompativeis. Atualize o aplicativo Ultrasonic para Android.</string>
     <string name="api.subsonic.upgrade_server">Versões incompativeis. Atualize o servidor Ultrasonic.</string>
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">Use classificação de cinco estrelas para músicas</string>
     <string name="server_editor.disabled_feature">Um ou mais recursos foram desativados porque o servidor não os suporta.
 \nPode executar este teste novamente a qualquer momento.</string>
     <string name="server_menu.demo">Servidor Demonstração</string>
@@ -347,7 +346,6 @@
     <string name="buttons.repeat">Repetir</string>
     <string name="buttons.stop">Parar</string>
     <string name="buttons.next">Próxima</string>
-    <string name="settings.five_star_rating_description">Usar o sistema de classificação de 5 estrelas em vez de estrelar/não estrelar itens.</string>
     <string name="grid_view">Cápa</string>
     <string name="list_view">Lista</string>
     <string name="supported_server_features">Recursos suportados</string>
