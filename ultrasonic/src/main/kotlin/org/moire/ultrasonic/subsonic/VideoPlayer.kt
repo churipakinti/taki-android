@@ -2,7 +2,7 @@ package org.moire.ultrasonic.subsonic
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MusicServiceFactory
@@ -27,7 +27,7 @@ class VideoPlayer {
                     format = "raw"
                 )
                 intent.setDataAndType(
-                    Uri.parse(url),
+                    url?.toUri(),
                     "video/*"
                 )
                 context.startActivity(intent)

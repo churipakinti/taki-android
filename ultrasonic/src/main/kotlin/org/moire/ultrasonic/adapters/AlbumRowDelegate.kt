@@ -35,8 +35,8 @@ open class AlbumRowDelegate(
     open val onContextMenuClick: (MenuItem, Album) -> Boolean
 ) : ItemViewDelegate<Album, AlbumRowDelegate.ListViewHolder>(), KoinComponent {
 
-    private val starDrawable: Int = R.drawable.ic_star_full
-    private val starHollowDrawable: Int = R.drawable.ic_star_hollow
+    private val starDrawable: Int = R.drawable.rating_star_full
+    private val starHollowDrawable: Int = R.drawable.rating_star_hollow
 
     open var layoutType = LayoutType.LIST
 

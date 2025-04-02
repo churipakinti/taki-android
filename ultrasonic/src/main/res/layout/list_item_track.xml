@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- DON'T CONVERT TO ConstraintLayout! We have been there and it was slower than LinearLayout :) -->
 <LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     a:id="@+id/song_layout"
     a:layout_width="fill_parent"
@@ -32,83 +33,16 @@
 
     <include layout="@layout/list_item_track_details" />
 
-    <LinearLayout
-        a:id="@+id/song_rating"
-        a:layout_width="wrap_content"
-        a:layout_height="fill_parent"
-        a:layout_gravity="center_vertical"
-        a:orientation="horizontal"
-        a:visibility="gone"
-        tools:visibility="visible">
-
-        <ImageView
-            a:id="@+id/song_five_star_1"
-            a:layout_width="10dip"
-            a:layout_height="fill_parent"
-            a:background="@android:color/transparent"
-            a:focusable="false"
-            a:gravity="center_vertical"
-            a:importantForAccessibility="no"
-            a:scaleType="centerInside"
-            a:src="@drawable/ic_star_hollow" />
-
-        <ImageView
-            a:id="@+id/song_five_star_2"
-            a:layout_width="10dip"
-            a:layout_height="fill_parent"
-            a:background="@android:color/transparent"
-            a:focusable="false"
-            a:gravity="center_vertical"
-            a:importantForAccessibility="no"
-            a:scaleType="centerInside"
-            a:src="@drawable/ic_star_hollow" />
-
-        <ImageView
-            a:id="@+id/song_five_star_3"
-            a:layout_width="10dip"
-            a:layout_height="fill_parent"
-            a:background="@android:color/transparent"
-            a:focusable="false"
-            a:gravity="center_vertical"
-            a:importantForAccessibility="no"
-            a:scaleType="centerInside"
-            a:src="@drawable/ic_star_hollow" />
-
-        <ImageView
-            a:id="@+id/song_five_star_4"
-            a:layout_width="10dip"
-            a:layout_height="fill_parent"
-            a:background="@android:color/transparent"
-            a:focusable="false"
-            a:gravity="center_vertical"
-            a:importantForAccessibility="no"
-            a:scaleType="centerInside"
-            a:src="@drawable/ic_star_hollow" />
-
-        <ImageView
-            a:id="@+id/song_five_star_5"
-            a:layout_width="10dip"
-            a:layout_height="fill_parent"
-            a:layout_marginEnd="8dip"
-            a:background="@android:color/transparent"
-            a:focusable="false"
-            a:gravity="center_vertical"
-            a:importantForAccessibility="no"
-            a:scaleType="centerInside"
-            a:src="@drawable/ic_star_hollow" />
-
-    </LinearLayout>
 
     <ImageView
         a:id="@+id/song_star"
-        a:layout_width="38dp"
+        a:layout_width="40dp"
         a:layout_height="fill_parent"
         a:background="@android:color/transparent"
         a:contentDescription="@string/download.menu_star"
         a:focusable="false"
         a:gravity="center_vertical"
-        a:paddingEnd="8dip"
-        a:src="@drawable/ic_star_hollow"
-        a:visibility="gone" />
+        a:paddingEnd="5dip"
+        a:src="@drawable/rating_star_5" />
 
 </LinearLayout>

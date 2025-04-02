@@ -67,7 +67,7 @@
             a:contentDescription="@string/download.menu_star"
             a:gravity="center_horizontal"
             a:padding="4dp"
-            a:src="@drawable/ic_star_hollow"
+            a:src="@drawable/rating_star_hollow"
             app:layout_constraintBottom_toBottomOf="@+id/cover_art"
             app:layout_constraintEnd_toEndOf="@+id/cover_art" />
 

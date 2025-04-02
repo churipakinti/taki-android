@@ -1,5 +1,5 @@
 default:
-  image: registry.gitlab.com/ultrasonic/ci-android:1.1.0
+  image: registry.gitlab.com/ultrasonic/ci-android:1.2.0
   cache: &global_cache
     key:
       files:

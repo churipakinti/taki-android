@@ -9,6 +9,7 @@ package org.moire.ultrasonic.util
 
 import android.content.Context
 import android.view.View
+import androidx.core.content.edit
 import androidx.preference.DialogPreference.TargetFragment
 import androidx.preference.Preference
 import androidx.preference.PreferenceDialogFragmentCompat
@@ -49,7 +50,7 @@ class TimeSpanPreferenceDialogFragmentCompat : PreferenceDialogFragmentCompat(),
             }
         }
         val preference: Preference = preference
-        preference.sharedPreferences!!.edit().putString(preference.key, persisted).apply()
+        preference.sharedPreferences!!.edit { putString(preference.key, persisted) }
     }
 
     @Suppress("UNCHECKED_CAST")

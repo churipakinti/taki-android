@@ -1,13 +1,18 @@
 package org.moire.ultrasonic.adapters
 
 import android.graphics.Color
+import android.graphics.drawable.LayerDrawable
+import android.os.Build
+import android.view.MenuInflater
 import android.view.View
 import android.widget.Checkable
 import android.widget.CheckedTextView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
@@ -31,6 +36,7 @@ import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
+import org.moire.ultrasonic.util.Util.themeColor
 
 const val INDICATOR_THICKNESS_INDEFINITE = 5
 const val INDICATOR_THICKNESS_DEFINITE = 10
@@ -50,17 +56,12 @@ class TrackViewHolder(val view: View) :
 
     var entry: Track? = null
         private set
-    var songLayout: LinearLayout = view.findViewById(R.id.song_layout)
+    private var songLayout: LinearLayout = view.findViewById(R.id.song_layout)
+
     var check: CheckedTextView = view.findViewById(R.id.song_check)
     var drag: ImageView = view.findViewById(R.id.song_drag)
     var observableChecked = MutableLiveData(false)
 
-    private var rating: LinearLayout = view.findViewById(R.id.song_rating)
-    private var fiveStar1: ImageView = view.findViewById(R.id.song_five_star_1)
-    private var fiveStar2: ImageView = view.findViewById(R.id.song_five_star_2)
-    private var fiveStar3: ImageView = view.findViewById(R.id.song_five_star_3)
-    private var fiveStar4: ImageView = view.findViewById(R.id.song_five_star_4)
-    private var fiveStar5: ImageView = view.findViewById(R.id.song_five_star_5)
     private var star: ImageView = view.findViewById(R.id.song_star)
     private var track: TextView = view.findViewById(R.id.song_track)
     private var title: TextView = view.findViewById(R.id.song_title)
@@ -80,7 +81,6 @@ class TrackViewHolder(val view: View) :
 
     @Suppress("ComplexMethod")
     fun setSong(song: Track, checkable: Boolean, draggable: Boolean, isSelected: Boolean = false) {
-        val useFiveStarRating = Settings.useFiveStarRating
         entry = song
 
         val entryDescription = Util.readableEntryDescription(song)
@@ -103,7 +103,7 @@ class TrackViewHolder(val view: View) :
         if (ActiveServerProvider.isOffline()) {
             star.isGone = true
         } else {
-            setupStarButtons(song, useFiveStarRating)
+            setupRating(song)
         }
 
         // Instead of blocking the UI thread while looking up the current state,
@@ -115,11 +115,7 @@ class TrackViewHolder(val view: View) :
             )
         }
 
-        if (useFiveStarRating) {
-            updateFiveStars(entry?.userRating ?: 0)
-        } else {
-            updateSingleStar(entry!!.starred)
-        }
+        updateRatingDisplay(entry!!.userRating, entry!!.starred)
 
         if (song.isVideo) {
             artist.isGone = true
@@ -144,9 +140,9 @@ class TrackViewHolder(val view: View) :
                 if (it.id != song.id) return@launch
 
                 if (it.rating is HeartRating) {
-                    updateSingleStar(it.rating.isHeart)
+                    updateRatingDisplay(song.userRating, it.rating.isHeart)
                 } else if (it.rating is StarRating) {
-                    updateFiveStars(it.rating.starRating.toInt())
+                    updateRatingDisplay(it.rating.starRating.toInt(), song.starred)
                 }
             }
         }
@@ -187,55 +183,88 @@ class TrackViewHolder(val view: View) :
         }
     }
 
-    private fun setupStarButtons(track: Track, useFiveStarRating: Boolean) {
-        if (useFiveStarRating) {
-            // Hide single star
-            star.isGone = true
-            rating.isVisible = true
-            val rating = if (track.userRating == null) 0 else track.userRating!!
-            updateFiveStars(rating)
+    private fun setupRating(track: Track) {
+        star.isVisible = true
+        updateRatingDisplay(track.userRating, track.starred)
 
-            // Five star rating has no click handler because in the
-            // track view theres not enough space
-        } else {
-            star.isVisible = true
-            rating.isGone = true
-            updateSingleStar(track.starred)
-            star.setOnClickListener {
-                track.starred = !track.starred
-                updateSingleStar(track.starred)
-                RxBus.ratingSubmitter.onNext(
-                    RatingUpdate(track.id, HeartRating(track.starred))
-                )
-            }
-        }
+        star.setOnClickListener { toggleHeart(track) }
+        star.setOnLongClickListener { view -> showRatingPopup(view, track) }
+    }
+
+    private fun toggleHeart(track: Track) {
+        track.starred = !track.starred
+        updateRatingDisplay(track.userRating, track.starred)
+        RxBus.ratingSubmitter.onNext(
+            RatingUpdate(track.id, HeartRating(track.starred))
+        )
     }
 
     @Suppress("MagicNumber")
-    private fun updateFiveStars(rating: Int) {
-        fiveStar1.setImageResource(
-            if (rating > 0) R.drawable.ic_star_full else R.drawable.ic_star_hollow
-        )
-        fiveStar2.setImageResource(
-            if (rating > 1) R.drawable.ic_star_full else R.drawable.ic_star_hollow
-        )
-        fiveStar3.setImageResource(
-            if (rating > 2) R.drawable.ic_star_full else R.drawable.ic_star_hollow
-        )
-        fiveStar4.setImageResource(
-            if (rating > 3) R.drawable.ic_star_full else R.drawable.ic_star_hollow
-        )
-        fiveStar5.setImageResource(
-            if (rating > 4) R.drawable.ic_star_full else R.drawable.ic_star_hollow
-        )
+    private fun showRatingPopup(view: View, track: Track): Boolean {
+        val popup = PopupMenu(view.context, view)
+        val inflater: MenuInflater = popup.menuInflater
+        inflater.inflate(R.menu.rating, popup.menu)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) popup.setForceShowIcon(true)
+
+        popup.setOnMenuItemClickListener {
+            val rating = when (it.itemId) {
+                R.id.popup_rate_1 -> 1
+                R.id.popup_rate_2 -> 2
+                R.id.popup_rate_3 -> 3
+                R.id.popup_rate_4 -> 4
+                R.id.popup_rate_5 -> 5
+                else -> 0
+            }
+            track.userRating = rating
+            updateRatingDisplay(track.userRating, track.starred)
+            RxBus.ratingSubmitter.onNext(
+                RatingUpdate(track.id, StarRating(5, rating.toFloat()))
+            )
+            true
+        }
+        popup.show()
+        return true
     }
 
-    private fun updateSingleStar(starred: Boolean) {
-        if (starred) {
-            star.setImageResource(R.drawable.ic_star_full)
-        } else {
-            star.setImageResource(R.drawable.ic_star_hollow)
+    @Suppress("MagicNumber")
+    private fun updateRatingDisplay(rating: Int?, starred: Boolean) {
+        val ratingDrawable = when (rating) {
+            1 -> R.drawable.rating_star_1
+            2 -> R.drawable.rating_star_2
+            3 -> R.drawable.rating_star_3
+            4 -> R.drawable.rating_star_4
+            5 -> R.drawable.rating_star_5
+            else -> {
+                R.drawable.rating_star_0
+            }
         }
+
+        val layers = if (starred) {
+            arrayOf(
+                ResourcesCompat.getDrawable(view.resources, ratingDrawable, null)!!,
+                ResourcesCompat.getDrawable(
+                    view.resources,
+                    R.drawable.rating_heart_mini_overlay,
+                    null
+                )!!
+            )
+        } else {
+            arrayOf(
+                ResourcesCompat.getDrawable(view.resources, ratingDrawable, null)!!
+            )
+        }
+
+        val ratingDisplay = LayerDrawable(layers)
+        ratingDisplay.getDrawable(0).setTint(
+            view.context.themeColor(com.google.android.material.R.attr.colorOnBackground)
+        )
+        if (starred) {
+            ratingDisplay.getDrawable(1).setTint(
+                view.context.themeColor(com.google.android.material.R.attr.colorTertiary)
+            )
+        }
+
+        star.setImageDrawable(ratingDisplay)
     }
 
     private fun updateStatus(status: DownloadState, progress: Int?) {

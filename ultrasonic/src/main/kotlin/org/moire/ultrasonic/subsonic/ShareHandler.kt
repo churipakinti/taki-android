@@ -254,7 +254,7 @@ class ShareHandler {
                 val timeSpanAmount: Int = timeSpanPicker!!.timeSpanAmount
                 Settings.defaultShareExpiration =
                     if (!noExpirationCheckBox!!.isChecked && timeSpanAmount > 0) {
-                        String.format("%d:%s", timeSpanAmount, timeSpanType)
+                        String.format(Locale.ROOT, "%d:%s", timeSpanAmount, timeSpanType)
                     } else {
                         ""
                     }

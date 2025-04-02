@@ -381,7 +381,6 @@
     <string name="api.subsonic.upgrade_client">Versions incompatibles. Veuillez mette à jour l\'application Android Ultrasonic.</string>
     <string name="api.subsonic.upgrade_server">Versions incompatibles. Veuillez mette à jour le serveur Subsonic.</string>
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">Utiliser les étoiles pour noter les morceaux</string>
     <string name="main.albums_by_year">Chronologique</string>
     <string name="grid_view">Couverture</string>
     <string name="settings.preload_1000">1000 morceaux</string>
@@ -408,7 +407,6 @@
     <string name="settings.use_id3_offline_summary">Si vous activez ce paramètre, il n\'affichera que la musique que vous avez téléchargée avec Ultrasonic 4.0 ou une version ultérieure. Les téléchargements antérieurs n\'ont pas les métadonnées nécessaires téléchargées. Vous pouvez basculer entre le mode Épingler et le mode Enregistrer pour déclencher le téléchargement des métadonnées manquantes.</string>
     <string name="settings.show_confirmation_dialog">Afficher le dialogue de confirmation</string>
     <string name="notification.permission_required">Les notifications sont nécessaires pour la lecture des médias. Vous pouvez accorder cette autorisation à tout moment dans les paramètres Android.</string>
-    <string name="settings.five_star_rating_description">Utiliser un système de notation à cinq étoiles pour les chansons au lieu d\'attribuer des étoiles ou de ne pas en attribuer à certains éléments.</string>
     <string name="settings.use_hw_offload_description">Essayez de lire le média à l\'aide de la puce de décodage média de votre téléphone. Ceci peut améliorer l\'utilisation de la batterie.</string>
     <string name="supported_server_features">Fonctionnalités prises en charge</string>
     <string name="settings.use_hw_offload_title">Utiliser la lecture matérielle (expérimental)</string>

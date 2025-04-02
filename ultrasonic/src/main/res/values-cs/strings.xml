@@ -329,5 +329,4 @@
     <string name="api.subsonic.upgrade_server">Nekompatibilní verze. Aktualizujte prosím Subsonic server.</string>
 
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">Používat pět hvězdiček pro hodnocení skladeb</string>
     </resources>

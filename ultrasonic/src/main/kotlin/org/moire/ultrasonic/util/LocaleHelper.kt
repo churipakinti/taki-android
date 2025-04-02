@@ -7,11 +7,11 @@
 
 package org.moire.ultrasonic.util
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Configuration
 import android.os.Build
+import androidx.annotation.RequiresApi
 import java.util.Locale
 
 /**
@@ -42,7 +42,7 @@ class LocaleHelper(base: Context?) : ContextWrapper(base) {
             config.locale = locale
         }
 
-        @TargetApi(Build.VERSION_CODES.N)
+        @RequiresApi(Build.VERSION_CODES.N)
         fun setSystemLocale(config: Configuration, locale: Locale?) {
             config.setLocale(locale)
         }

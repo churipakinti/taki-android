@@ -9,6 +9,7 @@ package org.moire.ultrasonic.service
 
 import android.os.Build
 import android.os.Bundle
+import androidx.annotation.OptIn
 import androidx.car.app.connection.CarConnection
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
@@ -21,11 +22,13 @@ import androidx.media3.common.MediaMetadata.MEDIA_TYPE_PLAYLIST
 import androidx.media3.common.Player
 import androidx.media3.common.Rating
 import androidx.media3.common.StarRating
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.CommandButton
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionResult.RESULT_SUCCESS
 import com.google.common.collect.ImmutableList
@@ -323,9 +326,9 @@ class MediaLibrarySessionCallback :
             )
             .setIconResId(
                 if (willHeart) {
-                    R.drawable.ic_star_hollow
+                    R.drawable.rating_star_hollow
                 } else {
-                    R.drawable.ic_star_full
+                    R.drawable.rating_star_full
                 }
             )
             .setSessionCommand(sessionCommand)
@@ -371,6 +374,7 @@ class MediaLibrarySessionCallback :
             .setEnabled(true)
             .build()
 
+    @OptIn(UnstableApi::class)
     override fun onGetItem(
         session: MediaLibraryService.MediaLibrarySession,
         browser: MediaSession.ControllerInfo,
@@ -390,7 +394,7 @@ class MediaLibrarySessionCallback :
             )
         } else {
             Futures.immediateFuture(
-                LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+                LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
             )
         }
     }

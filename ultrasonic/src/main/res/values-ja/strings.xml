@@ -325,8 +325,6 @@
     <string name="api.subsonic.requested_data_was_not_found">要求されたデータが見つかりませんでした。</string>
     <string name="api.subsonic.upgrade_client">互換性のないバージョンです。UltrasonicのAndroidアプリをバージョンアップしてください。</string>
     <string name="api.subsonic.upgrade_server">互換性のないバージョンです。Subsonicサーバーをバージョンアップしてください。</string>
-    <string name="settings.five_star_rating_title">曲に五つ星評価を利用</string>
-    <string name="settings.five_star_rating_description">楽曲の評価を、スターあり/なし ではなく、5つの星を付ける方式にします。</string>
     <string name="list_view">リスト</string>
     <string name="grid_view">カバー</string>
     <string name="supported_server_features">サポートされている機能</string>

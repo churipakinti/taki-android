@@ -429,8 +429,6 @@
     <string name="api.subsonic.upgrade_client">Versiones incompatibles. Por favor actualiza la aplicación de Android Ultrasonic.</string>
     <string name="api.subsonic.upgrade_server">Versiones incompatibles. Por favor actualiza el servidor de Subsonic.</string>
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">Use cinco estrellas para las canciones</string>
-    <string name="settings.five_star_rating_description">Utilice el sistema de calificación de cinco estrellas para canciones en lugar de simplemente marcar / desmarcar elementos.</string>
     <string name="settings.use_hw_offload_title">Utilizar la reproducción por hardware (experimental)</string>
     <string name="settings.use_hw_offload_description">Intenta reproducir los medios usando el procesador decodificador de los medios en tu teléfono. Esto puede mejorar el uso de la batería. ¡Algunos usuarios informan de fallos en la reproducción cuando activan esta opción!</string>
     <string name="list_view">Lista</string>
@@ -446,7 +444,6 @@
     <string name="settings.max_bitrate_pinning">Tasa de bits máxima: al fijar una canción de forma permanente</string>
     <string name="shortcut_play_random_songs_short">Canciones aleatorias</string>
     <string name="shortcut_play_random_songs_long">Reproducir las canciones aleatoriamente</string>
-    <string name="download.menu_unstar">No me gusta</string>
     <plurals name="n_songs_added_play_now">
         <item quantity="one">%d canción añadida a la cola de reproducción</item>
         <item quantity="many">%d canciones añadidas a la cola de reproducción</item>

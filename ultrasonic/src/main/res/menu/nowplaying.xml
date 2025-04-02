@@ -9,11 +9,6 @@
         a:icon="@drawable/media_toggle_list"
         app:showAsAction="always"
         a:title="@string/download.toggle_playlist"/>
-    <item
-        a:id="@+id/menu_item_star"
-        a:icon="@drawable/ic_star_hollow"
-        app:showAsAction="always"
-        a:title="@string/download.menu_star"/>
 
     <item
         a:id="@+id/menu_show_artist"

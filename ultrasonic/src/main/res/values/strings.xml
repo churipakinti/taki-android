@@ -132,6 +132,12 @@
     <string name="menu.exit">Exit</string>
     <string name="menu.settings">Settings</string>
     <string name="menu.refresh">Refresh</string>
+    <string name="menu.rating_no_rating">No Rating</string>
+    <string name="menu.rating_1">1 Star</string>
+    <string name="menu.rating_2">2 Stars</string>
+    <string name="menu.rating_3">3 Stars</string>
+    <string name="menu.rating_4">4 Stars</string>
+    <string name="menu.rating_5">5 Stars</string>
     <string name="music_library.label">Media Library</string>
     <string name="music_library.label_offline">Offline Media</string>
     <string name="playlist.label">Playlists</string>
@@ -338,7 +344,6 @@
     <string name="download.bookmark_set">Set Bookmark</string>
     <string name="download.bookmark_delete">Delete Bookmark</string>
     <string name="download.menu_star">Star</string>
-    <string name="download.menu_unstar">Unstar</string>
     <string name="download.menu_clear_playlist">Clear Playlist</string>
     <string name="button_bar.shares">Shares</string>
     <string name="select_share.empty">No shares available on server</string>
@@ -441,8 +446,6 @@
     <string name="api.subsonic.upgrade_server">Incompatible versions. Please upgrade Subsonic server.</string>
 
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">Use five star rating for songs</string>
-    <string name="settings.five_star_rating_description">Use five star rating system for songs instead of simply starring/unstarring items.</string>
     <string name="settings.use_hw_offload_title">Use hardware playback (experimental)</string>
     <string name="settings.use_hw_offload_description">Try to play the media using the media decoder chip on your phone. This can improve battery usage. Some users report glitches in playback when they activate this option!</string>
     <string name="list_view">List</string>

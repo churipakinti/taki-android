@@ -30,14 +30,18 @@ import android.os.Build
 import android.os.Environment
 import android.text.TextUtils
 import android.util.DisplayMetrics
+import android.util.TypedValue
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AnyRes
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -614,12 +618,12 @@ object Util {
     }
 
     fun getUriToDrawable(context: Context, @AnyRes drawableId: Int): Uri {
-        return Uri.parse(
+        return (
             ContentResolver.SCHEME_ANDROID_RESOURCE +
                 "://" + context.resources.getResourcePackageName(drawableId) +
                 '/' + context.resources.getResourceTypeName(drawableId) +
                 '/' + context.resources.getResourceEntryName(drawableId)
-        )
+            ).toUri()
     }
 
     data class ReadableEntryDescription(
@@ -822,6 +826,11 @@ object Util {
             Timber.d("${it.key}: ${it.value}")
         }
     }
+
+    @ColorInt
+    fun Context.themeColor(@AttrRes attrRes: Int): Int = TypedValue()
+        .apply { theme.resolveAttribute(attrRes, this, true) }
+        .data
 
     fun Fragment.navigateToCurrent() {
         if (Settings.shouldTransitionOnPlayback) {

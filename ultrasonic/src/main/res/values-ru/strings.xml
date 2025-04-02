@@ -358,5 +358,4 @@
     <string name="api.subsonic.upgrade_server">Несовместимые версии. Пожалуйста, обновите Subsonic сервер.</string>
 
     <!-- Subsonic features  -->
-    <string name="settings.five_star_rating_title">Использовать пятизвездочный рейтинг для песен</string>
     </resources>

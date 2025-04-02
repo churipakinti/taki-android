@@ -42,7 +42,10 @@ import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.navigateToCurrent
 import org.moire.ultrasonic.util.Util.toast
+import org.moire.ultrasonic.util.getTrackId
 import org.moire.ultrasonic.util.launchWithToast
+import org.moire.ultrasonic.util.setRating
+import org.moire.ultrasonic.util.setStarred
 import org.moire.ultrasonic.util.toMediaItem
 import org.moire.ultrasonic.util.toTrack
 import timber.log.Timber
@@ -235,9 +238,15 @@ class MediaPlayerManager(
         rxBusSubscription += RxBus.ratingSubmitterObservable.subscribe {
             // Ensure correct thread
             mainScope.launch {
-                // This deals only with the current track!
-                if (it.id != currentMediaItem?.toTrack()?.id) return@launch
-                setRating(it.rating)
+                val mediaItem =
+                    playlist.firstOrNull { item -> item.getTrackId() == it.id } ?: return@launch
+                if (it.rating is HeartRating) {
+                    mediaItem.setStarred(it.rating.isHeart)
+                }
+                if (it.rating is StarRating) {
+                    mediaItem.setRating(it.rating.starRating.toInt())
+                }
+                mediaItem.toTrack() // Update item in Converter cache
             }
         }
 
