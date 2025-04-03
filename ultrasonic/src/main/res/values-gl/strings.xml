@@ -314,7 +314,6 @@
         <item quantity="other">%d cancións engadidas despois da reprodución actual</item>
     </plurals>
     <string name="api.subsonic.upgrade_server">Versións non compatibles. Instala unha versión superior do servidor Subsonic.</string>
-    <string name="settings.five_star_rating_description">Usar o sistema de valoración con estrelas para as cancións no lugar de poñer ou retirar a estrela aos elementos.</string>
     <string name="settings.use_hw_offload_description">Intentar reproducir o multimedia usado o chip descodificador multimedia do teu móbil. Así poderías mellorar o uso da batería. Algunhas usuarias informaron de problemas coa reprodución ao activar esta opción!</string>
     <string name="jukebox">Jukebox</string>
     <string name="list_view">Lista</string>
@@ -431,7 +430,6 @@
     <string name="server_editor.new_label">Engadir servidor</string>
     <string name="server_editor.required">Requírese este campo</string>
     <string name="api.subsonic.generic.no.message">non se recibiu mensaxe desde o servidor</string>
-    <string name="settings.five_star_rating_title">Usa a valoración das cancións con cinco estrelas</string>
     <string name="server_menu.move_down">Mover abaixo</string>
     <string name="server_editor.authentication">Autenticación</string>
     <string name="server_editor.disabled_feature">Desactiváronse unha ou máis características porque o servidor non ten soporte para elas.
@@ -443,7 +441,6 @@
     <string name="server_selector.label">Servidores engadidos</string>
     <string name="server_selector.delete_confirmation">Tes a certeza de querer retirar o servidor?</string>
     <string name="server_editor.label">A editar o servidor</string>
-    <string name="download.menu_unstar">Retirar estrela</string>
     <string name="save_as_defaults">Establecer por defecto</string>
     <string name="share_comment">Comentar</string>
     <string name="download_song_removed">Retirouse \"%s\" da lista de reprodución</string>
