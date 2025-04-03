@@ -41,7 +41,7 @@ robolectric            = "4.11.1"
 timber                 = "5.0.1"
 fastScroll             = "2.0.1"
 colorPicker            = "2.3.0"
-rxJava                 = "3.1.8"
+rxJava                 = "3.1.10"
 rxAndroid              = "3.0.2"
 multiType              = "4.3.0"
 
