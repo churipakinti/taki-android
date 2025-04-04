@@ -455,10 +455,10 @@ class NavigationActivity : ScopeActivity() {
         return findNavController(R.id.nav_host_fragment).navigateUp(appBarConfiguration)
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        when (intent?.action) {
+        when (intent.action) {
             Constants.INTENT_PLAY_RANDOM_SONGS -> {
                 playRandomSongs()
             }
