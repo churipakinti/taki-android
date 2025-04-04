@@ -1,13 +1,13 @@
 [versions]
 # You need to run ./gradlew wrapper after updating the version
-gradle                 = "8.11.1"
+gradle                 = "8.13"
 
 navigation             = "2.8.9"
 gradlePlugin           = "8.9.1"
 androidxcar            = "1.4.0"
 androidxcore           = "1.15.0"
 ktlint                 = "1.0.1"
-ktlintGradle           = "12.1.1"
+ktlintGradle           = "12.2.0"
 detekt                 = "1.23.8"
 preferences            = "1.2.1"
 media3                 = "1.6.0"
