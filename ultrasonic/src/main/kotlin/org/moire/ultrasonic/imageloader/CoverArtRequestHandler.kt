@@ -2,7 +2,6 @@ package org.moire.ultrasonic.imageloader
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Build
 import com.squareup.picasso.Picasso.LoadedFrom.DISK
 import com.squareup.picasso.Picasso.LoadedFrom.NETWORK
 import com.squareup.picasso.Request
@@ -85,12 +84,6 @@ class CoverArtRequestHandler(private val client: SubsonicAPIClient) : RequestHan
             BitmapFactory.decodeFile(path, opt)
 
             // Now set the remaining flags
-            @Suppress("DEPRECATION")
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                opt.inDither = true
-                opt.inPreferQualityOverSpeed = true
-            }
-
             opt.inSampleSize = Util.calculateInSampleSize(
                 opt,
                 size,

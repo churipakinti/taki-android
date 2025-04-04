@@ -10,31 +10,37 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item android:id="@+id/popup_rate_5"
+        android:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom"
         android:icon="@drawable/rating_star_5"
         android:title="@string/menu.rating_5" />
 
     <item android:id="@+id/popup_rate_4"
+        android:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom"
         android:icon="@drawable/rating_star_4"
         android:title="@string/menu.rating_4" />
 
     <item android:id="@+id/popup_rate_3"
+        android:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom"
         android:icon="@drawable/rating_star_3"
         android:title="@string/menu.rating_3" />
 
     <item android:id="@+id/popup_rate_2"
+        android:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom"
         android:icon="@drawable/rating_star_2"
         android:title="@string/menu.rating_2" />
 
     <item android:id="@+id/popup_rate_1"
+        android:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom"
         android:icon="@drawable/rating_star_1"
         android:title="@string/menu.rating_1" />
 
     <item android:id="@+id/popup_rate_0"
+        android:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom"
         android:icon="@drawable/rating_star_0"
         android:title="@string/menu.rating_no_rating" />

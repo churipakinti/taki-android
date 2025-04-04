@@ -35,6 +35,7 @@
             android:layout_alignParentEnd="false"
             android:ems="5"
             android:gravity="left"
+            android:importantForAutofill="no"
             android:inputType="numberSigned" />
 
         <Spinner

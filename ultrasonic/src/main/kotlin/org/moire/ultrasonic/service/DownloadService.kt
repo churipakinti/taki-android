@@ -12,7 +12,6 @@ import android.app.Service
 import android.content.Intent
 import android.net.wifi.WifiManager
 import android.os.Binder
-import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -509,11 +508,7 @@ class DownloadService : Service(), KoinComponent {
             try {
                 val context = UApp.applicationContext()
                 val intent = Intent(context, DownloadService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
-                }
+                context.startForegroundService(intent)
             } catch (e: IllegalStateException) {
                 Timber.w(e, "Failed to start download service: the app is in the background")
             }

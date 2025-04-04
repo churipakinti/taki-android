@@ -114,10 +114,8 @@ private fun VmPolicy.Builder.detectAllExceptSocket(): VmPolicy.Builder {
     detectLeakedClosableObjects()
     detectLeakedRegistrationObjects()
     detectFileUriExposure()
+    detectContentUriWithoutPermission()
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        detectContentUriWithoutPermission()
-    }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         detectCredentialProtectedWhileLocked()
     }

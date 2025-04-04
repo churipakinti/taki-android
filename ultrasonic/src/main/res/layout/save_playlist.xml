@@ -8,6 +8,7 @@
 
     <EditText
             a:id="@+id/save_playlist_name"
+            a:importantForAutofill="no"
             a:layout_width="fill_parent"
             a:layout_height="wrap_content"
             a:inputType="text"

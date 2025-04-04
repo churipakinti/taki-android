@@ -1,8 +1,10 @@
 package org.moire.ultrasonic.imageloader
 
 import android.net.Uri
+import android.os.Environment
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Request
+import java.io.File
 import java.io.IOException
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
@@ -16,6 +18,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIClient
 import org.moire.ultrasonic.api.subsonic.response.StreamResponse
+import org.moire.ultrasonic.util.FileUtil
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -55,6 +58,10 @@ class CoverArtRequestHandlerTest {
     @Test
     fun `Should throw IOException when request to api failed`() {
         val streamResponse = StreamResponse(null, null, 500)
+        FileUtil.cachedUltrasonicDirectory = File(
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
+        )
 
         whenever(
             mockApiClient.toStreamResponse(any())
@@ -73,6 +80,10 @@ class CoverArtRequestHandlerTest {
             loadResourceStream("Big_Buck_Bunny.jpeg"),
             apiError = null,
             responseHttpCode = 200
+        )
+        FileUtil.cachedUltrasonicDirectory = File(
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
         )
 
         whenever(

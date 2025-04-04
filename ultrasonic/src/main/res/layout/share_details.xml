@@ -27,6 +27,7 @@
 
         <EditText
             a:id="@+id/share_description"
+            a:importantForAutofill="no"
             a:layout_width="fill_parent"
             a:layout_height="50dp"
             a:layout_marginTop="4dip"

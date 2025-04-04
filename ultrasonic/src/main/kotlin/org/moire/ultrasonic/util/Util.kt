@@ -303,16 +303,14 @@ object Util {
 
     private fun isNetworkMetered(): Boolean {
         val connManager = connectivityManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val capabilities = connManager.getNetworkCapabilities(
-                connManager.activeNetwork
-            )
-            if (capabilities != null &&
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
-            ) {
-                return false
-            }
+        val capabilities = connManager.getNetworkCapabilities(
+            connManager.activeNetwork
+        )
+        if (capabilities != null &&
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        ) {
+            return false
         }
         return connManager.isActiveNetworkMetered
     }
@@ -320,21 +318,13 @@ object Util {
     @Suppress("DEPRECATION")
     private fun isNetworkCellular(): Boolean {
         val connManager = connectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val network = connManager.activeNetwork
-                ?: return false // Nothing connected
-            connManager.getNetworkInfo(network)
-                ?: return true // Better be safe than sorry
-            val capabilities = connManager.getNetworkCapabilities(network)
-                ?: return true // Better be safe than sorry
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-        } else {
-            // if the default network is a VPN,
-            // this method will return the NetworkInfo for one of its underlying networks
-            val info = connManager.activeNetworkInfo
-                ?: return false // Nothing connected
-            info.type == ConnectivityManager.TYPE_MOBILE
-        }
+        val network = connManager.activeNetwork
+            ?: return false // Nothing connected
+        connManager.getNetworkInfo(network)
+            ?: return true // Better be safe than sorry
+        val capabilities = connManager.getNetworkCapabilities(network)
+            ?: return true // Better be safe than sorry
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
     }
 
     @JvmStatic
@@ -502,20 +492,18 @@ object Util {
         importance: Int? = null,
         notificationManager: NotificationManagerCompat
     ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // The suggested importance of a startForeground service notification is IMPORTANCE_LOW
-            val channel = NotificationChannel(
-                id,
-                name,
-                importance ?: NotificationManager.IMPORTANCE_DEFAULT
-            )
+        // The suggested importance of a startForeground service notification is IMPORTANCE_LOW
+        val channel = NotificationChannel(
+            id,
+            name,
+            importance ?: NotificationManager.IMPORTANCE_DEFAULT
+        )
 
-            channel.lightColor = android.R.color.holo_blue_dark
-            channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            channel.setShowBadge(false)
+        channel.lightColor = android.R.color.holo_blue_dark
+        channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        channel.setShowBadge(false)
 
-            notificationManager.createNotificationChannel(channel)
-        }
+        notificationManager.createNotificationChannel(channel)
     }
 
     fun ensurePermissionToPostNotification(
@@ -773,10 +761,8 @@ object Util {
         val intent = Intent(context, NavigationActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // needed starting Android 12 (S = 31)
-            flags = flags or PendingIntent.FLAG_IMMUTABLE
-        }
+        // needed starting Android 12 (S = 31)
+        flags = flags or PendingIntent.FLAG_IMMUTABLE
         intent.putExtra(Constants.INTENT_SHOW_PLAYER, true)
         return PendingIntent.getActivity(context, 0, intent, flags)
     }
@@ -809,12 +795,7 @@ object Util {
     }
 
     fun Service.stopForegroundRemoveNotification() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            stopForeground(true)
-        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     fun dumpSettingsToLog() {
