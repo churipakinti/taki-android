@@ -13,7 +13,6 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.KeyEvent
@@ -218,10 +217,8 @@ open class UltrasonicAppWidgetProvider : AppWidgetProvider() {
             intent.action = Intent.ACTION_MAIN
             intent.addCategory(Intent.CATEGORY_LAUNCHER)
             var flags = PendingIntent.FLAG_UPDATE_CURRENT
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // needed starting Android 12 (S = 31)
-                flags = flags or PendingIntent.FLAG_IMMUTABLE
-            }
+            // needed starting Android 12 (S = 31)
+            flags = flags or PendingIntent.FLAG_IMMUTABLE
             var pendingIntent =
                 PendingIntent.getActivity(context, 10, intent, flags)
             views.setOnClickPendingIntent(R.id.appwidget_coverart, pendingIntent)
@@ -235,10 +232,8 @@ open class UltrasonicAppWidgetProvider : AppWidgetProvider() {
                 KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
             )
             flags = 0
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // needed starting Android 12 (S = 31)
-                flags = PendingIntent.FLAG_IMMUTABLE
-            }
+            // needed starting Android 12 (S = 31)
+            flags = PendingIntent.FLAG_IMMUTABLE
             pendingIntent = PendingIntent.getBroadcast(context, 11, intent, flags)
             views.setOnClickPendingIntent(R.id.control_play, pendingIntent)
             intent = Intent(Constants.CMD_PROCESS_KEYCODE)

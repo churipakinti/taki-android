@@ -7,7 +7,6 @@
 
 package org.moire.ultrasonic.service
 
-import android.os.Build
 import android.os.Bundle
 import androidx.annotation.OptIn
 import androidx.car.app.connection.CarConnection
@@ -268,40 +267,36 @@ class MediaLibrarySessionCallback :
     }
 
     private fun configureRepeatMode(player: Player) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Timber.d("Car app library available, observing CarConnection")
+        Timber.d("Car app library available, observing CarConnection")
 
-            val originalRepeatMode = player.repeatMode
+        val originalRepeatMode = player.repeatMode
 
-            var lastCarConnectionType = -1
+        var lastCarConnectionType = -1
 
-            CarConnection(UApp.applicationContext()).type.observeForever {
-                if (lastCarConnectionType == it) {
-                    return@observeForever
-                }
-
-                lastCarConnectionType = it
-
-                Timber.d("CarConnection type changed to %s", it)
-
-                when (it) {
-                    CarConnection.CONNECTION_TYPE_PROJECTION ->
-                        if (!customRepeatModeSet) {
-                            Timber.d("[CarConnection] Setting repeat mode to ALL")
-                            player.repeatMode = Player.REPEAT_MODE_ALL
-                            customRepeatModeSet = true
-                        }
-
-                    CarConnection.CONNECTION_TYPE_NOT_CONNECTED ->
-                        if (customRepeatModeSet) {
-                            Timber.d("[CarConnection] Resetting repeat mode")
-                            player.repeatMode = originalRepeatMode
-                            customRepeatModeSet = false
-                        }
-                }
+        CarConnection(UApp.applicationContext()).type.observeForever {
+            if (lastCarConnectionType == it) {
+                return@observeForever
             }
-        } else {
-            Timber.d("Car app library not available")
+
+            lastCarConnectionType = it
+
+            Timber.d("CarConnection type changed to %s", it)
+
+            when (it) {
+                CarConnection.CONNECTION_TYPE_PROJECTION ->
+                    if (!customRepeatModeSet) {
+                        Timber.d("[CarConnection] Setting repeat mode to ALL")
+                        player.repeatMode = Player.REPEAT_MODE_ALL
+                        customRepeatModeSet = true
+                    }
+
+                CarConnection.CONNECTION_TYPE_NOT_CONNECTED ->
+                    if (customRepeatModeSet) {
+                        Timber.d("[CarConnection] Resetting repeat mode")
+                        player.repeatMode = originalRepeatMode
+                        customRepeatModeSet = false
+                    }
+            }
         }
     }
 

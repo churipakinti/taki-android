@@ -227,7 +227,7 @@ class NavigationActivity : ScopeActivity() {
 
         // Setup app shortcuts on supported devices, but not on first start, when the server
         // is not configured yet.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && !UApp.instance!!.isFirstRun) {
+        if (!UApp.instance!!.isFirstRun) {
             ShortcutUtil.registerShortcuts(this)
         }
 

@@ -11,7 +11,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.DocumentsContract
 import androidx.activity.result.contract.ActivityResultContract
 import org.moire.ultrasonic.fragment.SettingsFragment
@@ -19,7 +18,7 @@ import org.moire.ultrasonic.fragment.SettingsFragment
 class SelectCacheActivityContract : ActivityResultContract<String?, Uri?>() {
     override fun createIntent(context: Context, input: String?): Intent {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        if (Settings.cacheLocationUri != "" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Settings.cacheLocationUri != "") {
             intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, input)
         }
         intent.addFlags(SettingsFragment.RW_FLAG)

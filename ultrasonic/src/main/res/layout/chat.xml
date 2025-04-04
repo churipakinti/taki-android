@@ -32,6 +32,7 @@
         a:gravity="bottom" >
         <EditText
             a:id="@+id/chat_edittext"
+            a:importantForAutofill="no"
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_weight="1"

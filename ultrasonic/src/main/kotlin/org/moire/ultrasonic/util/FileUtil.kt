@@ -8,8 +8,6 @@
 package org.moire.ultrasonic.util
 
 import android.content.Context
-import android.os.Build
-import android.os.Environment
 import android.text.TextUtils
 import android.util.Pair
 import java.io.BufferedWriter
@@ -259,16 +257,7 @@ object FileUtil {
         get() {
             // Return cached if possible
             if (cachedUltrasonicDirectory != null) return cachedUltrasonicDirectory!!
-
-            @Suppress("DEPRECATION")
-            cachedUltrasonicDirectory = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                File(
-                    Environment.getExternalStorageDirectory(),
-                    "Android/data/org.moire.ultrasonic"
-                )
-            } else {
-                UApp.applicationContext().getExternalFilesDir(null)!!
-            }
+            cachedUltrasonicDirectory = UApp.applicationContext().getExternalFilesDir(null)!!
 
             return cachedUltrasonicDirectory!!
         }
