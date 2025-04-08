@@ -450,4 +450,10 @@
     <string name="menu.share">Compartir</string>
     <string name="download.menu_show_artist">Ir a Artista</string>
     <string name="albumArt">Imaxes do Álbum</string>
+    <string name="menu.rating_4">4 Estrelas</string>
+    <string name="menu.rating_5">5 Estrelas</string>
+    <string name="menu.rating_no_rating">Sen valoración</string>
+    <string name="menu.rating_1">1 Estrela</string>
+    <string name="menu.rating_2">2 Estrelas</string>
+    <string name="menu.rating_3">3 Estrelas</string>
 </resources>
