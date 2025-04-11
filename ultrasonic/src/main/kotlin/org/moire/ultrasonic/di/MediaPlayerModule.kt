@@ -1,7 +1,6 @@
 package org.moire.ultrasonic.di
 
 import org.koin.dsl.module
-import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.service.ExternalStorageMonitor
 import org.moire.ultrasonic.service.MediaPlayerLifecycleSupport
 import org.moire.ultrasonic.service.MediaPlayerManager
@@ -20,8 +19,7 @@ val mediaPlayerModule = module {
     single { NetworkAndStorageChecker() }
     single { ShareHandler() }
 
-    scope<NavigationActivity> {
-        scoped { MediaPlayerManager(get(), get()) }
-        scoped { MediaPlayerLifecycleSupport(get(), get(), get(), get()) }
-    }
+    // These MUST be singletons, for the media playback must work headless (without an activity)
+    single { MediaPlayerManager(get(), get()) }
+    single { MediaPlayerLifecycleSupport(get(), get(), get(), get()) }
 }
