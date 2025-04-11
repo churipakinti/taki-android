@@ -34,10 +34,10 @@ android {
                     'minify/proguard-kotlin.pro'
         }
         debug {
-            minifyEnabled false
-            multiDexEnabled true
-            testCoverageEnabled true
-            applicationIdSuffix '.debug'
+            minifyEnabled = false
+            multiDexEnabled = true
+            testCoverageEnabled = true
+            applicationIdSuffix = '.debug'
         }
     }
 
@@ -57,9 +57,9 @@ android {
     }
 
     buildFeatures {
-        viewBinding true
-        dataBinding true
-        buildConfig true
+        viewBinding = true
+        dataBinding = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -73,8 +73,8 @@ android {
 
     lint {
         baseline = file("lint-baseline.xml")
-        abortOnError true
-        warningsAsErrors true
+        abortOnError = true
+        warningsAsErrors = true
         warning 'ImpliedQuantity'
         disable 'IconMissingDensityFolder', 'VectorPath'
         disable 'MissingTranslation', 'UnusedQuantity', 'MissingQuantity'
@@ -82,10 +82,10 @@ android {
         // We manage dependencies on Gitlab with RenovateBot
         disable 'GradleDependency'
         disable 'AndroidGradlePluginVersion'
-        textReport true
-        checkDependencies true
+        textReport = true
+        checkDependencies = true
     }
-    namespace 'org.moire.ultrasonic'
+    namespace = 'org.moire.ultrasonic'
 
 }
 

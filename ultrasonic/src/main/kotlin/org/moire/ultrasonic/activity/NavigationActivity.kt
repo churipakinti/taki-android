@@ -13,7 +13,6 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.media.AudioManager
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.SearchRecentSuggestions
@@ -96,6 +95,7 @@ class NavigationActivity : ScopeActivity() {
     private var drawerLayout: DrawerLayout? = null
     private var host: NavHostFragment? = null
     private var selectServerButton: MaterialButton? = null
+    private var selectServerDropdownImage: ImageView? = null
     private var headerBackgroundImage: ImageView? = null
 
     // We store the last search string in this variable.
@@ -165,7 +165,7 @@ class NavigationActivity : ScopeActivity() {
             drawerLayout
         )
 
-        setupActionBar(navController, appBarConfiguration)
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
         setupNavigationMenu(navController)
 
@@ -333,9 +333,6 @@ class NavigationActivity : ScopeActivity() {
     }
 
     private fun updateNavigationHeaderForServer() {
-        // Only show the vector graphic on Android 11 or earlier
-        val showVectorBackground = (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
-
         val activeServer = activeServerProvider.getActiveServer()
 
         if (cachedServerCount == 0) {
@@ -345,7 +342,7 @@ class NavigationActivity : ScopeActivity() {
         }
 
         val foregroundColor =
-            ServerColor.getForegroundColor(this, activeServer.color, showVectorBackground)
+            ServerColor.getForegroundColor(this, activeServer.color)
         val backgroundColor =
             ServerColor.getBackgroundColor(this, activeServer.color)
 
@@ -359,12 +356,8 @@ class NavigationActivity : ScopeActivity() {
 
         selectServerButton?.iconTint = ColorStateList.valueOf(foregroundColor)
         selectServerButton?.setTextColor(foregroundColor)
+        selectServerDropdownImage?.imageTintList = ColorStateList.valueOf(foregroundColor)
         headerBackgroundImage?.setBackgroundColor(backgroundColor)
-
-        // Hide the vector graphic on Android 12 or later
-        if (!showVectorBackground) {
-            headerBackgroundImage?.setImageDrawable(null)
-        }
     }
 
     private fun setupNavigationMenu(navController: NavController) {
@@ -409,7 +402,7 @@ class NavigationActivity : ScopeActivity() {
 
         selectServerButton =
             navigationView?.getHeaderView(0)?.findViewById(R.id.header_select_server)
-        val dropDownButton: ImageView? =
+        selectServerDropdownImage =
             navigationView?.getHeaderView(0)?.findViewById(R.id.edit_server_button)
 
         val onClick: (View) -> Unit = {
@@ -420,14 +413,10 @@ class NavigationActivity : ScopeActivity() {
         }
 
         selectServerButton?.setOnClickListener(onClick)
-        dropDownButton?.setOnClickListener(onClick)
+        selectServerDropdownImage?.setOnClickListener(onClick)
 
         headerBackgroundImage =
             navigationView?.getHeaderView(0)?.findViewById(R.id.img_header_bg)
-    }
-
-    private fun setupActionBar(navController: NavController, appBarConfig: AppBarConfiguration) {
-        setupActionBarWithNavController(navController, appBarConfig)
     }
 
     private val closeNavigationDrawerOnBack = object : OnBackPressedCallback(true) {
@@ -446,13 +435,21 @@ class NavigationActivity : ScopeActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Skip android.R.id.home so the drawer button doesn't get wrongly routed
+        if (item.itemId == android.R.id.home) {
+            return super.onOptionsItemSelected(item)
+        }
         return item.onNavDestinationSelected(findNavController(R.id.nav_host_fragment)) ||
             super.onOptionsItemSelected(item)
     }
 
-    // TODO: Why is this needed? Shouldn't it just work by default?
     override fun onSupportNavigateUp(): Boolean {
-        return findNavController(R.id.nav_host_fragment).navigateUp(appBarConfiguration)
+        // This override is required by design when using setupActionBarWithNavController()
+        // with an AppBarConfiguration. It ensures that the Up button behavior is correctly
+        // delegated — either navigating "up" in the back stack, or opening the drawer if
+        // we're at a top-level destination.
+        return findNavController(R.id.nav_host_fragment).navigateUp(appBarConfiguration) ||
+            super.onSupportNavigateUp()
     }
 
     override fun onNewIntent(intent: Intent) {

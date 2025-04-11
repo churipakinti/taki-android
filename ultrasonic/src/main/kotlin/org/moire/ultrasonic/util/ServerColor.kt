@@ -14,7 +14,6 @@ import androidx.core.graphics.ColorUtils
 import com.google.android.material.color.MaterialColors
 
 private const val LUMINANCE_LIMIT = 0.5
-private const val LUMINANCE_CORRECTION = -0.25
 
 /**
  * Contains functions for computing server display colors
@@ -31,17 +30,9 @@ object ServerColor {
     }
 
     @ColorInt
-    fun getForegroundColor(
-        context: Context,
-        serverColor: Int?,
-        showVectorBackground: Boolean = false
-    ): Int {
+    fun getForegroundColor(context: Context, serverColor: Int?): Int {
         val backgroundColor = getBackgroundColor(context, serverColor)
-        var luminance = ColorUtils.calculateLuminance(backgroundColor)
-
-        // The actual luminance is a good bit lower
-        // when the background color is being overlayed by the vector
-        if (showVectorBackground) luminance += LUMINANCE_CORRECTION
+        val luminance = ColorUtils.calculateLuminance(backgroundColor)
 
         return if (luminance < LUMINANCE_LIMIT) {
             ContextCompat.getColor(context, org.moire.ultrasonic.R.color.selected_menu_dark)
