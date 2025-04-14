@@ -312,11 +312,11 @@ class DownloadService : Service(), KoinComponent {
 
                 completeFile?.let {
                     postState(track, DownloadState.DONE)
-                    false
+                    return@filter false
                 }
                 pinnedFile?.let {
                     postState(track, DownloadState.PINNED)
-                    false
+                    return@filter false
                 }
                 true
             }

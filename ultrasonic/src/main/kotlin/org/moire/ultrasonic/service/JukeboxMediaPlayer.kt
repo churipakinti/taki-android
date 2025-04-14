@@ -725,7 +725,7 @@ class JukeboxMediaPlayer : JukeboxUnimplementedFunctions(), Player {
     }
 
     override fun getTrackSelectionParameters(): TrackSelectionParameters {
-        return TrackSelectionParameters.DEFAULT_WITHOUT_CONTEXT
+        return TrackSelectionParameters.DEFAULT
     }
 
     override fun getMaxSeekToPreviousPosition(): Long {

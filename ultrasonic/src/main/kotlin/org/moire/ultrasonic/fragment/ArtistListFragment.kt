@@ -17,7 +17,6 @@ import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.ArtistRowBinder
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
-import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.model.ArtistListModel
@@ -70,7 +69,7 @@ class ArtistListFragment : EntryListFragment<ArtistOrIndex>() {
                 id = item.id,
                 name = item.name,
                 parentId = item.id,
-                isArtist = (item is Artist)
+                isArtist = false
             )
         } else {
             NavigationGraphDirections.toAlbumList(

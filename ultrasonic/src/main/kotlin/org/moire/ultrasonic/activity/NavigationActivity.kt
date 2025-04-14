@@ -435,12 +435,15 @@ class NavigationActivity : ScopeActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Skip android.R.id.home so the drawer button doesn't get wrongly routed
-        if (item.itemId == android.R.id.home) {
-            return super.onOptionsItemSelected(item)
-        }
-        return item.onNavDestinationSelected(findNavController(R.id.nav_host_fragment)) ||
+        val navController = findNavController(R.id.nav_host_fragment)
+        // Check if this item ID exists in the nav graph
+        val destinationExists = navController.graph.findNode(item.itemId) != null
+        return if (destinationExists) {
+            item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
+        } else {
+            // Let the fragments handle their own menu items
             super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

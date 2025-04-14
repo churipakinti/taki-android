@@ -19,6 +19,7 @@ import androidx.media3.common.C
 import androidx.media3.common.C.USAGE_MEDIA
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.ResolvingDataSource
@@ -289,6 +290,11 @@ class PlaybackService :
 
     private val listener: Player.Listener = object : Player.Listener {
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+            cacheNextSongs()
+        }
+
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            // Handles playlist changes, e.g. when tracks are reordered or deleted
             cacheNextSongs()
         }
 
