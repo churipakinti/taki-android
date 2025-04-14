@@ -83,6 +83,31 @@ class TrackViewHolder(val view: View) :
     fun setSong(song: Track, checkable: Boolean, draggable: Boolean, isSelected: Boolean = false) {
         entry = song
 
+        // Create new Disposable for the new Subscriptions
+        rxBusSubscription = CompositeDisposable()
+        rxBusSubscription!! += RxBus.playerStateObservable.subscribe {
+            setPlayIcon(it.track?.id == song.id && it.index == bindingAdapterPosition)
+        }
+
+        rxBusSubscription!! += RxBus.trackDownloadStateObservable.subscribe {
+            if (it.id != song.id) return@subscribe
+            updateStatus(it.state, it.progress)
+        }
+
+        // Listen for rating updates
+        rxBusSubscription!! += RxBus.ratingPublishedObservable.subscribe {
+            launch(Dispatchers.Main) {
+                // Ignore updates which are not for the current song
+                if (it.id != song.id) return@launch
+
+                if (it.rating is HeartRating) {
+                    updateRatingDisplay(song.userRating, it.rating.isHeart)
+                } else if (it.rating is StarRating) {
+                    updateRatingDisplay(it.rating.starRating.toInt(), song.starred)
+                }
+            }
+        }
+
         val entryDescription = Util.readableEntryDescription(song)
 
         artist.text = entryDescription.artist
@@ -120,31 +145,6 @@ class TrackViewHolder(val view: View) :
         if (song.isVideo) {
             artist.isGone = true
             progressIndicator.isGone = true
-        }
-
-        // Create new Disposable for the new Subscriptions
-        rxBusSubscription = CompositeDisposable()
-        rxBusSubscription!! += RxBus.playerStateObservable.subscribe {
-            setPlayIcon(it.track?.id == song.id && it.index == bindingAdapterPosition)
-        }
-
-        rxBusSubscription!! += RxBus.trackDownloadStateObservable.subscribe {
-            if (it.id != song.id) return@subscribe
-            updateStatus(it.state, it.progress)
-        }
-
-        // Listen for rating updates
-        rxBusSubscription!! += RxBus.ratingPublishedObservable.subscribe {
-            launch(Dispatchers.Main) {
-                // Ignore updates which are not for the current song
-                if (it.id != song.id) return@launch
-
-                if (it.rating is HeartRating) {
-                    updateRatingDisplay(song.userRating, it.rating.isHeart)
-                } else if (it.rating is StarRating) {
-                    updateRatingDisplay(it.rating.starRating.toInt(), song.starred)
-                }
-            }
         }
     }
 

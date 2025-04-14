@@ -740,7 +740,7 @@ object Util {
         timeline: Timeline?,
         isShuffled: Boolean,
         firstIndex: Int? = null,
-        count: Int? = null
+        count: Int = Int.MAX_VALUE
     ): List<MediaItem> {
         if (timeline == null) return emptyList()
         if (timeline.windowCount < 1) return emptyList()
@@ -749,7 +749,7 @@ object Util {
         var i = firstIndex ?: timeline.getFirstWindowIndex(isShuffled)
         if (i == C.INDEX_UNSET) return emptyList()
 
-        while (i != C.INDEX_UNSET && (count != playlist.count())) {
+        while (i != C.INDEX_UNSET && (count >= playlist.count())) {
             val window = timeline.getWindow(i, Timeline.Window())
             playlist.add(window.mediaItem)
             i = timeline.getNextWindowIndex(i, Player.REPEAT_MODE_OFF, isShuffled)

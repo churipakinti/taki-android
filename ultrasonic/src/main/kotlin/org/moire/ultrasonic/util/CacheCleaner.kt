@@ -192,6 +192,7 @@ class CacheCleaner : CoroutineScope by CoroutineScope(Dispatchers.IO), KoinCompo
             val files: MutableList<AbstractFile> = ArrayList()
             val dirs: MutableList<AbstractFile> = ArrayList()
 
+            Timber.i("CacheCleaner backgroundSpaceCleanup running...")
             findCandidatesForDeletion(musicDirectory, files, dirs)
 
             val bytesToDelete = getMinimumDelete(files)
@@ -235,7 +236,8 @@ class CacheCleaner : CoroutineScope by CoroutineScope(Dispatchers.IO), KoinCompo
         val filesToNotDelete: MutableSet<String> = HashSet(5)
 
         // We just take the last published playlist from RX
-        val playlist = RxBus.playlistObservable.blockingLast()
+        val playlist = RxBus.playlistObservable.firstElement().blockingGet()
+            ?: return filesToNotDelete
         for (track in playlist) {
             filesToNotDelete.add(track.getPartialFile())
             filesToNotDelete.add(track.getCompleteFile())

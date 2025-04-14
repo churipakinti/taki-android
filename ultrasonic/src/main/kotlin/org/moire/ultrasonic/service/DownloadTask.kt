@@ -23,6 +23,7 @@ import org.moire.ultrasonic.data.MetaDatabase
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.Track
+import org.moire.ultrasonic.service.DownloadState.Companion.isFinalState
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.FileUtil.copyWithProgress
@@ -48,11 +49,17 @@ class DownloadTask(
     private var inputStream: InputStream? = null
     private var outputStream: OutputStream? = null
     private var lastPostTime: Long = 0
+    private var state: DownloadState = DownloadState.UNKNOWN
+
+    private fun setState(state: DownloadState, progress: Int?) {
+        this.state = state
+        stateChangedCallback(downloadTrack, state, progress)
+    }
 
     private fun checkIfExists(): Boolean {
         if (Storage.isPathExists(downloadTrack.pinnedFile)) {
             Timber.i("%s already exists. Skipping.", downloadTrack.pinnedFile)
-            stateChangedCallback(downloadTrack, DownloadState.PINNED, null)
+            setState(DownloadState.PINNED, null)
             return true
         }
 
@@ -77,7 +84,7 @@ class DownloadTask(
             } catch (ignore: Exception) {
                 Timber.w(ignore)
             }
-            stateChangedCallback(downloadTrack, newStatus, null)
+            setState(newStatus, null)
             return true
         }
 
@@ -85,7 +92,7 @@ class DownloadTask(
     }
 
     fun download() {
-        stateChangedCallback(downloadTrack, DownloadState.DOWNLOADING, null)
+        setState(DownloadState.DOWNLOADING, null)
 
         val fileLength = Storage.getFromPath(downloadTrack.partialFile)?.length ?: 0
 
@@ -136,11 +143,7 @@ class DownloadTask(
                 (totalBytesCopied * 100 / (size)).toInt()
             }
 
-            stateChangedCallback(
-                downloadTrack,
-                DownloadState.DOWNLOADING,
-                progress
-            )
+            setState(DownloadState.DOWNLOADING, progress)
         }
     }
 
@@ -157,7 +160,7 @@ class DownloadTask(
                 downloadTrack.pinnedFile
             )
             Timber.i("Renamed file to ${downloadTrack.pinnedFile}")
-            stateChangedCallback(downloadTrack, DownloadState.PINNED, null)
+            setState(DownloadState.PINNED, null)
             Util.scanMedia(downloadTrack.pinnedFile)
         } else {
             Storage.rename(
@@ -165,20 +168,22 @@ class DownloadTask(
                 downloadTrack.completeFile
             )
             Timber.i("Renamed file to ${downloadTrack.completeFile}")
-            stateChangedCallback(downloadTrack, DownloadState.DONE, null)
+            setState(DownloadState.DONE, null)
         }
     }
 
     private fun onCompletion(e: Throwable?) {
         if (e is CancellationException) {
-            Timber.w(e, "CompletionHandler ${downloadTrack.pinnedFile}")
-            stateChangedCallback(downloadTrack, DownloadState.CANCELLED, null)
+            if (!state.isFinalState()) {
+                Timber.w(e, "CompletionHandler ${downloadTrack.pinnedFile}")
+                setState(DownloadState.CANCELLED, null)
+            }
         } else if (e != null) {
             Timber.w(e, "CompletionHandler ${downloadTrack.pinnedFile}")
             if (downloadTrack.tryCount < MAX_RETRIES) {
-                stateChangedCallback(downloadTrack, DownloadState.RETRYING, null)
+                setState(DownloadState.RETRYING, null)
             } else {
-                stateChangedCallback(downloadTrack, DownloadState.FAILED, null)
+                setState(DownloadState.FAILED, null)
             }
         }
         inputStream.safeClose()
