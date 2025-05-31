@@ -66,7 +66,7 @@
     <string name="download.menu_save">Wiedergabeliste speichern</string>
     <string name="download.menu_screen_off">Bildschirm aus</string>
     <string name="download.menu_screen_on">Bildschirm an</string>
-    <string name="download.menu_show_album">Album anzeigen</string>
+    <string name="download.menu_show_album">Zum Album gehen</string>
     <string name="download.menu_shuffle">Mischen</string>
     <string name="download.menu_shuffle_on">Zufalls-Modus aktiviert</string>
     <string name="download.menu_shuffle_off">Zufalls-Modus deaktiviert</string>
@@ -228,7 +228,7 @@
     <string name="settings.max_bitrate_unlimited">Unbegrenzt</string>
     <string name="settings.max_bitrate_wifi">Max. Bitrate - WLAN</string>
     <string name="settings.max_songs">Max. Anzahl der Titel</string>
-    <string name="settings.network_timeout">Netzwerk Zeitüberschreitung</string>
+    <string name="settings.network_timeout">Netzwerk-Zeitüberschreitung</string>
     <string name="settings.network_timeout_105000">105 Sekunden</string>
     <string name="settings.network_timeout_120000">120 Sekunden</string>
     <string name="settings.network_timeout_15000">15 Sekunden</string>
@@ -444,4 +444,11 @@
         <item quantity="one">Ein Titel wurde zur Wiedergabeliste hinzugefügt</item>
         <item quantity="other">%d Titel wurden zur Wiedergabeliste hinzugefügt</item>
     </plurals>
+    <string name="menu.rating_no_rating">Keine Bewertung</string>
+    <string name="menu.rating_1">1 Stern</string>
+    <string name="menu.rating_2">2 Sterne</string>
+    <string name="menu.rating_3">3 Sterne</string>
+    <string name="menu.rating_4">4 Sterne</string>
+    <string name="menu.rating_5">5 Sterne</string>
+    <string name="settings.share_options">Optionen</string>
 </resources>
