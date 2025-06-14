@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="background_task.network_error">Se ha producido un error de red. Compruebe la dirección del servidor o reinténtelo más tarde.</string>
+    <string name="background_task.network_error">Se ha producido un error de red. Por favor comprueba la dirección del servidor o reinténtalo mas tarde.</string>
     <string name="background_task.unsupported_api">La API del servidor v%1$s no admite esta función.</string>
-    <string name="background_task.no_network">Este programa requiere acceso a la red. Encienda la red wifi o los datos móviles.</string>
-    <string name="background_task.not_found">Recurso no encontrado. Compruebe la dirección del servidor.</string>
-    <string name="background_task.parse_error">No se entiende la respuesta. Compruebe la dirección del servidor.</string>
+    <string name="background_task.no_network">Este programa requiere acceso a la red. Por favor activa la red wifi o móvil.</string>
+    <string name="background_task.not_found">Recurso no encontrado. Por favor comprueba la dirección del servidor.</string>
+    <string name="background_task.parse_error">No se entiende la respuesta. Por favor comprueba la dirección del servidor.</string>
     <string name="background_task.ssl_cert_error">Error del certificado HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Excepción de conexión SSL. Compruebe el certificado del servidor.</string>
     <string name="button_bar.bookmarks">Marcadores</string>
-    <string name="button_bar.browse">Mediateca</string>
+    <string name="button_bar.browse">Biblioteca</string>
     <string name="button_bar.chat">Chat</string>
     <string name="button_bar.now_playing">Reproduciendo ahora</string>
     <string name="buttons.play">Reproducir</string>
@@ -47,10 +47,10 @@
     <string name="common.select_all">Seleccionar todo</string>
     <string name="common.title">Título</string>
     <string name="common.unpin">Desanclar</string>
-    <string name="common.delete_selection_confirmation">¿Realmente quiere eliminar la selección actual?</string>
-    <string name="common.unpin_selection_confirmation">¿Realmente quiere desanclar la selección actual?</string>
+    <string name="common.delete_selection_confirmation">¿Realmente quieres eliminar la selección actual?</string>
+    <string name="common.unpin_selection_confirmation">¿Realmente quieres desanclar la selección actual?</string>
     <string name="common.various_artists">Varios artistas</string>
-    <string name="delete_playlist">¿Quiere eliminar %1$s</string>
+    <string name="delete_playlist">Quieres eliminar %1$s</string>
     <string name="download.bookmark_removed" formatted="false">Marcador eliminado.</string>
     <string name="download.bookmark_set_at_position" formatted="false">Marcador añadido a %s.</string>
     <string name="download.empty">No se está descargando nada</string>
@@ -366,7 +366,7 @@
     <string name="notification.downloading_title">Descargando medios en segundo plano…</string>
     <string name="notification.permission_required">Las notificaciones son necesarias para la reproducción de medios. Puedes conceder el permiso en cualquier momento en los ajustes de Android.</string>
     <string name="server_selector.label">Servidores configurados</string>
-    <string name="server_selector.delete_confirmation">¿Confirma que quiere eliminar el servidor?</string>
+    <string name="server_selector.delete_confirmation">¿Confirmas que quieres eliminar el servidor?</string>
     <string name="server_editor.label">Editando servidor</string>
     <string name="server_editor.new_label">Añadir servidor</string>
     <string name="server_editor.leave_confirmation">¿Confirma que quiere abandonar y perder sus cambios?</string>
