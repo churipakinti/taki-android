@@ -36,8 +36,9 @@ android {
         debug {
             minifyEnabled = false
             multiDexEnabled = true
-            testCoverageEnabled = true
             applicationIdSuffix = '.debug'
+            enableUnitTestCoverage true
+            enableAndroidTestCoverage true
         }
     }
 
