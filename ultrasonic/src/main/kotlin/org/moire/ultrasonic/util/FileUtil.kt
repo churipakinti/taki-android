@@ -38,8 +38,8 @@ import timber.log.Timber
 @Suppress("TooManyFunctions")
 object FileUtil {
 
-    private val FILE_SYSTEM_UNSAFE = arrayOf("/", "\\", "..", ":", "\"", "?", "*", "<", ">", "|")
-    private val FILE_SYSTEM_UNSAFE_DIR = arrayOf("\\", "..", ":", "\"", "?", "*", "<", ">", "|")
+    private val FILE_SYSTEM_UNSAFE = charArrayOf('/', '\\', ':', '"', '?', '*', '<', '>', '|')
+    private val FILE_SYSTEM_UNSAFE_DIR = charArrayOf('\\', ':', '"', '?', '*', '<', '>', '|')
     private val MUSIC_FILE_EXTENSIONS =
         listOf("mp3", "ogg", "aac", "flac", "m4a", "wav", "wma", "opus")
     private val VIDEO_FILE_EXTENSIONS =
@@ -310,15 +310,12 @@ object FileUtil {
      * @return The filename with special characters replaced by hyphens.
      */
     private fun fileSystemSafe(name: String?): String {
-        if (name == null || name.trim { it <= ' ' }.isEmpty()) {
+        val filename = name?.trim { it <= ' ' }
+        if (filename.isNullOrEmpty()) {
             return UNNAMED
         }
-        var filename: String = name
 
-        for (s in FILE_SYSTEM_UNSAFE) {
-            filename = filename.replace(s, "-")
-        }
-        return filename
+        return createSafe(filename, FILE_SYSTEM_UNSAFE)
     }
 
     /**
@@ -329,14 +326,39 @@ object FileUtil {
      * @return The the directory name with special characters replaced by hyphens.
      */
     private fun fileSystemSafeDir(path: String?): String {
-        var filepath = path
-        if (filepath == null || filepath.trim { it <= ' ' }.isEmpty()) {
+        val filepath = path?.trim { it <= ' ' }
+        if (filepath.isNullOrEmpty()) {
             return ""
         }
-        for (s in FILE_SYSTEM_UNSAFE_DIR) {
-            filepath = filepath!!.replace(s, "-")
+
+        return createSafe(filepath, FILE_SYSTEM_UNSAFE_DIR)
+    }
+
+    private fun createSafe(value: String, unsafeChars: CharArray): String = buildString {
+        var skipNext = false
+        for ((i, c) in value.withIndex()) {
+            if (skipNext) {
+                skipNext = false
+                continue
+            }
+
+            if (c == '.') {
+                if (i == value.length - 1) {
+                    append('-')
+                } else if (value[i + 1] == '/') {
+                    append('-')
+                } else if (value[i + 1] == '.') {
+                    skipNext = true
+                    append('-')
+                } else {
+                    append(c)
+                }
+            } else if (c in unsafeChars) {
+                append('-')
+            } else {
+                append(c)
+            }
         }
-        return filepath!!
     }
 
     /**
