@@ -66,11 +66,11 @@
     <string name="download.menu_save">Enregistrer la liste de lecture</string>
     <string name="download.menu_screen_off">Désactiver l\'écran</string>
     <string name="download.menu_screen_on">Sur l\'écran</string>
-    <string name="download.menu_show_album">Afficher l\'album</string>
+    <string name="download.menu_show_album">Aller à l\'album</string>
     <string name="download.menu_shuffle">Aléatoire</string>
     <string name="download.playerstate_loading">Mise en mémoire tampon…</string>
     <string name="download.playerstate_playing_shuffle">En lecture aléatoire</string>
-    <string name="download.playlist_done">La liste de lecture a bien été enregistrée.</string>
+    <string name="download.playlist_done">La liste de lecture a été enregistrée.</string>
     <string name="download.playlist_error">L\'enregistrement de la liste de lecture a échoué, veuillez réessayer plus tard.</string>
     <string name="download.playlist_name">Entrez le nom de la liste de lecture :</string>
     <string name="download.playlist_saving">Enregistrement de la liste de lecture « %s »…</string>
@@ -337,7 +337,7 @@
     <string name="share_default_greeting">Écoutez donc cette musique que j\'ai partagée depuis %s</string>
     <string name="share_via">Partager des titres via</string>
     <string name="menu.share">Partager</string>
-    <string name="download.menu_show_artist">Afficher l\'artiste</string>
+    <string name="download.menu_show_artist">Aller à l\'artiste</string>
     <string name="common_multiple_years">Années multiples</string>
     <string name="settings.debug.title">Paramètres de debug</string>
     <string name="settings.debug.log_to_file">Enregistrer les logs de debug dans des fichiers</string>
@@ -370,7 +370,7 @@
         <item quantity="other">%d titres</item>
     </plurals>
     <!-- Subsonic api errors -->
-    <string name="api.subsonic.generic">Erreur de l\'API générique : %1$s</string>
+    <string name="api.subsonic.generic">Erreur de l\'API générique : %1$s</string>
     <string name="api.subsonic.generic.no.message">aucun message donné par le serveur</string>
     <string name="api.subsonic.token_auth_not_supported_for_ldap">L\'authentification par jeton n\'est pas prise en charge pour les utilisateurs LDAP.</string>
     <string name="api.subsonic.not_authenticated">Mauvais nom d\'utilisateur ou mot de passe.</string>
@@ -407,7 +407,7 @@
     <string name="settings.use_id3_offline_summary">Si vous activez ce paramètre, il n\'affichera que la musique que vous avez téléchargée avec Ultrasonic 4.0 ou une version ultérieure. Les téléchargements antérieurs n\'ont pas les métadonnées nécessaires téléchargées. Vous pouvez basculer entre le mode Épingler et le mode Enregistrer pour déclencher le téléchargement des métadonnées manquantes.</string>
     <string name="settings.show_confirmation_dialog">Afficher le dialogue de confirmation</string>
     <string name="notification.permission_required">Les notifications sont nécessaires pour la lecture des médias. Vous pouvez accorder cette autorisation à tout moment dans les paramètres Android.</string>
-    <string name="settings.use_hw_offload_description">Essayez de lire le média à l\'aide de la puce de décodage média de votre téléphone. Ceci peut améliorer l\'utilisation de la batterie.</string>
+    <string name="settings.use_hw_offload_description">Essayez de lire le média à l\'aide de la puce de décodage média de votre téléphone. Ceci peut augmenter l\'utilisation de la batterie. Certains utilisateurs signalent des problèmes de lecture lorsqu\'ils activent cette option !</string>
     <string name="supported_server_features">Fonctionnalités prises en charge</string>
     <string name="settings.use_hw_offload_title">Utiliser la lecture matérielle (expérimental)</string>
     <string name="jukebox">Jukebox</string>
@@ -439,4 +439,21 @@
         <item quantity="many">%d chansons sélectionnées à épingler</item>
         <item quantity="other">%d chansons sélectionnées à épingler</item>
     </plurals>
+    <string name="menu.rating_no_rating">Aucune évaluation</string>
+    <string name="menu.rating_1">1 Étoile</string>
+    <string name="menu.rating_2">2 Étoiles</string>
+    <string name="menu.rating_3">3 Étoiles</string>
+    <string name="menu.rating_4">4 Étoiles</string>
+    <string name="menu.rating_5">5 Étoiles</string>
+    <string name="settings.max_bitrate_pinning">Débit binaire maximal - Lors de l\'épinglage permanent d\'une chanson</string>
+    <string name="settings.share_options">Options</string>
+    <plurals name="n_songs_added_play_now">
+        <item quantity="one">%d chanson ajoutée à la file de jeu</item>
+        <item quantity="many">%d chansons ajoutées à la file de jeu</item>
+        <item quantity="other">%d chansons ajoutées à la file de jeu</item>
+    </plurals>
+    <string name="foreground_exception_title">La lecture ne peut pas être reprise</string>
+    <string name="foreground_exception_text">Appuyez sur le bouton de lecture de la notification multimédia s\'il est toujours présent, sinon veuillez ouvrir l\'application pour démarrer la lecture et reconnecter la session au contrôleur</string>
+    <string name="shortcut_play_random_songs_short">Chansons aléatoires</string>
+    <string name="shortcut_play_random_songs_long">Jouer des chansons au hasard</string>
 </resources>
