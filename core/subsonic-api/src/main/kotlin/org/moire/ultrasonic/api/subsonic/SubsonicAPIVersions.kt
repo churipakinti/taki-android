@@ -85,7 +85,7 @@ enum class SubsonicAPIVersions(val subsonicVersions: String, val restApiVersion:
                 p: JsonParser,
                 ctxt: DeserializationContext?
             ): SubsonicAPIVersions {
-                if (p.currentName != "version") {
+                if (p.currentName() != "version") {
                     throw JsonParseException(p, "Not valid token for API version!")
                 }
                 return getClosestKnownClientApiVersion(p.text)

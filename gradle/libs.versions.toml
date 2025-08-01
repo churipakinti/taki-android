@@ -2,7 +2,7 @@
 # You need to run ./gradlew wrapper after updating the version
 gradle                 = "8.14.2"
 
-navigation             = "2.8.9"
+navigation             = "2.9.0"
 gradlePlugin           = "8.12.0"
 androidxcar            = "1.4.0"
 androidxcore           = "1.16.0"
@@ -10,7 +10,7 @@ ktlint                 = "1.0.1"
 ktlintGradle           = "12.3.0"
 detekt                 = "1.23.8"
 preferences            = "1.2.1"
-media3                 = "1.6.1"
+media3                 = "1.8.0"
 
 androidSupport         = "1.9.1"
 materialDesign         = "1.12.0"
@@ -21,7 +21,7 @@ room                   = "2.7.0"
 kotlin                 = "2.1.21"
 ksp                    = "2.1.21-2.0.1"
 kotlinxCoroutines      = "1.10.2"
-viewModelKtx           = "2.8.7"
+viewModelKtx           = "2.9.0"
 swipeRefresh           = "1.1.0"
 
 retrofit               = "3.0.0"
