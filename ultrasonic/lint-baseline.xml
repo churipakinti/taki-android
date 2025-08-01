@@ -2,6 +2,14 @@
 <issues format="6" by="lint 8.0.1" type="baseline" client="gradle" dependencies="true" name="AGP (8.0.1)" variant="all" version="8.0.1">
 
     <issue
+        id="NewerVersionAvailable"
+        message="A newer version of com.squareup.picasso:picasso than 2.8 is available: 2.71828">
+        <location
+            file="gradle/libs.versions.toml"
+            line="31" />
+	</issue>
+	
+    <issue
         id="PluralsCandidate"
         message="Formatting %d followed by words (&quot;tracks&quot;): This should probably be a plural rather than a string"
         errorLine1="    &lt;string name=&quot;select_album.n_selected&quot;>%d tracks selected&lt;/string>"
