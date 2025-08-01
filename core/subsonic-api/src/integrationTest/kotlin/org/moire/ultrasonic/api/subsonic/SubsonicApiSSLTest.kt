@@ -16,7 +16,7 @@ import org.junit.Before
 import org.junit.Test
 
 private const val PORT = 8443
-private const val HOST = "localhost"
+private const val HOST = "127.0.0.1"
 
 /**
  * Integration test to check [SubsonicAPIClient] interaction with different SSL scenarios.

@@ -335,13 +335,11 @@ class MediaPlayerManager(
 
     @Synchronized
     fun restore(state: PlaybackState, autoPlay: Boolean) {
-        val insertionMode = InsertionMode.APPEND
-
         addToPlaylist(
             state.songs,
             autoPlay = false,
             shuffle = false,
-            insertionMode = insertionMode
+            insertionMode = InsertionMode.RESTORE
         )
 
         repeatMode = state.repeatMode
@@ -446,6 +444,14 @@ class MediaPlayerManager(
                 // Must never be larger than the count of items (especially when empty)
                 insertAt = (currentMediaItemIndex + 1).coerceAtMost(mediaItemCount)
             }
+            InsertionMode.RESTORE -> {
+                if (mediaItemCount == 0) {
+                    insertAt = 0
+                } else {
+                    Timber.i("Skipping restore: playlist already populated")
+                    return
+                }
+            }
         }
 
         val mediaItems: List<MediaItem> = songs.map {
@@ -534,7 +540,7 @@ class MediaPlayerManager(
                 InsertionMode.APPEND ->
                     quantize(R.plurals.n_songs_added_to_end, list)
 
-                InsertionMode.CLEAR -> {
+                InsertionMode.CLEAR, InsertionMode.RESTORE -> {
                     if (Settings.shouldTransitionOnPlayback) {
                         null
                     } else {
@@ -890,7 +896,8 @@ class MediaPlayerManager(
     enum class InsertionMode {
         CLEAR,
         APPEND,
-        AFTER_CURRENT
+        AFTER_CURRENT,
+        RESTORE
     }
 
     enum class PlayerBackend { JUKEBOX, LOCAL }
