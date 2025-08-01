@@ -450,4 +450,10 @@
         <item quantity="other">%d músicas adicionadas na fila</item>
     </plurals>
     <string name="chat.user_avatar">Imagem do Avatar</string>
+    <string name="menu.rating_no_rating">Sem Avaliação</string>
+    <string name="menu.rating_1">1 Estrela</string>
+    <string name="menu.rating_2">2 Estrelas</string>
+    <string name="menu.rating_3">3 Estrelas</string>
+    <string name="menu.rating_4">4 Estrelas</string>
+    <string name="menu.rating_5">5 Estrelas</string>
 </resources>
