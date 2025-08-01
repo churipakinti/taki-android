@@ -100,36 +100,11 @@ abstract class JukeboxUnimplementedFunctions : Player {
         TODO("Not yet implemented")
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun seekToPreviousWindow() {
-        TODO("Not yet implemented")
-    }
-
     override fun seekToPreviousMediaItem() {
         TODO("Not yet implemented")
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun hasNext(): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun hasNextWindow(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun hasNextMediaItem(): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun next() {
-        TODO("Not yet implemented")
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun seekToNextWindow() {
         TODO("Not yet implemented")
     }
 

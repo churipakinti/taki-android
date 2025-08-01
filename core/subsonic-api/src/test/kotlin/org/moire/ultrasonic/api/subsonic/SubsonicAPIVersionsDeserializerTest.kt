@@ -27,14 +27,15 @@ class SubsonicAPIVersionsDeserializerTest {
 
     @Test
     fun `Should throw if current token name is not version`() {
-        doReturn("asdasd").whenever(jsonParser).currentName
+        doReturn("asdasd").whenever(jsonParser).currentName()
 
-        { deserializer.deserialize(jsonParser, context) } `should throw` JsonParseException::class
+        val fail = { deserializer.deserialize(jsonParser, context) }
+        fail `should throw` JsonParseException::class
     }
 
     @Test
     fun `Should return parsed version`() {
-        doReturn("version").whenever(jsonParser).currentName
+        doReturn("version").whenever(jsonParser).currentName()
         doReturn(SubsonicAPIVersions.V1_13_0.restApiVersion).whenever(jsonParser).text
 
         val parsedVersion = deserializer.deserialize(jsonParser, context)

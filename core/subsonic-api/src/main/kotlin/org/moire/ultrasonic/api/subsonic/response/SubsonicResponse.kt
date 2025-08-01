@@ -30,10 +30,10 @@ open class SubsonicResponse(
 
             class StatusJsonDeserializer : JsonDeserializer<Status>() {
                 override fun deserialize(p: JsonParser, ctxt: DeserializationContext?): Status {
-                    if (p.currentName != "status") {
+                    if (p.currentName() != "status") {
                         throw JsonParseException(
                             p,
-                            "Current token is not status. Current token name ${p.currentName}."
+                            "Current token is not status. Current token name ${p.currentName()}."
                         )
                     }
                     return getStatusFromJson(p.text)
