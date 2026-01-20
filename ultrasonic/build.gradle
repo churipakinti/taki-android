@@ -82,6 +82,7 @@ android {
         disable 'ObsoleteLintCustomCheck'
         // We manage dependencies on Gitlab with RenovateBot
         disable 'GradleDependency'
+        disable 'NewerVersionAvailable'
         disable 'AndroidGradlePluginVersion'
         textReport = true
         checkDependencies = true
