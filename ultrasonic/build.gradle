@@ -37,8 +37,8 @@ android {
             minifyEnabled = false
             multiDexEnabled = true
             applicationIdSuffix = '.debug'
-            enableUnitTestCoverage true
-            enableAndroidTestCoverage true
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
         }
     }
 
