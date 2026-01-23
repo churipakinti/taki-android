@@ -342,6 +342,14 @@ class JukeboxMediaPlayer : JukeboxUnimplementedFunctions(), Player {
         deviceVolume = gain
     }
 
+    override fun mute() {
+        setDeviceMuted(true, C.VOLUME_FLAG_SHOW_UI)
+    }
+
+    override fun unmute() {
+        setDeviceMuted(false, C.VOLUME_FLAG_SHOW_UI)
+    }
+
     override fun getVolume(): Float {
         return floatGain
     }
