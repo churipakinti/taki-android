@@ -240,8 +240,8 @@ class PlayerFragment :
     override fun onSaveInstanceState(outState: Bundle) {
         if (this::playlistFlipper.isInitialized) {
             outState.putInt("playlistFlipper.displayedChild", playlistFlipper.displayedChild)
-            super.onSaveInstanceState(outState)
         }
+        super.onSaveInstanceState(outState)
     }
 
     @Suppress("LongMethod")
