@@ -111,6 +111,7 @@ dependencies {
     implementation libs.roomKtx
     implementation libs.viewModelKtx
     implementation libs.constraintLayout
+    implementation libs.documentfile
     implementation libs.preferences
     implementation libs.media3common
     implementation libs.media3exoplayer

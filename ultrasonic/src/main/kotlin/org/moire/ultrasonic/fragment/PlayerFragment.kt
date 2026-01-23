@@ -288,7 +288,7 @@ class PlayerFragment :
         setLayerDrawableColors(hollowHeartDrawable as LayerDrawable)
         setLayerDrawableColors(
             fullHeartDrawable as LayerDrawable,
-            RM.attr.colorAccent,
+            androidx.appcompat.R.attr.colorAccent,
             RM.attr.colorSurface
         )
 
@@ -1294,7 +1294,7 @@ class PlayerFragment :
     private fun setLayerDrawableColors(
         drawable: LayerDrawable,
         innerColor: Int = RM.attr.colorSurface,
-        borderColor: Int = RM.attr.colorAccent
+        borderColor: Int = androidx.appcompat.R.attr.colorAccent
     ) {
         drawable.apply {
             getDrawable(0).setTint(requireContext().themeColor(innerColor))
