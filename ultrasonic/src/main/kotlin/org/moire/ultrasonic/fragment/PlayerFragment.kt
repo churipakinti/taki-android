@@ -237,6 +237,13 @@ class PlayerFragment :
         heartRatingImageView = view.findViewById(R.id.song_rating_heart)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        if (this::playlistFlipper.isInitialized) {
+            outState.putInt("playlistFlipper.displayedChild", playlistFlipper.displayedChild)
+            super.onSaveInstanceState(outState)
+        }
+    }
+
     @Suppress("LongMethod")
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -272,6 +279,8 @@ class PlayerFragment :
         gestureScanner = GestureDetector(context, this)
 
         findViews(view)
+        playlistFlipper.displayedChild =
+            savedInstanceState?.getInt("playlistFlipper.displayedChild") ?: 0
         val previousButton: AutoRepeatButton = view.findViewById(R.id.button_previous)
         val nextButton: AutoRepeatButton = view.findViewById(R.id.button_next)
         shuffleButton = view.findViewById(R.id.button_shuffle)
