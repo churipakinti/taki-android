@@ -141,6 +141,7 @@ dependencies {
     testImplementation libs.kotlinReflect
     testImplementation libs.junit
     testRuntimeOnly libs.junitVintage
+    testRuntimeOnly libs.junitPlatformLauncher
     testImplementation libs.kotlinJunit
     testImplementation libs.kluent
     testImplementation libs.mockito

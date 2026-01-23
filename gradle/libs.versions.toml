@@ -1,6 +1,6 @@
 [versions]
 # You need to run ./gradlew wrapper after updating the version
-gradle                 = "8.14.2"
+gradle                 = "9.2.1"
 
 navigation             = "2.9.6"
 gradlePlugin           = "8.13.2"
@@ -90,6 +90,7 @@ multiType               = { module = "com.drakeet.multitype:multitype", version.
 
 junit                   = { module = "junit:junit", version.ref = "junit4" }
 junitVintage            = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "junit" }
+junitPlatformLauncher   = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
 kotlinJunit             = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 mockitoKotlin           = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 mockito                 = { module = "org.mockito:mockito-core", version.ref = "mockito" }
