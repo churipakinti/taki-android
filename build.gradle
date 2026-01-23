@@ -40,13 +40,6 @@ allprojects {
         google()
     }
 
-    // Set Kotlin JVM target to the same for all subprojects
-    tasks.withType(KotlinCompile).configureEach {
-        kotlinOptions {
-            jvmTarget = "21"
-        }
-    }
-
     tasks.withType(JavaCompile).tap {
         configureEach {
             options.compilerArgs.add("-Xlint:deprecation")

@@ -27,6 +27,6 @@ if (isCodeQualityEnabled) {
                 parallel = true
             }
         }
-        tasks.detekt.jvmTarget = "17"
+        tasks.detekt.jvmTarget = "21"
     }
 }
