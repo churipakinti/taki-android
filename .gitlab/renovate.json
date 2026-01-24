@@ -1,7 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
-  "baseBranches": [ "develop" ],
-  "labels": [ "housekeeping", "dependencies" ],
+  "extends": [
+    "config:recommended"
+  ],
+  "baseBranchPatterns": [
+    "develop"
+  ],
+  "labels": [
+    "housekeeping",
+    "dependencies"
+  ],
   "configMigration": true
 }
