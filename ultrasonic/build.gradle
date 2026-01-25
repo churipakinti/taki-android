@@ -25,7 +25,7 @@ android {
     buildTypes {
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     'minify/proguard-main.pro',
                     'minify/proguard-okhttp.pro',
                     'minify/proguard-retrofit.pro',
