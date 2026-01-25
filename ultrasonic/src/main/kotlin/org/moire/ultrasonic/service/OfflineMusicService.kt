@@ -297,7 +297,7 @@ class OfflineMusicService : MusicService, KoinComponent {
     }
 
     @Throws(Exception::class)
-    override fun getLyrics(artist: String, title: String): Lyrics? {
+    override fun getLyrics(artist: String, title: String): Lyrics {
         throw OfflineException("Lyrics not available in offline mode")
     }
 
@@ -426,12 +426,12 @@ class OfflineMusicService : MusicService, KoinComponent {
     }
 
     @Throws(OfflineException::class)
-    override fun getStreamUrl(id: String, maxBitRate: Int?, format: String?): String? {
+    override fun getStreamUrl(id: String, maxBitRate: Int?, format: String?): String {
         throw OfflineException("getStreamUrl isn't available in offline mode")
     }
 
     @Throws(OfflineException::class)
-    override fun getChatMessages(since: Long?): List<ChatMessage?>? {
+    override fun getChatMessages(since: Long?): List<ChatMessage?> {
         throw OfflineException("getChatMessages isn't available in offline mode")
     }
 
@@ -456,7 +456,7 @@ class OfflineMusicService : MusicService, KoinComponent {
     }
 
     @Throws(OfflineException::class)
-    override fun getVideos(refresh: Boolean): MusicDirectory? {
+    override fun getVideos(refresh: Boolean): MusicDirectory {
         throw OfflineException("getVideos isn't available in offline mode")
     }
 
@@ -510,7 +510,7 @@ class OfflineMusicService : MusicService, KoinComponent {
     }
 
     @Throws(OfflineException::class)
-    override fun getPodcastEpisodes(podcastChannelId: String?): MusicDirectory? {
+    override fun getPodcastEpisodes(podcastChannelId: String?): MusicDirectory {
         throw OfflineException("getPodcastEpisodes isn't available in offline mode")
     }
 
