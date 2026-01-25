@@ -40,7 +40,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.R
@@ -105,7 +104,7 @@ class MediaLibrarySessionCallback :
     KoinComponent {
 
     private val activeServerProvider: ActiveServerProvider by inject()
-    private val playbackStateSerializer: PlaybackStateSerializer by inject()
+    private val lifecycleSupport: MediaPlayerLifecycleSupport by inject()
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
@@ -250,18 +249,13 @@ class MediaLibrarySessionCallback :
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     override fun onPlaybackResumption(
         mediaSession: MediaSession,
-        controller: MediaSession.ControllerInfo
+        controller: MediaSession.ControllerInfo,
+        isForPlayback: Boolean
     ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
         val result = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
         serviceScope.launch {
-            val state = playbackStateSerializer.deserializeNow()
-            if (state != null) {
-                result.set(state.toMediaItemsWithStartPosition())
-                withContext(Dispatchers.Main) {
-                    mediaSession.player.shuffleModeEnabled = state.shufflePlay
-                    mediaSession.player.repeatMode = state.repeatMode
-                }
-            }
+            // lifecycleSupport will set the MediaItems so we don't actually return them here.
+            lifecycleSupport.onCreate(isForPlayback, null)
         }
         return result
     }

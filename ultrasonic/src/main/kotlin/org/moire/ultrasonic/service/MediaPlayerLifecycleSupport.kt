@@ -57,7 +57,7 @@ class MediaPlayerLifecycleSupport(
         onCreate(false, null)
     }
 
-    private fun onCreate(autoPlay: Boolean, afterRestore: Runnable?) {
+    fun onCreate(autoPlay: Boolean, afterRestore: Runnable?) {
         if (created) {
             afterRestore?.run()
             return
