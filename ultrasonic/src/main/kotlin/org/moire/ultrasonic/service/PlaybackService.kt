@@ -182,7 +182,7 @@ class PlaybackService :
 
             val list = createShuffleListFromCurrentIndex(cur, len, random)
             Timber.i("New Shuffle order: %s", list.joinToString { it.toString() })
-            exo.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(list, seed))
+            exo.shuffleOrder = ShuffleOrder.DefaultShuffleOrder(list, seed)
         }
 
         // Listen to the shutdown command

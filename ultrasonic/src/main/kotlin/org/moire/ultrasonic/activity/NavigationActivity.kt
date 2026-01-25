@@ -255,7 +255,7 @@ class NavigationActivity : ScopeActivity() {
 
     fun setupSearchField(menu: Menu) {
         Timber.i("Recreating search field")
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        val searchManager = getSystemService(SEARCH_SERVICE) as SearchManager
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
         val searchableInfo = searchManager.getSearchableInfo(this.componentName)

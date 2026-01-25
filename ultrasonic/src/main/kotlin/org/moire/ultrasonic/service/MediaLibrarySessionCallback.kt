@@ -246,7 +246,7 @@ class MediaLibrarySessionCallback :
         )
     }
 
-    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    @OptIn(UnstableApi::class)
     override fun onPlaybackResumption(
         mediaSession: MediaSession,
         controller: MediaSession.ControllerInfo,
