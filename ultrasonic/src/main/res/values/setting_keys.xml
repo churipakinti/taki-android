@@ -55,4 +55,11 @@
     <string name="setting_key.first_installed_version" translatable="false">firstInstalledVersion</string>
     <string name="setting_key.show_confirmation_dialog" translatable="false">showConfirmationDialog</string>
     <string name="setting_key.last_view_type" translatable="false">lastViewType</string>
+    <string name="setting_key.replaygain" translatable="false">replayGain</string>
+    <string name="setting_key.replaygain_disabled" translatable="false">replayGainDisabled</string>
+    <string name="setting_key.replaygain_dynamic" translatable="false">replayGainDynamic</string>
+    <string name="setting_key.replaygain_prefer_track" translatable="false">replayGainPreferTrack</string>
+    <string name="setting_key.replaygain_prefer_album" translatable="false">replayGainPreferAlbum</string>
+    <string name="setting_key.replaygain_track_only" translatable="false">replayGainTrackOnly</string>
+    <string name="setting_key.replaygain_album_only" translatable="false">replayGainAlbumOnly</string>
 </resources>

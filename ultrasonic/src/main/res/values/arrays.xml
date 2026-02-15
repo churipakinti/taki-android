@@ -13,6 +13,22 @@
         <item>@string/settings.theme_dark</item>
         <item>@string/settings.theme_black</item>
     </string-array>
+    <string-array name="replayGainNames" translatable="false">
+        <item>@string/settings.replaygain_disabled</item>
+        <item>@string/settings.replaygain_dynamic</item>
+        <item>@string/settings.replaygain_prefer_track</item>
+        <item>@string/settings.replaygain_prefer_album</item>
+        <item>@string/settings.replaygain_track_only</item>
+        <item>@string/settings.replaygain_album_only</item>
+    </string-array>
+    <string-array name="replayGainValues" translatable="false">
+        <item>@string/setting_key.replaygain_disabled</item>
+        <item>@string/setting_key.replaygain_dynamic</item>
+        <item>@string/setting_key.replaygain_prefer_track</item>
+        <item>@string/setting_key.replaygain_prefer_album</item>
+        <item>@string/setting_key.replaygain_track_only</item>
+        <item>@string/setting_key.replaygain_album_only</item>
+    </string-array>
     <string-array name="preloadCountValues" translatable="false">
         <item>1</item>
         <item>2</item>
