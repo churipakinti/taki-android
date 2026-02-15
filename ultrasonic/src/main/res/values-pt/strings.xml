@@ -76,7 +76,7 @@
     <string name="main.albums_newest">Recentemente Adicionados</string>
     <string name="main.albums_random">Aleatórios</string>
     <string name="main.albums_recent">Recentemente Tocados</string>
-    <string name="main.albums_starred">Favoritos</string>
+    <string name="main.albums_starred">Favoritado</string>
     <string name="main.albums_title">Álbuns</string>
     <string name="main.artists_title">Artistas</string>
     <string name="main.genres_title">Gêneros</string>
@@ -92,7 +92,7 @@
     <string name="menu.deleted_playlist_error">Falha ao apagar a playlist %s</string>
     <string name="menu.exit">Sair</string>
     <string name="menu.settings">Configurações</string>
-    <string name="menu.refresh">Refresh</string>
+    <string name="menu.refresh">Atualizar</string>
     <string name="music_library.label">Biblioteca de Mídia</string>
     <string name="music_library.label_offline">Mídia Offline</string>
     <string name="playlist.label">Playlists</string>
