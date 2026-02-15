@@ -254,6 +254,7 @@ class ImageLoader(
                 }
             } catch (all: Exception) {
                 Timber.w(all)
+                runCatching { File(file).delete() }
             } finally {
                 cacheInProgress.remove(file)?.countDown()
             }

@@ -102,6 +102,7 @@ dependencies {
 
     implementation libs.car
     implementation libs.core
+    implementation libs.testCore
     implementation libs.design
     implementation libs.multidex
     implementation libs.roomRuntime
@@ -126,6 +127,7 @@ dependencies {
     implementation libs.kotlinStdlib
     implementation libs.kotlinxCoroutines
     implementation libs.kotlinxGuava
+    implementation libs.kotlinxCoroutinesTest
     implementation libs.koinAndroid
     implementation libs.okhttpLogging
     implementation libs.fastScroll
