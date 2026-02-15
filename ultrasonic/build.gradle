@@ -115,6 +115,7 @@ dependencies {
     implementation libs.media3session
     implementation libs.media3datasource
     implementation libs.media3okhttp
+    implementation libs.media3inspector
     implementation libs.swipeRefresh
 
     implementation libs.navigationFragment

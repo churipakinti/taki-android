@@ -249,6 +249,12 @@ object Settings {
     var useHwOffload by BooleanSetting(getKey(R.string.setting_key_hardware_offload), false)
 
     @JvmStatic
+    var replayGain by StringSetting(
+        getKey(R.string.setting_key_replaygain),
+        getKey(R.string.setting_key_replaygain_disabled)
+    )
+
+    @JvmStatic
     var firstInstalledVersion by IntSetting(
         getKey(R.string.setting_key_first_installed_version),
         0

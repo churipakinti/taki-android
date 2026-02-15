@@ -8,7 +8,7 @@ servers.
 
 We currently don't have that much time to spend developing Subsonic, so any
 contributions or active developers are always welcomed.
-Have a look at [CONTRIBUTING](CONTRIBUTING.md) to get started.
+Have a look at [CONTRIBUTING](docs/CONTRIBUTING.md) to get started.
 
 ## Download
 
@@ -31,9 +31,13 @@ If you want to use the version downloaded from F-Droid or from GitLab with
 First, see if your issue haven’t been yet reported [here][issues], otherwise
 open [a new issue][newissue].
 
+## Documentation
+
+See [documentation](docs/).
+
 ## Contributing
 
-See [CONTRIBUTING](CONTRIBUTING.md).
+See [CONTRIBUTING](docs/CONTRIBUTING.md).
 
 ## Supported (tested) Subsonic API implementations
 

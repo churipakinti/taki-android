@@ -111,6 +111,13 @@
             a:summary="@string/settings.use_hw_offload_description"
             a:title="@string/settings.use_hw_offload_title"
             app:iconSpaceReserved="false" />
+        <ListPreference
+            a:defaultValue="@string/setting_key.replaygain_disabled"
+            a:entries="@array/replayGainNames"
+            a:entryValues="@array/replayGainValues"
+            a:key="@string/setting_key.replaygain"
+            a:title="@string/settings.replaygain_title"
+            app:iconSpaceReserved="false"/>
     </PreferenceCategory>
     <PreferenceCategory
         a:title="@string/settings.notifications_title"

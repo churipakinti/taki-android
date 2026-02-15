@@ -21,6 +21,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
+import androidx.media3.common.Tracks
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
@@ -298,6 +299,10 @@ class PlaybackService :
             cacheNextSongs()
         }
 
+        override fun onTracksChanged(tracks: Tracks) {
+            updateReplayGain(tracks)
+        }
+
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             // Since we cannot update the metadata of the media item after creation,
             // we cannot set change the rating on it
@@ -337,6 +342,43 @@ class PlaybackService :
         launch {
             DownloadService.download(nextSongs, isHighPriority = true)
         }
+    }
+
+    private fun updateReplayGain(tracks: Tracks) {
+        // Always reset the volume to the default in case we fail to set replaygain for some reason.
+        player.volume = 1f
+        val context = UApp.applicationContext()
+        var replayGainType = ReplayGainType.TrackGainWithFallback
+        when (Settings.replayGain) {
+            context.getString(R.string.setting_key_replaygain_disabled) -> return
+
+            context.getString(R.string.setting_key_replaygain_dynamic) -> {
+                if (isSingleAlbumPlaylist(player)) {
+                    replayGainType = ReplayGainType.AlbumGainWithFallback
+                } else {
+                    replayGainType = ReplayGainType.TrackGainWithFallback
+                }
+            }
+
+            context.getString(R.string.setting_key_replaygain_prefer_track) -> {
+                replayGainType = ReplayGainType.TrackGainWithFallback
+            }
+
+            context.getString(R.string.setting_key_replaygain_prefer_album) -> {
+                replayGainType = ReplayGainType.AlbumGainWithFallback
+            }
+
+            context.getString(R.string.setting_key_replaygain_track_only) -> {
+                replayGainType = ReplayGainType.TrackGain
+            }
+
+            context.getString(R.string.setting_key_replaygain_album_only) -> {
+                replayGainType = ReplayGainType.AlbumGain
+            }
+        }
+        val volume = getReplayGainVolume(replayGainType, tracks)
+        Timber.d("Applying ReplayGain %s adjustment: %f", replayGainType, volume)
+        player.volume = volume
     }
 
     private fun getPendingIntentForContent(): PendingIntent {
