@@ -456,4 +456,11 @@
     <string name="menu.rating_1">1 Estrela</string>
     <string name="menu.rating_2">2 Estrelas</string>
     <string name="menu.rating_3">3 Estrelas</string>
+    <string name="settings.replaygain_title">Modo para ReplayGain</string>
+    <string name="settings.replaygain_disabled">Desactivado</string>
+    <string name="settings.replaygain_dynamic">Canción a non se que se reproduza un Álbum</string>
+    <string name="settings.replaygain_prefer_track">Preferir Canción</string>
+    <string name="settings.replaygain_prefer_album">Preferir Álbum</string>
+    <string name="settings.replaygain_track_only">Só Canción</string>
+    <string name="settings.replaygain_album_only">Só Álbum</string>
 </resources>
