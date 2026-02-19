@@ -456,4 +456,11 @@
     <string name="menu.rating_3">3 estrellas</string>
     <string name="menu.rating_4">4 estrellas</string>
     <string name="menu.rating_5">5 estrellas</string>
+    <string name="settings.replaygain_title">Modo ReplayGain</string>
+    <string name="settings.replaygain_disabled">Desactivado</string>
+    <string name="settings.replaygain_dynamic">Pista, a menos que se esté reproduciendo un álbum</string>
+    <string name="settings.replaygain_prefer_track">Preferir pista</string>
+    <string name="settings.replaygain_prefer_album">Preferir álbum</string>
+    <string name="settings.replaygain_track_only">Solo pista</string>
+    <string name="settings.replaygain_album_only">Solo álbum</string>
 </resources>
