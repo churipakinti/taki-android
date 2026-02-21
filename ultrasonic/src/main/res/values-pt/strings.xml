@@ -466,4 +466,11 @@
     <string name="menu.rating_3">3 Estrelas</string>
     <string name="menu.rating_4">4 Estrelas</string>
     <string name="menu.rating_5">5 Estrelas</string>
+    <string name="settings.replaygain_title">Modo ReplayGain</string>
+    <string name="settings.replaygain_disabled">Desativado</string>
+    <string name="settings.replaygain_dynamic">Faixa Isolada, Salvo ao Reproduzir Álbum</string>
+    <string name="settings.replaygain_prefer_track">Dar Preferência à Faixa</string>
+    <string name="settings.replaygain_prefer_album">Dar Preferência ao Álbum</string>
+    <string name="settings.replaygain_track_only">Apenas Faixa Individual</string>
+    <string name="settings.replaygain_album_only">Somente Álbum</string>
 </resources>
