@@ -1,11 +1,18 @@
 package org.moire.ultrasonic.app
 
+import android.app.ActivityManager
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode.VmPolicy
+import androidx.core.content.ContextCompat
 import androidx.multidex.MultiDexApplication
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.memory.MemoryCache
+import coil3.request.crossfade
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,6 +25,10 @@ import org.moire.ultrasonic.di.applicationModule
 import org.moire.ultrasonic.di.baseNetworkModule
 import org.moire.ultrasonic.di.mediaPlayerModule
 import org.moire.ultrasonic.di.musicServiceModule
+import org.moire.ultrasonic.imageloader.AvatarFetcher
+import org.moire.ultrasonic.imageloader.AvatarKeyer
+import org.moire.ultrasonic.imageloader.CoverArtFetcher
+import org.moire.ultrasonic.imageloader.CoverArtKeyer
 import org.moire.ultrasonic.log.FileLoggerTree
 import org.moire.ultrasonic.log.TimberKoinLogger
 import org.moire.ultrasonic.util.FileUtil
@@ -31,7 +42,7 @@ import timber.log.Timber.DebugTree
  * The Main class of the Application
  */
 
-class UApp : MultiDexApplication() {
+class UApp : MultiDexApplication(), SingletonImageLoader.Factory {
 
     private var ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -70,6 +81,35 @@ class UApp : MultiDexApplication() {
         }
 
         startKoin()
+    }
+
+    override fun newImageLoader(context: Context): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components {
+                add(CoverArtFetcher.Factory())
+                add(CoverArtKeyer())
+                add(AvatarFetcher.Factory())
+                add(AvatarKeyer())
+            }
+            .memoryCache(
+                MemoryCache.Builder().maxSizeBytes(
+                    calculateMemoryCacheSize(context)
+                ).build()
+            )
+            .crossfade(true)
+            .build()
+    }
+
+    private fun calculateMemoryCacheSize(context: Context): Long {
+        val am = ContextCompat.getSystemService(
+            context,
+            ActivityManager::class.java
+        )
+        val largeHeap = context.applicationInfo.flags and ApplicationInfo.FLAG_LARGE_HEAP != 0
+        val memoryClass = if (largeHeap) am!!.largeMemoryClass else am!!.memoryClass
+        // Target 25% of the available heap.
+        @Suppress("MagicNumber")
+        return 1024L * 1024L * memoryClass / 4
     }
 
     internal fun startKoin() {
