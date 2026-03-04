@@ -1,6 +1,6 @@
 [versions]
 # You need to run ./gradlew wrapper after updating the version
-gradle                 = "9.3.1"
+gradle                 = "9.4.0"
 
 navigation             = "2.9.7"
 gradlePlugin           = "9.1.0"
