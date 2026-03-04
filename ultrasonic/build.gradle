@@ -31,7 +31,8 @@ android {
                     'minify/proguard-retrofit.pro',
                     'minify/proguard-jackson.pro',
                     'minify/proguard-kotlin-reflect.pro',
-                    'minify/proguard-kotlin.pro'
+                    'minify/proguard-kotlin.pro',
+                    'minify/proguard-coil.pro'
         }
         debug {
             minifyEnabled = false
@@ -96,10 +97,6 @@ dependencies {
     implementation project(':core:domain')
     implementation project(':core:subsonic-api')
 
-    api(libs.picasso) {
-        exclude group: "com.android.support"
-    }
-
     implementation libs.car
     implementation libs.core
     implementation libs.design
@@ -127,6 +124,7 @@ dependencies {
     implementation libs.kotlinxCoroutines
     implementation libs.kotlinxGuava
     implementation libs.koinAndroid
+    implementation libs.coil
     implementation libs.okhttpLogging
     implementation libs.fastScroll
     implementation libs.colorPickerView
@@ -145,6 +143,9 @@ dependencies {
     testImplementation libs.mockito
     testImplementation libs.mockitoKotlin
     testImplementation libs.robolectric
+    testImplementation libs.kotlinxCoroutinesTest
+    testImplementation libs.koinTest
+    testImplementation libs.testCore
 
     implementation libs.timber
 }

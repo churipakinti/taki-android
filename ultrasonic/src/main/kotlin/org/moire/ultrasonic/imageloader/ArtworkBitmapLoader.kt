@@ -46,9 +46,7 @@ class ArtworkBitmapLoader : BitmapLoader, KoinComponent {
     }
 
     override fun loadBitmap(uri: Uri): ListenableFuture<Bitmap> {
-        return executorService.submit<Bitmap> {
-            load(uri)
-        }
+        return load(uri)
     }
 
     private fun decode(data: ByteArray): Bitmap {
@@ -57,7 +55,7 @@ class ArtworkBitmapLoader : BitmapLoader, KoinComponent {
     }
 
     @Throws(IOException::class)
-    private fun load(uri: Uri): Bitmap {
+    private fun load(uri: Uri): ListenableFuture<Bitmap> {
         val parts = uri.path?.trim('/')?.split('|')
 
         require(parts!!.count() == 2) { "Invalid bitmap Uri" }
