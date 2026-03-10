@@ -40,11 +40,9 @@ class SearchListModel(application: Application) : GenericListModel(application) 
         maxArtists: Int = Settings.defaultArtists,
         maxAlbums: Int = Settings.defaultAlbums,
         maxSongs: Int = Settings.defaultSongs
-    ): SearchResult {
-        return SearchResult(
-            artists = result.artists.take(maxArtists),
-            albums = result.albums.take(maxAlbums),
-            songs = result.songs.take(maxSongs)
-        )
-    }
+    ): SearchResult = SearchResult(
+        artists = result.artists.take(maxArtists),
+        albums = result.albums.take(maxAlbums),
+        songs = result.songs.take(maxSongs)
+    )
 }

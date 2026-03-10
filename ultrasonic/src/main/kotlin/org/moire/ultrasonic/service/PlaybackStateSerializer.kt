@@ -102,7 +102,8 @@ class PlaybackStateSerializer : KoinComponent {
 
     fun deserializeNow(): PlaybackState? {
         val state = FileUtil.deserialize<PlaybackState>(
-            context, Constants.FILENAME_PLAYLIST_SER
+            context,
+            Constants.FILENAME_PLAYLIST_SER
         ) ?: return null
 
         Timber.i(

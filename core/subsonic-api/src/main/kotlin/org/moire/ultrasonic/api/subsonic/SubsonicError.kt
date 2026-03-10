@@ -44,8 +44,10 @@ sealed class SubsonicError(val code: Int) {
                 while (p.nextToken() != END_OBJECT) {
                     when {
                         p.currentToken == START_OBJECT -> p.skipChildren()
+
                         "code".equals(p.currentName(), ignoreCase = true) ->
                             code = p.nextIntValue(-1)
+
                         "message".equals(p.currentName(), ignoreCase = true) ->
                             message = p.nextTextValue()
                     }

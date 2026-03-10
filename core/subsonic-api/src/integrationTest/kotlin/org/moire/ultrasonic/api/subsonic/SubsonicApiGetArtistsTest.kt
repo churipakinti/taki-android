@@ -45,11 +45,15 @@ class SubsonicApiGetArtistsTest : SubsonicAPIClientTest() {
                     name = "T",
                     artists = listOf(
                         Artist(
-                            id = "516", name = "Tangerine Dream", coverArt = "ar-516",
+                            id = "516",
+                            name = "Tangerine Dream",
+                            coverArt = "ar-516",
                             albumCount = 1
                         ),
                         Artist(
-                            id = "242", name = "Taproot", coverArt = "ar-242",
+                            id = "242",
+                            name = "Taproot",
+                            coverArt = "ar-242",
                             albumCount = 2
                         )
                     )

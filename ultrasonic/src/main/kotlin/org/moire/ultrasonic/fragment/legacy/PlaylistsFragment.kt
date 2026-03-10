@@ -56,7 +56,10 @@ import org.moire.ultrasonic.util.toastingExceptionHandler
  * TODO: This file has been converted from Java, but not modernized yet.
  */
 @Suppress("InstanceOfCheckForException")
-class PlaylistsFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment {
+class PlaylistsFragment :
+    ScopeFragment(),
+    KoinScopeComponent,
+    RefreshableFragment {
     override var swipeRefresh: SwipeRefreshLayout? = null
     private var playlistsListView: ListView? = null
     private var emptyTextView: View? = null
@@ -71,9 +74,7 @@ class PlaylistsFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragme
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.select_playlist, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.select_playlist, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         swipeRefresh = view.findViewById(R.id.select_playlist_refresh)
@@ -148,6 +149,7 @@ class PlaylistsFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragme
                     isDirectory = false
                 )
             }
+
             R.id.playlist_menu_unpin -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.UNPIN,
@@ -158,6 +160,7 @@ class PlaylistsFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragme
                     isDirectory = false
                 )
             }
+
             R.id.playlist_menu_download -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.DOWNLOAD,
@@ -168,6 +171,7 @@ class PlaylistsFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragme
                     isDirectory = false
                 )
             }
+
             R.id.playlist_menu_play_now -> {
                 val action = NavigationGraphDirections.toTrackCollection(
                     playlistId = playlist.id,
@@ -176,6 +180,7 @@ class PlaylistsFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragme
                 )
                 findNavController().navigate(action)
             }
+
             R.id.playlist_menu_play_shuffled -> {
                 val action = NavigationGraphDirections.toTrackCollection(
                     playlistId = playlist.id,
@@ -186,15 +191,19 @@ class PlaylistsFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragme
 
                 findNavController().navigate(action)
             }
+
             R.id.playlist_menu_delete -> {
                 deletePlaylist(playlist)
             }
+
             R.id.playlist_info -> {
                 displayPlaylistInfo(playlist)
             }
+
             R.id.playlist_update_info -> {
                 updatePlaylistInfo(playlist)
             }
+
             else -> {
                 return super.onContextItemSelected(menuItem)
             }

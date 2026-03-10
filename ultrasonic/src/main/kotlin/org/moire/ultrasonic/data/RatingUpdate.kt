@@ -9,8 +9,4 @@ package org.moire.ultrasonic.data
 
 import androidx.media3.common.Rating
 
-data class RatingUpdate(
-    val id: String,
-    val rating: Rating,
-    val success: Boolean? = null
-)
+data class RatingUpdate(val id: String, val rating: Rating, val success: Boolean? = null)

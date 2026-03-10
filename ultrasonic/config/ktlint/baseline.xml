@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/org/moire/ultrasonic/util/CacheCleaner.kt">
+        <error line="337" column="21" source="standard:mixed-condition-operators" />
+    </file>
+    <file name="src/main/kotlin/org/moire/ultrasonic/util/Util.kt">
+        <error line="203" column="9" source="standard:mixed-condition-operators" />
+    </file>
+</baseline>

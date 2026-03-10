@@ -34,9 +34,7 @@ class EntryByDiscAndTrackComparator : Comparator<MusicDirectory.Child> {
     }
 
     companion object {
-        private fun compare(a: Int, b: Int): Int {
-            return a.compareTo(b)
-        }
+        private fun compare(a: Int, b: Int): Int = a.compareTo(b)
 
         private fun compare(a: String?, b: String?): Int {
             if (a == null && b == null) {

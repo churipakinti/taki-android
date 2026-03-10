@@ -5,11 +5,8 @@ import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions
 import org.moire.ultrasonic.api.subsonic.SubsonicError
 import org.moire.ultrasonic.api.subsonic.models.ChatMessage
 
-class ChatMessagesResponse(
-    status: Status,
-    version: SubsonicAPIVersions,
-    error: SubsonicError?
-) : SubsonicResponse(status, version, error) {
+class ChatMessagesResponse(status: Status, version: SubsonicAPIVersions, error: SubsonicError?) :
+    SubsonicResponse(status, version, error) {
     @JsonProperty("chatMessages")
     private val wrapper = ChatMessagesWrapper()
 

@@ -20,9 +20,8 @@ class ResettableLazy<T>(private val initializer: () -> T) {
         )
     )
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-        return lazyRef.get().getValue(thisRef, property)
-    }
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): T =
+        lazyRef.get().getValue(thisRef, property)
 
     val value: T
         get() {

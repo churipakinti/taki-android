@@ -27,17 +27,17 @@ abstract class ArtistOrIndex(
     open var closeness: Int = 0
 ) : GenericEntry() {
 
-    fun compareTo(other: ArtistOrIndex): Int {
-        return when {
-            this.closeness == other.closeness -> {
-                0
-            }
-            this.closeness > other.closeness -> {
-                -1
-            }
-            else -> {
-                1
-            }
+    fun compareTo(other: ArtistOrIndex): Int = when {
+        this.closeness == other.closeness -> {
+            0
+        }
+
+        this.closeness > other.closeness -> {
+            -1
+        }
+
+        else -> {
+            1
         }
     }
 

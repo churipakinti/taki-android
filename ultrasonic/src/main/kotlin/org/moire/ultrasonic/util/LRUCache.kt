@@ -59,9 +59,7 @@ class LRUCache<K, V>(capacity: Int) {
         var timestamp: Long = 0
             private set
 
-        fun getValue(): V? {
-            return value.get()
-        }
+        fun getValue(): V? = value.get()
 
         fun updateTimestamp() {
             timestamp = System.currentTimeMillis()

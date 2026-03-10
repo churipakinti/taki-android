@@ -31,22 +31,16 @@ class JavaFile(override val parent: AbstractFile?, val file: File) : AbstractFil
     override val path: String
         get() = file.absolutePath
 
-    override fun delete(): Boolean {
-        return file.delete()
-    }
+    override fun delete(): Boolean = file.delete()
 
     override fun listFiles(): Array<AbstractFile> {
         val fileList = file.listFiles()
         return fileList?.map { file -> JavaFile(this, file) }?.toTypedArray() ?: emptyArray()
     }
 
-    override fun getFileOutputStream(append: Boolean): OutputStream {
-        return FileOutputStream(file, append)
-    }
+    override fun getFileOutputStream(append: Boolean): OutputStream = FileOutputStream(file, append)
 
-    override fun getFileInputStream(): InputStream {
-        return FileInputStream(file)
-    }
+    override fun getFileInputStream(): InputStream = FileInputStream(file)
 
     override fun getDocumentFileDescriptor(openMode: String): AssetFileDescriptor? {
         val documentFile = DocumentFile.fromFile(file)
@@ -61,13 +55,9 @@ class JavaFile(override val parent: AbstractFile?, val file: File) : AbstractFil
         return JavaFile(null, File(path))
     }
 
-    override fun isPathExists(path: String): Boolean {
-        return File(path).exists()
-    }
+    override fun isPathExists(path: String): Boolean = File(path).exists()
 
-    override fun getFromPath(path: String): AbstractFile {
-        return JavaFile(null, File(path))
-    }
+    override fun getFromPath(path: String): AbstractFile = JavaFile(null, File(path))
 
     override fun createDirsOnPath(path: String) {
         File(path).mkdirs()

@@ -22,7 +22,9 @@ import org.koin.core.component.inject
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 
 @SuppressLint("UnsafeOptInUsageError")
-class ArtworkBitmapLoader : BitmapLoader, KoinComponent {
+class ArtworkBitmapLoader :
+    BitmapLoader,
+    KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 
@@ -37,17 +39,14 @@ class ArtworkBitmapLoader : BitmapLoader, KoinComponent {
         return true
     }
 
-    override fun decodeBitmap(data: ByteArray): ListenableFuture<Bitmap> {
-        return executorService.submit<Bitmap> {
+    override fun decodeBitmap(data: ByteArray): ListenableFuture<Bitmap> =
+        executorService.submit<Bitmap> {
             decode(
                 data
             )
         }
-    }
 
-    override fun loadBitmap(uri: Uri): ListenableFuture<Bitmap> {
-        return load(uri)
-    }
+    override fun loadBitmap(uri: Uri): ListenableFuture<Bitmap> = load(uri)
 
     private fun decode(data: ByteArray): Bitmap {
         val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)

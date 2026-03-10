@@ -10,9 +10,7 @@ import timber.log.Timber
 /**
  * Logs the stack trace of uncaught exceptions to a file on the SD card.
  */
-class UncaughtExceptionHandler(
-    private val context: Context
-) : Thread.UncaughtExceptionHandler {
+class UncaughtExceptionHandler(private val context: Context) : Thread.UncaughtExceptionHandler {
     private val defaultHandler: Thread.UncaughtExceptionHandler? =
         Thread.getDefaultUncaughtExceptionHandler()
 

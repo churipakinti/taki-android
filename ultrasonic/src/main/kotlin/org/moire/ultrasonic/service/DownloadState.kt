@@ -19,16 +19,15 @@ enum class DownloadState {
     UNKNOWN;
 
     companion object {
-        fun DownloadState.isFinalState(): Boolean {
-            return when (this) {
-                RETRYING,
-                FAILED,
-                CANCELLED,
-                DONE,
-                PINNED
-                -> true
-                else -> false
-            }
+        fun DownloadState.isFinalState(): Boolean = when (this) {
+            RETRYING,
+            FAILED,
+            CANCELLED,
+            DONE,
+            PINNED
+            -> true
+
+            else -> false
         }
     }
 }

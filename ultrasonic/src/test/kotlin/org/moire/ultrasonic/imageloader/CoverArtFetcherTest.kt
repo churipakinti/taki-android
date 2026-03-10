@@ -74,7 +74,8 @@ class CoverArtFetcherTest : KoinTest {
         // Create and return a fake stream response with an error code.
         val streamResponse = StreamResponse(null, null, 500)
         FileUtil.cachedUltrasonicDirectory = File(
-            Environment.getExternalStorageDirectory(), "Android/data/org.moire.ultrasonic"
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
         )
         whenever(
             mockApiClient.toStreamResponse(any())
@@ -110,7 +111,8 @@ class CoverArtFetcherTest : KoinTest {
             responseHttpCode = 200
         )
         FileUtil.cachedUltrasonicDirectory = File(
-            Environment.getExternalStorageDirectory(), "Android/data/org.moire.ultrasonic"
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
         )
 
         // If the correct subsonic API is called return the above fake stream response.
@@ -143,7 +145,8 @@ class CoverArtFetcherTest : KoinTest {
 
         // Copy the test image into the pinned album art directory so the fetcher can find it.
         FileUtil.cachedUltrasonicDirectory = File(
-            Environment.getExternalStorageDirectory(), "Android/data/org.moire.ultrasonic"
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
         )
         val sourceFile = File(javaClass.classLoader!!.getResource(cacheKey).file)
         val cachedAlbumArtFile = File(FileUtil.albumArtDirectory, cacheKey)
@@ -172,7 +175,8 @@ class CoverArtFetcherTest : KoinTest {
         // only make a large version of the image so the initial cache check for the small image
         // will fail but we should fall back to the larger image.
         FileUtil.cachedUltrasonicDirectory = File(
-            Environment.getExternalStorageDirectory(), "Android/data/org.moire.ultrasonic"
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
         )
         val sourceFile = File(javaClass.classLoader!!.getResource(cacheKeyLarge).file)
         val cachedAlbumArtFile = File(FileUtil.albumArtDirectory, cacheKeyLarge)

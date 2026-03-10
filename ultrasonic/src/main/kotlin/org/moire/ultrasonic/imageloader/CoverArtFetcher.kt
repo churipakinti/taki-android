@@ -31,22 +31,15 @@ import org.moire.ultrasonic.util.FileUtil.SUFFIX_SMALL
 import org.moire.ultrasonic.util.Util
 import timber.log.Timber
 
-data class CoverArtRequest(
-    val id: String,
-    val cacheKey: String,
-    val size: Int
-)
+data class CoverArtRequest(val id: String, val cacheKey: String, val size: Int)
 
 class CoverArtKeyer : Keyer<CoverArtRequest> {
-    override fun key(data: CoverArtRequest, options: Options): String? {
-        return data.cacheKey
-    }
+    override fun key(data: CoverArtRequest, options: Options): String? = data.cacheKey
 }
 
-class CoverArtFetcher(
-    private val coverArtRequest: CoverArtRequest,
-    private val options: Options
-) : Fetcher, KoinComponent {
+class CoverArtFetcher(private val coverArtRequest: CoverArtRequest, private val options: Options) :
+    Fetcher,
+    KoinComponent {
     private val client: SubsonicAPIClient by inject()
 
     override suspend fun fetch(): FetchResult {
@@ -140,8 +133,6 @@ class CoverArtFetcher(
             data: CoverArtRequest,
             options: Options,
             imageLoader: coil3.ImageLoader
-        ): Fetcher {
-            return CoverArtFetcher(data, options)
-        }
+        ): Fetcher = CoverArtFetcher(data, options)
     }
 }

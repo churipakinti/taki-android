@@ -40,9 +40,8 @@ class DownloadsFragment : MultiListFragment<Track>() {
     /**
      * The central function to pass a query to the model and return a LiveData object
      */
-    override fun getLiveData(refresh: Boolean, append: Boolean): LiveData<List<Track>> {
-        return listModel.getList()
-    }
+    override fun getLiveData(refresh: Boolean, append: Boolean): LiveData<List<Track>> =
+        listModel.getList()
 
     override fun setTitle(title: String?) {
         FragmentTitle.setTitle(this, Util.appContext().getString(R.string.menu_downloads))
@@ -80,7 +79,5 @@ class DownloadsFragment : MultiListFragment<Track>() {
 }
 
 class DownloadListModel(application: Application) : GenericListModel(application) {
-    fun getList(): LiveData<List<Track>> {
-        return DownloadService.observableDownloads
-    }
+    fun getList(): LiveData<List<Track>> = DownloadService.observableDownloads
 }

@@ -38,7 +38,9 @@ import org.moire.ultrasonic.util.Util
  * An abstract Model, which can be extended to display a list of items of type T from the API
  * @param T: The type of data which will be used (must extend GenericEntry)
  */
-abstract class MultiListFragment<T : Identifiable> : ScopeFragment(), RefreshableFragment {
+abstract class MultiListFragment<T : Identifiable> :
+    ScopeFragment(),
+    RefreshableFragment {
     internal val activeServerProvider: ActiveServerProvider by inject()
     internal val serverSettingsModel: ServerSettingsModel by viewModel()
     internal val imageLoaderProvider: ImageLoaderProvider by inject()
@@ -70,9 +72,8 @@ abstract class MultiListFragment<T : Identifiable> : ScopeFragment(), Refreshabl
     /**
      * The central function to pass a query to the model and return a LiveData object
      */
-    open fun getLiveData(refresh: Boolean = false, append: Boolean = false): LiveData<List<T>> {
-        return MutableLiveData()
-    }
+    open fun getLiveData(refresh: Boolean = false, append: Boolean = false): LiveData<List<T>> =
+        MutableLiveData()
 
     /**
      * The id of the main layout
@@ -111,7 +112,7 @@ abstract class MultiListFragment<T : Identifiable> : ScopeFragment(), Refreshabl
      * What to do when the list has changed
      */
     internal open val defaultObserver: ((List<T>) -> Unit) = {
-        emptyView.isVisible = it.isEmpty() && !(swipeRefresh?.isRefreshing?:false)
+        emptyView.isVisible = it.isEmpty() && !(swipeRefresh?.isRefreshing ?: false)
         viewAdapter.submitList(it)
     }
 
@@ -155,9 +156,7 @@ abstract class MultiListFragment<T : Identifiable> : ScopeFragment(), Refreshabl
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(mainLayout, container, false)
-    }
+    ): View? = inflater.inflate(mainLayout, container, false)
 
     abstract fun onContextMenuItemSelected(menuItem: MenuItem, item: T): Boolean
 

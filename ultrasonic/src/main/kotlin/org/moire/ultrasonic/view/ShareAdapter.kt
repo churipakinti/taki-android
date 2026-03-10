@@ -16,11 +16,12 @@ import android.widget.TextView
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Share
 
-class ShareAdapter(private val context: Context, shares: List<Share>) : ArrayAdapter<Share>(
-    context,
-    R.layout.share_list_item,
-    shares
-) {
+class ShareAdapter(private val context: Context, shares: List<Share>) :
+    ArrayAdapter<Share>(
+        context,
+        R.layout.share_list_item,
+        shares
+    ) {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val entry = getItem(position)
         val view: View

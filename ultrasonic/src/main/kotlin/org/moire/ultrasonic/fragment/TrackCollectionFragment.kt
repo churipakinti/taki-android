@@ -69,9 +69,9 @@ import timber.log.Timber
  * or using Offline mode, both in which Indexes instead of Artists are being used.
  */
 @Suppress("TooManyFunctions")
-open class TrackCollectionFragment(
-    initialOrder: SortOrder? = null
-) : MultiListFragment<MusicDirectory.Child>(), FilterableFragment {
+open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
+    MultiListFragment<MusicDirectory.Child>(),
+    FilterableFragment {
 
     private var albumButtons: View? = null
     private var selectButton: MaterialButton? = null
@@ -489,16 +489,12 @@ open class TrackCollectionFragment(
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun getAllTracks(): List<Track> {
-        return viewAdapter.getCurrentList().filter {
-            it is Track && !it.isDirectory
-        } as List<Track>
-    }
+    private fun getAllTracks(): List<Track> = viewAdapter.getCurrentList().filter {
+        it is Track && !it.isDirectory
+    } as List<Track>
 
-    fun getSelectedOrAllTracks(): List<Track> {
-        return getSelectedTracks().ifEmpty {
-            getAllTracks()
-        }
+    fun getSelectedOrAllTracks(): List<Track> = getSelectedTracks().ifEmpty {
+        getAllTracks()
     }
 
     override fun setTitle(title: String?) {
@@ -615,9 +611,11 @@ open class TrackCollectionFragment(
                 )
                 findNavController().navigate(action)
             }
+
             item is Track && item.isVideo -> {
                 VideoPlayer.playVideo(requireContext(), item)
             }
+
             else -> {
                 triggerButtonUpdate()
             }

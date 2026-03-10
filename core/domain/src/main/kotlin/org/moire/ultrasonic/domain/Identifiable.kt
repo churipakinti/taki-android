@@ -13,7 +13,5 @@ interface Identifiable : Comparable<Identifiable> {
     val longId: Long
         get() = id.hashCode().toLong()
 
-    override fun compareTo(other: Identifiable): Int {
-        return longId.compareTo(other.longId)
-    }
+    override fun compareTo(other: Identifiable): Int = longId.compareTo(other.longId)
 }

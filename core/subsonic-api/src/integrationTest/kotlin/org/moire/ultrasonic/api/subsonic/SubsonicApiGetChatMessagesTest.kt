@@ -27,11 +27,13 @@ class SubsonicApiGetChatMessagesTest : SubsonicAPIClientTest() {
         with(response.body()!!.chatMessages) {
             size `should be equal to` 2
             this[0] `should be equal to` ChatMessage(
-                username = "sindre", time = 1269771845310,
+                username = "sindre",
+                time = 1269771845310,
                 message = "Sindre was here"
             )
             this[1] `should be equal to` ChatMessage(
-                username = "ben", time = 1269771842504,
+                username = "ben",
+                time = 1269771842504,
                 message = "Ben too"
             )
         }

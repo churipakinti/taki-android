@@ -80,19 +80,13 @@ object FileUtil {
         return "$dir/$fileName"
     }
 
-    fun Track.getPinnedFile(): String {
-        return getSongFile(this)
-    }
+    fun Track.getPinnedFile(): String = getSongFile(this)
 
-    fun Track.getPartialFile(): String {
-        return getParentPath(this.getPinnedFile()) + "/" +
-            getPartialFile(getNameFromPath(this.getPinnedFile()))
-    }
+    fun Track.getPartialFile(): String = getParentPath(this.getPinnedFile()) + "/" +
+        getPartialFile(getNameFromPath(this.getPinnedFile()))
 
-    fun Track.getCompleteFile(): String {
-        return getParentPath(this.getPinnedFile()) + "/" +
-            getCompleteFile(getNameFromPath(this.getPinnedFile()))
-    }
+    fun Track.getCompleteFile(): String = getParentPath(this.getPinnedFile()) + "/" +
+        getCompleteFile(getNameFromPath(this.getPinnedFile()))
 
     @JvmStatic
     fun getPlaylistFile(server: String?, name: String?): File {
@@ -434,13 +428,10 @@ object FileUtil {
      * @param name The filename in question.
      * @return The .partial file name
      */
-    fun getPartialFile(name: String): String {
-        return String.format(Locale.ROOT, "%s.partial.%s", getBaseName(name), getExtension(name))
-    }
+    fun getPartialFile(name: String): String =
+        String.format(Locale.ROOT, "%s.partial.%s", getBaseName(name), getExtension(name))
 
-    fun getNameFromPath(path: String): String {
-        return path.substringAfterLast('/')
-    }
+    fun getNameFromPath(path: String): String = path.substringAfterLast('/')
 
     fun getParentPath(path: String?): String? {
         if (path == null || !path.contains('/')) return null
@@ -461,9 +452,8 @@ object FileUtil {
      * @param name The filename in question.
      * @return The .complete file name
      */
-    fun getCompleteFile(name: String): String {
-        return String.format(Locale.ROOT, "%s.complete.%s", getBaseName(name), getExtension(name))
-    }
+    fun getCompleteFile(name: String): String =
+        String.format(Locale.ROOT, "%s.complete.%s", getBaseName(name), getExtension(name))
 
     @JvmStatic
     fun <T : Serializable?> serialize(context: Context, obj: T, fileName: String): Boolean {

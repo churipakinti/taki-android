@@ -248,9 +248,7 @@ class NavigationActivity : ScopeActivity() {
             inflater.inflate(R.menu.search_view_menu, menu)
         }
 
-        override fun onMenuItemSelected(item: MenuItem): Boolean {
-            return false
-        }
+        override fun onMenuItemSelected(item: MenuItem): Boolean = false
     }
 
     fun setupSearchField(menu: Menu) {
@@ -370,9 +368,11 @@ class NavigationActivity : ScopeActivity() {
                 R.id.mediaLibraryFragment -> {
                     navController.navigate(NavigationGraphDirections.toMediaLibrary())
                 }
+
                 R.id.bookmarksFragment -> {
                     navController.navigate(NavigationGraphDirections.toBookmarks())
                 }
+
                 R.id.trackCollectionFragment -> {
                     navController.navigate(
                         NavigationGraphDirections.toTrackCollection(
@@ -380,12 +380,14 @@ class NavigationActivity : ScopeActivity() {
                         )
                     )
                 }
+
                 R.id.menu_exit -> {
                     setResult(Constants.RESULT_CLOSE_ALL)
                     mediaPlayerManager.onDestroy()
                     finish()
                     exit()
                 }
+
                 else -> navController.navigate(it.itemId)
             }
             drawerLayout?.closeDrawer(GravityCompat.START)
@@ -462,15 +464,18 @@ class NavigationActivity : ScopeActivity() {
             Constants.INTENT_PLAY_RANDOM_SONGS -> {
                 playRandomSongs()
             }
+
             Intent.ACTION_MAIN -> {
                 if (intent.getBooleanExtra(Constants.INTENT_SHOW_PLAYER, false)) {
                     findNavController(R.id.nav_host_fragment).navigate(R.id.playerFragment)
                 }
             }
+
             Intent.ACTION_SEARCH -> {
                 searchQuery = intent.getStringExtra(SearchManager.QUERY)
                 handleSearchIntent(searchQuery, false)
             }
+
             MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH -> {
                 searchQuery = intent.getStringExtra(SearchManager.QUERY)
                 handleSearchIntent(searchQuery, true)

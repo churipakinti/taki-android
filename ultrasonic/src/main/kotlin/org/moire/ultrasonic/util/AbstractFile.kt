@@ -24,13 +24,9 @@ abstract class AbstractFile : Comparable<AbstractFile> {
     abstract val path: String
     abstract val parent: AbstractFile?
 
-    override fun compareTo(other: AbstractFile): Int {
-        return path.compareTo(other.path)
-    }
+    override fun compareTo(other: AbstractFile): Int = path.compareTo(other.path)
 
-    override fun toString(): String {
-        return name
-    }
+    override fun toString(): String = name
 
     abstract fun delete(): Boolean
 

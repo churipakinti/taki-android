@@ -5,11 +5,8 @@ import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions
 import org.moire.ultrasonic.api.subsonic.SubsonicError
 import org.moire.ultrasonic.api.subsonic.models.Share
 
-class SharesResponse(
-    status: Status,
-    version: SubsonicAPIVersions,
-    error: SubsonicError?
-) : SubsonicResponse(status, version, error) {
+class SharesResponse(status: Status, version: SubsonicAPIVersions, error: SubsonicError?) :
+    SubsonicResponse(status, version, error) {
     @JsonProperty("shares")
     private val wrappedShares = SharesWrapper()
 

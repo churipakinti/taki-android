@@ -32,12 +32,10 @@ object CommunicationError {
     fun getHandler(
         context: Context?,
         handler: ((CoroutineContext, Throwable) -> Unit)? = null
-    ): CoroutineExceptionHandler {
-        return CoroutineExceptionHandler { coroutineContext, exception ->
-            Handler(Looper.getMainLooper()).post {
-                handleError(exception, context)
-                handler?.invoke(coroutineContext, exception)
-            }
+    ): CoroutineExceptionHandler = CoroutineExceptionHandler { coroutineContext, exception ->
+        Handler(Looper.getMainLooper()).post {
+            handleError(exception, context)
+            handler?.invoke(coroutineContext, exception)
         }
     }
 

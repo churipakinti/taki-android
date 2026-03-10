@@ -32,8 +32,10 @@ class SubsonicApiSearchThreeTest : SubsonicAPIClientTest() {
         with(response.body()!!.searchResult) {
             artistList.size `should be equal to` 1
             artistList[0] `should be equal to` Artist(
-                id = "505", name = "The Prodigy",
-                coverArt = "ar-505", albumCount = 5
+                id = "505",
+                name = "The Prodigy",
+                coverArt = "ar-505",
+                albumCount = 5
             )
             albumList.size `should be equal to` 1
             albumList[0] `should be equal to` Album(

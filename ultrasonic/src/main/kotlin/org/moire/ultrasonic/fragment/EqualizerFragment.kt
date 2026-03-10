@@ -50,9 +50,7 @@ class EqualizerFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.equalizer, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.equalizer, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -179,7 +177,8 @@ class EqualizerFragment : Fragment() {
         freqTextView.text = String.format(
             Locale.getDefault(),
             "%d - %d Hz",
-            range[0] / 1000, range[1] / 1000
+            range[0] / 1000,
+            range[1] / 1000
         )
 
         bars[band] = bar

@@ -174,17 +174,29 @@ class MediaPlayerLifecycleSupport(
                 KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
                 KeyEvent.KEYCODE_HEADSETHOOK
                 -> mediaPlayerManager.togglePlayPause()
+
                 KeyEvent.KEYCODE_MEDIA_PREVIOUS -> mediaPlayerManager.seekToPrevious()
+
                 KeyEvent.KEYCODE_MEDIA_NEXT -> mediaPlayerManager.seekToNext()
+
                 KeyEvent.KEYCODE_MEDIA_STOP -> mediaPlayerManager.stop()
+
                 KeyEvent.KEYCODE_MEDIA_PLAY -> mediaPlayerManager.play()
+
                 KeyEvent.KEYCODE_MEDIA_PAUSE -> mediaPlayerManager.pause()
+
                 KeyEvent.KEYCODE_1 -> mediaPlayerManager.legacySetRating(1)
+
                 KeyEvent.KEYCODE_2 -> mediaPlayerManager.legacySetRating(2)
+
                 KeyEvent.KEYCODE_3 -> mediaPlayerManager.legacySetRating(3)
+
                 KeyEvent.KEYCODE_4 -> mediaPlayerManager.legacySetRating(4)
+
                 KeyEvent.KEYCODE_5 -> mediaPlayerManager.legacySetRating(5)
+
                 KeyEvent.KEYCODE_STAR -> mediaPlayerManager.legacyToggleStar()
+
                 else -> {
                 }
             }
@@ -213,15 +225,20 @@ class MediaPlayerLifecycleSupport(
         onCreate(autoStart) {
             when (action) {
                 Constants.CMD_PLAY -> mediaPlayerManager.play()
+
                 Constants.CMD_RESUME_OR_PLAY ->
                     // If Ultrasonic wasn't running, the autoStart is enough to resume,
                     // no need to call anything
                     if (isRunning) mediaPlayerManager.resumeOrPlay()
 
                 Constants.CMD_NEXT -> mediaPlayerManager.seekToNext()
+
                 Constants.CMD_PREVIOUS -> mediaPlayerManager.seekToPrevious()
+
                 Constants.CMD_TOGGLEPAUSE -> mediaPlayerManager.togglePlayPause()
+
                 Constants.CMD_STOP -> mediaPlayerManager.stop()
+
                 Constants.CMD_PAUSE -> mediaPlayerManager.pause()
             }
         }

@@ -52,9 +52,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         artists.postValue(result.toMutableList().sortedWith(comparator))
     }
 
-    override fun showSelectFolderHeader(): Boolean {
-        return true
-    }
+    override fun showSelectFolderHeader(): Boolean = true
 
     companion object {
         val comparator: Comparator<ArtistOrIndex> =

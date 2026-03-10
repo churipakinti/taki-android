@@ -209,13 +209,9 @@ class SettableAsyncListDiffer<T> {
         val oldList: List<T> = mList!!
         mConfig!!.backgroundThreadExecutor.execute {
             val result = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                override fun getOldListSize(): Int {
-                    return oldList.size
-                }
+                override fun getOldListSize(): Int = oldList.size
 
-                override fun getNewListSize(): Int {
-                    return newList.size
-                }
+                override fun getNewListSize(): Int = newList.size
 
                 override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
                     val oldItem: T? = oldList[oldItemPosition]

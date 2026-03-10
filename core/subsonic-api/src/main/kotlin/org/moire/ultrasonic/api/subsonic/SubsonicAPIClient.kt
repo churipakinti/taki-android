@@ -150,9 +150,7 @@ class SubsonicAPIClient(
     /**
      * This function is necessary because Mockito has problems with stubbing chained calls
      */
-    fun toStreamResponse(call: Response<ResponseBody>): StreamResponse {
-        return call.toStreamResponse()
-    }
+    fun toStreamResponse(call: Response<ResponseBody>): StreamResponse = call.toStreamResponse()
 
     val isOffline by lazy {
         config.baseUrl == OFFLINE_DB_URL

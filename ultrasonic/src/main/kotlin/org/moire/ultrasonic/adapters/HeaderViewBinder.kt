@@ -20,9 +20,9 @@ import org.moire.ultrasonic.util.Util
 /**
  * This Binder can bind a list of entries into a Header
  */
-class HeaderViewBinder(
-    context: Context
-) : ItemViewBinder<AlbumHeader, HeaderViewBinder.ViewHolder>(), KoinComponent {
+class HeaderViewBinder(context: Context) :
+    ItemViewBinder<AlbumHeader, HeaderViewBinder.ViewHolder>(),
+    KoinComponent {
 
     private val weakContext: WeakReference<Context> = WeakReference(context)
     private val random: Random = Random()
@@ -31,9 +31,8 @@ class HeaderViewBinder(
     // Set our layout files
     val layout = R.layout.list_header_album
 
-    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder {
-        return ViewHolder(inflater.inflate(layout, parent, false))
-    }
+    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder =
+        ViewHolder(inflater.inflate(layout, parent, false))
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val coverArtView: ImageView = itemView.findViewById(R.id.select_album_art)

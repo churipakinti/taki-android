@@ -70,10 +70,12 @@ abstract class EndlessScrollListener : RecyclerView.OnScrollListener {
                 // get maximum element within the list
                 lastVisibleItemPosition = getLastVisibleItem(lastVisibleItemPositions)
             }
+
             is GridLayoutManager -> {
                 lastVisibleItemPosition =
                     thisManager.findLastVisibleItemPosition()
             }
+
             is LinearLayoutManager -> {
                 lastVisibleItemPosition =
                     thisManager.findLastVisibleItemPosition()

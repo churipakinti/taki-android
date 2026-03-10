@@ -14,13 +14,11 @@ class TimeLimitedCache<T>(expiresAfter: Long = 60L, timeUnit: TimeUnit = TimeUni
     private val expiresMillis: Long = TimeUnit.MILLISECONDS.convert(expiresAfter, timeUnit)
     private var expires: Long = 0
 
-    fun get(): T? {
-        return if (System.currentTimeMillis() < expires) {
-            value!!.get()
-        } else {
-            clear()
-            null
-        }
+    fun get(): T? = if (System.currentTimeMillis() < expires) {
+        value!!.get()
+    } else {
+        clear()
+        null
     }
 
     @JvmOverloads

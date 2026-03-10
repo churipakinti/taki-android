@@ -31,7 +31,8 @@ class SubsonicApiGetIndexesTest : SubsonicAPIClientTest() {
                     "A",
                     listOf(
                         Artist(
-                            id = "50", name = "Ace Of Base",
+                            id = "50",
+                            name = "Ace Of Base",
                             starred = parseDate("2017-04-02T20:16:29.815Z")
                         ),
                         Artist(id = "379", name = "A Perfect Circle")

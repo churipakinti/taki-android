@@ -32,7 +32,9 @@ import org.moire.ultrasonic.util.toastingExceptionHandler
 /**
  * Displays the podcasts available on the server
  */
-class PodcastFragment : ScopeFragment(), RefreshableFragment {
+class PodcastFragment :
+    ScopeFragment(),
+    RefreshableFragment {
     private var emptyTextView: View? = null
     private var channelItemsListView: ListView? = null
     override var swipeRefresh: SwipeRefreshLayout? = null
@@ -46,9 +48,7 @@ class PodcastFragment : ScopeFragment(), RefreshableFragment {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.podcasts, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.podcasts, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

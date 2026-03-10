@@ -37,6 +37,7 @@ object ContextMenuUtil : KoinComponent {
                     id = item.id,
                     isArtist = isArtist
                 )
+
             R.id.menu_play_next ->
                 mediaPlayerManager.playTracksAndToast(
                     fragment = fragment,
@@ -44,6 +45,7 @@ object ContextMenuUtil : KoinComponent {
                     id = item.id,
                     isArtist = isArtist
                 )
+
             R.id.menu_play_last ->
                 mediaPlayerManager.playTracksAndToast(
                     fragment = fragment,
@@ -51,6 +53,7 @@ object ContextMenuUtil : KoinComponent {
                     id = item.id,
                     isArtist = isArtist
                 )
+
             R.id.menu_pin ->
                 DownloadUtil.justDownload(
                     action = DownloadAction.PIN,
@@ -58,6 +61,7 @@ object ContextMenuUtil : KoinComponent {
                     id = item.id,
                     isArtist = isArtist
                 )
+
             R.id.menu_unpin ->
                 DownloadUtil.justDownload(
                     action = DownloadAction.UNPIN,
@@ -65,6 +69,7 @@ object ContextMenuUtil : KoinComponent {
                     id = item.id,
                     isArtist = isArtist
                 )
+
             R.id.menu_download ->
                 DownloadUtil.justDownload(
                     action = DownloadAction.DOWNLOAD,
@@ -72,6 +77,7 @@ object ContextMenuUtil : KoinComponent {
                     id = item.id,
                     isArtist = isArtist
                 )
+
             else -> return false
         }
         return true
@@ -91,6 +97,7 @@ object ContextMenuUtil : KoinComponent {
                     tracks = tracks
                 )
             }
+
             R.id.song_menu_play_next -> {
                 mediaPlayerManager.playTracksAndToast(
                     fragment = fragment,
@@ -98,6 +105,7 @@ object ContextMenuUtil : KoinComponent {
                     tracks = tracks
                 )
             }
+
             R.id.song_menu_play_last -> {
                 mediaPlayerManager.playTracksAndToast(
                     fragment = fragment,
@@ -105,6 +113,7 @@ object ContextMenuUtil : KoinComponent {
                     tracks = tracks
                 )
             }
+
             R.id.song_menu_pin -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.PIN,
@@ -112,6 +121,7 @@ object ContextMenuUtil : KoinComponent {
                     tracks = tracks
                 )
             }
+
             R.id.song_menu_unpin -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.UNPIN,
@@ -119,6 +129,7 @@ object ContextMenuUtil : KoinComponent {
                     tracks = tracks
                 )
             }
+
             R.id.song_menu_download -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.DOWNLOAD,
@@ -126,6 +137,7 @@ object ContextMenuUtil : KoinComponent {
                     tracks = tracks
                 )
             }
+
             R.id.song_menu_share -> {
                 val shareHandler: ShareHandler by inject()
                 shareHandler.createShare(
@@ -133,6 +145,7 @@ object ContextMenuUtil : KoinComponent {
                     tracks = tracks
                 )
             }
+
             else -> return false
         }
         return true

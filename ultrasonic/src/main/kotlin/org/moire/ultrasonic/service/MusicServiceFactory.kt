@@ -37,12 +37,10 @@ import timber.log.Timber
  */
 object MusicServiceFactory : KoinComponent {
     @JvmStatic
-    fun getMusicService(): MusicService {
-        return if (ActiveServerProvider.isOffline()) {
-            get(named(OFFLINE_MUSIC_SERVICE))
-        } else {
-            get(named(ONLINE_MUSIC_SERVICE))
-        }
+    fun getMusicService(): MusicService = if (ActiveServerProvider.isOffline()) {
+        get(named(OFFLINE_MUSIC_SERVICE))
+    } else {
+        get(named(ONLINE_MUSIC_SERVICE))
     }
 
     /**

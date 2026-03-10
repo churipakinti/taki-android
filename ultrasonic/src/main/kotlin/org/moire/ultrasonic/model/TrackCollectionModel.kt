@@ -177,14 +177,17 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
                     DownloadState.DONE -> {
                         deleteEnabled = true
                     }
+
                     DownloadState.PINNED -> {
                         deleteEnabled = true
                         pinnedCount++
                         unpinEnabled = true
                     }
+
                     DownloadState.IDLE, DownloadState.FAILED -> {
                         downloadEnabled = true
                     }
+
                     else -> {}
                 }
             }

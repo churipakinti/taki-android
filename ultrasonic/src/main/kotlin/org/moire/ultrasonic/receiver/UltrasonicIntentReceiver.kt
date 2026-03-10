@@ -15,7 +15,9 @@ import org.koin.core.component.inject
 import org.moire.ultrasonic.service.MediaPlayerLifecycleSupport
 import timber.log.Timber
 
-class UltrasonicIntentReceiver : BroadcastReceiver(), KoinComponent {
+class UltrasonicIntentReceiver :
+    BroadcastReceiver(),
+    KoinComponent {
     private val lifecycleSupport by inject<MediaPlayerLifecycleSupport>()
 
     override fun onReceive(context: Context, intent: Intent) {

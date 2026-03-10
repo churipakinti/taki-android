@@ -73,15 +73,13 @@ class TimeSpanPicker(private var mContext: Context, attrs: AttributeSet?, defSty
         timeSpanSpinner.isEnabled = enabled
     }
 
-    fun getTimeSpan(): Long {
-        return if (!timeSpanDisableCheckbox.isChecked) {
-            getTimeSpanFromDialog(
-                mContext,
-                dialog
-            )
-        } else {
-            -1L
-        }
+    fun getTimeSpan(): Long = if (!timeSpanDisableCheckbox.isChecked) {
+        getTimeSpanFromDialog(
+            mContext,
+            dialog
+        )
+    } else {
+        -1L
     }
 
     val timeSpanEnabled: Boolean
@@ -156,12 +154,15 @@ class TimeSpanPicker(private var mContext: Context, attrs: AttributeSet?, defSty
                 resources.getText(R.string.settings_share_minutes) -> {
                     TimeUnit.MINUTES.toMillis(timeSpanAmount)
                 }
+
                 resources.getText(R.string.settings_share_hours) -> {
                     TimeUnit.HOURS.toMillis(timeSpanAmount)
                 }
+
                 resources.getText(R.string.settings_share_days) -> {
                     TimeUnit.DAYS.toMillis(timeSpanAmount)
                 }
+
                 else -> TimeUnit.MINUTES.toMillis(0L)
             }
         }

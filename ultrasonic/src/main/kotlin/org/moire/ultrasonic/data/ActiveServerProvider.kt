@@ -28,9 +28,8 @@ import timber.log.Timber
  * This class can be used to retrieve the properties of the Active Server
  * It caches the settings read up from the DB to improve performance.
  */
-class ActiveServerProvider(
-    private val repository: ServerSettingDao
-) : CoroutineScope by CoroutineScope(Dispatchers.IO) {
+class ActiveServerProvider(private val repository: ServerSettingDao) :
+    CoroutineScope by CoroutineScope(Dispatchers.IO) {
     private var cachedServer: ServerSetting? = null
     private var cachedDatabase: MetaDatabase? = null
     private var cachedServerId: Int? = null
@@ -152,16 +151,14 @@ class ActiveServerProvider(
         initDatabase(0)
     }
 
-    private fun initDatabase(serverId: Int): MetaDatabase {
-        return Room.databaseBuilder(
-            UApp.applicationContext(),
-            MetaDatabase::class.java,
-            METADATA_DB + serverId
-        )
-            .addMigrations(META_MIGRATION_2_3)
-            .fallbackToDestructiveMigrationOnDowngrade(true)
-            .build()
-    }
+    private fun initDatabase(serverId: Int): MetaDatabase = Room.databaseBuilder(
+        UApp.applicationContext(),
+        MetaDatabase::class.java,
+        METADATA_DB + serverId
+    )
+        .addMigrations(META_MIGRATION_2_3)
+        .fallbackToDestructiveMigrationOnDowngrade(true)
+        .build()
 
     @Synchronized
     fun deleteMetaDatabase(id: Int) {
@@ -246,16 +243,12 @@ class ActiveServerProvider(
          * Queries if the Active Server is the "Offline" mode of Ultrasonic
          * @return True, if the "Offline" mode is selected
          */
-        fun isOffline(): Boolean {
-            return getActiveServerId() == OFFLINE_DB_ID
-        }
+        fun isOffline(): Boolean = getActiveServerId() == OFFLINE_DB_ID
 
         /**
          * Queries the Id of the Active Server
          */
-        fun getActiveServerId(): Int {
-            return Settings.activeServer
-        }
+        fun getActiveServerId(): Int = Settings.activeServer
 
         /**
          * Queries if Scrobbling is enabled
@@ -270,9 +263,8 @@ class ActiveServerProvider(
         /**
          * Queries if ID3 tags should be used
          */
-        fun shouldUseId3Tags(): Boolean {
-            return Settings.id3TagsEnabledOnline && (!isOffline() || Settings.id3TagsEnabledOffline)
-        }
+        fun shouldUseId3Tags(): Boolean =
+            Settings.id3TagsEnabledOnline && (!isOffline() || Settings.id3TagsEnabledOffline)
 
         /**
          * Queries if Server Scaling is enabled

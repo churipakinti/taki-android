@@ -21,20 +21,15 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIClient
 
-data class AvatarRequest(
-    val username: String
-)
+data class AvatarRequest(val username: String)
 
 class AvatarKeyer : Keyer<AvatarRequest> {
-    override fun key(data: AvatarRequest, options: Options): String {
-        return data.username
-    }
+    override fun key(data: AvatarRequest, options: Options): String = data.username
 }
 
-class AvatarFetcher(
-    private val avatarRequest: AvatarRequest,
-    private val options: Options
-) : Fetcher, KoinComponent {
+class AvatarFetcher(private val avatarRequest: AvatarRequest, private val options: Options) :
+    Fetcher,
+    KoinComponent {
     private val client: SubsonicAPIClient by inject()
 
     override suspend fun fetch(): FetchResult {
@@ -58,8 +53,6 @@ class AvatarFetcher(
             data: AvatarRequest,
             options: Options,
             imageLoader: coil3.ImageLoader
-        ): Fetcher {
-            return AvatarFetcher(data, options)
-        }
+        ): Fetcher = AvatarFetcher(data, options)
     }
 }

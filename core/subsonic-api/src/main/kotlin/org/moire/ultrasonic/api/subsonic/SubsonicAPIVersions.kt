@@ -53,24 +53,42 @@ enum class SubsonicAPIVersions(val subsonicVersions: String, val restApiVersion:
                     1 -> when {
                         minorVersion < 1 ->
                             throw IllegalArgumentException("Unknown api version $apiVersion")
+
                         minorVersion < 2 && patchVersion < 1 -> return V1_1_0
+
                         minorVersion < 2 -> return V1_1_1
+
                         minorVersion < 3 -> return V1_2_0
+
                         minorVersion < 4 -> return V1_3_0
+
                         minorVersion < 5 -> return V1_4_0
+
                         minorVersion < 6 -> return V1_5_0
+
                         minorVersion < 7 -> return V1_6_0
+
                         minorVersion < 8 -> return V1_7_0
+
                         minorVersion < 9 -> return V1_8_0
+
                         minorVersion < 10 -> return V1_9_0
+
                         minorVersion < 11 -> return V1_10_2
+
                         minorVersion < 12 -> return V1_11_0
+
                         minorVersion < 13 -> return V1_12_0
+
                         minorVersion < 14 -> return V1_13_0
+
                         minorVersion < 15 -> return V1_14_0
+
                         minorVersion < 16 -> return V1_15_0
+
                         else -> return V1_16_0
                     }
+
                     // Subsonic API specifies that the client's and the server's major API version
                     // must be the same
                     else -> throw IllegalArgumentException("Unknown api version $apiVersion")

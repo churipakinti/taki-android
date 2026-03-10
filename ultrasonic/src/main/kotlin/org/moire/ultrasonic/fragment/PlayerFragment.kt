@@ -378,12 +378,15 @@ class PlayerFragment :
                 0 -> toast(
                     R.string.download_repeat_off
                 )
+
                 1 -> toast(
                     R.string.download_repeat_single
                 )
+
                 2 -> toast(
                     R.string.download_repeat_all
                 )
+
                 else -> {
                 }
             }
@@ -474,14 +477,17 @@ class PlayerFragment :
                 repeatButton.setIconResource(R.drawable.media_repeat_off)
                 repeatButton.alpha = ALPHA_DEACTIVATED
             }
+
             1 -> {
                 repeatButton.setIconResource(R.drawable.media_repeat_one)
                 repeatButton.alpha = ALPHA_FULL
             }
+
             2 -> {
                 repeatButton.setIconResource(R.drawable.media_repeat_all)
                 repeatButton.alpha = ALPHA_FULL
             }
+
             else -> {
             }
         }
@@ -554,9 +560,8 @@ class PlayerFragment :
             menuInflater.inflate(R.menu.nowplaying, menu)
         }
 
-        override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-            return menuItemSelected(menuItem.itemId, currentSong)
-        }
+        override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
+            menuItemSelected(menuItem.itemId, currentSong)
     }
 
     @Suppress("ComplexMethod", "LongMethod", "NestedBlockDepth")
@@ -666,6 +671,7 @@ class PlayerFragment :
                 }
                 return true
             }
+
             R.id.menu_show_album -> {
                 if (track == null) return false
 
@@ -680,12 +686,14 @@ class PlayerFragment :
                 findNavController().navigate(action)
                 return true
             }
+
             R.id.menu_lyrics -> {
                 if (track?.artist == null || track.title == null) return false
                 val action = PlayerFragmentDirections.playerToLyrics(track.artist!!, track.title!!)
                 Navigation.findNavController(requireView()).navigate(action)
                 return true
             }
+
             R.id.menu_item_screen_on_off -> {
                 val window = requireActivity().window
                 if (mediaPlayerManager.keepScreenOn) {
@@ -697,14 +705,17 @@ class PlayerFragment :
                 }
                 return true
             }
+
             R.id.menu_shuffle -> {
                 toggleShuffle()
                 return true
             }
+
             R.id.menu_item_equalizer -> {
                 Navigation.findNavController(requireView()).navigate(R.id.playerToEqualizer)
                 return true
             }
+
             R.id.menu_item_jukebox -> {
                 val jukeboxEnabled = !mediaPlayerManager.isJukeboxEnabled
                 mediaPlayerManager.isJukeboxEnabled = jukeboxEnabled
@@ -718,22 +729,26 @@ class PlayerFragment :
                 )
                 return true
             }
+
             R.id.menu_item_toggle_list -> {
                 toggleFullScreenAlbumArt()
                 return true
             }
+
             R.id.menu_item_clear_playlist -> {
                 mediaPlayerManager.isShufflePlayEnabled = false
                 mediaPlayerManager.clear()
                 onPlaylistChanged()
                 return true
             }
+
             R.id.menu_item_save_playlist -> {
                 if (mediaPlayerManager.playlistSize > 0) {
                     showSavePlaylistDialog()
                 }
                 return true
             }
+
             R.id.menu_item_bookmark_set -> {
                 if (track == null) return true
 
@@ -756,6 +771,7 @@ class PlayerFragment :
                 toast(msg)
                 return true
             }
+
             R.id.menu_item_bookmark_delete -> {
                 if (track == null) return true
 
@@ -772,6 +788,7 @@ class PlayerFragment :
                 toast(R.string.download_bookmark_removed)
                 return true
             }
+
             R.id.menu_item_share -> {
                 val tracks = mediaPlayerManager.playlist.map {
                     it.toTrack()
@@ -782,6 +799,7 @@ class PlayerFragment :
                 )
                 return true
             }
+
             R.id.menu_item_share_song -> {
                 if (track == null) return true
 
@@ -791,6 +809,7 @@ class PlayerFragment :
                 )
                 return true
             }
+
             else -> return false
         }
     }
@@ -972,9 +991,7 @@ class PlayerFragment :
                 viewHolder.itemView.alpha = 1.0f
             }
 
-            override fun isLongPressDragEnabled(): Boolean {
-                return false
-            }
+            override fun isLongPressDragEnabled(): Boolean = false
 
             override fun onChildDraw(
                 canvas: Canvas,
@@ -1088,8 +1105,10 @@ class PlayerFragment :
                     )
                 }
                 bitrateFormatTextView.text = String.format(
-                    Locale.ROOT, "%s %s",
-                    bitRate, currentSong!!.suffix
+                    Locale.ROOT,
+                    "%s %s",
+                    bitRate,
+                    currentSong!!.suffix
                 )
                 bitrateFormatTextView.isVisible = true
             } else {
@@ -1161,6 +1180,7 @@ class PlayerFragment :
                 )
                 setTitle(this@PlayerFragment, downloadStatus)
             }
+
             Player.STATE_READY -> {
                 if (mediaPlayerManager.isShufflePlayEnabled) {
                     setTitle(
@@ -1171,7 +1191,9 @@ class PlayerFragment :
                     setTitle(this@PlayerFragment, R.string.common_appname)
                 }
             }
+
             Player.STATE_IDLE, Player.STATE_ENDED -> {}
+
             else -> setTitle(this@PlayerFragment, R.string.common_appname)
         }
     }
@@ -1181,6 +1203,7 @@ class PlayerFragment :
             Player.STATE_BUFFERING, Player.STATE_READY -> {
                 progressBar.secondaryProgress = progress
             }
+
             else -> { }
         }
     }
@@ -1193,11 +1216,13 @@ class PlayerFragment :
                 stopButton.isVisible = false
                 playButton.isVisible = !isPlaying
             }
+
             Player.STATE_BUFFERING -> {
                 pauseButton.isVisible = false
                 stopButton.isVisible = true
                 playButton.isVisible = false
             }
+
             else -> {
                 pauseButton.isVisible = false
                 stopButton.isVisible = false
@@ -1216,9 +1241,7 @@ class PlayerFragment :
         }
     }
 
-    override fun onDown(me: MotionEvent): Boolean {
-        return false
-    }
+    override fun onDown(me: MotionEvent): Boolean = false
 
     @Suppress("ReturnCount")
     override fun onFling(
@@ -1270,14 +1293,10 @@ class PlayerFragment :
         e2: MotionEvent,
         distanceX: Float,
         distanceY: Float
-    ): Boolean {
-        return false
-    }
+    ): Boolean = false
 
     override fun onShowPress(e: MotionEvent) {}
-    override fun onSingleTapUp(e: MotionEvent): Boolean {
-        return false
-    }
+    override fun onSingleTapUp(e: MotionEvent): Boolean = false
 
     private fun updateSongRatingDisplay() {
         val rating = currentSong?.userRating ?: 0
@@ -1296,9 +1315,8 @@ class PlayerFragment :
         }
     }
 
-    private fun getStarForRating(rating: Int, position: Int): Drawable {
-        return if (rating > position) fullStarDrawable else hollowStarDrawable
-    }
+    private fun getStarForRating(rating: Int, position: Int): Drawable =
+        if (rating > position) fullStarDrawable else hollowStarDrawable
 
     private fun setLayerDrawableColors(
         drawable: LayerDrawable,

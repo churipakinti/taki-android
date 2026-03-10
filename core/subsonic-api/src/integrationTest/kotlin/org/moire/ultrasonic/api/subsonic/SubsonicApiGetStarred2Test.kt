@@ -30,7 +30,8 @@ class SubsonicApiGetStarred2Test : SubsonicAPIClientTest() {
             albumList `should be equal to` emptyList()
             artistList.size `should be equal to` 1
             artistList[0] `should be equal to` Artist(
-                id = "364", name = "Parov Stelar",
+                id = "364",
+                name = "Parov Stelar",
                 starred = parseDate("2017-08-12T18:32:58.768Z")
             )
             songList `should be equal to` emptyList()
