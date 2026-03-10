@@ -25,25 +25,18 @@ import org.moire.ultrasonic.util.Storage
 import timber.log.Timber
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-class CachedDataSource(
-    private var upstreamDataSource: DataSource
-) : BaseDataSource(true) {
+class CachedDataSource(private var upstreamDataSource: DataSource) : BaseDataSource(true) {
 
-    class Factory(
-        private var upstreamDataSourceFactory: DataSource.Factory
-    ) : DataSource.Factory {
+    class Factory(private var upstreamDataSourceFactory: DataSource.Factory) : DataSource.Factory {
 
-        override fun createDataSource(): CachedDataSource {
-            return createDataSourceInternal(
-                upstreamDataSourceFactory.createDataSource()
-            )
-        }
+        override fun createDataSource(): CachedDataSource = createDataSourceInternal(
+            upstreamDataSourceFactory.createDataSource()
+        )
 
-        private fun createDataSourceInternal(upstreamDataSource: DataSource): CachedDataSource {
-            return CachedDataSource(
+        private fun createDataSourceInternal(upstreamDataSource: DataSource): CachedDataSource =
+            CachedDataSource(
                 upstreamDataSource
             )
-        }
     }
 
     private var bytesToRead: Long = 0
@@ -174,9 +167,7 @@ class CachedDataSource(
      * This method is called by StatsDataSource to verify that the loading succeeded,
      * so its important that we return the correct value here..
      */
-    override fun getUri(): Uri? {
-        return cachePath?.toUri() ?: upstreamDataSource.uri
-    }
+    override fun getUri(): Uri? = cachePath?.toUri() ?: upstreamDataSource.uri
 
     override fun close() {
         Timber.i("CachedDatasource: close %s", openedFile)

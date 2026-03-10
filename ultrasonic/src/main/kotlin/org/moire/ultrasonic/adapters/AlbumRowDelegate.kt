@@ -33,7 +33,8 @@ import org.moire.ultrasonic.util.LayoutType
 open class AlbumRowDelegate(
     open val onItemClick: (Album) -> Unit,
     open val onContextMenuClick: (MenuItem, Album) -> Boolean
-) : ItemViewDelegate<Album, AlbumRowDelegate.ListViewHolder>(), KoinComponent {
+) : ItemViewDelegate<Album, AlbumRowDelegate.ListViewHolder>(),
+    KoinComponent {
 
     private val starDrawable: Int = R.drawable.rating_star_full
     private val starHollowDrawable: Int = R.drawable.rating_star_hollow
@@ -73,9 +74,7 @@ open class AlbumRowDelegate(
     /**
      * Holds the view properties of an Item row
      */
-    open class ListViewHolder(
-        view: View
-    ) : RecyclerView.ViewHolder(view) {
+    open class ListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         var album: TextView
         var artist: TextView
@@ -101,9 +100,7 @@ open class AlbumRowDelegate(
     /**
      * Holds the view properties of an Item row
      */
-    class CoverViewHolder(
-        view: View
-    ) : ListViewHolder(view) {
+    class CoverViewHolder(view: View) : ListViewHolder(view) {
         constructor(parent: ViewGroup, inflater: LayoutInflater) : this(
             inflater.inflate(R.layout.grid_item_album, parent, false)
         )
@@ -124,18 +121,18 @@ open class AlbumRowDelegate(
         )
     }
 
-    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ListViewHolder {
-        return when (layoutType) {
+    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ListViewHolder =
+        when (layoutType) {
             LayoutType.LIST -> ListViewHolder(
                 parent,
                 LayoutInflater.from(context)
             )
+
             LayoutType.COVER -> CoverViewHolder(
                 parent,
                 LayoutInflater.from(context)
             )
         }
-    }
 }
 
 class AlbumGridDelegate(

@@ -31,14 +31,12 @@ class APIShareConverterTest : BaseTest() {
         }
     }
 
-    private fun createFakeShare(): Share {
-        return Share(
-            id = "45", url = "some-long-url", username = "Bender",
-            created = Calendar.getInstance(), expires = Calendar.getInstance(), visitCount = 24,
-            description = "Kiss my shiny metal ass", lastVisited = Calendar.getInstance(),
-            items = listOf(MusicDirectoryChild())
-        )
-    }
+    private fun createFakeShare(): Share = Share(
+        id = "45", url = "some-long-url", username = "Bender",
+        created = Calendar.getInstance(), expires = Calendar.getInstance(), visitCount = 24,
+        description = "Kiss my shiny metal ass", lastVisited = Calendar.getInstance(),
+        items = listOf(MusicDirectoryChild())
+    )
 
     @Test
     fun `Should parse list of shares into domain entity list`() {

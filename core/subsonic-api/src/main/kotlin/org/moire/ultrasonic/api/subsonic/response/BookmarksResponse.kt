@@ -5,11 +5,8 @@ import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions
 import org.moire.ultrasonic.api.subsonic.SubsonicError
 import org.moire.ultrasonic.api.subsonic.models.Bookmark
 
-class BookmarksResponse(
-    status: Status,
-    version: SubsonicAPIVersions,
-    error: SubsonicError?
-) : SubsonicResponse(status, version, error) {
+class BookmarksResponse(status: Status, version: SubsonicAPIVersions, error: SubsonicError?) :
+    SubsonicResponse(status, version, error) {
     @JsonProperty("bookmarks")
     private val bookmarksWrapper = BookmarkWrapper()
 

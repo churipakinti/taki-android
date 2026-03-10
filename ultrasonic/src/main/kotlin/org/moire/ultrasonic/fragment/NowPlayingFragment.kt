@@ -60,9 +60,7 @@ class NowPlayingFragment : ScopeFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.now_playing, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.now_playing, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         playButton = view.findViewById(R.id.now_playing_control_play)

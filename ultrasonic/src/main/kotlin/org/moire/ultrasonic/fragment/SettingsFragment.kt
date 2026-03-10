@@ -124,17 +124,21 @@ class SettingsFragment :
             getString(R.string.setting_key_hide_media) -> {
                 setHideMedia(sharedPreferences.getBoolean(key, false))
             }
+
             getString(R.string.setting_key_debug_log_to_file) -> {
                 setDebugLogToFile(sharedPreferences.getBoolean(key, false))
             }
+
             getString(R.string.setting_key_id3_tags) -> {
                 val enabled = sharedPreferences.getBoolean(key, false)
                 showArtistPicture?.isEnabled = enabled
                 useId3TagsOffline?.isEnabled = enabled
             }
+
             getString(R.string.setting_key_theme) -> {
                 RxBus.themeChangedEventPublisher.onNext(Unit)
             }
+
             getString(R.string.setting_key_custom_cache_location) -> {
                 if (Settings.customCacheLocation) {
                     selectCacheLocation()
@@ -157,9 +161,11 @@ class SettingsFragment :
                 is ListPreference -> {
                     pref.summary = pref.entry
                 }
+
                 is EditTextPreference -> {
                     pref.summary = pref.text
                 }
+
                 is TimeSpanPreference -> {
                     pref.summary = pref.text
                 }
@@ -278,20 +284,22 @@ class SettingsFragment :
             .create().show()
     }
 
-    private fun bluetoothDevicePreferenceToString(preferenceValue: Int): String {
-        return when (preferenceValue) {
+    private fun bluetoothDevicePreferenceToString(preferenceValue: Int): String =
+        when (preferenceValue) {
             Constants.PREFERENCE_VALUE_ALL -> {
                 getString(R.string.settings_playback_bluetooth_all)
             }
+
             Constants.PREFERENCE_VALUE_A2DP -> {
                 getString(R.string.settings_playback_bluetooth_a2dp)
             }
+
             Constants.PREFERENCE_VALUE_DISABLED -> {
                 getString(R.string.settings_playback_bluetooth_disabled)
             }
+
             else -> ""
         }
-    }
 
     private fun setupClearSearchPreference() {
         val clearSearchPreference =
@@ -315,7 +323,8 @@ class SettingsFragment :
         if (debugLogToFile?.isChecked == true) {
             debugLogToFile?.summary = getString(
                 R.string.settings_debug_log_path,
-                ultrasonicDirectory, FileLoggerTree.FILENAME
+                ultrasonicDirectory,
+                FileLoggerTree.FILENAME
             )
         } else {
             debugLogToFile?.summary = ""

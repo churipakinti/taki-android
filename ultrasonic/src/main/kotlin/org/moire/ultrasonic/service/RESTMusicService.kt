@@ -142,17 +142,15 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun search(criteria: SearchCriteria): SearchResult {
-        return try {
-            if (shouldUseId3Tags()) {
-                search3(criteria)
-            } else {
-                search2(criteria)
-            }
-        } catch (ignored: ApiNotSupportedException) {
-            // Ensure backward compatibility with REST 1.3.
-            searchOld(criteria)
+    override fun search(criteria: SearchCriteria): SearchResult = try {
+        if (shouldUseId3Tags()) {
+            search3(criteria)
+        } else {
+            search2(criteria)
         }
+    } catch (ignored: ApiNotSupportedException) {
+        // Ensure backward compatibility with REST 1.3.
+        searchOld(criteria)
     }
 
     /**

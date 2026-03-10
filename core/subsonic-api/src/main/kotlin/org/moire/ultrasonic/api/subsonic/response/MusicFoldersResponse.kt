@@ -5,11 +5,8 @@ import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions
 import org.moire.ultrasonic.api.subsonic.SubsonicError
 import org.moire.ultrasonic.api.subsonic.models.MusicFolder
 
-class MusicFoldersResponse(
-    status: Status,
-    version: SubsonicAPIVersions,
-    error: SubsonicError?
-) : SubsonicResponse(status, version, error) {
+class MusicFoldersResponse(status: Status, version: SubsonicAPIVersions, error: SubsonicError?) :
+    SubsonicResponse(status, version, error) {
     @JsonProperty("musicFolders")
     private val wrapper = MusicFoldersWrapper()
 

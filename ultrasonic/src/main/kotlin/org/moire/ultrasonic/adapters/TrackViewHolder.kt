@@ -230,10 +230,15 @@ class TrackViewHolder(val view: View) :
     private fun updateRatingDisplay(rating: Int?, starred: Boolean) {
         val ratingDrawable = when (rating) {
             1 -> R.drawable.rating_star_1
+
             2 -> R.drawable.rating_star_2
+
             3 -> R.drawable.rating_star_3
+
             4 -> R.drawable.rating_star_4
+
             5 -> R.drawable.rating_star_5
+
             else -> {
                 R.drawable.rating_star_0
             }
@@ -277,20 +282,25 @@ class TrackViewHolder(val view: View) :
             DownloadState.DONE -> {
                 showStatusImage(R.drawable.ic_downloaded)
             }
+
             DownloadState.PINNED -> {
                 showStatusImage(R.drawable.ic_menu_pin)
             }
+
             DownloadState.FAILED -> {
                 showStatusImage(R.drawable.ic_baseline_error)
             }
+
             DownloadState.DOWNLOADING -> {
                 showProgress()
             }
+
             DownloadState.RETRYING,
             DownloadState.QUEUED
             -> {
                 showIndefiniteProgress()
             }
+
             else -> {
                 // This handles CANCELLED too.
                 // Usually it means no error, just that the track wasn't downloaded
@@ -346,9 +356,7 @@ class TrackViewHolder(val view: View) :
         observableChecked.postValue(newStatus)
     }
 
-    override fun isChecked(): Boolean {
-        return check.isChecked
-    }
+    override fun isChecked(): Boolean = check.isChecked
 
     override fun toggle() {
         isChecked = isChecked

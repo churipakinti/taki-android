@@ -26,7 +26,5 @@ class DownloadableTrack(
         get() = track.id
 
     override fun compareTo(other: Identifiable) = compareTo(other as DownloadableTrack)
-    fun compareTo(other: DownloadableTrack): Int {
-        return priority.compareTo(other.priority)
-    }
+    fun compareTo(other: DownloadableTrack): Int = priority.compareTo(other.priority)
 }

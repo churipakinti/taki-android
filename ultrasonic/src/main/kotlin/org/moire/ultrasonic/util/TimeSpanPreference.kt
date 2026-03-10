@@ -8,10 +8,11 @@ import org.moire.ultrasonic.R
 /**
  * Created by Joshua Bahnsen on 12/22/13.
  */
-class TimeSpanPreference(mContext: Context, attrs: AttributeSet?) : DialogPreference(
-    mContext,
-    attrs
-) {
+class TimeSpanPreference(mContext: Context, attrs: AttributeSet?) :
+    DialogPreference(
+        mContext,
+        attrs
+    ) {
     init {
         setPositiveButtonText(android.R.string.ok)
         setNegativeButtonText(android.R.string.cancel)

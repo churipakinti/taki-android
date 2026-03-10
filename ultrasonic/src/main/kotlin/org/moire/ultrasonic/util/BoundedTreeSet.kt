@@ -28,9 +28,7 @@ class BoundedTreeSet<E> : TreeSet<E> {
         setMaxSize(maxSize)
     }
 
-    fun getMaxSize(): Int {
-        return maxSize
-    }
+    fun getMaxSize(): Int = maxSize
 
     fun setMaxSize(max: Int) {
         maxSize = max

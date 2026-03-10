@@ -29,7 +29,6 @@ object FragmentTitle {
         }
     }
 
-    fun getTitle(fragment: Fragment): CharSequence? {
-        return (fragment.activity as AppCompatActivity).supportActionBar?.title
-    }
+    fun getTitle(fragment: Fragment): CharSequence? =
+        (fragment.activity as AppCompatActivity).supportActionBar?.title
 }

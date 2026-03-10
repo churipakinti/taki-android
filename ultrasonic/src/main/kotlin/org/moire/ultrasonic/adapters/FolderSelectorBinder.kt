@@ -31,18 +31,15 @@ class FolderSelectorBinder(context: Context) :
     // Set our layout files
     val layout = R.layout.list_header_folder
 
-    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder {
-        return ViewHolder(inflater.inflate(layout, parent, false), weakContext)
-    }
+    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder =
+        ViewHolder(inflater.inflate(layout, parent, false), weakContext)
 
     override fun onBindViewHolder(holder: ViewHolder, item: FolderHeader) {
         holder.setData(item)
     }
 
-    class ViewHolder(
-        view: View,
-        private val weakContext: WeakReference<Context>
-    ) : RecyclerView.ViewHolder(view) {
+    class ViewHolder(view: View, private val weakContext: WeakReference<Context>) :
+        RecyclerView.ViewHolder(view) {
 
         private var data: FolderHeader? = null
 
@@ -122,10 +119,7 @@ class FolderSelectorBinder(context: Context) :
         }
     }
 
-    data class FolderHeader(
-        var folders: List<MusicFolder>,
-        var selected: String?
-    ) : Identifiable {
+    data class FolderHeader(var folders: List<MusicFolder>, var selected: String?) : Identifiable {
         override val id: String
             get() = "FOLDERSELECTOR"
 

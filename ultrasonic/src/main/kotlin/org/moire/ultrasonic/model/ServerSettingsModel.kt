@@ -48,9 +48,8 @@ class ServerSettingsModel(
      * Retrieves a single Server Setting by its index
      * This function is asynchronous, uses LiveData to provide the Setting.
      */
-    fun getServerSetting(index: Int): LiveData<ServerSetting?> {
-        return repository.getLiveServerSettingByIndex(index)
-    }
+    fun getServerSetting(index: Int): LiveData<ServerSetting?> =
+        repository.getLiveServerSettingByIndex(index)
 
     /**
      * Moves a Setting up in the Server List by decreasing its index

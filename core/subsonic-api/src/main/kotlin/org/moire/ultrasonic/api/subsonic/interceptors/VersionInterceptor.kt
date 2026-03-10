@@ -8,9 +8,7 @@ import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions
  * Special [Interceptor] that adds client supported version to request
  * @author Yahor Berdnikau
  */
-internal class VersionInterceptor(
-    internal var protocolVersion: SubsonicAPIVersions
-) : Interceptor {
+internal class VersionInterceptor(internal var protocolVersion: SubsonicAPIVersions) : Interceptor {
 
     override fun intercept(chain: Chain): okhttp3.Response {
         val originalRequest = chain.request()

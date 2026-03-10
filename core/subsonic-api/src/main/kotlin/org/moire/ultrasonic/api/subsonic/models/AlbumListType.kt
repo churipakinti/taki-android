@@ -26,9 +26,7 @@ enum class AlbumListType(val typeName: String) {
     BY_GENRE("byGenre")
     ;
 
-    override fun toString(): String {
-        return typeName
-    }
+    override fun toString(): String = typeName
 
     companion object {
         @JvmStatic

@@ -21,10 +21,9 @@ data class PlaybackState(
 }
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-fun PlaybackState.toMediaItemsWithStartPosition(): MediaSession.MediaItemsWithStartPosition {
-    return MediaSession.MediaItemsWithStartPosition(
+fun PlaybackState.toMediaItemsWithStartPosition(): MediaSession.MediaItemsWithStartPosition =
+    MediaSession.MediaItemsWithStartPosition(
         songs.map { it.toMediaItem() },
         currentPlayingIndex,
         currentPlayingPosition.toLong()
     )
-}

@@ -30,7 +30,9 @@ import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenu
  * towards the display of MusicDirectory.Entries.
  * @param T: The type of data which will be used (must extend GenericEntry)
  */
-abstract class EntryListFragment<T : GenericEntry> : MultiListFragment<T>(), KoinScopeComponent {
+abstract class EntryListFragment<T : GenericEntry> :
+    MultiListFragment<T>(),
+    KoinScopeComponent {
 
     private var rxBusSubscription: CompositeDisposable = CompositeDisposable()
     private val mediaPlayerManager: MediaPlayerManager by inject()
@@ -38,10 +40,9 @@ abstract class EntryListFragment<T : GenericEntry> : MultiListFragment<T>(), Koi
     /**
      * Whether to show the folder selector
      */
-    private fun showFolderHeader(): Boolean {
-        return listModel.showSelectFolderHeader() && !listModel.isOffline() &&
+    private fun showFolderHeader(): Boolean =
+        listModel.showSelectFolderHeader() && !listModel.isOffline() &&
             !ActiveServerProvider.shouldUseId3Tags()
-    }
 
     override fun onContextMenuItemSelected(menuItem: MenuItem, item: T): Boolean {
         val isArtist = (item is Artist)

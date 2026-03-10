@@ -23,7 +23,9 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.FileUtil
 import timber.log.Timber
 
-class AlbumArtContentProvider : ContentProvider(), KoinComponent {
+class AlbumArtContentProvider :
+    ContentProvider(),
+    KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 
@@ -91,7 +93,6 @@ class AlbumArtContentProvider : ContentProvider(), KoinComponent {
 
     override fun getType(uri: Uri): String? = null
 
-    override fun getStreamTypes(uri: Uri, mimeTypeFilter: String): Array<String> {
-        return arrayOf("image/jpeg", "image/png", "image/gif")
-    }
+    override fun getStreamTypes(uri: Uri, mimeTypeFilter: String): Array<String> =
+        arrayOf("image/jpeg", "image/png", "image/gif")
 }

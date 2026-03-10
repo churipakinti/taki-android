@@ -60,17 +60,11 @@ internal class ServerRowAdapter(
         notifyDataSetChanged()
     }
 
-    override fun getCount(): Int {
-        return data.size
-    }
+    override fun getCount(): Int = data.size
 
-    override fun getItem(position: Int): Any {
-        return data[position]
-    }
+    override fun getItem(position: Int): Any = data[position]
 
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
-    }
+    override fun getItemId(position: Int): Long = position.toLong()
 
     /**
      * Creates the Row representation of a Server Setting
@@ -183,19 +177,23 @@ internal class ServerRowAdapter(
                 serverEditRequestedCallback.invoke(position)
                 return true
             }
+
             MENU_ID_DELETE -> {
                 val server = getItem(position) as ServerSetting
                 serverDeletedCallback.invoke(server.id)
                 return true
             }
+
             MENU_ID_UP -> {
                 model.moveItemUp(position)
                 return true
             }
+
             MENU_ID_DOWN -> {
                 model.moveItemDown(position)
                 return true
             }
+
             else -> return false
         }
     }

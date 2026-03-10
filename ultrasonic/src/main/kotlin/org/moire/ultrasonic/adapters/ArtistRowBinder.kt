@@ -123,16 +123,13 @@ class ArtistRowBinder(
         return Util.stripAccents(section.toString())
     }
 
-    private fun showArtistPicture(): Boolean {
-        return ActiveServerProvider.shouldUseId3Tags() && Settings.shouldShowArtistPicture
-    }
+    private fun showArtistPicture(): Boolean =
+        ActiveServerProvider.shouldUseId3Tags() && Settings.shouldShowArtistPicture
 
     /**
      * Creates an instance of our ViewHolder class
      */
-    class ViewHolder(
-        itemView: View
-    ) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var section: TextView = itemView.findViewById(R.id.row_section)
         var textView: TextView = itemView.findViewById(R.id.row_artist_name)
         var layout: RelativeLayout = itemView.findViewById(R.id.containing_layout)
@@ -140,9 +137,8 @@ class ArtistRowBinder(
         var coverArtId: String? = null
     }
 
-    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder {
-        return ViewHolder(inflater.inflate(layout, parent, false))
-    }
+    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder =
+        ViewHolder(inflater.inflate(layout, parent, false))
 
     companion object {
         const val SECTION_KEY_DEFAULT = "#"

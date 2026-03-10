@@ -168,7 +168,9 @@ class MediaPlayerManager(
             while (windowIndex != C.INDEX_UNSET) {
                 count++
                 windowIndex = timeline.getNextWindowIndex(
-                    windowIndex, REPEAT_MODE_OFF, true
+                    windowIndex,
+                    REPEAT_MODE_OFF,
+                    true
                 )
                 Timber.d("Shuffle: windowIndex: $windowIndex, at: $count")
             }
@@ -282,6 +284,7 @@ class MediaPlayerManager(
                     scrobbler.scrobble(currentPlaying, false)
                 }
             }
+
             // STATE_ENDED is only signaled if the whole playlist completes. Scrobble the last song.
             Player.STATE_ENDED -> {
                 scrobbler.scrobble(currentPlaying, true)
@@ -439,7 +442,9 @@ class MediaPlayerManager(
 
         when (insertionMode) {
             InsertionMode.CLEAR -> clear()
+
             InsertionMode.APPEND -> insertAt = mediaItemCount
+
             InsertionMode.AFTER_CURRENT -> {
                 // Must never be larger than the count of items (especially when empty)
                 insertAt = (currentMediaItemIndex + 1).coerceAtMost(mediaItemCount)
@@ -543,13 +548,12 @@ class MediaPlayerManager(
         }
     }
 
-    private fun quantize(resId: Int, tracks: List<Track>): String {
-        return UApp.applicationContext().resources.getQuantityString(
+    private fun quantize(resId: Int, tracks: List<Track>): String =
+        UApp.applicationContext().resources.getQuantityString(
             resId,
             tracks.size,
             tracks.size
         )
-    }
 
     @set:Synchronized
     var isShufflePlayEnabled: Boolean
@@ -643,9 +647,8 @@ class MediaPlayerManager(
     }
 
     @Synchronized
-    fun canSeekToPrevious(): Boolean {
-        return controller?.isCommandAvailable(Player.COMMAND_SEEK_TO_PREVIOUS) == true
-    }
+    fun canSeekToPrevious(): Boolean =
+        controller?.isCommandAvailable(Player.COMMAND_SEEK_TO_PREVIOUS) == true
 
     @Synchronized
     fun seekToNext() {
@@ -653,9 +656,8 @@ class MediaPlayerManager(
     }
 
     @Synchronized
-    fun canSeekToNext(): Boolean {
-        return controller?.isCommandAvailable(Player.COMMAND_SEEK_TO_NEXT) == true
-    }
+    fun canSeekToNext(): Boolean =
+        controller?.isCommandAvailable(Player.COMMAND_SEEK_TO_NEXT) == true
 
     @Synchronized
     fun reset() {
@@ -818,7 +820,9 @@ class MediaPlayerManager(
             if (match && !returnWindow) return count
             count++
             windowIndex = timeline.getNextWindowIndex(
-                windowIndex, REPEAT_MODE_OFF, true
+                windowIndex,
+                REPEAT_MODE_OFF,
+                true
             )
         }
 
@@ -833,11 +837,10 @@ class MediaPlayerManager(
      * in the shuffled timeline.
      * @return The index of the item in the shuffled timeline, or [C.INDEX_UNSET] if not found.
      */
-    private fun getShuffledIndexOf(searchPosition: Int): Int {
-        return getWindowIndexWhere(false) { _, windowIndex ->
+    private fun getShuffledIndexOf(searchPosition: Int): Int =
+        getWindowIndexWhere(false) { _, windowIndex ->
             windowIndex == searchPosition
         }
-    }
 
     /**
      * Returns the index of the unshuffled position of the current playback item given its shuffled
@@ -847,18 +850,14 @@ class MediaPlayerManager(
      * unshuffled timeline.
      * @return the index of the item in the unshuffled timeline, or [C.INDEX_UNSET] if not found.
      */
-    fun getUnshuffledIndexOf(shufflePosition: Int): Int {
-        return getWindowIndexWhere(true) { count, _ ->
-            count == shufflePosition
-        }
+    fun getUnshuffledIndexOf(shufflePosition: Int): Int = getWindowIndexWhere(true) { count, _ ->
+        count == shufflePosition
     }
 
     val mediaItemCount: Int
         get() = controller?.mediaItemCount ?: 0
 
-    fun getMediaItemAt(index: Int): MediaItem? {
-        return controller?.getMediaItemAt(index)
-    }
+    fun getMediaItemAt(index: Int): MediaItem? = controller?.getMediaItemAt(index)
 
     val playlistSize: Int
         get() = controller?.currentTimeline?.windowCount ?: 0

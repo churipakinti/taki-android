@@ -105,50 +105,48 @@ class ShareHandler {
         result: Share?,
         shareDetails: ShareDetails,
         fragment: Fragment
-    ) {
-        return withContext(Dispatchers.Main) {
-            val intent = Intent(Intent.ACTION_SEND)
-            intent.type = "text/plain"
+    ) = withContext(Dispatchers.Main) {
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
 
-            if (result != null) {
-                // Created a share, send the URL
-                intent.putExtra(
-                    Intent.EXTRA_TEXT,
-                    String.format(
-                        Locale.ROOT,
-                        "%s\n\n%s",
-                        Settings.shareGreeting,
-                        result.url
-                    )
-                )
-            } else {
-                // Sending only text details
-                val textBuilder = StringBuilder()
-                textBuilder.appendLine(Settings.shareGreeting)
-
-                if (!shareDetails.entries[0].title.isNullOrEmpty()) {
-                    textBuilder.append(getString(R.string.common_title))
-                        .append(": ").appendLine(shareDetails.entries[0].title)
-                }
-                if (!shareDetails.entries[0].artist.isNullOrEmpty()) {
-                    textBuilder.append(getString(R.string.common_artist))
-                        .append(": ").appendLine(shareDetails.entries[0].artist)
-                }
-                if (!shareDetails.entries[0].album.isNullOrEmpty()) {
-                    textBuilder.append(getString(R.string.common_album))
-                        .append(": ").append(shareDetails.entries[0].album)
-                }
-
-                intent.putExtra(Intent.EXTRA_TEXT, textBuilder.toString())
-            }
-
-            fragment.activity?.startActivity(
-                Intent.createChooser(
-                    intent,
-                    getString(R.string.share_via)
+        if (result != null) {
+            // Created a share, send the URL
+            intent.putExtra(
+                Intent.EXTRA_TEXT,
+                String.format(
+                    Locale.ROOT,
+                    "%s\n\n%s",
+                    Settings.shareGreeting,
+                    result.url
                 )
             )
+        } else {
+            // Sending only text details
+            val textBuilder = StringBuilder()
+            textBuilder.appendLine(Settings.shareGreeting)
+
+            if (!shareDetails.entries[0].title.isNullOrEmpty()) {
+                textBuilder.append(getString(R.string.common_title))
+                    .append(": ").appendLine(shareDetails.entries[0].title)
+            }
+            if (!shareDetails.entries[0].artist.isNullOrEmpty()) {
+                textBuilder.append(getString(R.string.common_artist))
+                    .append(": ").appendLine(shareDetails.entries[0].artist)
+            }
+            if (!shareDetails.entries[0].album.isNullOrEmpty()) {
+                textBuilder.append(getString(R.string.common_album))
+                    .append(": ").append(shareDetails.entries[0].album)
+            }
+
+            intent.putExtra(Intent.EXTRA_TEXT, textBuilder.toString())
         }
+
+        fragment.activity?.startActivity(
+            Intent.createChooser(
+                intent,
+                getString(R.string.share_via)
+            )
+        )
     }
 
     fun createShare(fragment: Fragment, tracks: List<Track>, additionalId: String? = null) {

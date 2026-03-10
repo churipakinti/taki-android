@@ -54,7 +54,10 @@ import org.moire.ultrasonic.view.ShareAdapter
  *
  * TODO: This file has been converted from Java, but not modernized yet.
  */
-class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment {
+class SharesFragment :
+    ScopeFragment(),
+    KoinScopeComponent,
+    RefreshableFragment {
     override var swipeRefresh: SwipeRefreshLayout? = null
     private var sharesListView: ListView? = null
     private var emptyTextView: View? = null
@@ -70,9 +73,7 @@ class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment 
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.select_share, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.select_share, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         swipeRefresh = view.findViewById(R.id.select_share_refresh)
@@ -80,8 +81,10 @@ class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment 
         swipeRefresh!!.setOnRefreshListener { load(true) }
         emptyTextView = view.findViewById(R.id.select_share_empty)
         sharesListView!!.onItemClickListener = AdapterView.OnItemClickListener {
-                parent, _,
-                position, _
+                parent,
+                _,
+                position,
+                _
             ->
             val share = parent.getItemAtPosition(position) as Share
 
@@ -137,6 +140,7 @@ class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment 
                     isDirectory = false
                 )
             }
+
             R.id.share_menu_unpin -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.UNPIN,
@@ -147,6 +151,7 @@ class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment 
                     isDirectory = false
                 )
             }
+
             R.id.share_menu_download -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.DOWNLOAD,
@@ -157,6 +162,7 @@ class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment 
                     isDirectory = false
                 )
             }
+
             R.id.share_menu_play_now -> {
                 mediaPlayerManager.playTracksAndToast(
                     this,
@@ -166,6 +172,7 @@ class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment 
                     shuffle = false
                 )
             }
+
             R.id.share_menu_play_shuffled -> {
                 mediaPlayerManager.playTracksAndToast(
                     this,
@@ -175,15 +182,19 @@ class SharesFragment : ScopeFragment(), KoinScopeComponent, RefreshableFragment 
                     shuffle = true
                 )
             }
+
             R.id.share_menu_delete -> {
                 deleteShare(share)
             }
+
             R.id.share_info -> {
                 displayShareInfo(share)
             }
+
             R.id.share_update_info -> {
                 updateShareInfo(share)
             }
+
             else -> {
                 return super.onContextItemSelected(menuItem)
             }

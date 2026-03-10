@@ -19,7 +19,5 @@ enum class JukeboxAction(val action: String) {
     SET_GAIN("setGain")
     ;
 
-    override fun toString(): String {
-        return action
-    }
+    override fun toString(): String = action
 }

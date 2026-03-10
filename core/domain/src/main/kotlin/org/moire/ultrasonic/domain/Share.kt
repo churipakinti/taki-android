@@ -12,7 +12,8 @@ data class Share(
     var expires: String? = null,
     var visitCount: Long? = null,
     private val tracks: MutableList<Track> = mutableListOf()
-) : Serializable, GenericEntry() {
+) : GenericEntry(),
+    Serializable {
     override val name: String?
         get() {
             if (url != null) {
@@ -21,9 +22,7 @@ data class Share(
             return null
         }
 
-    fun getEntries(): List<Track> {
-        return tracks.toList()
-    }
+    fun getEntries(): List<Track> = tracks.toList()
 
     fun addEntry(track: Track) {
         tracks.add(track)

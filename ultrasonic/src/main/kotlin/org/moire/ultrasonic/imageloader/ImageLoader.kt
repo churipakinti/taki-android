@@ -239,12 +239,10 @@ class ImageLoader(
         }
     }
 
-    private fun resolveSize(requested: Int, large: Boolean): Int {
-        return if (requested <= 0) {
-            if (large) config.largeSize else config.defaultSize
-        } else {
-            requested
-        }
+    private fun resolveSize(requested: Int, large: Boolean): Int = if (requested <= 0) {
+        if (large) config.largeSize else config.defaultSize
+    } else {
+        requested
     }
 }
 

@@ -135,14 +135,13 @@ class FilterButtonBar : ConstraintLayout {
         return newType
     }
 
-    private fun toggleLayoutType(): LayoutType {
-        return when (layoutType) {
-            LayoutType.LIST -> {
-                LayoutType.COVER
-            }
-            LayoutType.COVER -> {
-                LayoutType.LIST
-            }
+    private fun toggleLayoutType(): LayoutType = when (layoutType) {
+        LayoutType.LIST -> {
+            LayoutType.COVER
+        }
+
+        LayoutType.COVER -> {
+            LayoutType.LIST
         }
     }
 
@@ -164,6 +163,7 @@ class FilterButtonBar : ConstraintLayout {
                 )
                 viewTypeToggle!!.text = context.getString(R.string.grid_view)
             }
+
             LayoutType.LIST -> {
                 viewTypeToggle!!.chipIcon = AppCompatResources.getDrawable(
                     context,
@@ -174,18 +174,16 @@ class FilterButtonBar : ConstraintLayout {
         }
     }
 
-    private fun getStringForSortOrder(sortOrder: SortOrder): Int {
-        return when (sortOrder) {
-            SortOrder.RANDOM -> R.string.main_albums_random
-            SortOrder.NEWEST -> R.string.main_albums_newest
-            SortOrder.HIGHEST -> R.string.main_albums_highest
-            SortOrder.FREQUENT -> R.string.main_albums_frequent
-            SortOrder.RECENT -> R.string.main_albums_recent
-            SortOrder.BY_NAME -> R.string.main_albums_alphaByName
-            SortOrder.BY_ARTIST -> R.string.main_albums_alphaByArtist
-            SortOrder.STARRED -> R.string.main_albums_starred
-            SortOrder.BY_YEAR -> R.string.main_albums_by_year
-        }
+    private fun getStringForSortOrder(sortOrder: SortOrder): Int = when (sortOrder) {
+        SortOrder.RANDOM -> R.string.main_albums_random
+        SortOrder.NEWEST -> R.string.main_albums_newest
+        SortOrder.HIGHEST -> R.string.main_albums_highest
+        SortOrder.FREQUENT -> R.string.main_albums_frequent
+        SortOrder.RECENT -> R.string.main_albums_recent
+        SortOrder.BY_NAME -> R.string.main_albums_alphaByName
+        SortOrder.BY_ARTIST -> R.string.main_albums_alphaByArtist
+        SortOrder.STARRED -> R.string.main_albums_starred
+        SortOrder.BY_YEAR -> R.string.main_albums_by_year
     }
 }
 
@@ -195,10 +193,7 @@ class FilterButtonBar : ConstraintLayout {
  * @property sortOrder
  * @property string
  */
-data class TranslatedSortOrder(
-    val sortOrder: SortOrder,
-    val string: String
-) {
+data class TranslatedSortOrder(val sortOrder: SortOrder, val string: String) {
     override fun toString() = string
 }
 

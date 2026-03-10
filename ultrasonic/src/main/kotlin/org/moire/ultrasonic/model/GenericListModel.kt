@@ -31,7 +31,8 @@ import org.moire.ultrasonic.util.CommunicationError
  * An abstract Model, which can be extended to retrieve a list of items from the API
  */
 open class GenericListModel(application: Application) :
-    AndroidViewModel(application), KoinComponent {
+    AndroidViewModel(application),
+    KoinComponent {
 
     val activeServerProvider: ActiveServerProvider by inject()
 
@@ -46,16 +47,12 @@ open class GenericListModel(application: Application) :
 
     val musicFolders: MutableLiveData<List<MusicFolder>> = MutableLiveData(listOf())
 
-    open fun showSelectFolderHeader(): Boolean {
-        return false
-    }
+    open fun showSelectFolderHeader(): Boolean = false
 
     /**
      * Helper function to check online status
      */
-    fun isOffline(): Boolean {
-        return ActiveServerProvider.isOffline()
-    }
+    fun isOffline(): Boolean = ActiveServerProvider.isOffline()
 
     /**
      * Refreshes the cached items from the server

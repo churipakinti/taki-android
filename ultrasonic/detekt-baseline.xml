@@ -1,13 +1,13 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
-  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>ImplicitDefaultLocale:FileLoggerTree.kt$FileLoggerTree$String.format("Failed to write log to %s", file)</ID>
     <ID>ImplicitDefaultLocale:FileLoggerTree.kt$FileLoggerTree$String.format("Log file rotated, logging into file %s", file?.name)</ID>
     <ID>ImplicitDefaultLocale:FileLoggerTree.kt$FileLoggerTree$String.format("Logging into file %s", file?.name)</ID>
-    <ID>ImplicitDefaultLocale:ShareHandler.kt$ShareHandler$String.format("%d:%s", timeSpanAmount, timeSpanType)</ID>
     <ID>LongMethod:EditServerFragment.kt$EditServerFragment$override fun onViewCreated(view: View, savedInstanceState: Bundle?)</ID>
     <ID>LongMethod:NavigationActivity.kt$NavigationActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:PlayerFragment.kt$PlayerFragment$private fun onTrackChanged()</ID>
     <ID>LongMethod:PlaylistsFragment.kt$PlaylistsFragment$override fun onContextItemSelected(menuItem: MenuItem): Boolean</ID>
     <ID>LongMethod:SharesFragment.kt$SharesFragment$override fun onContextItemSelected(menuItem: MenuItem): Boolean</ID>
     <ID>MagicNumber:ActiveServerProvider.kt$ActiveServerProvider$8192</ID>

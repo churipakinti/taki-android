@@ -272,17 +272,11 @@ object Settings {
         0
     )
 
-    fun hasKey(key: String): Boolean {
-        return preferences.contains(key)
-    }
+    fun hasKey(key: String): Boolean = preferences.contains(key)
 
-    private fun getKey(key: Int): String {
-        return appContext.getString(key)
-    }
+    private fun getKey(key: Int): String = appContext.getString(key)
 
-    fun getAllKeys(): List<String> {
-        return preferences.all.keys.toList()
-    }
+    fun getAllKeys(): List<String> = preferences.all.keys.toList()
 
     private val appContext: Context
         get() = UApp.applicationContext()

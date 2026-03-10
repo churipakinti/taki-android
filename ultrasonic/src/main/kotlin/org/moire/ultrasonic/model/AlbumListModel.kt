@@ -67,13 +67,17 @@ class AlbumListModel(application: Application) : GenericListModel(application) {
 
             musicDirectory = if (ActiveServerProvider.shouldUseId3Tags()) {
                 service.getAlbumList2(
-                    albumListType, size,
-                    offset, musicFolderId
+                    albumListType,
+                    size,
+                    offset,
+                    musicFolderId
                 )
             } else {
                 service.getAlbumList(
-                    albumListType, size,
-                    offset, musicFolderId
+                    albumListType,
+                    size,
+                    offset,
+                    musicFolderId
                 )
             }
 
@@ -99,6 +103,7 @@ class AlbumListModel(application: Application) : GenericListModel(application) {
                     it.year
                 }
             }
+
             else -> {
                 list.value?.sortedBy {
                     it.name
@@ -118,14 +123,12 @@ class AlbumListModel(application: Application) : GenericListModel(application) {
         return !isOffline() && !ActiveServerProvider.shouldUseId3Tags() && isAlphabetical
     }
 
-    private fun isCollectionSortable(albumListType: AlbumListType): Boolean {
-        return when (albumListType) {
-            AlbumListType.RANDOM -> false
-            AlbumListType.NEWEST -> false
-            AlbumListType.HIGHEST -> false
-            AlbumListType.FREQUENT -> false
-            AlbumListType.RECENT -> false
-            else -> true
-        }
+    private fun isCollectionSortable(albumListType: AlbumListType): Boolean = when (albumListType) {
+        AlbumListType.RANDOM -> false
+        AlbumListType.NEWEST -> false
+        AlbumListType.HIGHEST -> false
+        AlbumListType.FREQUENT -> false
+        AlbumListType.RECENT -> false
+        else -> true
     }
 }

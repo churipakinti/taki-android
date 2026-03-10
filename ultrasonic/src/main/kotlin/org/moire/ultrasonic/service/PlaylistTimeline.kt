@@ -26,14 +26,11 @@ class PlaylistTimeline @JvmOverloads constructor(
     shuffledIndices: IntArray = createUnshuffledIndices(
         mediaItems.size
     )
-) :
-    Timeline() {
+) : Timeline() {
     private val mediaItems: ImmutableList<MediaItem>
     private val shuffledIndices: IntArray
     private val indicesInShuffled: IntArray
-    override fun getWindowCount(): Int {
-        return mediaItems.size
-    }
+    override fun getWindowCount(): Int = mediaItems.size
 
     override fun getWindow(
         windowIndex: Int,
@@ -108,9 +105,7 @@ class PlaylistTimeline @JvmOverloads constructor(
         return if (shuffleModeEnabled) shuffledIndices[0] else 0
     }
 
-    override fun getPeriodCount(): Int {
-        return windowCount
-    }
+    override fun getPeriodCount(): Int = windowCount
 
     override fun getPeriod(periodIndex: Int, period: Period, setIds: Boolean): Period {
         period[null, null, periodIndex, Util.msToUs(DEFAULT_DURATION_MS)] =
@@ -118,13 +113,9 @@ class PlaylistTimeline @JvmOverloads constructor(
         return period
     }
 
-    override fun getIndexOfPeriod(uid: Any): Int {
-        throw UnsupportedOperationException()
-    }
+    override fun getIndexOfPeriod(uid: Any): Int = throw UnsupportedOperationException()
 
-    override fun getUidOfPeriod(periodIndex: Int): Any {
-        throw UnsupportedOperationException()
-    }
+    override fun getUidOfPeriod(periodIndex: Int): Any = throw UnsupportedOperationException()
 
     companion object {
         private const val DEFAULT_DURATION_MS: Long = 100

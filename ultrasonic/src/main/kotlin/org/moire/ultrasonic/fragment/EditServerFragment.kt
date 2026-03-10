@@ -96,9 +96,7 @@ class EditServerFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.server_edit, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.server_edit, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -186,8 +184,7 @@ class EditServerFragment : Fragment() {
                         updateColor(envelope.color)
                     }
                 )
-                .setNegativeButton(getString(R.string.common_cancel)) {
-                        dialogInterface, _ ->
+                .setNegativeButton(getString(R.string.common_cancel)) { dialogInterface, _ ->
                     dialogInterface.dismiss()
                 }
                 .setBottomSpace(DIALOG_PADDING)

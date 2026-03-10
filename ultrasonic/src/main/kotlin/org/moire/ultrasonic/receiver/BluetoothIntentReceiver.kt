@@ -44,6 +44,7 @@ class BluetoothIntentReceiver : BroadcastReceiver() {
             BluetoothDevice.ACTION_ACL_CONNECTED -> {
                 connectionStatus = Constants.PREFERENCE_VALUE_ALL
             }
+
             BluetoothDevice.ACTION_ACL_DISCONNECTED,
             BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED
             -> {
@@ -56,6 +57,7 @@ class BluetoothIntentReceiver : BroadcastReceiver() {
             BluetoothA2dp.STATE_CONNECTED -> {
                 connectionStatus = Constants.PREFERENCE_VALUE_A2DP
             }
+
             BluetoothA2dp.STATE_DISCONNECTED -> {
                 disconnectionStatus = Constants.PREFERENCE_VALUE_A2DP
             }
@@ -70,6 +72,7 @@ class BluetoothIntentReceiver : BroadcastReceiver() {
             Constants.PREFERENCE_VALUE_ALL -> {
                 shouldResume = (connectionStatus != Constants.PREFERENCE_VALUE_DISABLED)
             }
+
             Constants.PREFERENCE_VALUE_A2DP -> {
                 shouldResume = (connectionStatus == Constants.PREFERENCE_VALUE_A2DP)
             }
@@ -79,6 +82,7 @@ class BluetoothIntentReceiver : BroadcastReceiver() {
             Constants.PREFERENCE_VALUE_ALL -> {
                 shouldPause = (disconnectionStatus != Constants.PREFERENCE_VALUE_DISABLED)
             }
+
             Constants.PREFERENCE_VALUE_A2DP -> {
                 shouldPause = (disconnectionStatus == Constants.PREFERENCE_VALUE_A2DP)
             }
@@ -105,19 +109,19 @@ class BluetoothIntentReceiver : BroadcastReceiver() {
         val logBluetoothName = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             (
                 ActivityCompat.checkSelfPermission(
-                    UApp.applicationContext(), Manifest.permission.BLUETOOTH_CONNECT
+                    UApp.applicationContext(),
+                    Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED
                 )
 
         return if (logBluetoothName) this?.name else "Unknown"
     }
 
-    private fun Intent.getBluetoothDevice(): BluetoothDevice? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    private fun Intent.getBluetoothDevice(): BluetoothDevice? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
         } else {
             @Suppress("DEPRECATION")
             getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
         }
-    }
 }

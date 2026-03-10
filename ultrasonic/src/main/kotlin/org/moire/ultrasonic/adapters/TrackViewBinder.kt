@@ -27,16 +27,16 @@ class TrackViewBinder(
             R.menu.context_menu_track
         )
     }
-) : ItemViewBinder<Identifiable, TrackViewHolder>(), KoinComponent {
+) : ItemViewBinder<Identifiable, TrackViewHolder>(),
+    KoinComponent {
 
     var startDrag: ((TrackViewHolder) -> Unit)? = null
 
     // Set our layout files
     val layout = R.layout.list_item_track
 
-    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): TrackViewHolder {
-        return TrackViewHolder(inflater.inflate(layout, parent, false))
-    }
+    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): TrackViewHolder =
+        TrackViewHolder(inflater.inflate(layout, parent, false))
 
     @SuppressLint("ClickableViewAccessibility")
     @Suppress("LongMethod")

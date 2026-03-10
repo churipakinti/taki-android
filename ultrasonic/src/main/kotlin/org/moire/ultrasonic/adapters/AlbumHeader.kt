@@ -6,10 +6,7 @@ import org.moire.ultrasonic.domain.MusicDirectory
 import org.moire.ultrasonic.util.Settings.shouldUseFolderForArtistName
 import org.moire.ultrasonic.util.Util.getGrandparent
 
-class AlbumHeader(
-    var entries: List<MusicDirectory.Child>,
-    var name: String?
-) : Identifiable {
+class AlbumHeader(var entries: List<MusicDirectory.Child>, var name: String?) : Identifiable {
     var isAllVideo: Boolean
         private set
 

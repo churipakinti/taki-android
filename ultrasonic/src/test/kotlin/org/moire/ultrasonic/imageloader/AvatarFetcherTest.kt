@@ -73,7 +73,8 @@ class AvatarFetcherTest : KoinTest {
         // Create and return a fake stream response with an error code.
         val streamResponse = StreamResponse(null, null, 500)
         FileUtil.cachedUltrasonicDirectory = File(
-            Environment.getExternalStorageDirectory(), "Android/data/org.moire.ultrasonic"
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
         )
         whenever(
             mockApiClient.toStreamResponse(any())
@@ -108,7 +109,8 @@ class AvatarFetcherTest : KoinTest {
             responseHttpCode = 200
         )
         FileUtil.cachedUltrasonicDirectory = File(
-            Environment.getExternalStorageDirectory(), "Android/data/org.moire.ultrasonic"
+            Environment.getExternalStorageDirectory(),
+            "Android/data/org.moire.ultrasonic"
         )
 
         // If the correct subsonic API is called return the above fake stream response.

@@ -35,17 +35,11 @@ class ChatAdapter(private val context: Context, private val messages: List<ChatM
     private val activeServerProvider: ActiveServerProvider by inject()
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 
-    override fun areAllItemsEnabled(): Boolean {
-        return true
-    }
+    override fun areAllItemsEnabled(): Boolean = true
 
-    override fun isEnabled(position: Int): Boolean {
-        return false
-    }
+    override fun isEnabled(position: Int): Boolean = false
 
-    override fun getCount(): Int {
-        return messages.size
-    }
+    override fun getCount(): Int = messages.size
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         var view = convertView
@@ -69,9 +63,8 @@ class ChatAdapter(private val context: Context, private val messages: List<ChatM
         return view
     }
 
-    private fun inflateView(layout: Int, parent: ViewGroup): View {
-        return LayoutInflater.from(context).inflate(layout, parent, false)
-    }
+    private fun inflateView(layout: Int, parent: ViewGroup): View =
+        LayoutInflater.from(context).inflate(layout, parent, false)
 
     private class ViewHolder {
         var layout = R.layout.chat_item

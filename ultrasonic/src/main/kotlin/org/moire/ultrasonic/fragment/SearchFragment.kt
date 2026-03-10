@@ -49,7 +49,10 @@ import org.moire.ultrasonic.util.toastingExceptionHandler
  * Initiates a search on the media library and displays the results
 
  */
-class SearchFragment : MultiListFragment<Identifiable>(), KoinScopeComponent, RefreshableFragment {
+class SearchFragment :
+    MultiListFragment<Identifiable>(),
+    KoinScopeComponent,
+    RefreshableFragment {
     private var searchResult: SearchResult? = null
     override var swipeRefresh: SwipeRefreshLayout? = null
     private val mediaPlayerManager: MediaPlayerManager by inject()
@@ -248,6 +251,7 @@ class SearchFragment : MultiListFragment<Identifiable>(), KoinScopeComponent, Re
             is ArtistOrIndex -> {
                 onArtistSelected(item)
             }
+
             is Track -> {
                 if (item.isVideo) {
                     onVideoSelected(item)
@@ -255,6 +259,7 @@ class SearchFragment : MultiListFragment<Identifiable>(), KoinScopeComponent, Re
                     onSongSelected(item, true)
                 }
             }
+
             is Album -> {
                 onAlbumSelected(item, false)
             }

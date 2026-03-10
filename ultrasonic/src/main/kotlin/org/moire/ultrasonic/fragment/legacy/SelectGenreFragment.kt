@@ -35,7 +35,9 @@ import org.moire.ultrasonic.view.GenreAdapter
 /**
  * Displays the available genres in the media library
  */
-class SelectGenreFragment : Fragment(), RefreshableFragment {
+class SelectGenreFragment :
+    Fragment(),
+    RefreshableFragment {
     override var swipeRefresh: SwipeRefreshLayout? = null
     private var genreListView: ListView? = null
     private var emptyView: View? = null
@@ -49,9 +51,7 @@ class SelectGenreFragment : Fragment(), RefreshableFragment {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.select_genre, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.select_genre, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -60,8 +60,10 @@ class SelectGenreFragment : Fragment(), RefreshableFragment {
         swipeRefresh?.setOnRefreshListener { load(true) }
 
         genreListView?.setOnItemClickListener {
-                parent: AdapterView<*>, _: View?,
-                position: Int, _: Long
+                parent: AdapterView<*>,
+                _: View?,
+                position: Int,
+                _: Long
             ->
             val genre = parent.getItemAtPosition(position) as Genre
 

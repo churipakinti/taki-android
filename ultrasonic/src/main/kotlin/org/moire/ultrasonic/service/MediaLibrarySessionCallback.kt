@@ -548,6 +548,7 @@ class MediaLibrarySessionCallback :
 
         val tracks = when (mediaIdParts.first()) {
             MEDIA_PLAYLIST_ITEM -> playPlaylist(mediaIdParts[1], mediaIdParts[2])
+
             MEDIA_PLAYLIST_SONG_ITEM -> playPlaylistSong(
                 mediaIdParts[1],
                 mediaIdParts[2],
@@ -555,6 +556,7 @@ class MediaLibrarySessionCallback :
             )
 
             MEDIA_ALBUM_ITEM -> playAlbum(mediaIdParts[1], mediaIdParts[2])
+
             MEDIA_ALBUM_SONG_ITEM -> playAlbumSong(
                 mediaIdParts[1],
                 mediaIdParts[2],
@@ -562,19 +564,28 @@ class MediaLibrarySessionCallback :
             )
 
             MEDIA_SONG_STARRED_ID -> playStarredSongs()
+
             MEDIA_SONG_STARRED_ITEM -> playStarredSong(mediaIdParts[1])
+
             MEDIA_SONG_RANDOM_ID -> playRandomSongs()
+
             MEDIA_SONG_RANDOM_ITEM -> playRandomSong(mediaIdParts[1])
+
             MEDIA_SHARE_ITEM -> playShare(mediaIdParts[1])
+
             MEDIA_SHARE_SONG_ITEM -> playShareSong(mediaIdParts[1], mediaIdParts[2])
+
             MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
+
             MEDIA_PODCAST_ITEM -> playPodcast(mediaIdParts[1])
+
             MEDIA_PODCAST_EPISODE_ITEM -> playPodcastEpisode(
                 mediaIdParts[1],
                 mediaIdParts[2]
             )
 
             MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
+
             else -> null
         }
 
@@ -598,35 +609,55 @@ class MediaLibrarySessionCallback :
 
         return when (parentIdParts.first()) {
             MEDIA_ROOT_ID -> getRootItems()
+
             MEDIA_LIBRARY_ID -> getLibrary()
+
             MEDIA_ARTIST_ID -> getArtists()
+
             MEDIA_ARTIST_SECTION -> getArtists(parentIdParts[1])
+
             MEDIA_ALBUM_ID -> getAlbums(AlbumListType.SORTED_BY_NAME)
+
             MEDIA_ALBUM_PAGE_ID -> getAlbums(
                 AlbumListType.fromName(parentIdParts[1]),
                 parentIdParts[2].toInt()
             )
 
             MEDIA_PLAYLIST_ID -> getPlaylists()
+
             MEDIA_ALBUM_FREQUENT_ID -> getAlbums(AlbumListType.FREQUENT)
+
             MEDIA_ALBUM_NEWEST_ID -> getAlbums(AlbumListType.NEWEST)
+
             MEDIA_ALBUM_RECENT_ID -> getAlbums(AlbumListType.RECENT)
+
             MEDIA_ALBUM_RANDOM_ID -> getAlbums(AlbumListType.RANDOM)
+
             MEDIA_ALBUM_STARRED_ID -> getAlbums(AlbumListType.STARRED)
+
             MEDIA_SONG_RANDOM_ID -> getRandomSongs()
+
             MEDIA_SONG_STARRED_ID -> getStarredSongs()
+
             MEDIA_SHARE_ID -> getShares()
+
             MEDIA_BOOKMARK_ID -> getBookmarks()
+
             MEDIA_PODCAST_ID -> getPodcasts()
+
             MEDIA_PLAYLIST_ITEM -> getPlaylist(parentIdParts[1], parentIdParts[2])
+
             MEDIA_ARTIST_ITEM -> getAlbumsForArtist(
                 parentIdParts[1],
                 parentIdParts[2]
             )
 
             MEDIA_ALBUM_ITEM -> getSongsForAlbum(parentIdParts[1], parentIdParts[2])
+
             MEDIA_SHARE_ITEM -> getSongsForShare(parentIdParts[1])
+
             MEDIA_PODCAST_ITEM -> getPodcastEpisodes(parentIdParts[1])
+
             else -> Futures.immediateFuture(LibraryResult.ofItemList(listOf(), null))
         }
     }
@@ -703,6 +734,7 @@ class MediaLibrarySessionCallback :
         // TODO Media Artist item is missing!!!
         return when (mediaIdParts.first()) {
             MEDIA_PLAYLIST_ITEM -> playPlaylist(mediaIdParts[1], mediaIdParts[2])
+
             MEDIA_PLAYLIST_SONG_ITEM -> playPlaylistSong(
                 mediaIdParts[1],
                 mediaIdParts[2],
@@ -710,6 +742,7 @@ class MediaLibrarySessionCallback :
             )
 
             MEDIA_ALBUM_ITEM -> playAlbum(mediaIdParts[1], mediaIdParts[2])
+
             MEDIA_ALBUM_SONG_ITEM -> playAlbumSong(
                 mediaIdParts[1],
                 mediaIdParts[2],
@@ -717,19 +750,28 @@ class MediaLibrarySessionCallback :
             )
 
             MEDIA_SONG_STARRED_ID -> playStarredSongs()
+
             MEDIA_SONG_STARRED_ITEM -> playStarredSong(mediaIdParts[1])
+
             MEDIA_SONG_RANDOM_ID -> playRandomSongs()
+
             MEDIA_SONG_RANDOM_ITEM -> playRandomSong(mediaIdParts[1])
+
             MEDIA_SHARE_ITEM -> playShare(mediaIdParts[1])
+
             MEDIA_SHARE_SONG_ITEM -> playShareSong(mediaIdParts[1], mediaIdParts[2])
+
             MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
+
             MEDIA_PODCAST_ITEM -> playPodcast(mediaIdParts[1])
+
             MEDIA_PODCAST_EPISODE_ITEM -> playPodcastEpisode(
                 mediaIdParts[1],
                 mediaIdParts[2]
             )
 
             MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
+
             else -> {
                 listOf()
             }
@@ -1412,25 +1454,22 @@ class MediaLibrarySessionCallback :
         return null
     }
 
-    private fun listSongsInMusicService(id: String, name: String?): MusicDirectory? {
-        return serviceScope.future {
+    private fun listSongsInMusicService(id: String, name: String?): MusicDirectory? =
+        serviceScope.future {
             if (ActiveServerProvider.shouldUseId3Tags()) {
                 callWithErrorHandling { musicService.getAlbumAsDir(id, name, false) }
             } else {
                 callWithErrorHandling { musicService.getMusicDirectory(id, name, false) }
             }
         }.get()
-    }
 
-    private fun listStarredSongsInMusicService(): SearchResult? {
-        return serviceScope.future {
-            if (ActiveServerProvider.shouldUseId3Tags()) {
-                callWithErrorHandling { musicService.getStarred2() }
-            } else {
-                callWithErrorHandling { musicService.getStarred() }
-            }
-        }.get()
-    }
+    private fun listStarredSongsInMusicService(): SearchResult? = serviceScope.future {
+        if (ActiveServerProvider.shouldUseId3Tags()) {
+            callWithErrorHandling { musicService.getStarred2() }
+        } else {
+            callWithErrorHandling { musicService.getStarred() }
+        }
+    }.get()
 
     private fun MutableList<MediaItem>.add(
         title: String,

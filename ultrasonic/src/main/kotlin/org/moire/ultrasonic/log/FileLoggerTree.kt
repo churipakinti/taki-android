@@ -21,13 +21,16 @@ import timber.log.Timber
  * Subclass of the DebugTree so it inherits the Tag handling
  */
 @Suppress("MagicNumber")
-class FileLoggerTree : Timber.DebugTree(), CoroutineScope by CoroutineScope(Dispatchers.IO) {
+class FileLoggerTree :
+    Timber.DebugTree(),
+    CoroutineScope by CoroutineScope(Dispatchers.IO) {
     private val dateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
 
     @OptIn(ObsoleteCoroutinesApi::class)
     private val logMessageActor = actor<LogMessage> {
-        for (msg in channel)
+        for (msg in channel) {
             writeLogToFile(msg.file, msg.priority, msg.tag, msg.message, msg.t)
+        }
     }
 
     data class LogMessage(
@@ -133,16 +136,14 @@ class FileLoggerTree : Timber.DebugTree(), CoroutineScope by CoroutineScope(Disp
         )
     }
 
-    private fun logLevelToString(logLevel: Int): String {
-        return when (logLevel) {
-            2 -> "V"
-            3 -> "D"
-            4 -> "I"
-            5 -> "W"
-            6 -> "E"
-            7 -> "A"
-            else -> "U"
-        }
+    private fun logLevelToString(logLevel: Int): String = when (logLevel) {
+        2 -> "V"
+        3 -> "D"
+        4 -> "I"
+        5 -> "W"
+        6 -> "E"
+        7 -> "A"
+        else -> "U"
     }
 
     companion object {

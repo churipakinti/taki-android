@@ -21,16 +21,12 @@ class MusicDirectory : ArrayList<MusicDirectory.Child>() {
         return filter { it.isDirectory && includeDirs || !it.isDirectory && includeFiles }
     }
 
-    fun getTracks(): List<Track> {
-        return mapNotNull {
-            it as? Track
-        }
+    fun getTracks(): List<Track> = mapNotNull {
+        it as? Track
     }
 
-    fun getAlbums(): List<Album> {
-        return mapNotNull {
-            it as? Album
-        }
+    fun getAlbums(): List<Album> = mapNotNull {
+        it as? Album
     }
 
     abstract class Child : GenericEntry() {

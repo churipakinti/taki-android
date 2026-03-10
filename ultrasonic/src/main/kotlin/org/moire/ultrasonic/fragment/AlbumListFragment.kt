@@ -41,7 +41,8 @@ import org.moire.ultrasonic.view.ViewCapabilities
 class AlbumListFragment(
     private var layoutType: LayoutType = LayoutType.LIST,
     private var orderType: SortOrder? = null
-) : FilterableFragment, EntryListFragment<Album>() {
+) : EntryListFragment<Album>(),
+    FilterableFragment {
 
     private var filterButtonBar: FilterButtonBar? = null
 

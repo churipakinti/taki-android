@@ -81,9 +81,7 @@ class StorageFile(
         return true
     }
 
-    override fun listFiles(): Array<AbstractFile> {
-        return getChildren().toTypedArray()
-    }
+    override fun listFiles(): Array<AbstractFile> = getChildren().toTypedArray()
 
     override fun getFileOutputStream(append: Boolean): OutputStream {
         val mode = if (append) "wa" else "w"
@@ -93,17 +91,15 @@ class StorageFile(
         ) ?: throw IOException("Couldn't retrieve OutputStream")
     }
 
-    override fun getFileInputStream(): InputStream {
-        return UApp.applicationContext().contentResolver.openInputStream(uri)
+    override fun getFileInputStream(): InputStream =
+        UApp.applicationContext().contentResolver.openInputStream(uri)
             ?: throw IOException("Couldn't retrieve InputStream")
-    }
 
-    override fun getDocumentFileDescriptor(openMode: String): AssetFileDescriptor? {
-        return UApp.applicationContext().contentResolver.openAssetFileDescriptor(
+    override fun getDocumentFileDescriptor(openMode: String): AssetFileDescriptor? =
+        UApp.applicationContext().contentResolver.openAssetFileDescriptor(
             uri,
             openMode
         )
-    }
 
     @Synchronized
     override fun getOrCreateFileFromPath(path: String): AbstractFile {
@@ -122,9 +118,7 @@ class StorageFile(
         return file
     }
 
-    override fun isPathExists(path: String): Boolean {
-        return getFromPath(path) != null
-    }
+    override fun isPathExists(path: String): Boolean = getFromPath(path) != null
 
     override fun getFromPath(path: String): StorageFile? {
         if (storageFilePathDictionary.containsKey(path)) {

@@ -27,7 +27,8 @@ import timber.log.Timber
  */
 @Suppress("unused", "UNUSED_PARAMETER")
 class BaseAdapter<T : Identifiable>(allowDuplicateEntries: Boolean = false) :
-    MultiTypeAdapter(), FastScrollRecyclerView.SectionedAdapter {
+    MultiTypeAdapter(),
+    FastScrollRecyclerView.SectionedAdapter {
 
     // Update the BoundedTreeSet if selection type is changed
     internal var selectionType: SelectionType = SelectionType.MULTIPLE
@@ -45,13 +46,9 @@ class BaseAdapter<T : Identifiable>(allowDuplicateEntries: Boolean = false) :
         setHasStableIds(!allowDuplicateEntries)
     }
 
-    override fun getItemId(position: Int): Long {
-        return getItem(position).longId
-    }
+    override fun getItemId(position: Int): Long = getItem(position).longId
 
-    private fun getItem(position: Int): T {
-        return mDiffer.currentList[position]
-    }
+    private fun getItem(position: Int): T = mDiffer.currentList[position]
 
     override var items: List<Any>
         get() = getCurrentList()
@@ -120,9 +117,7 @@ class BaseAdapter<T : Identifiable>(allowDuplicateEntries: Boolean = false) :
         mDiffer.submitList(list, commitCallback)
     }
 
-    override fun getItemCount(): Int {
-        return mDiffer.currentList.size
-    }
+    override fun getItemCount(): Int = mDiffer.currentList.size
 
     /**
      * Get the current List - any diffing to present this list has already been computed and
@@ -139,9 +134,7 @@ class BaseAdapter<T : Identifiable>(allowDuplicateEntries: Boolean = false) :
      *
      * @see .onCurrentListChanged
      */
-    fun getCurrentList(): List<T> {
-        return mDiffer.currentList
-    }
+    fun getCurrentList(): List<T> = mDiffer.currentList
 
     /**
      * Called when the current List is updated.
@@ -204,17 +197,11 @@ class BaseAdapter<T : Identifiable>(allowDuplicateEntries: Boolean = false) :
         return selectedSet.count()
     }
 
-    fun isSelected(longId: Long): Boolean {
-        return selectedSet.contains(longId)
-    }
+    fun isSelected(longId: Long): Boolean = selectedSet.contains(longId)
 
-    fun hasSingleSelection(): Boolean {
-        return selectionType == SelectionType.SINGLE
-    }
+    fun hasSingleSelection(): Boolean = selectionType == SelectionType.SINGLE
 
-    fun hasMultipleSelection(): Boolean {
-        return selectionType == SelectionType.MULTIPLE
-    }
+    fun hasMultipleSelection(): Boolean = selectionType == SelectionType.MULTIPLE
 
     enum class SelectionType(val size: Int) {
         SINGLE(1),
@@ -226,13 +213,9 @@ class BaseAdapter<T : Identifiable>(allowDuplicateEntries: Boolean = false) :
      */
     class GenericDiffCallback<T : Identifiable> : DiffUtil.ItemCallback<T>() {
         @SuppressLint("DiffUtilEquals")
-        override fun areContentsTheSame(oldItem: T, newItem: T): Boolean {
-            return oldItem == newItem
-        }
+        override fun areContentsTheSame(oldItem: T, newItem: T): Boolean = oldItem == newItem
 
-        override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
-            return oldItem.id == newItem.id
-        }
+        override fun areItemsTheSame(oldItem: T, newItem: T): Boolean = oldItem.id == newItem.id
     }
 
     override fun getSectionName(position: Int): String {

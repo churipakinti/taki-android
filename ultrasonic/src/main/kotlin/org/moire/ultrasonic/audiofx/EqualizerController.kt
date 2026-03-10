@@ -100,9 +100,7 @@ class EqualizerController : CoroutineScope by CoroutineScope(Dispatchers.IO) {
          * Retrieves the EqualizerController as LiveData
          */
         @JvmStatic
-        fun get(): LiveData<EqualizerController?> {
-            return instance
-        }
+        fun get(): LiveData<EqualizerController?> = instance
 
         /**
          * Initializes the EqualizerController instance with a Session

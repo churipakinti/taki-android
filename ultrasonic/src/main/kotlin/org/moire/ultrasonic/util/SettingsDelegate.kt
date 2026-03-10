@@ -58,10 +58,8 @@ class LongSetting(private val key: String, private val defaultValue: Long = 0.to
         sharedPreferences.edit { putLong(key, value) }
 }
 
-class FloatSetting(
-    private val key: String,
-    private val defaultValue: Float = 0.toFloat()
-) : SettingsDelegate<Float>() {
+class FloatSetting(private val key: String, private val defaultValue: Float = 0.toFloat()) :
+    SettingsDelegate<Float>() {
     override fun getValue(thisRef: Any, property: KProperty<*>) =
         sharedPreferences.getFloat(key, defaultValue)
 

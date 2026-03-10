@@ -38,9 +38,7 @@ class AboutFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.help, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.help, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         titleText = view.findViewById(R.id.help_title)

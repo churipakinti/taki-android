@@ -23,14 +23,11 @@ class DividerBinder : ItemViewBinder<DividerBinder.Divider, DividerBinder.ViewHo
         holder.textView.setText(item.stringId)
     }
 
-    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder {
-        return ViewHolder(inflater.inflate(layout, parent, false))
-    }
+    override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder =
+        ViewHolder(inflater.inflate(layout, parent, false))
 
     // ViewHolder class
-    class ViewHolder(
-        itemView: View
-    ) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var textView: TextView = itemView.findViewById(R.id.text)
     }
 

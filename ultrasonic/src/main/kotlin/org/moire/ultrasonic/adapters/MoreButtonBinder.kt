@@ -25,18 +25,13 @@ class MoreButtonBinder : ItemViewBinder<MoreButtonBinder.MoreButton, RecyclerVie
     override fun onCreateViewHolder(
         inflater: LayoutInflater,
         parent: ViewGroup
-    ): RecyclerView.ViewHolder {
-        return ViewHolder(inflater.inflate(layout, parent, false))
-    }
+    ): RecyclerView.ViewHolder = ViewHolder(inflater.inflate(layout, parent, false))
 
     // ViewHolder class
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
     // Class to store our data into
-    data class MoreButton(
-        val stringId: Int,
-        val onClick: (() -> Unit)
-    ) : Identifiable {
+    data class MoreButton(val stringId: Int, val onClick: (() -> Unit)) : Identifiable {
 
         override val id: String
             get() = stringId.toString()

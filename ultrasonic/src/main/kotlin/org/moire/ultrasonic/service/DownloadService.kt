@@ -59,7 +59,9 @@ private const val CHECK_INTERVAL = 5000L
  * actively aware of and isn’t a candidate for the system to kill when low on memory."
  *
  */
-class DownloadService : Service(), KoinComponent {
+class DownloadService :
+    Service(),
+    KoinComponent {
     private var scope: CoroutineScope? = null
     private val storageMonitor: ExternalStorageMonitor by inject()
     private val cacheCleaner: CacheCleaner by inject()
@@ -70,9 +72,7 @@ class DownloadService : Service(), KoinComponent {
     private var isShuttingDown = false
     private var retrying = false
 
-    override fun onBind(intent: Intent): IBinder {
-        return binder
-    }
+    override fun onBind(intent: Intent): IBinder = binder
 
     override fun onCreate() {
         super.onCreate()
@@ -191,10 +191,12 @@ class DownloadService : Service(), KoinComponent {
                 downloadQueue.remove(item)
                 failedList[item.id] = item
             }
+
             DownloadState.RETRYING -> {
                 item.tryCount++
                 downloadQueue.add(item)
             }
+
             else -> {}
         }
     }
@@ -521,9 +523,8 @@ class DownloadService : Service(), KoinComponent {
             return null
         }
 
-        fun PriorityBlockingQueue<DownloadableTrack>.contains(id: String): Boolean {
-            return (this.get(id) != null)
-        }
+        fun PriorityBlockingQueue<DownloadableTrack>.contains(id: String): Boolean =
+            (this.get(id) != null)
     }
 }
 

@@ -45,17 +45,12 @@ object Storage {
         }
     }
 
-    fun getOrCreateFileFromPath(path: String): AbstractFile {
-        return mediaRoot.value.getOrCreateFileFromPath(path)
-    }
+    fun getOrCreateFileFromPath(path: String): AbstractFile =
+        mediaRoot.value.getOrCreateFileFromPath(path)
 
-    fun isPathExists(path: String): Boolean {
-        return mediaRoot.value.isPathExists(path)
-    }
+    fun isPathExists(path: String): Boolean = mediaRoot.value.isPathExists(path)
 
-    fun getFromPath(path: String): AbstractFile? {
-        return mediaRoot.value.getFromPath(path)
-    }
+    fun getFromPath(path: String): AbstractFile? = mediaRoot.value.getFromPath(path)
 
     fun createDirsOnPath(path: String) {
         mediaRoot.value.createDirsOnPath(path)

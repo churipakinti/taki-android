@@ -121,15 +121,9 @@ class RxBus {
         val state: Int
     )
 
-    data class TrackDownloadState(
-        val id: String,
-        val state: DownloadState,
-        val progress: Int?
-    )
+    data class TrackDownloadState(val id: String, val state: DownloadState, val progress: Int?)
 
-    data class Folder(
-        val id: String?
-    )
+    data class Folder(val id: String?)
 }
 
 operator fun CompositeDisposable.plusAssign(disposable: Disposable) {

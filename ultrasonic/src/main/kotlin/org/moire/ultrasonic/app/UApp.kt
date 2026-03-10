@@ -42,7 +42,9 @@ import timber.log.Timber.DebugTree
  * The Main class of the Application
  */
 
-class UApp : MultiDexApplication(), SingletonImageLoader.Factory {
+class UApp :
+    MultiDexApplication(),
+    SingletonImageLoader.Factory {
 
     private var ioScope = CoroutineScope(Dispatchers.IO)
 
@@ -83,22 +85,20 @@ class UApp : MultiDexApplication(), SingletonImageLoader.Factory {
         startKoin()
     }
 
-    override fun newImageLoader(context: Context): ImageLoader {
-        return ImageLoader.Builder(context)
-            .components {
-                add(CoverArtFetcher.Factory())
-                add(CoverArtKeyer())
-                add(AvatarFetcher.Factory())
-                add(AvatarKeyer())
-            }
-            .memoryCache(
-                MemoryCache.Builder().maxSizeBytes(
-                    calculateMemoryCacheSize(context)
-                ).build()
-            )
-            .crossfade(true)
-            .build()
-    }
+    override fun newImageLoader(context: Context): ImageLoader = ImageLoader.Builder(context)
+        .components {
+            add(CoverArtFetcher.Factory())
+            add(CoverArtKeyer())
+            add(AvatarFetcher.Factory())
+            add(AvatarKeyer())
+        }
+        .memoryCache(
+            MemoryCache.Builder().maxSizeBytes(
+                calculateMemoryCacheSize(context)
+            ).build()
+        )
+        .crossfade(true)
+        .build()
 
     private fun calculateMemoryCacheSize(context: Context): Long {
         val am = ContextCompat.getSystemService(
@@ -142,9 +142,7 @@ class UApp : MultiDexApplication(), SingletonImageLoader.Factory {
     companion object {
         var instance: UApp? = null
 
-        fun applicationContext(): Context {
-            return instance!!.applicationContext
-        }
+        fun applicationContext(): Context = instance!!.applicationContext
     }
 }
 

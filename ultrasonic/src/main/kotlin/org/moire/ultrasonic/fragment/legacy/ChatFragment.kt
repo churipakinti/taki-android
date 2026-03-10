@@ -51,7 +51,10 @@ import org.moire.ultrasonic.util.Util.isNullOrWhiteSpace
 import org.moire.ultrasonic.util.toastingExceptionHandler
 import org.moire.ultrasonic.view.ChatAdapter
 
-class ChatFragment : Fragment(), KoinComponent, RefreshableFragment {
+class ChatFragment :
+    Fragment(),
+    KoinComponent,
+    RefreshableFragment {
     private lateinit var chatListView: ListView
     private lateinit var messageEditText: EditText
     private lateinit var sendButton: MaterialButton
@@ -70,9 +73,7 @@ class ChatFragment : Fragment(), KoinComponent, RefreshableFragment {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.chat, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.chat, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

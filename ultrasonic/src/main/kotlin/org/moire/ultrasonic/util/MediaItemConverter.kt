@@ -142,9 +142,7 @@ fun Track.toMediaItem(mediaId: String = id): MediaItem {
 /**
  * Convenience function to get the Track Id of the MediaItem
  */
-fun MediaItem.getTrackId(): String {
-    return mediaId
-}
+fun MediaItem.getTrackId(): String = mediaId
 
 /**
  * Updates the "starred" metadata of the MediaItem
@@ -236,16 +234,14 @@ fun MediaItem.toTrack(cacheResult: Boolean = true): Track {
     return track
 }
 
-private fun safeParseDate(created: String?): Date? {
-    return if (created != null) {
-        try {
-            DateFormat.getDateInstance().parse(created)
-        } catch (_: ParseException) {
-            null
-        }
-    } else {
+private fun safeParseDate(created: String?): Date? = if (created != null) {
+    try {
+        DateFormat.getDateInstance().parse(created)
+    } catch (_: ParseException) {
         null
     }
+} else {
+    null
 }
 
 /**

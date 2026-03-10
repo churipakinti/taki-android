@@ -190,12 +190,13 @@ class DownloadTask(
         outputStream.safeClose()
     }
 
-    private fun exceptionHandler(): CoroutineExceptionHandler {
-        return CoroutineExceptionHandler { _, exception ->
-            Timber.w(exception, "Exception in DownloadTask ${downloadTrack.pinnedFile}")
-            Storage.delete(downloadTrack.completeFile)
-            Storage.delete(downloadTrack.pinnedFile)
-        }
+    private fun exceptionHandler(): CoroutineExceptionHandler = CoroutineExceptionHandler {
+            _,
+            exception
+        ->
+        Timber.w(exception, "Exception in DownloadTask ${downloadTrack.pinnedFile}")
+        Storage.delete(downloadTrack.completeFile)
+        Storage.delete(downloadTrack.pinnedFile)
     }
 
     fun start() {
