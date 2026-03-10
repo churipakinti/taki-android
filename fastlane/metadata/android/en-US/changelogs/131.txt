@@ -1,0 +1,42 @@
+### Fixes
+- Can now download albums that end with a period (#1314)
+- Retain playlist view when rotating screen (#1326)
+- Now remembers last song played when playback is resumed outside of the main app (bluetooth, android auto, etc.) (#1303)
+- Handles cover art fetch failure to prevent occasional persistent missing cover art (#1327)
+
+### Features
+- Unify 5-star and heart rating
+- Numerous translation updates
+- Added replaygain support (#1302)
+- Update android target/compile SDK to 36 (Android 16 Baklava) and min SDK to 26 (Android 8 Oreo)
+
+### Dependencies
+- gradle 8.1.1 -> 9.4.0
+- androidx.navigation 2.7.3 -> 2.9.7
+- com.android.tools.build:gradle 8.1.2 -> 9.1.0
+- androidx.car.app 1.2.0 -> 1.7.0
+- androidx.core:core-ktx 1.12.0 -> 1.17.0
+- ktlint 0.43.2 -> 1.0.1
+- org.jlleitschuh.gradle:ktlint-gradle 11.6.0 -> 14.1.0
+- io.gitlab.arturbosch.detekt:detekt-gradle-plugin 1.23.0 -> 1.23.8
+- androidx.media3 1.1.1 -> 1.9.2
+- com.google.android.material 1.9.0 -> 1.13.0
+- androidx.constraintlayout 2.1.4 -> 2.2.1
+- androidx.room 2.5.2 -> 2.8.4
+- org.jetbrains.kotlin:kotlin-gradle-plugin 1.9.10 -> 2.3.10
+- com.google.devtools.ksp 1.9.10 -> 2.3.6
+- org.jetbrains.kotlinx:kotlinx-coroutines-* 1.7.3 -> 1.10.2
+- androidx.lifecycle:lifecycle-viewmodel-ktx 2.6.2 -> 2.10.0
+- androidx.swiperefreshlayout 1.1.0 -> 1.2.0
+- com.squareup.retrofit2 2.9.0 -> 3.0.0
+- com.fasterxml.jackson.module:jackson-module-kotlin 2.13.5 -> 2.21.1
+- com.squareup.okhttp3:logging-interceptor 4.11.0 -> 5.3.2
+- io.insert-koin 3.5.0 -> 4.1.1
+- picasso 2.8 -> io.coil-kt.coil3 3.4.0
+- junit 5.10.0 -> 6.0.3
+- org.mockito:mockito-core 5.5.0 -> 5.22.0
+- org.mockito.kotlin 5.1.0 -> 6.2.3
+- commons-codec 1.16.0 -> 1.21.0
+- org.robolectric 4.10.3 -> 4.16.1
+- com.github.skydoves:colorpickerview 2.2.4 -> 2.4.0
+- io.reactivex.rxjava3:rxjava 3.1.8 -> 3.1.12
