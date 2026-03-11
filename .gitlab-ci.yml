@@ -140,9 +140,9 @@ RoboTest:
     - "curl -L https://gitlab.com/gitlab-org/cli/-/releases/${GLAB_VERSION}/downloads/glab_${GLAB_VERSION#v}_linux_amd64.deb -o /tmp/glab.deb"
     - dpkg -i /tmp/glab.deb
     - glab auth login --job-token $CI_JOB_TOKEN --hostname $CI_SERVER_HOST
-    - glab securefile download --all
+    - glab securefile download --name firebase-key.json
   script:
-    - gcloud auth activate-service-account --key-file .secure_files/firebase-key.json
+    - gcloud auth activate-service-account --key-file firebase-key.json
     - gcloud firebase test android models list
     - gcloud firebase test android run --project ultrasonic-61089 --type robo --app ultrasonic-release/${PACKAGE_APK} --robo-directives click:button1= --device model=Pixel3a,version=28,locale=fr,orientation=landscape 
   rules:
