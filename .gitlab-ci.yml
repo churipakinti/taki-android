@@ -144,7 +144,15 @@ RoboTest:
   script:
     - gcloud auth activate-service-account --key-file firebase-key.json
     - gcloud firebase test android models list --project ultrasonic-61089
-    - gcloud firebase test android run --project ultrasonic-61089 --type robo --app ultrasonic-release/${PACKAGE_APK} --robo-directives click:button1= --device model=Pixel3a,version=28,locale=fr,orientation=landscape 
+    - >
+      gcloud firebase test android run
+      --project ultrasonic-61089
+      --type robo
+      --app ultrasonic-release/${PACKAGE_APK}
+      --robo-directives click:button1=
+      --device model=1610,version=23
+      --device model=blazer,version=36
+      --device model=blueline,version=28,locale=fr,orientation=landscape
   rules:
     # Run when releasing a new tag
     - if: $CI_COMMIT_TAG && $CI_PROJECT_ID == $ROOT_PROJECT_ID
