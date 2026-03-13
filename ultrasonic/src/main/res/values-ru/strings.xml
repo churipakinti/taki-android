@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="background_task.network_error">Произошла ошибка сети. Пожалуйста, проверьте адрес сервера или повторите попытку позже.</string>
-    <string name="background_task.unsupported_api">Серверный api версии %1$s не поддерживает эту функцию.</string>
+    <string name="background_task.unsupported_api">Серверный API версии %1$s не поддерживает эту функцию.</string>
     <string name="background_task.no_network">Эта программа требует доступа к сети. Пожалуйста, включите Wi-Fi или мобильную сеть.</string>
     <string name="background_task.not_found">Ресурс не найден. Пожалуйста, проверьте адрес сервера.</string>
     <string name="background_task.parse_error">Не понятный ответ. Пожалуйста, проверьте адрес сервера.</string>
@@ -355,4 +355,19 @@
     <string name="api.subsonic.upgrade_client">Несовместимые версии. Пожалуйста, обновите приложение Ultrasonic для Android.</string>
     <string name="api.subsonic.upgrade_server">Несовместимые версии. Пожалуйста, обновите Subsonic сервер.</string>
     <!-- Subsonic features  -->
+<string name="chat.send_button">Отправить</string>
+    <string name="chat.user_avatar">Аватар</string>
+    <string name="download.playerstate_loading">Загрузка…</string>
+    <string name="language.fr">Французский</string>
+    <string name="menu.rating_5">5 звёзд</string>
+    <string name="select_album.n_selected">Выбрано %d песен</string>
+    <string name="settings.custom_cache_location">Использовать пользовательское расположение кэша</string>
+    <string name="settings.display_bitrate">Показать битрейт и расширение файла</string>
+    <string name="settings.replaygain_title">Режим ReplayGain</string>
+    <string name="settings.replaygain_disabled">Выключено</string>
+    <string name="settings.replaygain_dynamic">Песня или альбом</string>
+    <string name="settings.replaygain_prefer_track">Предпочитать песню</string>
+    <string name="settings.replaygain_prefer_album">Предпочитать альбом</string>
+    <string name="settings.replaygain_track_only">Только песня</string>
+    <string name="settings.replaygain_album_only">Только альбом</string>
 </resources>
