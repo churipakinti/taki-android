@@ -15,6 +15,12 @@ Many issues are hard to reproduce without a log file. Please enable logging by o
 There you will find an option to activate loging and to export the file. Please note that the log might contain personal information,
 such as the name of the tracks you listened to. If you don't want to post it publicly, let us know, and we will find a way.
 
+If your device doesn't allow you to access the log file directly, you can use `adb` command to retrieve it:
+```
+% adb pull ./storage/emulated/0/Android/data/org.moire.ultrasonic/files/ultrasonic.1.log
+```
+
+More information about `adb`, the Android Debug Bridge: https://developer.android.com/tools/adb
 
 ## System information
 
