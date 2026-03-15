@@ -31,6 +31,7 @@
     <string name="setting_key.default_artists" translatable="false">defaultArtists</string>
     <string name="setting_key.show_now_playing" translatable="false">showNowPlaying</string>
     <string name="setting_key.clear_search_history" translatable="false">clearSearchHistory</string>
+    <string name="setting_key.clear_image_cache" translatable="false">clearImageCache</string>
     <string name="setting_key.download_transition" translatable="false">transitionToDownloadOnPlay</string>
     <string name="setting_key.increment_time" translatable="false">incrementTime</string>
     <string name="setting_key.show_now_playing_details" translatable="false">showNowPlayingDetails</string>

@@ -244,6 +244,11 @@
             a:key="@string/setting_key.directory_cache_time"
             a:title="@string/settings.directory_cache_time"
             app:iconSpaceReserved="false"/>
+        <Preference
+            a:key="@string/setting_key.clear_image_cache"
+            a:persistent="false"
+            a:title="@string/settings.clear_image_cache"
+            app:iconSpaceReserved="false"/>
     </PreferenceCategory>
     <PreferenceCategory
         a:title="@string/settings.search_title"
