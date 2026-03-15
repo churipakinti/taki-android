@@ -39,6 +39,7 @@ import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.util.ConfirmationDialog
 import org.moire.ultrasonic.util.Constants
 import org.moire.ultrasonic.util.ErrorDialog
+import org.moire.ultrasonic.util.FileUtil.albumArtDirectory
 import org.moire.ultrasonic.util.FileUtil.ultrasonicDirectory
 import org.moire.ultrasonic.util.InfoDialog
 import org.moire.ultrasonic.util.SelectCacheActivityContract
@@ -48,6 +49,7 @@ import org.moire.ultrasonic.util.Settings.preferences
 import org.moire.ultrasonic.util.Storage
 import org.moire.ultrasonic.util.TimeSpanPreference
 import org.moire.ultrasonic.util.TimeSpanPreferenceDialogFragmentCompat
+import org.moire.ultrasonic.util.Util.formatBytes
 import org.moire.ultrasonic.util.Util.toast
 import timber.log.Timber
 
@@ -67,6 +69,7 @@ class SettingsFragment :
     private var pauseOnBluetoothDevice: Preference? = null
     private var debugLogToFile: CheckBoxPreference? = null
     private var customCacheLocation: CheckBoxPreference? = null
+    private var clearImageCache: Preference? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.settings, rootKey)
@@ -85,8 +88,10 @@ class SettingsFragment :
         useId3TagsOffline = findPreference(getString(R.string.setting_key_id3_tags_offline))
         customCacheLocation = findPreference(getString(R.string.setting_key_custom_cache_location))
         cacheLocation = findPreference(getString(R.string.setting_key_cache_location))
+        clearImageCache = findPreference(getString(R.string.setting_key_clear_image_cache))
 
         setupClearSearchPreference()
+        setupClearImageCachePreference()
         setupCacheLocationPreference()
         setupBluetoothDevicePreferences()
     }
@@ -317,6 +322,60 @@ class SettingsFragment :
                     false
                 }
         }
+    }
+
+    private fun setupClearImageCachePreference() {
+        val clearImagePreference =
+            findPreference<Preference>(getString(R.string.setting_key_clear_image_cache))
+        if (clearImagePreference != null) {
+            val cacheSize = getImageCacheSize()
+            clearImagePreference.summary =
+                getString(R.string.settings_clear_image_cache_summary, cacheSize)
+            clearImagePreference.onPreferenceClickListener =
+                Preference.OnPreferenceClickListener {
+                    ConfirmationDialog.Builder(requireContext())
+                        .setMessage(R.string.settings_clear_image_cache_confirm)
+                        .setNegativeButton(R.string.common_cancel) { dIf: DialogInterface, _: Int ->
+                            dIf.cancel()
+                        }
+                        .setPositiveButton(R.string.common_ok) { _: DialogInterface, _: Int ->
+                            clearImageCache()
+                        }
+                        .create().show()
+                    false
+                }
+        }
+    }
+
+    private fun getImageCacheSize(): String {
+        val albumArtDir = albumArtDirectory
+        if (!albumArtDir.exists()) return "0 B"
+
+        var totalSize = 0L
+        albumArtDir.walkTopDown().forEach { file ->
+            if (file.isFile) {
+                totalSize += file.length()
+            }
+        }
+        return formatBytes(totalSize)
+    }
+
+    private fun clearImageCache() {
+        val albumArtDir = albumArtDirectory
+        if (!albumArtDir.exists()) {
+            toast(R.string.settings_clear_image_cache_cleared)
+            return
+        }
+
+        var deletedCount = 0
+        albumArtDir.walkTopDown().forEach { file ->
+            if (file.isFile && file.delete()) {
+                deletedCount++
+            }
+        }
+        Timber.i("Deleted %d image cache files", deletedCount)
+        clearImageCache?.summary = getString(R.string.settings_clear_image_cache_summary, "0 B")
+        toast(R.string.settings_clear_image_cache_cleared)
     }
 
     private fun updateCustomPreferences() {

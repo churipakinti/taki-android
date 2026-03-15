@@ -198,6 +198,10 @@
     <string name="settings.clear_bookmark">Clear Bookmark</string>
     <string name="settings.clear_bookmark_summary">Clear bookmark upon completion of playback of a song</string>
     <string name="settings.clear_search_history">Clear Search History</string>
+    <string name="settings.clear_image_cache">Clear Image Cache</string>
+    <string name="settings.clear_image_cache_summary">Delete %1$s of cached images</string>
+    <string name="settings.clear_image_cache_confirm">Are you sure you want to delete the cached images?</string>
+    <string name="settings.clear_image_cache_cleared">Image cache cleared</string>
     <string name="settings.default_albums">Default Albums</string>
     <string name="settings.default_artists">Default Artists</string>
     <string name="settings.default_songs">Default Songs</string>
