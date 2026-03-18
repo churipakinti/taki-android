@@ -463,4 +463,8 @@
     <string name="settings.replaygain_prefer_album">Preferir Álbum</string>
     <string name="settings.replaygain_track_only">Só Canción</string>
     <string name="settings.replaygain_album_only">Só Álbum</string>
+    <string name="settings.clear_image_cache">Limpar memoria tobo de imaxes</string>
+    <string name="settings.clear_image_cache_summary">Eliminar %1$s imaxes da memoria</string>
+    <string name="settings.clear_image_cache_confirm">Tes certeza de querer eliminar as imaxes da memoria tobo?</string>
+    <string name="settings.clear_image_cache_cleared">Limpouse a memoria tobo de imaxes</string>
 </resources>
