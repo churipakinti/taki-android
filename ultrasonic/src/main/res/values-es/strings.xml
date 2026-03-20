@@ -463,4 +463,8 @@
     <string name="settings.replaygain_prefer_album">Preferir álbum</string>
     <string name="settings.replaygain_track_only">Solo pista</string>
     <string name="settings.replaygain_album_only">Solo álbum</string>
+    <string name="settings.clear_image_cache">Borrar la caché de imágenes</string>
+    <string name="settings.clear_image_cache_summary">Eliminar %1$s de imágenes almacenadas en la caché</string>
+    <string name="settings.clear_image_cache_confirm">¿Confirmas que quieres eliminar las imágenes almacenadas en la caché?</string>
+    <string name="settings.clear_image_cache_cleared">Se ha borrado la caché de imágenes</string>
 </resources>
