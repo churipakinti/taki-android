@@ -75,6 +75,6 @@ interface AlbumDao : GenericDao<Album> {
     /**
      * Get list of genres from albums.
      */
-    @Query("SELECT DISTINCT genre FROM albums")
+    @Query("SELECT DISTINCT genre FROM albums ORDER BY genre ASC")
     fun getGenres(): List<String>
 }

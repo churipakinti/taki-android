@@ -163,10 +163,7 @@ class MusicCollectionAdapter(fragment: Fragment, initialType: LayoutType = Layou
     // viewPager.findFragmentAtPosition(childFragmentManager, position) is sometimes delayed..
     var fragmentMap: HashMap<Int, SoftReference<Fragment>> = hashMapOf()
 
-    override fun getItemCount(): Int {
-        // Hide Genre tab when offline
-        return if (ActiveServerProvider.isOffline()) 3 else 4
-    }
+    override fun getItemCount(): Int = 4
 
     override fun createFragment(position: Int): Fragment {
         Timber.i("Creating new fragment at position: $position")

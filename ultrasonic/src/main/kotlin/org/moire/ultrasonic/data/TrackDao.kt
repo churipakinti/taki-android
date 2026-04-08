@@ -15,20 +15,26 @@ interface TrackDao : GenericDao<Track> {
     fun clear()
 
     /**
-     * Get all albums
+     * Get all tracks
      */
     @Query("SELECT * FROM tracks")
     fun get(): List<Track>
 
     /**
-     * Get albums by artist
+     * Get tracks by album
      */
     @Query("SELECT * FROM tracks WHERE albumId LIKE :id")
     fun byAlbum(id: String): List<Track>
 
     /**
-     * Get albums by artist
+     * Get tracks by artist
      */
     @Query("SELECT * FROM tracks WHERE artistId LIKE :id")
     fun byArtist(id: String): List<Track>
+
+    /**
+     * Get tracks by genre
+     */
+    @Query("SELECT * FROM tracks WHERE genre LIKE :id ORDER BY title ASC LIMIT :offset,:size")
+    fun byGenre(id: String, size: Int, offset: Int = 0): List<Track>
 }
