@@ -280,8 +280,9 @@ class CachedMusicService(private val musicService: MusicService) :
         type: AlbumListType,
         size: Int,
         offset: Int,
+        genre: String?,
         musicFolderId: String?
-    ): List<Album> = musicService.getAlbumList2(type, size, offset, musicFolderId)
+    ): List<Album> = musicService.getAlbumList2(type, size, offset, genre, musicFolderId)
 
     @Throws(Exception::class)
     override fun getRandomSongs(size: Int): MusicDirectory = musicService.getRandomSongs(size)

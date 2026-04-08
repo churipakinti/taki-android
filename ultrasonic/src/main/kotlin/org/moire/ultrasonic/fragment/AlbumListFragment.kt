@@ -63,6 +63,8 @@ class AlbumListFragment(
 
     private val navArgs: AlbumListFragmentArgs by navArgs()
 
+    private var selectedGenre: String? = null
+
     /**
      * The central function to pass a query to the model and return a LiveData object
      */
@@ -72,7 +74,11 @@ class AlbumListFragment(
         return listModel.list
     }
 
-    private fun fetchAlbums(refresh: Boolean = navArgs.refresh, append: Boolean = navArgs.append) {
+    private fun fetchAlbums(
+        refresh: Boolean = navArgs.refresh,
+        append: Boolean = navArgs.append,
+        newSortOrderChosen: Boolean = false
+    ) {
         listModel.viewModelScope.launch(
             toastingExceptionHandler()
         ) {
@@ -84,6 +90,8 @@ class AlbumListFragment(
                     id = navArgs.id!!,
                     name = navArgs.title
                 )
+            } else if (orderType == SortOrder.BY_GENRE) {
+                fetchAlbumsByGenre(refresh, append, newSortOrderChosen)
             } else {
                 listModel.getAlbums(
                     albumListType = orderType?.mapToAlbumListType() ?: navArgs.type,
@@ -94,6 +102,35 @@ class AlbumListFragment(
                 )
             }
             swipeRefresh?.isRefreshing = false
+        }
+    }
+
+    private suspend fun fetchAlbumsByGenre(
+        refresh: Boolean,
+        append: Boolean,
+        newSortOrderChosen: Boolean
+    ) {
+        if (selectedGenre != null && !newSortOrderChosen) {
+            listModel.getAlbums(
+                albumListType = AlbumListType.BY_GENRE,
+                size = navArgs.size,
+                offset = navArgs.offset,
+                append = append,
+                refresh = refresh or append,
+                genre = selectedGenre
+            )
+            swipeRefresh?.isRefreshing = false
+            return
+        }
+        val genres = listModel.getGenres(true)
+        if (genres.isEmpty()) {
+            swipeRefresh?.isRefreshing = false
+            return
+        }
+        val genreStrings = genres.map { it.name }.toTypedArray()
+        if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
+            ItemSelectionDialogFragment.create(R.string.main_genres_title, genreStrings)
+                .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
         }
     }
 
@@ -126,7 +163,7 @@ class AlbumListFragment(
         if (navArgs.byArtist) {
             listModel.sortListByOrder(newOrder.mapToAlbumListType())
         } else {
-            fetchAlbums(refresh = true, append = false)
+            fetchAlbums(refresh = true, append = false, newSortOrderChosen = true)
         }
     }
 
@@ -135,6 +172,7 @@ class AlbumListFragment(
         supportedSortOrders = getListOfSortOrders()
     )
 
+    @Suppress("ComplexMethod")
     private fun getListOfSortOrders(): List<SortOrder> {
         val useId3 = Settings.id3TagsEnabledOnline
         val useId3Offline = Settings.id3TagsEnabledOffline
@@ -166,8 +204,22 @@ class AlbumListFragment(
         if (isOnline || useId3Offline) {
             supported.add(SortOrder.BY_ARTIST)
         }
+        if (isOnline || useId3Offline) {
+            supported.add(SortOrder.BY_GENRE)
+        }
 
         return supported
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState != null) {
+            val orderTypeName = savedInstanceState.getString("order_type")
+            if (orderTypeName != null) {
+                orderType = SortOrder.valueOf(orderTypeName)
+            }
+            selectedGenre = savedInstanceState.getString("selected_genre")
+        }
     }
 
     override fun onCreateView(
@@ -181,6 +233,23 @@ class AlbumListFragment(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Handler for genre selection dialog. Invoked if the user selects "By Genre" in the
+        // orderType dropdown menu.
+        childFragmentManager.setFragmentResultListener(
+            ItemSelectionDialogFragment.REQUEST_KEY,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) {
+                swipeRefresh?.isRefreshing = false
+                return@setFragmentResultListener
+            }
+            val genreName = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)
+            if (genreName != null) {
+                selectedGenre = genreName
+                fetchAlbums(refresh = true, append = false)
+            }
+        }
 
         // Setup refresh handler
         swipeRefresh = view.findViewById(refreshListId)
@@ -216,6 +285,12 @@ class AlbumListFragment(
         }
 
         emptyTextView.setText(R.string.select_album_empty)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("order_type", orderType?.name)
+        outState.putString("selected_genre", selectedGenre)
     }
 
     private fun setupFilterBar(view: View) {
@@ -256,6 +331,7 @@ class AlbumListFragment(
         SortOrder.RECENT -> AlbumListType.RECENT
         SortOrder.BY_NAME -> AlbumListType.SORTED_BY_NAME
         SortOrder.BY_ARTIST -> AlbumListType.SORTED_BY_ARTIST
+        SortOrder.BY_GENRE -> AlbumListType.BY_GENRE
         SortOrder.STARRED -> AlbumListType.STARRED
         SortOrder.BY_YEAR -> AlbumListType.BY_YEAR
     }

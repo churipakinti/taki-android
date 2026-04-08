@@ -104,6 +104,7 @@
     <string name="language.ru">Russian</string>
     <string name="main.albums_alphaByArtist">By Artist</string>
     <string name="main.albums_alphaByName">By Name</string>
+    <string name="main.albums_byGenre">By Genre</string>
     <string name="main.albums_frequent">Most Played</string>
     <string name="main.albums_highest">Top Rated</string>
     <string name="main.albums_newest">Recently Added</string>

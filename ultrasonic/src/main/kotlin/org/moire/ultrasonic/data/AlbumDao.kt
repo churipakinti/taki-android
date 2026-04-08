@@ -65,4 +65,16 @@ interface AlbumDao : GenericDao<Album> {
      */
     @Query("DELETE FROM albums WHERE id LIKE :id")
     fun delete(id: String)
+
+    /**
+     * Get albums by genre
+     */
+    @Query("SELECT * FROM albums WHERE genre LIKE :id ORDER BY title ASC LIMIT :offset,:size")
+    fun byGenre(id: String, size: Int, offset: Int = 0): List<Album>
+
+    /**
+     * Get list of genres from albums.
+     */
+    @Query("SELECT DISTINCT genre FROM albums")
+    fun getGenres(): List<String>
 }

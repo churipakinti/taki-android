@@ -1050,6 +1050,7 @@ class MediaLibrarySessionCallback :
                             type,
                             DISPLAY_LIMIT,
                             offset,
+                            null,
                             null
                         )
                     }

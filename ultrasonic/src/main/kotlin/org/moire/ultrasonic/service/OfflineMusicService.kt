@@ -315,12 +315,14 @@ class OfflineMusicService :
         type: AlbumListType,
         size: Int,
         offset: Int,
+        genre: String?,
         musicFolderId: String?
     ): List<Album> {
         // TODO: Implement filtering by musicFolder?
         return when (type) {
             AlbumListType.NEWEST -> cachedAlbums.orderedByAge(size, offset)
             AlbumListType.SORTED_BY_ARTIST -> cachedAlbums.orderedByArtist(size, offset)
+            AlbumListType.BY_GENRE -> cachedAlbums.byGenre(genre!!, size, offset)
             else -> cachedAlbums.orderedByName(size, offset)
         }
     }
@@ -364,8 +366,10 @@ class OfflineMusicService :
         throw OfflineException("Getting Songs By Genre not available in offline mode")
 
     @Throws(Exception::class)
-    override fun getGenres(refresh: Boolean): List<Genre> =
-        throw OfflineException("Getting Genres not available in offline mode")
+    override fun getGenres(refresh: Boolean): List<Genre> {
+        val genres = cachedAlbums.getGenres()
+        return genres.map { Genre(it, it) }
+    }
 
     @Throws(Exception::class)
     override fun getUser(username: String): UserInfo =
