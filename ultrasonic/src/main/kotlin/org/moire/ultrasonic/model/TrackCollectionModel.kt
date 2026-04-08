@@ -155,7 +155,8 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
 
     private fun updateList(root: MusicDirectory, append: Boolean = false) {
         val newList = if (append) {
-            currentList.value!! + root.getChildren()
+            // Prevent duplicates.
+            (currentList.value!! + root.getChildren()).distinctBy { it.id }
         } else {
             root.getChildren()
         }
