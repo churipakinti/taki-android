@@ -102,6 +102,12 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
     private val navArgs: TrackCollectionFragmentArgs by navArgs()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val sortOrderName = savedInstanceState?.getString("sort_order")
+        sortOrderName?.let { sortOrder = SortOrder.valueOf(it) }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -185,6 +191,11 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
 
         listView!!.addOnScrollListener(scrollListener)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("sort_order", sortOrder?.name)
     }
 
     private fun loadMoreTracks() {
@@ -626,6 +637,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         sortOrder = newOrder
         getLiveData(refresh = true)
     }
+
+    override fun getOrderType(): SortOrder? = sortOrder
 
     override var viewCapabilities: ViewCapabilities = ViewCapabilities(
         supportsGrid = false,

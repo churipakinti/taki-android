@@ -144,7 +144,7 @@ class MainFragment :
 private fun FilterButtonBar.configureWithCapabilitiesFromFragment(frag: Fragment?) {
     if (frag is FilterableFragment) {
         Timber.w("Setting kapas: ${frag.viewCapabilities}")
-        this.configureWithCapabilities(frag.viewCapabilities)
+        this.configureWithCapabilities(frag.viewCapabilities, frag.getOrderType())
     } else {
         Timber.w("Setting kapas: $EMPTY_CAPABILITIES")
         this.configureWithCapabilities(EMPTY_CAPABILITIES)
@@ -216,5 +216,6 @@ class MusicCollectionAdapter(fragment: Fragment, initialType: LayoutType = Layou
 interface FilterableFragment {
     fun setLayoutType(newType: LayoutType) {}
     fun setOrderType(newOrder: SortOrder)
+    fun getOrderType(): SortOrder? = null
     var viewCapabilities: ViewCapabilities
 }

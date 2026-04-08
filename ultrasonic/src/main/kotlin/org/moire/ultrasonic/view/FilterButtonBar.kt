@@ -50,8 +50,9 @@ class FilterButtonBar : ConstraintLayout {
      * the linked fragment and configure the UI accordingly
      *
      * @param caps
+     * @param currentSortOrder
      */
-    fun configureWithCapabilities(caps: ViewCapabilities) {
+    fun configureWithCapabilities(caps: ViewCapabilities, currentSortOrder: SortOrder? = null) {
         viewTypeToggle!!.isVisible = caps.supportsGrid
         sortOrderMenu!!.isVisible = caps.supportedSortOrders.isNotEmpty()
 
@@ -63,8 +64,11 @@ class FilterButtonBar : ConstraintLayout {
                     string = context.getString(getStringForSortOrder(it))
                 )
             }
-            // Fill the visible with  the first available option
-            sortOrderOptions!!.setText(getStringForSortOrder(translatedOrders.first().sortOrder))
+
+            // Set the current SortOrder, fall back to the first in the list if none was specified.
+            val selected = currentSortOrder ?: translatedOrders.first().sortOrder
+            sortOrderOptions!!.setText(context.getString(getStringForSortOrder(selected)), false)
+
             adapter!!.clear()
             // Next line addresses a bug in Android components:
             // https://github.com/material-components/material-components-android/issues/1464

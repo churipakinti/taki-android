@@ -167,6 +167,8 @@ class AlbumListFragment(
         }
     }
 
+    override fun getOrderType(): SortOrder? = orderType
+
     override var viewCapabilities: ViewCapabilities = ViewCapabilities(
         supportsGrid = true,
         supportedSortOrders = getListOfSortOrders()
@@ -306,7 +308,8 @@ class AlbumListFragment(
                     SortOrder.BY_NAME,
                     SortOrder.BY_YEAR
                 )
-            )
+            ),
+            orderType
         )
 
         // Set layout toggle Chip to correct state
