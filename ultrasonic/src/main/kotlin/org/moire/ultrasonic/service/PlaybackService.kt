@@ -35,6 +35,9 @@ import java.util.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.Credentials
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -118,9 +121,23 @@ class PlaybackService :
         val id = components[0]
         val bitrate = components[1].toInt()
         val uri = getMusicService().getStreamUrl(id, bitrate, null)!!
-        // AirSonic doesn't seem to stream correctly with the default
-        // icy-metadata headers set by media3, so remove them.
-        it.buildUpon().setUri(uri).setHttpRequestHeaders(emptyMap()).build()
+
+        val headers = HashMap<String, String>()
+        val httpUrl = uri.toHttpUrl()
+        if (httpUrl.username.isNotEmpty() &&
+            httpUrl.password.isNotEmpty()
+        ) {
+            headers["Authorization"] =
+                Credentials.basic(
+                    httpUrl.username,
+                    httpUrl.password
+                )
+        }
+
+        // Set request headers to:
+        // 1. Remove icy-metadata headers set by media3 (for AirSonic to stream correctly)
+        // 2. Add the Authorization header for streaming with HTTP basic auth to work
+        it.buildUpon().setUri(uri).setHttpRequestHeaders(headers).build()
     }
 
     private fun initializeSessionAndPlayer() {
