@@ -362,8 +362,12 @@ class OfflineMusicService :
         throw OfflineException("Starred not available in offline mode")
 
     @Throws(Exception::class)
-    override fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory =
-        throw OfflineException("Getting Songs By Genre not available in offline mode")
+    override fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory {
+        val songs = cachedTracks.byGenre(genre, count, offset)
+        val dir = MusicDirectory()
+        dir.addAll(songs)
+        return dir
+    }
 
     @Throws(Exception::class)
     override fun getGenres(refresh: Boolean): List<Genre> {
