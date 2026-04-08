@@ -19,6 +19,7 @@ import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.lang.ref.SoftReference
 import kotlin.collections.HashMap
 import kotlin.collections.hashMapOf
@@ -28,8 +29,9 @@ import org.koin.core.component.KoinScopeComponent
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
-import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.fragment.legacy.SelectGenreFragment
+import org.moire.ultrasonic.service.RxBus
+import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.util.LayoutType
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.view.EMPTY_CAPABILITIES
@@ -48,6 +50,7 @@ class MainFragment :
 
     private lateinit var musicCollectionAdapter: MusicCollectionAdapter
     private lateinit var viewPager: ViewPager2
+    private val rxBusSubscription = CompositeDisposable()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -83,6 +86,12 @@ class MainFragment :
 
         // Set layout toggle Chip to correct state
         filterButtonBar!!.setLayoutType(layoutType)
+
+        // Reconfigure available capabilities when we switch between online and offline mode.
+        rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
+            val frag = findCurrentFragment()
+            filterButtonBar!!.configureWithCapabilitiesFromFragment(frag)
+        }
 
         // Listen to changes in the current page (=fragment)
         viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
@@ -138,6 +147,11 @@ class MainFragment :
         // hold a reference to it. Fallback on the WeakMap instead.
         return fragmentManager.findFragmentByTag("f$position")
             ?: musicCollectionAdapter.fragmentMap[position]?.get()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        rxBusSubscription.dispose()
     }
 }
 
