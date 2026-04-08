@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.domain.Album
+import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.service.MusicServiceFactory
 
 class AlbumListModel(application: Application) : GenericListModel(application) {
@@ -35,7 +36,8 @@ class AlbumListModel(application: Application) : GenericListModel(application) {
         size: Int = 0,
         offset: Int = 0,
         append: Boolean = false,
-        refresh: Boolean
+        refresh: Boolean,
+        genre: String? = null
     ) {
         // Don't reload the data if navigating back to the view that was active before.
         // This way, we keep the scroll position
@@ -70,6 +72,7 @@ class AlbumListModel(application: Application) : GenericListModel(application) {
                     albumListType,
                     size,
                     offset,
+                    genre,
                     musicFolderId
                 )
             } else {
@@ -94,6 +97,11 @@ class AlbumListModel(application: Application) : GenericListModel(application) {
 
             loadedUntil = offset
         }
+    }
+
+    suspend fun getGenres(refresh: Boolean): List<Genre> = withContext(Dispatchers.IO) {
+        val musicService = MusicServiceFactory.getMusicService()
+        musicService.getGenres(refresh)
     }
 
     fun sortListByOrder(order: AlbumListType) {

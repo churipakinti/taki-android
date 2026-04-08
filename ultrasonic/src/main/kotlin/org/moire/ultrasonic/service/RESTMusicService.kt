@@ -320,6 +320,7 @@ open class RESTMusicService(
         type: AlbumListType,
         size: Int,
         offset: Int,
+        genre: String?,
         musicFolderId: String?
     ): List<Album> {
         val response = API.getAlbumList2(
@@ -328,7 +329,7 @@ open class RESTMusicService(
             offset,
             null,
             null,
-            null,
+            genre,
             musicFolderId
         ).execute().throwOnFailure()
 

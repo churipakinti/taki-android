@@ -107,6 +107,7 @@ interface MusicService {
         type: AlbumListType,
         size: Int,
         offset: Int,
+        genre: String? = null,
         musicFolderId: String?
     ): List<Album>
 

@@ -45,6 +45,8 @@ complexity:
     thresholdInObjects: 30
   LabeledExpression:
     active: false
+  LongParameterList:
+    ignoreDefaultParameters: true
 
 style:
   active: true
