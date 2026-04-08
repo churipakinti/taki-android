@@ -61,12 +61,13 @@ abstract class EntryListFragment<T : GenericEntry> :
         findNavController().navigate(action)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-        // Call a cheap function on ServerSettingsModel to make sure it is initialized by Koin,
-        // because it can't be initialized from inside the callback
-        serverSettingsModel.toString()
+        // Update displayed media when switching between online and offline or changing servers.
+        rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
+            getLiveData(refresh = true)
+        }
 
         rxBusSubscription += RxBus.musicFolderChangedEventObservable.subscribe {
             if (!listModel.isOffline()) {
@@ -76,14 +77,22 @@ abstract class EntryListFragment<T : GenericEntry> :
             }
             listModel.refresh(swipeRefresh!!)
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Call a cheap function on ServerSettingsModel to make sure it is initialized by Koin,
+        // because it can't be initialized from inside the callback
+        serverSettingsModel.toString()
 
         viewAdapter.register(
             FolderSelectorBinder(view.context)
         )
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
+    override fun onDestroy() {
+        super.onDestroy()
         rxBusSubscription.dispose()
     }
 
