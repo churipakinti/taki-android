@@ -451,4 +451,11 @@
     <string name="menu.rating_4">4 Sterne</string>
     <string name="menu.rating_5">5 Sterne</string>
     <string name="settings.share_options">Optionen</string>
+    <string name="main.albums_byGenre">Nach Genre</string>
+    <string name="settings.replaygain_title">ReplayGain-Modus</string>
+    <string name="settings.replaygain_disabled">Deaktiviert</string>
+    <string name="settings.replaygain_prefer_track">Titel bevorzugen</string>
+    <string name="settings.replaygain_prefer_album">Album bevorzugen</string>
+    <string name="settings.replaygain_track_only">Nur Titel</string>
+    <string name="settings.replaygain_album_only">Nur Album</string>
 </resources>
