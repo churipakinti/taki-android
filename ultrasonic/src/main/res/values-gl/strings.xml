@@ -467,4 +467,5 @@
     <string name="settings.clear_image_cache_summary">Eliminar %1$s imaxes da memoria</string>
     <string name="settings.clear_image_cache_confirm">Tes certeza de querer eliminar as imaxes da memoria tobo?</string>
     <string name="settings.clear_image_cache_cleared">Limpouse a memoria tobo de imaxes</string>
+    <string name="main.albums_byGenre">Por xénero</string>
 </resources>
