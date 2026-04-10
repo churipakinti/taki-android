@@ -143,10 +143,10 @@ RoboTest:
     - glab securefile download --name firebase-key.json
   script:
     - gcloud auth activate-service-account --key-file firebase-key.json
-    - gcloud firebase test android models list --project ultrasonic-61089
+    - gcloud firebase test android models list --project org-moire-ultrasonic
     - >
       gcloud firebase test android run
-      --project ultrasonic-61089
+      --project org-moire-ultrasonic
       --type robo
       --app ultrasonic-release/${PACKAGE_APK}
       --robo-directives click:button1=
