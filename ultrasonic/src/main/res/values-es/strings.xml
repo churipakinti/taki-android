@@ -467,4 +467,5 @@
     <string name="settings.clear_image_cache_summary">Eliminar %1$s de imágenes almacenadas en la caché</string>
     <string name="settings.clear_image_cache_confirm">¿Confirmas que quieres eliminar las imágenes almacenadas en la caché?</string>
     <string name="settings.clear_image_cache_cleared">Se ha borrado la caché de imágenes</string>
+    <string name="main.albums_byGenre">Por género</string>
 </resources>
