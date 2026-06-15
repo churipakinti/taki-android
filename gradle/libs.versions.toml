@@ -27,7 +27,7 @@ documentfile           = "1.1.0"
 retrofit               = "3.0.0"
 jackson                = "2.21.3"
 okhttp                 = "5.4.0"
-koin                   = "4.2.1"
+koin                   = "4.2.2"
 coil                   = "3.5.0"
 
 junit4                 = "4.13.2"
