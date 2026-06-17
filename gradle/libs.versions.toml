@@ -20,7 +20,7 @@ room                   = "2.8.4"
 kotlin                 = "2.3.21"
 ksp                    = "2.3.9"
 kotlinxCoroutines      = "1.11.0"
-viewModelKtx           = "2.10.0"
+viewModelKtx           = "2.11.0"
 swipeRefresh           = "1.2.0"
 documentfile           = "1.1.0"
 
