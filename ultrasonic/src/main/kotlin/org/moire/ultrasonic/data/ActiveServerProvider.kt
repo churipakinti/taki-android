@@ -119,8 +119,8 @@ class ActiveServerProvider(private val repository: ServerSettingDao) :
         // Use a coroutine to post the server change to the end of the message queue
         launch {
             withContext(Dispatchers.Main) {
-                resetMusicService()
                 Settings.activeServer = serverId
+                resetMusicService()
 
                 RxBus.activeServerChangedPublisher.onNext(getActiveServer(serverId))
                 Timber.i("setActiveServerById done, new id: %s", serverId)
