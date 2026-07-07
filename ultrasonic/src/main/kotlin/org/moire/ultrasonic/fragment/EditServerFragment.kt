@@ -42,6 +42,7 @@ import org.moire.ultrasonic.data.ServerSetting
 import org.moire.ultrasonic.model.EditServerModel
 import org.moire.ultrasonic.model.ServerSettingsModel
 import org.moire.ultrasonic.service.MusicServiceFactory
+import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.util.CommunicationError.getErrorMessage
 import org.moire.ultrasonic.util.ErrorDialog
 import org.moire.ultrasonic.util.InfoDialog
@@ -145,6 +146,7 @@ class EditServerFragment : Fragment() {
                             currentServerSetting!!.id
                         ) {
                             MusicServiceFactory.resetMusicService()
+                            RxBus.activeServerChangedPublisher.onNext(currentServerSetting!!)
                         }
                         findNavController().navigateUp()
                     }

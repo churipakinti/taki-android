@@ -36,13 +36,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.Credentials
-import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
+import org.moire.ultrasonic.api.subsonic.allowSelfSignedCertificates
 import org.moire.ultrasonic.app.UApp
 import org.moire.ultrasonic.audiofx.EqualizerController
 import org.moire.ultrasonic.data.ActiveServerProvider
@@ -168,6 +168,8 @@ class PlaybackService :
 
         // Set a listener to update the API client when the active server has changed
         rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
+            // Recreate the player to ensure we use the correct OkHttpClient and settings
+            actualBackend?.let { updateBackend(it) }
             // Set the player wake mode
             (player as? ExoPlayer)?.setWakeMode(getWakeModeFlag())
         }
@@ -239,6 +241,9 @@ class PlaybackService :
     private fun getLocalPlayer(): Player {
         // Create a new plain OkHttpClient
         val builder = OkHttpClient.Builder()
+        if (activeServerProvider.getActiveServer().allowSelfSignedCertificate) {
+            builder.allowSelfSignedCertificates()
+        }
         val client = builder.build()
 
         // Create the wrapped data sources:

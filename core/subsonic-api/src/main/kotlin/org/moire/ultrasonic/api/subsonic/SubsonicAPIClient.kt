@@ -3,11 +3,7 @@ package org.moire.ultrasonic.api.subsonic
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit.MILLISECONDS
-import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
@@ -127,24 +123,6 @@ class SubsonicAPIClient(
         val loggingInterceptor = HttpLoggingInterceptor(okLogger)
         loggingInterceptor.level = HttpLoggingInterceptor.Level.HEADERS
         this.addInterceptor(loggingInterceptor)
-    }
-
-    @Suppress("CustomX509TrustManager", "TrustAllX509TrustManager")
-    private fun OkHttpClient.Builder.allowSelfSignedCertificates() {
-        val trustManager =
-
-            object : X509TrustManager {
-                override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
-                override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
-                override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-            }
-
-        val sslContext = SSLContext.getInstance("SSL")
-        sslContext.init(null, arrayOf(trustManager), SecureRandom())
-
-        sslSocketFactory(sslContext.socketFactory, trustManager)
-
-        hostnameVerifier { _, _ -> true }
     }
 
     /**

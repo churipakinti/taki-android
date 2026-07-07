@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
+import okhttp3.OkHttpClient
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.BuildConfig
@@ -23,6 +24,7 @@ import org.moire.ultrasonic.api.subsonic.SubsonicAPIDefinition
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions
 import org.moire.ultrasonic.api.subsonic.SubsonicClientConfiguration
 import org.moire.ultrasonic.api.subsonic.SubsonicRESTException
+import org.moire.ultrasonic.api.subsonic.allowSelfSignedCertificates
 import org.moire.ultrasonic.api.subsonic.response.SubsonicResponse
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ServerSetting
@@ -118,7 +120,11 @@ class EditServerModel(val app: Application) :
             BuildConfig.DEBUG
         )
 
-        val client = SubsonicAPIClient(configuration)
+        val builder = OkHttpClient.Builder()
+        if (serverSetting.allowSelfSignedCertificate) {
+            builder.allowSelfSignedCertificates()
+        }
+        val client = SubsonicAPIClient(configuration, baseOkClient = builder.build())
 
         // Execute a ping to retrieve the API version.
         // This is accepted to fail if the authentication is incorrect yet.
