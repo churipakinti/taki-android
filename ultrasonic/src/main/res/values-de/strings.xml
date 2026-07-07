@@ -458,4 +458,7 @@
     <string name="settings.replaygain_prefer_album">Album bevorzugen</string>
     <string name="settings.replaygain_track_only">Nur Titel</string>
     <string name="settings.replaygain_album_only">Nur Album</string>
+    <string name="settings.clear_image_cache">Bild-Cache löschen</string>
+    <string name="settings.clear_image_cache_cleared">Bild-Cache gelöscht</string>
+    <string name="settings.clear_image_cache_confirm">Sind Sie sicher, dass Sie die Bilder aus dem Cache löschen möchten?</string>
 </resources>
