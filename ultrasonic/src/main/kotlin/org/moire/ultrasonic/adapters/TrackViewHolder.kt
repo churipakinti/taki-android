@@ -69,7 +69,7 @@ class TrackViewHolder(val view: View) :
     private var duration: TextView = view.findViewById(R.id.song_duration)
     private var statusImage: ImageView = view.findViewById(R.id.song_status_image)
     private var progressIndicator: CircularProgressIndicator =
-        view.findViewById<CircularProgressIndicator?>(R.id.song_status_progress).apply {
+        view.findViewById<CircularProgressIndicator>(R.id.song_status_progress).apply {
             this.max = 100
         }
 
