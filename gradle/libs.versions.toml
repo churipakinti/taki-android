@@ -31,7 +31,7 @@ koin                   = "4.2.2"
 coil                   = "3.5.0"
 
 junit4                 = "4.13.2"
-junit                  = "6.1.1"
+junit                  = "6.1.2"
 mockito                = "5.23.0"
 mockitoKotlin          = "6.3.0"
 kluent                 = "1.73"
