@@ -1,5 +1,5 @@
 ext.versions = [
         minSdk               : 26,
-        targetSdk            : 36,
-        compileSdk           : 36,
+        targetSdk            : 37,
+        compileSdk           : 37,
 ]
