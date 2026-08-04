@@ -642,6 +642,19 @@ class MediaPlayerManager(
     }
 
     @Synchronized
+    fun serializeCurrentSessionSync() {
+        if (!playbackStateSerializer.isReady || currentMediaItemIndex == -1) return
+
+        playbackStateSerializer.serializeNow(
+            tracks = playlist.map { it.toTrack() },
+            currentPlayingIndex = currentMediaItemIndex,
+            currentPlayingPosition = playerPosition,
+            shufflePlay = isShufflePlayEnabled,
+            repeatMode = repeatMode
+        )
+    }
+
+    @Synchronized
     fun seekToPrevious() {
         controller?.seekToPrevious()
     }

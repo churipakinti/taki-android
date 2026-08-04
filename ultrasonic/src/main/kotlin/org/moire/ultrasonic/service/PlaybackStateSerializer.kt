@@ -58,7 +58,10 @@ class PlaybackStateSerializer : KoinComponent {
         }
     }
 
-    private fun serializeNow(
+    val isReady: Boolean get() = isSetup.get()
+
+    @Synchronized
+    internal fun serializeNow(
         tracks: Iterable<Track>,
         currentPlayingIndex: Int,
         currentPlayingPosition: Int,
