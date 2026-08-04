@@ -67,6 +67,7 @@ class PlaybackService :
     private lateinit var mediaLibrarySession: MediaLibrarySession
     private var equalizer: EqualizerController? = null
     private val activeServerProvider: ActiveServerProvider by inject()
+    private val mediaPlayerManager: MediaPlayerManager by inject()
 
     private lateinit var librarySessionCallback: MediaLibrarySessionCallback
 
@@ -102,10 +103,10 @@ class PlaybackService :
 
     private fun releasePlayerAndSession() {
         Timber.i("Releasing player and session")
+        mediaPlayerManager.serializeCurrentSessionSync()
         // Broadcast that the service is being shutdown
         RxBus.stopServiceCommandPublisher.onNext(Unit)
 
-        // TODO Save the player state before shutdown
         player.removeListener(listener)
         player.release()
         mediaLibrarySession.release()
