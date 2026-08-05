@@ -36,6 +36,7 @@ import org.moire.ultrasonic.adapters.AlbumHeader
 import org.moire.ultrasonic.adapters.AlbumRowDelegate
 import org.moire.ultrasonic.adapters.HeaderViewBinder
 import org.moire.ultrasonic.adapters.TrackViewBinder
+import org.moire.ultrasonic.adapters.Utils
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.isOffline
 import org.moire.ultrasonic.domain.Identifiable
@@ -152,7 +153,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 onContextMenuClick = { menu, id -> onContextMenuItemSelected(menu, id) },
                 checkable = true,
                 draggable = false,
-                lifecycleOwner = viewLifecycleOwner
+                lifecycleOwner = viewLifecycleOwner,
+                createContextMenu = { view, _ ->
+                    Utils.createPopupMenu(view, R.menu.context_menu_track_collection)
+                }
             )
         )
 
@@ -590,6 +594,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         menuItem: MenuItem,
         item: MusicDirectory.Child
     ): Boolean {
+        if (menuItem.itemId == R.id.song_menu_play_from_here && item is Track) {
+            return playFromHere(item)
+        }
+
         val tracks = getClickedSong(item)
 
         return ContextMenuUtil.handleContextMenuTracks(
@@ -598,6 +606,21 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             mediaPlayerManager = mediaPlayerManager,
             fragment = this
         )
+    }
+
+    private fun playFromHere(track: Track): Boolean {
+        val allTracks = getAllTracks()
+        val startIndex = allTracks.indexOfFirst { it === track }
+        if (startIndex < 0) return false
+
+        mediaPlayerManager.addToPlaylist(
+            songs = allTracks,
+            autoPlay = false,
+            shuffle = false,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+        )
+        mediaPlayerManager.play(startIndex)
+        return true
     }
 
     private fun getClickedSong(item: MusicDirectory.Child): List<Track> {

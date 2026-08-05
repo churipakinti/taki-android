@@ -42,6 +42,7 @@
     <string name="common.play_next">Play Next</string>
     <string name="common.play_now">Play Now</string>
     <string name="common.play_shuffled">Play Shuffled</string>
+    <string name="common.play_from_here">Play from Here</string>
     <string name="common.public">Public</string>
     <string name="common.save">Save</string>
     <string name="common.select_all">Select all</string>
