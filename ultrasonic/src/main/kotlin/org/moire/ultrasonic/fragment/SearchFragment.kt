@@ -16,6 +16,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinScopeComponent
 import org.koin.core.component.inject
@@ -54,6 +55,7 @@ class SearchFragment :
     KoinScopeComponent,
     RefreshableFragment {
     private var searchResult: SearchResult? = null
+    private var searchJob: Job? = null
     override var swipeRefresh: SwipeRefreshLayout? = null
     private val mediaPlayerManager: MediaPlayerManager by inject()
     private val navArgs by navArgs<SearchFragmentArgs>()
@@ -103,7 +105,8 @@ class SearchFragment :
                 onContextMenuClick = ::onContextMenuItemSelected,
                 checkable = false,
                 draggable = false,
-                lifecycleOwner = viewLifecycleOwner
+                lifecycleOwner = viewLifecycleOwner,
+                showRating = false
             )
         )
 
@@ -128,7 +131,11 @@ class SearchFragment :
     }
 
     private fun search(query: String, autoplay: Boolean) {
-        listModel.viewModelScope.launch(
+        // Live search can re-trigger this before a previous request finishes (e.g. two
+        // debounced queries in flight if the network is slow) -- cancel the older one so its
+        // response can't land after and overwrite a newer query's results.
+        searchJob?.cancel()
+        searchJob = listModel.viewModelScope.launch(
             toastingExceptionHandler()
         ) {
             swipeRefresh?.isRefreshing = true

@@ -20,6 +20,7 @@ import org.moire.ultrasonic.api.subsonic.toStreamResponse
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.shouldUseId3Tags
 import org.moire.ultrasonic.domain.Album
+import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistInfo
 import org.moire.ultrasonic.domain.Bookmark
@@ -160,6 +161,13 @@ open class RESTMusicService(
         val response = API.getAlbum(id).execute().throwOnFailure()
 
         return response.body()!!.album.toDomainEntity(activeServerId)
+    }
+
+    @Throws(Exception::class)
+    override fun getAlbumInfo(id: String): AlbumInfo {
+        val response = API.getAlbumInfo2(id).execute().throwOnFailure()
+
+        return response.body()!!.albumInfo.toDomainEntity()
     }
 
     @Throws(Exception::class)

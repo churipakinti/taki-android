@@ -39,11 +39,6 @@ class RxBus {
         var activeServerChangedObservable: Observable<ServerSetting> =
             activeServerChangedPublisher.observeOn(mainThread())
 
-        val themeChangedEventPublisher: PublishSubject<Unit> =
-            PublishSubject.create()
-        val themeChangedEventObservable: Observable<Unit> =
-            themeChangedEventPublisher.observeOn(mainThread())
-
         val musicFolderChangedEventPublisher: PublishSubject<Folder> =
             PublishSubject.create()
         val musicFolderChangedEventObservable: Observable<Folder> =

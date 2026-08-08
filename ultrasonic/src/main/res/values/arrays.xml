@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string-array name="themeValues" translatable="false">
-        <item>@string/setting_key.theme_day_night</item>
-        <item>@string/setting_key.theme_light</item>
-        <item>@string/setting_key.theme_dark</item>
-        <item>@string/setting_key.theme_black</item>
-    </string-array>
-    <string-array name="themeNames" translatable="false">
-        <item>@string/settings.theme_day_night</item>
-        <item>@string/settings.theme_light</item>
-        <item>@string/settings.theme_dark</item>
-        <item>@string/settings.theme_black</item>
-    </string-array>
     <string-array name="replayGainNames" translatable="false">
         <item>@string/settings.replaygain_disabled</item>
         <item>@string/settings.replaygain_dynamic</item>
@@ -28,30 +16,6 @@
         <item>@string/setting_key.replaygain_prefer_album</item>
         <item>@string/setting_key.replaygain_track_only</item>
         <item>@string/setting_key.replaygain_album_only</item>
-    </string-array>
-    <string-array name="preloadCountValues" translatable="false">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>5</item>
-        <item>10</item>
-        <item>50</item>
-        <item>100</item>
-        <item>500</item>
-        <item>1000</item>
-        <item>-1</item>
-    </string-array>
-    <string-array name="preloadCountNames" translatable="false">
-        <item>@string/settings.preload_1</item>
-        <item>@string/settings.preload_2</item>
-        <item>@string/settings.preload_3</item>
-        <item>@string/settings.preload_5</item>
-        <item>@string/settings.preload_10</item>
-        <item>@string/settings.preload_50</item>
-        <item>@string/settings.preload_100</item>
-        <item>@string/settings.preload_500</item>
-        <item>@string/settings.preload_1000</item>
-        <item>@string/settings.preload_unlimited</item>
     </string-array>
     <string-array name="cacheSizeValues" translatable="false">
         <item>100</item>
@@ -119,135 +83,10 @@
         <item>@string/settings.max_bitrate_320</item>
         <item>@string/settings.max_bitrate_unlimited</item>
     </string-array>
-    <string-array name="incrementTimeValues" translatable="false">
-        <item>1000</item>
-        <item>2000</item>
-        <item>5000</item>
-        <item>8000</item>
-        <item>10000</item>
-        <item>12000</item>
-        <item>15000</item>
-        <item>20000</item>
-        <item>30000</item>
-    </string-array>
-    <string-array name="chatRefreshValues" translatable="false">
-        <item>0</item>
-        <item>1000</item>
-        <item>2000</item>
-        <item>5000</item>
-        <item>8000</item>
-        <item>10000</item>
-        <item>12000</item>
-        <item>15000</item>
-        <item>20000</item>
-        <item>30000</item>
-        <item>60000</item>
-        <item>120000</item>
-    </string-array>
-    <string-array name="chatRefreshNames" translatable="false">
-        <item>@string/settings.increment_time_0</item>
-        <item>@string/settings.increment_time_1</item>
-        <item>@string/settings.increment_time_2</item>
-        <item>@string/settings.increment_time_5</item>
-        <item>@string/settings.increment_time_8</item>
-        <item>@string/settings.increment_time_10</item>
-        <item>@string/settings.increment_time_12</item>
-        <item>@string/settings.increment_time_15</item>
-        <item>@string/settings.increment_time_20</item>
-        <item>@string/settings.increment_time_30</item>
-        <item>@string/settings.increment_time_60</item>
-        <item>@string/settings.increment_time_120</item>
-    </string-array>
-    <string-array name="directoryCacheTimeValues" translatable="false">
-        <item>0</item>
-        <item>60</item>
-        <item>120</item>
-        <item>300</item>
-        <item>600</item>
-        <item>1800</item>
-        <item>3600</item>
-    </string-array>
-    <string-array name="directoryCacheTimeNames" translatable="false">
-        <item>@string/settings.directory_cache_time_0</item>
-        <item>@string/settings.directory_cache_time_1</item>
-        <item>@string/settings.directory_cache_time_2</item>
-        <item>@string/settings.directory_cache_time_5</item>
-        <item>@string/settings.directory_cache_time_10</item>
-        <item>@string/settings.directory_cache_time_30</item>
-        <item>@string/settings.directory_cache_time_60</item>
-    </string-array>
-    <string-array name="incrementTimeNames" translatable="false">
-        <item>@string/settings.increment_time_1</item>
-        <item>@string/settings.increment_time_2</item>
-        <item>@string/settings.increment_time_5</item>
-        <item>@string/settings.increment_time_8</item>
-        <item>@string/settings.increment_time_10</item>
-        <item>@string/settings.increment_time_12</item>
-        <item>@string/settings.increment_time_15</item>
-        <item>@string/settings.increment_time_20</item>
-        <item>@string/settings.increment_time_30</item>
-    </string-array>
-    <string-array name="networkTimeoutValues" translatable="false">
-        <item>15000</item>
-        <item>30000</item>
-        <item>45000</item>
-        <item>60000</item>
-        <item>75000</item>
-        <item>90000</item>
-        <item>105000</item>
-        <item>120000</item>
-    </string-array>
-    <string-array name="networkTimeoutNames" translatable="false">
-        <item>@string/settings.network_timeout_15000</item>
-        <item>@string/settings.network_timeout_30000</item>
-        <item>@string/settings.network_timeout_45000</item>
-        <item>@string/settings.network_timeout_60000</item>
-        <item>@string/settings.network_timeout_75000</item>
-        <item>@string/settings.network_timeout_90000</item>
-        <item>@string/settings.network_timeout_105000</item>
-        <item>@string/settings.network_timeout_120000</item>
-    </string-array>
-    <string-array name="searchValues" translatable="false">
-        <item>1</item>
-        <item>3</item>
-        <item>5</item>
-        <item>10</item>
-        <item>15</item>
-        <item>20</item>
-        <item>25</item>
-        <item>30</item>
-        <item>40</item>
-        <item>50</item>
-        <item>75</item>
-        <item>100</item>
-        <item>250</item>
-        <item>500</item>
-    </string-array>
-    <string-array name="searchNames" translatable="false">
-        <item>@string/settings.search_1</item>
-        <item>@string/settings.search_3</item>
-        <item>@string/settings.search_5</item>
-        <item>@string/settings.search_10</item>
-        <item>@string/settings.search_15</item>
-        <item>@string/settings.search_20</item>
-        <item>@string/settings.search_25</item>
-        <item>@string/settings.search_30</item>
-        <item>@string/settings.search_40</item>
-        <item>@string/settings.search_50</item>
-        <item>@string/settings.search_75</item>
-        <item>@string/settings.search_100</item>
-        <item>@string/settings.search_250</item>
-        <item>@string/settings.search_500</item>
-    </string-array>
     <string-array name="shareExpirationNames" translatable="false">
         <item>@string/settings.share_minutes</item>
         <item>@string/settings.share_hours</item>
         <item>@string/settings.share_days</item>
-    </string-array>
-    <string-array name="bluetoothDeviceSettingNames" translatable="false">
-        <item>@string/settings.playback.bluetooth_all</item>
-        <item>@string/settings.playback.bluetooth_a2dp</item>
-        <item>@string/settings.playback.bluetooth_disabled</item>
     </string-array>
     <string-array name="languageNames" translatable="false">
         <item>@string/language.default</item>

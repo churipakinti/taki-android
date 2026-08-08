@@ -14,6 +14,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
+import androidx.core.text.HtmlCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isGone
@@ -32,12 +34,16 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.Collections
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.adapters.AlbumDetailHeaderBinder
 import org.moire.ultrasonic.adapters.AlbumHeader
 import org.moire.ultrasonic.adapters.AlbumRowDelegate
+import org.moire.ultrasonic.adapters.DiscHeader
+import org.moire.ultrasonic.adapters.DiscHeaderBinder
 import org.moire.ultrasonic.adapters.HeaderViewBinder
 import org.moire.ultrasonic.adapters.LibraryTrackBinder
 import org.moire.ultrasonic.adapters.TrackViewBinder
@@ -47,19 +53,19 @@ import org.moire.ultrasonic.data.ActiveServerProvider.Companion.isOffline
 import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.MusicDirectory
+import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.TrackCollectionModel
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
-import org.moire.ultrasonic.subsonic.ShareHandler
 import org.moire.ultrasonic.subsonic.VideoPlayer
-import org.moire.ultrasonic.util.ConfirmationDialog
 import org.moire.ultrasonic.util.ContextMenuUtil
 import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.EntryByDiscAndTrackComparator
+import org.moire.ultrasonic.util.PlaylistUtil
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util.navigateToCurrent
 import org.moire.ultrasonic.util.Util.toast
@@ -83,21 +89,12 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     FilterableFragment {
 
     private var albumButtons: View? = null
-    private var selectButton: MaterialButton? = null
-    internal var playNowButton: MaterialButton? = null
-    private var playNextButton: MaterialButton? = null
-    private var playLastButton: MaterialButton? = null
-    private var pinButton: MaterialButton? = null
-    private var unpinButton: MaterialButton? = null
     private var downloadButton: MaterialButton? = null
-    private var deleteButton: MaterialButton? = null
+    private var addPlaylistButton: MaterialButton? = null
     private var playAllButtonVisible = false
-    private var shareButtonVisible = false
     private var playAllButton: MenuItem? = null
-    private var shareButton: MenuItem? = null
 
     internal val mediaPlayerManager: MediaPlayerManager by inject()
-    private val shareHandler: ShareHandler by inject()
 
     override val listModel: TrackCollectionModel by viewModels()
     private val rxBusSubscription: CompositeDisposable = CompositeDisposable()
@@ -109,6 +106,13 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private var pendingFilterSelection: SortOrder? = null
     private var availableArtists: List<ArtistOrIndex> = emptyList()
     private var filterButtonBar: FilterButtonBar? = null
+    private var loadJob: Job? = null
+    private var albumHasMultipleArtists = false
+    private var albumHasMultipleDiscs = false
+    private var albumNotes: String? = null
+    private var selectionModeActive = false
+    private var pendingAddToPlaylistTracks: List<Track>? = null
+    private var availablePlaylists: List<Playlist> = emptyList()
 
     /**
      * The id of the main layout
@@ -163,9 +167,20 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 viewLifecycleOwner,
                 ::handleFilterSelectionResult
             )
+        } else {
+            childFragmentManager.setFragmentResultListener(
+                ItemSelectionDialogFragment.REQUEST_KEY,
+                viewLifecycleOwner,
+                ::handleAddToPlaylistResult
+            )
         }
 
         registerForContextMenu(listView!!)
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            selectionModeBackCallback
+        )
 
         // Register our options menu
         (requireActivity() as MenuHost).addMenuProvider(
@@ -184,11 +199,22 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             adapter = viewAdapter
         }
 
-        viewAdapter.register(
-            HeaderViewBinder(
-                context = requireContext()
+        if (navArgs.isAlbum) {
+            viewAdapter.register(
+                AlbumDetailHeaderBinder(
+                    context = requireContext(),
+                    onPlay = { playAll() },
+                    onShuffle = { playAll(shuffle = true) },
+                    onDownload = { downloadSelectedOrAllTracks(false) }
+                )
             )
-        )
+        } else {
+            viewAdapter.register(
+                HeaderViewBinder(
+                    context = requireContext()
+                )
+            )
+        }
 
         if (isMediaLibrarySongs) {
             viewAdapter.register(
@@ -207,7 +233,16 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     lifecycleOwner = viewLifecycleOwner,
                     createContextMenu = { itemView, _ ->
                         Utils.createPopupMenu(itemView, R.menu.context_menu_track_collection)
-                    }
+                    },
+                    layout = if (navArgs.isAlbum) {
+                        R.layout.list_item_track_album
+                    } else {
+                        R.layout.list_item_track
+                    },
+                    showArtist = if (navArgs.isAlbum) ::albumShowArtist else { _ -> true },
+                    showRating = !navArgs.isAlbum,
+                    isSelectionModeActive = { selectionModeActive },
+                    onEnterSelectionMode = ::enterSelectionMode
                 )
             )
         }
@@ -218,6 +253,18 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 { menuItem, entry -> onContextMenuItemSelected(menuItem, entry) }
             )
         )
+
+        if (navArgs.isAlbum) {
+            viewAdapter.register(
+                DiscHeaderBinder { tracks ->
+                    DownloadUtil.justDownload(
+                        action = DownloadAction.DOWNLOAD,
+                        fragment = this,
+                        tracks = tracks
+                    )
+                }
+            )
+        }
 
         // Change the buttons if the status of any selected track changes
         rxBusSubscription += RxBus.trackDownloadStateObservable.subscribe {
@@ -234,6 +281,11 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             viewLifecycleOwner
         ) {
             triggerButtonUpdate()
+            // Deselecting the last item leaves selection mode automatically, same as tapping
+            // every checkbox off in Gmail/Photos-style pickers.
+            if (selectionModeActive && viewAdapter.selectedSet.isEmpty()) {
+                exitSelectionMode()
+            }
         }
 
         // Attach our onScrollListener
@@ -247,6 +299,50 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
 
         listView!!.addOnScrollListener(scrollListener)
+
+        // Album hero title reveal: the hero is item 0 of the list (not a persistent scroll
+        // view like Artist Detail's), so it gets recycled once scrolled off-screen -- track the
+        // scroll offset against a fixed height instead of measuring the live header view.
+        if (navArgs.isAlbum) {
+            val revealThresholdPx = (
+                (HERO_HEIGHT_DP - TOOLBAR_REVEAL_OFFSET_DP) * resources.displayMetrics.density
+                ).toInt()
+            listView!!.addOnScrollListener(
+                object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        val collapsed =
+                            recyclerView.computeVerticalScrollOffset() >= revealThresholdPx
+                        setTitle(if (collapsed) navArgs.name else "")
+                    }
+                }
+            )
+        }
+    }
+
+    private fun albumShowArtist(@Suppress("UNUSED_PARAMETER") track: Track): Boolean =
+        albumHasMultipleArtists
+
+    // Album notes are optional metadata from a separate, slower network call than the track
+    // list, so they can arrive before or after the header is first rendered. Either way, a new
+    // AlbumHeader instance is submitted so DiffUtil (which compares AlbumHeader by reference,
+    // since it has no equals()/hashCode() override) actually detects the change and rebinds it.
+    private fun loadAlbumInfo(albumId: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val info = listModel.getAlbumInfo(albumId)
+            albumNotes = info?.notes
+                ?.let { HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim() }
+                ?.takeIf { it.isNotEmpty() }
+            refreshHeaderNotes()
+        }
+    }
+
+    private fun refreshHeaderNotes() {
+        val current = viewAdapter.getCurrentList()
+        val header = current.firstOrNull() as? AlbumHeader ?: return
+        if (header.notes == albumNotes) return
+
+        val updatedHeader = AlbumHeader(header.entries, header.name).apply { notes = albumNotes }
+        viewAdapter.submitList(listOf(updatedHeader) + current.drop(1))
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -260,7 +356,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
     private fun loadMoreTracks() {
         if (
-            displayRandom() || selectedGenreName != null || navArgs.genreName != null ||
+            displayRandom() ||
+            ((selectedGenreName != null || navArgs.genreName != null) &&
+                listModel.canLoadMoreGenreSongs) ||
             (selectedArtistId != null && listModel.canLoadMoreArtistSongs) ||
             (displayAllSongs() && listModel.canLoadMoreAllSongs)
         ) {
@@ -273,61 +371,15 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     }
 
     internal open fun setupButtons(view: View) {
-        selectButton = view.findViewById(R.id.select_album_select)
-        playNowButton = view.findViewById(R.id.select_album_play_now)
-        playNextButton = view.findViewById(R.id.select_album_play_next)
-        playLastButton = view.findViewById(R.id.select_album_play_last)
-        pinButton = view.findViewById(R.id.select_album_pin)
-        unpinButton = view.findViewById(R.id.select_album_unpin)
         downloadButton = view.findViewById(R.id.select_album_download)
-        deleteButton = view.findViewById(R.id.select_album_delete)
-
-        selectButton?.setOnClickListener {
-            selectAllOrNone()
-        }
-
-        playNowButton?.setOnClickListener {
-            playSelectedOrAllTracks(MediaPlayerManager.InsertionMode.CLEAR)
-        }
-
-        playNextButton?.setOnClickListener {
-            playSelectedOrAllTracks(MediaPlayerManager.InsertionMode.AFTER_CURRENT)
-        }
-
-        playLastButton!!.setOnClickListener {
-            playSelectedOrAllTracks(MediaPlayerManager.InsertionMode.APPEND)
-        }
-
-        pinButton?.setOnClickListener {
-            downloadSelectedOrAllTracks(true)
-        }
+        addPlaylistButton = view.findViewById(R.id.select_album_add_playlist)
 
         downloadButton?.setOnClickListener {
             downloadSelectedOrAllTracks(false)
         }
 
-        unpinButton?.setOnClickListener {
-            if (Settings.showConfirmationDialog) {
-                ConfirmationDialog.Builder(requireContext())
-                    .setMessage(R.string.common_unpin_selection_confirmation)
-                    .setPositiveButton(R.string.common_unpin) { _, _ ->
-                        unpinSelectedTracks()
-                    }.show()
-            } else {
-                unpinSelectedTracks()
-            }
-        }
-
-        deleteButton?.setOnClickListener {
-            if (Settings.showConfirmationDialog) {
-                ConfirmationDialog.Builder(requireContext())
-                    .setMessage(R.string.common_delete_selection_confirmation)
-                    .setPositiveButton(R.string.common_delete) { _, _ ->
-                        deleteSelectedTracks()
-                    }.show()
-            } else {
-                deleteSelectedTracks()
-            }
+        addPlaylistButton?.setOnClickListener {
+            addTracksToPlaylist(getSelectedTracks())
         }
     }
 
@@ -341,12 +393,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             if (playAllButton != null) {
                 playAllButton!!.isVisible = playAllButtonVisible
             }
-
-            shareButton = menu.findItem(R.id.menu_item_share)
-
-            if (shareButton != null) {
-                shareButton!!.isVisible = shareButtonVisible
-            }
         }
 
         override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
@@ -357,13 +403,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             if (item.itemId == R.id.select_album_play_all) {
                 playAll()
                 return true
-            } else if (item.itemId == R.id.menu_item_share) {
-                shareHandler.createShare(
-                    fragment = this@TrackCollectionFragment,
-                    tracks = getSelectedOrAllTracks(),
-                    additionalId = navArgs.id
-                )
-                return true
             }
             return false
         }
@@ -373,19 +412,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         rxBusSubscription.dispose()
         super.onDestroyView()
     }
-
-    /**
-     * Get the size of the underlying list
-     */
-    private val childCount: Int
-        get() {
-            val count = viewAdapter.getCurrentList().count()
-            return if (listModel.showHeader) {
-                count - 1
-            } else {
-                count
-            }
-        }
 
     private fun playAll(
         shuffle: Boolean = false,
@@ -424,14 +450,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             }
         }
     }
-    private fun unpinSelectedTracks() {
-        DownloadUtil.justDownload(
-            action = DownloadAction.UNPIN,
-            fragment = this,
-            tracks = getSelectedTracks()
-        )
-    }
-
     private fun downloadSelectedOrAllTracks(save: Boolean) {
         DownloadUtil.justDownload(
             action = if (save) DownloadAction.PIN else DownloadAction.DOWNLOAD,
@@ -440,35 +458,66 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         )
     }
 
-    private fun playSelectedOrAllTracks(insertionMode: MediaPlayerManager.InsertionMode) {
-        mediaPlayerManager.playTracksAndToast(
-            fragment = this,
-            insertionMode = insertionMode,
-            tracks = getSelectedOrAllTracks()
-        )
+    /**
+     * Enters selection mode (checkbox + row-action icons swap for a checkbox on every row) and
+     * selects [track]. Only triggered by a long-press (see [org.moire.ultrasonic.adapters.TrackViewBinder]);
+     * tapping a row plays it directly otherwise.
+     */
+    private val selectionModeBackCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            viewAdapter.setSelectionStatusOfAll(false)
+            exitSelectionMode()
+        }
     }
 
-    private fun deleteSelectedTracks() {
-        DownloadUtil.justDownload(
-            action = DownloadAction.DELETE,
-            fragment = this,
-            tracks = getSelectedTracks()
-        )
+    private fun enterSelectionMode(track: Track) {
+        if (selectionModeActive) return
+        selectionModeActive = true
+        selectionModeBackCallback.isEnabled = true
+        viewAdapter.notifySelected(track.longId)
+        viewAdapter.notifyItemRangeChanged(0, viewAdapter.itemCount)
     }
 
-    private fun selectAllOrNone() {
-        val someUnselected = viewAdapter.selectedSet.size < childCount
-        selectAll(someUnselected)
+    private fun exitSelectionMode() {
+        if (!selectionModeActive) return
+        selectionModeActive = false
+        selectionModeBackCallback.isEnabled = false
+        viewAdapter.notifyItemRangeChanged(0, viewAdapter.itemCount)
     }
 
-    private fun selectAll(selected: Boolean) {
-        var selectedCount = viewAdapter.selectedSet.size * -1
+    private fun addTracksToPlaylist(tracks: List<Track>) {
+        if (tracks.isEmpty() || isOffline()) return
+        pendingAddToPlaylistTracks = tracks
+        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+            availablePlaylists = PlaylistUtil.getPlaylists()
+            if (availablePlaylists.isEmpty()) {
+                pendingAddToPlaylistTracks = null
+                toast(R.string.select_playlist_empty)
+                return@launch
+            }
+            ItemSelectionDialogFragment.create(
+                R.string.playlist_add_to_title,
+                availablePlaylists.map { it.name }.toTypedArray()
+            ).show(childFragmentManager, ItemSelectionDialogFragment.TAG)
+        }
+    }
 
-        selectedCount += viewAdapter.setSelectionStatusOfAll(selected)
+    private fun handleAddToPlaylistResult(@Suppress("UNUSED_PARAMETER") key: String, bundle: Bundle) {
+        val tracks = pendingAddToPlaylistTracks
+        pendingAddToPlaylistTracks = null
+        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED) || tracks == null) return
 
-        // Display toast: N tracks selected
-        val toastResId = R.string.select_album_n_selected
-        toast(getString(toastResId, selectedCount.coerceAtLeast(0)))
+        val name = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM) ?: return
+        val playlist = availablePlaylists.firstOrNull { it.name == name } ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(getString(R.string.playlist_add_error))
+        ) {
+            PlaylistUtil.addToPlaylist(playlist, tracks)
+            toast(getString(R.string.playlist_added, playlist.name))
+            viewAdapter.setSelectionStatusOfAll(false)
+            exitSelectionMode()
+        }
     }
 
     @Synchronized
@@ -482,15 +531,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         // If view is null, our view was disposed in the meantime
         if (view == null) return
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            val multipleSelection = viewAdapter.hasMultipleSelection()
-
-            playNowButton?.isVisible = show.all
-            playNextButton?.isVisible = show.all && multipleSelection
-            playLastButton?.isVisible = show.all && multipleSelection
-            pinButton?.isVisible = show.all && show.pin
-            unpinButton?.isVisible = show.all && show.unpin
             downloadButton?.isVisible = show.all && show.download && !isOffline()
-            deleteButton?.isVisible = show.all && show.delete
+            addPlaylistButton?.isVisible = show.all && !isOffline()
         }
     }
 
@@ -515,10 +557,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             }
         }
 
-        // Hide select button for video lists and singular selection lists
-        selectButton?.isVisible = !isMediaLibrarySongs && !allVideos &&
-            viewAdapter.hasMultipleSelection() && songCount > 0
-
         // Show a text if we have no entries
         emptyView.isVisible = entryList.isEmpty()
 
@@ -526,18 +564,41 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         val isAlbumList = (navArgs.albumListType != null)
 
-        playAllButtonVisible = !isMediaLibrarySongs &&
+        // Album Detail has its own persistent play/shuffle row in the hero, so the overflow
+        // menu's "play all" would be redundant there.
+        playAllButtonVisible = !isMediaLibrarySongs && !navArgs.isAlbum &&
             !(isAlbumList || entryList.isEmpty()) && !allVideos
-        shareButtonVisible = !isMediaLibrarySongs && !isOffline() && songCount > 0
 
         playAllButton?.isVisible = playAllButtonVisible
-        shareButton?.isVisible = shareButtonVisible
 
         if (songCount > 0 && listModel.showHeader) {
             val intentAlbumName = navArgs.name
             val albumHeader = AlbumHeader(it, intentAlbumName)
+
+            if (navArgs.isAlbum) {
+                albumHasMultipleArtists = albumHeader.artists.size > 1
+                albumHasMultipleDiscs = entryList.filterIsInstance<Track>()
+                    .mapNotNull { track -> track.discNumber }
+                    .toSet().size > 1
+                albumHeader.notes = albumNotes
+            }
+
             val mixedList: MutableList<Identifiable> = mutableListOf(albumHeader)
-            mixedList.addAll(entryList)
+            if (navArgs.isAlbum && albumHasMultipleDiscs) {
+                val tracksByDisc = entryList.filterIsInstance<Track>()
+                    .groupBy { it.discNumber ?: 1 }
+                var lastDisc: Int? = null
+                for (entry in entryList) {
+                    val discNumber = (entry as? Track)?.discNumber ?: 1
+                    if (discNumber != lastDisc) {
+                        mixedList.add(DiscHeader(discNumber, tracksByDisc[discNumber].orEmpty()))
+                        lastDisc = discNumber
+                    }
+                    mixedList.add(entry)
+                }
+            } else {
+                mixedList.addAll(entryList)
+            }
             viewAdapter.submitList(mixedList)
         } else {
             viewAdapter.submitList(entryList)
@@ -611,7 +672,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             listModel.showHeader = false
         }
 
-        listModel.viewModelScope.launch(
+        // Cancel any still-running load from a previous filter/sort change so a slow, stale
+        // response can't overwrite the list after a more recent selection already completed.
+        loadJob?.cancel()
+        loadJob = listModel.viewModelScope.launch(
             toastingExceptionHandler()
         ) {
             swipeRefresh?.isRefreshing = true
@@ -646,13 +710,17 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 setTitle(R.string.main_songs_random)
                 listModel.getRandom(size, append)
             } else {
-                setTitle(name)
+                // Album Detail reveals its title in the toolbar only once the hero has been
+                // scrolled past (see the OnScrollListener added in onViewCreated).
+                setTitle(if (isAlbum) "" else name)
 
                 if (isAlbum && ActiveServerProvider.shouldUseId3Tags()) {
                     listModel.getAlbum(refresh2, id, name)
                 } else {
                     listModel.getMusicDirectory(refresh2, id, name)
                 }
+
+                if (isAlbum) loadAlbumInfo(id)
             }
 
             swipeRefresh?.isRefreshing = false
@@ -672,6 +740,11 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     ): Boolean {
         if (menuItem.itemId == R.id.song_menu_play_from_here && item is Track) {
             return playFromHere(item)
+        }
+
+        if (menuItem.itemId == R.id.song_menu_add_playlist && item is Track) {
+            addTracksToPlaylist(listOf(item))
+            return true
         }
 
         val tracks = getClickedSong(item)
@@ -726,13 +799,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 VideoPlayer.playVideo(requireContext(), item)
             }
 
-            else -> {
-                if (isMediaLibrarySongs && item is Track) {
-                    playFromHere(item)
-                } else {
-                    triggerButtonUpdate()
-                }
-            }
+            item is Track -> playFromHere(item)
+
+            else -> triggerButtonUpdate()
         }
     }
 
@@ -874,5 +943,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         private const val SELECTED_ARTIST_NAME_KEY = "songs_selected_artist_name"
         private const val SELECTED_GENRE_KEY = "songs_selected_genre"
         private const val PENDING_FILTER_KEY = "songs_pending_filter"
+        private const val HERO_HEIGHT_DP = 300
+        private const val TOOLBAR_REVEAL_OFFSET_DP = 56
     }
 }

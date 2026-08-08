@@ -1,47 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="setting_key.resume_play_on_headphones_plug" translatable="false">playback.resume_play_on_headphones_plug</string>
     <string name="setting_key.server_instance" translatable="false">serverInstanceId</string>
-    <string name="setting_key.theme" translatable="false">theme</string>
-    <string name="setting_key.theme_light" translatable="false">light</string>
-    <string name="setting_key.theme_dark" translatable="false">dark</string>
-    <string name="setting_key.theme_black" translatable="false">black</string>
-    <string name="setting_key.theme_day_night" translatable="false">dayNight</string>
-    <string name="setting_key.display_bitrate_with_artist" translatable="false">displayBitrateWithArtist</string>
-    <string name="setting_key.use_folder_for_album_artist" translatable="false">useFolderForAlbumArtist</string>
-    <string name="setting_key.show_track_number" translatable="false">showTrackNumber</string>
     <string name="setting_key.max_bitrate_wifi" translatable="false">maxBitrateWifi</string>
     <string name="setting_key.max_bitrate_mobile" translatable="false">maxBitrateMobile</string>
     <string name="setting_key.max_bitrate_pinning" translatable="false">maxBitratePinning</string>
     <string name="setting_key.cache_size" translatable="false">cacheSize</string>
     <string name="setting_key.custom_cache_location" translatable="false">customCacheLocation</string>
     <string name="setting_key.cache_location" translatable="false">cacheLocation</string>
-    <string name="setting_key.preload_count" translatable="false">preloadCount</string>
-    <string name="setting_key.parallel_downloads" translatable="false">parallelDownloads</string>
-    <string name="setting_key.hide_media" translatable="false">hideMedia</string>
-    <string name="setting_key.scrobble" translatable="false">scrobble</string>
-    <string name="setting_key.server_scaling" translatable="false">serverScaling</string>
     <string name="setting_key.wifi_required_for_download" translatable="false">wifiRequiredForDownload</string>
-    <string name="setting_key.network_timeout" translatable="false">networkTimeout</string>
-    <string name="setting_key.max_albums" translatable="false">maxAlbums</string>
-    <string name="setting_key.max_songs" translatable="false">maxSongs</string>
-    <string name="setting_key.max_artists" translatable="false">maxArtists</string>
-    <string name="setting_key.default_albums" translatable="false">defaultAlbums</string>
-    <string name="setting_key.default_songs" translatable="false">defaultSongs</string>
-    <string name="setting_key.default_artists" translatable="false">defaultArtists</string>
-    <string name="setting_key.show_now_playing" translatable="false">showNowPlaying</string>
     <string name="setting_key.clear_search_history" translatable="false">clearSearchHistory</string>
     <string name="setting_key.clear_image_cache" translatable="false">clearImageCache</string>
     <string name="setting_key.download_transition" translatable="false">transitionToDownloadOnPlay</string>
-    <string name="setting_key.increment_time" translatable="false">incrementTime</string>
-    <string name="setting_key.show_now_playing_details" translatable="false">showNowPlayingDetails</string>
     <string name="setting_key.id3_tags" translatable="false">useId3Tags</string>
     <string name="setting_key.id3_tags_offline" translatable="false">useId3TagsOffline</string>
-    <string name="setting_key.show_artist_picture" translatable="false">showArtistPicture</string>
-    <string name="setting_key.chat_refresh_interval" translatable="false">chatRefreshInterval</string>
-    <string name="setting_key.directory_cache_time" translatable="false">directoryCacheTime</string>
     <string name="setting_key.clear_bookmark" translatable="false">clearBookmark</string>
-    <string name="setting_key.disc_sort" translatable="false">discAndTrackSort</string>
     <string name="setting_key.ask_for_share_details" translatable="false">sharingAlwaysAskForDetails</string>
     <string name="setting_key.default_share_description" translatable="false">sharingDefaultDescription</string>
     <string name="setting_key.default_share_greeting" translatable="false">sharingDefaultGreeting</string>
@@ -49,8 +21,6 @@
     <string name="setting_key.default_share_expiration" translatable="false">sharingDefaultExpiration</string>
     <string name="setting_key.hardware_offload" translatable="false">use_hw_offload</string>
     <string name="setting_key.first_run_executed" translatable="false">firstRunExecuted</string>
-    <string name="setting_key.resume_on_bluetooth_device" translatable="false">resumeOnBluetoothDevice</string>
-    <string name="setting_key.pause_on_bluetooth_device" translatable="false">pauseOnBluetoothDevice</string>
     <string name="setting_key.debug_log_to_file" translatable="false">debugLogToFile</string>
     <string name="setting_key.override_language" translatable="false">overrideLanguage</string>
     <string name="setting_key.first_installed_version" translatable="false">firstInstalledVersion</string>

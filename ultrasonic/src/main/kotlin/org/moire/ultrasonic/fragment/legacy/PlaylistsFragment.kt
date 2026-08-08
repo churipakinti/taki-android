@@ -26,7 +26,6 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.GridView
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -35,6 +34,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
@@ -455,7 +455,7 @@ class PlaylistsFragment :
             row.setOnLongClickListener {
                 playlistsView?.showContextMenuForChild(row) ?: false
             }
-            row.findViewById<ImageButton>(R.id.playlist_download).apply {
+            row.findViewById<MaterialButton>(R.id.playlist_download).apply {
                 setOnClickListener { handleDownloadAction(playlist) }
             }
             return row
@@ -573,7 +573,7 @@ class PlaylistsFragment :
     private fun bindDownloadStatus(row: View, playlist: Playlist) {
         val status = playlistDownloadStates[playlist.id] ?: PlaylistDownloadStatus.CHECKING
         val statusText = row.findViewById<TextView>(R.id.playlist_download_status)
-        val action = row.findViewById<ImageButton>(R.id.playlist_download)
+        val action = row.findViewById<MaterialButton>(R.id.playlist_download)
         val progress = row.findViewById<ProgressBar>(R.id.playlist_download_progress)
 
         statusText.setText(status.textResource)
@@ -582,7 +582,7 @@ class PlaylistsFragment :
             status == PlaylistDownloadStatus.REMOVING
         progress.isVisible = busy
         action.isVisible = !busy && !isOffline() && status != PlaylistDownloadStatus.EMPTY
-        action.setImageResource(
+        action.setIconResource(
             if (status == PlaylistDownloadStatus.DOWNLOADED) {
                 R.drawable.ic_menu_remove_all
             } else {

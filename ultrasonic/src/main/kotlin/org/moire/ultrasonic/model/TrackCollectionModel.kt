@@ -10,10 +10,14 @@ package org.moire.ultrasonic.model
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import java.util.Locale
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.data.ActiveServerProvider
+import org.moire.ultrasonic.domain.Album
+import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.MusicDirectory
@@ -22,6 +26,7 @@ import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
 import org.moire.ultrasonic.service.MusicServiceFactory
+import org.moire.ultrasonic.util.EntryByDiscAndTrackComparator
 import org.moire.ultrasonic.util.Util
 
 /*
@@ -30,7 +35,68 @@ import org.moire.ultrasonic.util.Util
 class TrackCollectionModel(application: Application) : GenericListModel(application) {
 
     val currentList: MutableLiveData<List<MusicDirectory.Child>> = MutableLiveData()
-    private var loadedUntil: Int = 0
+
+    /**
+     * The Downloads screen's data source. [DownloadService.observableDownloads] only reflects
+     * the active download queue (currently downloading/queued) -- once a download finishes it
+     * drops out of that list entirely, which is why tracks downloaded in a previous session
+     * never showed up here. The actual persistent record of "what's downloaded" is the same
+     * local metadata database offline browsing already reads from (populated when a download
+     * completes, pruned by [org.moire.ultrasonic.util.CacheCleaner] on delete).
+     */
+    suspend fun getDownloadedTracks() {
+        withContext(Dispatchers.IO) {
+            val tracks = activeServerProvider.offlineMetaDatabase.trackDao().get()
+                .sortedBy { it.title.orEmpty().lowercase(Locale.ROOT) }
+            val musicDirectory = MusicDirectory().apply { addAll(tracks) }
+            currentListIsSortable = false
+            updateList(musicDirectory)
+        }
+    }
+
+    val downloadedAlbums: MutableLiveData<List<Album>> = MutableLiveData()
+
+    /**
+     * The Downloads screen's top level: downloaded tracks grouped by album. An album's
+     * songCount reflects its full length on the server, which may be larger than what's
+     * actually downloaded (the user might have grabbed only some tracks) -- so it's overwritten
+     * here with the real local count instead of trusting the cached server value.
+     */
+    suspend fun getDownloadedAlbums() {
+        withContext(Dispatchers.IO) {
+            val db = activeServerProvider.offlineMetaDatabase
+            val counts = db.trackDao().get().groupingBy { it.albumId }.eachCount()
+            val albums = db.albumDao().get()
+                .onEach { it.songCount = (counts[it.id] ?: 0).toLong() }
+                .sortedBy { it.title.orEmpty().lowercase(Locale.ROOT) }
+            downloadedAlbums.postValue(albums)
+        }
+    }
+
+    /**
+     * A single downloaded album's tracks, for [org.moire.ultrasonic.fragment.DownloadedAlbumFragment]
+     * -- reuses the same local-only data path as [getDownloadedTracks] so this screen works
+     * with no network at all, unlike the normal Album Detail flow.
+     */
+    suspend fun getDownloadedAlbumTracks(albumId: String) {
+        withContext(Dispatchers.IO) {
+            val tracks = getDownloadedTracksForAlbum(albumId)
+                .sortedWith(EntryByDiscAndTrackComparator())
+            val musicDirectory = MusicDirectory().apply { addAll(tracks) }
+            currentListIsSortable = false
+            updateList(musicDirectory)
+        }
+    }
+
+    suspend fun getDownloadedTracksForAlbum(albumId: String): List<Track> =
+        withContext(Dispatchers.IO) {
+            activeServerProvider.offlineMetaDatabase.trackDao().byAlbum(albumId)
+        }
+
+    private var genreSongsNextOffset: Int = 0
+    private var genreSongsLoading: Boolean = false
+    var canLoadMoreGenreSongs: Boolean = true
+        private set
     private var allSongsNextOffset: Int = 0
     private var allSongsLoading: Boolean = false
     var canLoadMoreAllSongs: Boolean = true
@@ -61,20 +127,43 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         }
     }
 
+    /**
+     * Optional enrichment (album notes/review from the server's external metadata agent).
+     * Not every server/album has it, so failures or missing data resolve to null rather than
+     * surfacing an error -- the track list itself doesn't depend on this.
+     */
+    suspend fun getAlbumInfo(id: String): AlbumInfo? = withContext(Dispatchers.IO) {
+        try {
+            MusicServiceFactory.getMusicService().getAlbumInfo(id)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            null
+        }
+    }
+
     suspend fun getSongsForGenre(genre: String, count: Int, offset: Int, append: Boolean) {
-        // Handle the logic for endless scrolling:
-        // If appending the existing list, set the offset from where to load
-        var newOffset = offset
-        if (append) newOffset += (count + loadedUntil)
+        if (genreSongsLoading || (append && !canLoadMoreGenreSongs)) return
+        genreSongsLoading = true
 
-        withContext(Dispatchers.IO) {
-            val service = MusicServiceFactory.getMusicService()
-            val musicDirectory = service.getSongsByGenre(genre, count, newOffset)
-            currentListIsSortable = false
-            updateList(musicDirectory, append)
+        try {
+            if (!append) {
+                genreSongsNextOffset = offset
+                canLoadMoreGenreSongs = true
+            }
 
-            // Update current offset
-            loadedUntil = newOffset
+            withContext(Dispatchers.IO) {
+                val service = MusicServiceFactory.getMusicService()
+                val musicDirectory = service.getSongsByGenre(genre, count, genreSongsNextOffset)
+                val songCount = musicDirectory.getChildren().size
+                currentListIsSortable = false
+                updateList(musicDirectory, append)
+
+                genreSongsNextOffset += songCount
+                canLoadMoreGenreSongs = songCount == count
+            }
+        } finally {
+            genreSongsLoading = false
         }
     }
 

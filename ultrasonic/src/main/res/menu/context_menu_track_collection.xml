@@ -14,6 +14,9 @@
         a:id="@+id/song_menu_play_from_here"
         a:title="@string/common.play_from_here" />
     <item
+        a:id="@+id/song_menu_add_playlist"
+        a:title="@string/playlist.add_to_title" />
+    <item
         a:id="@+id/song_menu_pin"
         a:title="@string/common.pin" />
     <item
@@ -23,7 +26,7 @@
         a:id="@+id/song_menu_download"
         a:title="@string/common.download" />
     <item
-        a:id="@+id/song_menu_share"
-        a:title="@string/menu.share" />
+        a:id="@+id/song_menu_delete"
+        a:title="@string/common.delete" />
 
 </menu>

@@ -19,8 +19,5 @@
     <item
         a:id="@+id/song_menu_download"
         a:title="@string/common.download" />
-    <item
-        a:id="@+id/song_menu_share"
-        a:title="@string/menu.share" />
 
 </menu>

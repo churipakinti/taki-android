@@ -19,11 +19,13 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import org.moire.ultrasonic.app.UApp
 import org.moire.ultrasonic.util.Constants
-import org.moire.ultrasonic.util.Settings
 import timber.log.Timber
 
 /**
- * Resume or pause playback on Bluetooth A2DP connect/disconnect.
+ * Resume or pause playback on Bluetooth A2DP (audio device, e.g. headphones/speakers/car audio)
+ * connect/disconnect. Deliberately A2DP-only, not any paired Bluetooth device (a fitness tracker
+ * connecting shouldn't start music) -- this used to be user-configurable, but resuming/pausing
+ * for actual audio devices is expected default behavior, not a decision worth asking for.
  */
 class BluetoothIntentReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -35,58 +37,8 @@ class BluetoothIntentReceiver : BroadcastReceiver() {
         val name = device.getNameSafely()
         Timber.d("Bluetooth device: $name; State: $state; Action: $action")
 
-        // In these flags we store what kind of device (any or a2dp) has (dis)connected
-        var connectionStatus = Constants.PREFERENCE_VALUE_DISABLED
-        var disconnectionStatus = Constants.PREFERENCE_VALUE_DISABLED
-
-        // First check for general devices
-        when (action) {
-            BluetoothDevice.ACTION_ACL_CONNECTED -> {
-                connectionStatus = Constants.PREFERENCE_VALUE_ALL
-            }
-
-            BluetoothDevice.ACTION_ACL_DISCONNECTED,
-            BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED
-            -> {
-                disconnectionStatus = Constants.PREFERENCE_VALUE_ALL
-            }
-        }
-
-        // Then check for A2DP devices
-        when (state) {
-            BluetoothA2dp.STATE_CONNECTED -> {
-                connectionStatus = Constants.PREFERENCE_VALUE_A2DP
-            }
-
-            BluetoothA2dp.STATE_DISCONNECTED -> {
-                disconnectionStatus = Constants.PREFERENCE_VALUE_A2DP
-            }
-        }
-
-        // Flags to store which action should be performed
-        var shouldResume = false
-        var shouldPause = false
-
-        // Now check the settings and set the appropriate flags
-        when (Settings.resumeOnBluetoothDevice) {
-            Constants.PREFERENCE_VALUE_ALL -> {
-                shouldResume = (connectionStatus != Constants.PREFERENCE_VALUE_DISABLED)
-            }
-
-            Constants.PREFERENCE_VALUE_A2DP -> {
-                shouldResume = (connectionStatus == Constants.PREFERENCE_VALUE_A2DP)
-            }
-        }
-
-        when (Settings.pauseOnBluetoothDevice) {
-            Constants.PREFERENCE_VALUE_ALL -> {
-                shouldPause = (disconnectionStatus != Constants.PREFERENCE_VALUE_DISABLED)
-            }
-
-            Constants.PREFERENCE_VALUE_A2DP -> {
-                shouldPause = (disconnectionStatus == Constants.PREFERENCE_VALUE_A2DP)
-            }
-        }
+        val shouldResume = state == BluetoothA2dp.STATE_CONNECTED
+        val shouldPause = state == BluetoothA2dp.STATE_DISCONNECTED
 
         if (shouldResume) {
             Timber.i("Connected to Bluetooth device $name; Resuming playback.")

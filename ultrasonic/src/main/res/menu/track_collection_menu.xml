@@ -5,12 +5,6 @@
     >
 
     <item
-        a:id="@+id/menu_item_share"
-        app:showAsAction="ifRoom|withText"
-        a:title="@string/menu.share"
-        a:icon="@drawable/ic_menu_share"/>
-
-    <item
         a:id="@+id/select_album_play_all"
         a:icon="@drawable/media_start"
         app:showAsAction="ifRoom|withText"

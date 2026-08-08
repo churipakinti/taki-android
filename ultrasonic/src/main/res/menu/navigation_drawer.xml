@@ -31,11 +31,6 @@
             a:icon="@drawable/ic_menu_download"
             a:title="@string/menu.downloads" />
         <item
-            a:id="@+id/sharesFragment"
-            a:checkable="true"
-            a:icon="@drawable/ic_menu_share"
-            a:title="@string/button_bar.shares" />
-        <item
             a:id="@+id/bookmarksFragment"
             a:checkable="true"
             a:icon="@drawable/ic_menu_bookmark"

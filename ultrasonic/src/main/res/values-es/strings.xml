@@ -18,6 +18,7 @@
     <string name="buttons.stop">Detener</string>
     <string name="buttons.next">Siguiente</string>
     <string name="buttons.previous">Anterior</string>
+    <string name="buttons.queue">Cola</string>
     <string name="podcasts.label">Pódcast</string>
     <string name="podcasts_channels.empty">No hay canales de pódcasts registrados</string>
     <string name="button_bar.podcasts">Pódcast</string>
@@ -54,6 +55,7 @@
     <string name="download.bookmark_removed" formatted="false">Marcador eliminado.</string>
     <string name="download.bookmark_set_at_position" formatted="false">Marcador añadido a %s.</string>
     <string name="download.empty">No se está descargando nada</string>
+    <string name="album.remove_download_description">Eliminar álbum descargado</string>
     <string name="playlist.empty">La lista de reproducción está vacía</string>
     <string name="download.jukebox_not_authorized">El control remoto no está activado. Activa el modo gramola (jukebox) en <b>Usuarios &gt; Configuración</b> en tu servidor Subsonic.</string>
     <string name="download.jukebox_off">Control remoto apagado. La música se reproduce en el dispositivo.</string>
@@ -71,6 +73,8 @@
     <string name="download.menu_shuffle">Aleatorio</string>
     <string name="download.menu_shuffle_on">Modo aleatorio activado</string>
     <string name="download.menu_shuffle_off">Modo aleatorio desactivado</string>
+    <string name="download.menu_favorite">Favorito</string>
+    <string name="download.menu_rate">Calificar</string>
     <string name="download.playerstate_loading">Almacenando en el buffer …</string>
     <string name="download.playerstate_playing_shuffle">Reproduciendo en modo aleatorio</string>
     <string name="download.playlist_done">Lista de reproducción guardada.</string>

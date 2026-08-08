@@ -14,14 +14,12 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
 import android.view.View
-import androidx.annotation.StringRes
 import androidx.core.net.toUri
-import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import java.io.File
+import androidx.preference.SwitchPreferenceCompat
 import kotlin.math.ceil
 import org.koin.core.component.KoinComponent
 import org.moire.ultrasonic.R
@@ -35,9 +33,7 @@ import org.moire.ultrasonic.log.FileLoggerTree.Companion.plantToTimberForest
 import org.moire.ultrasonic.log.FileLoggerTree.Companion.uprootFromTimberForest
 import org.moire.ultrasonic.provider.SearchSuggestionProvider
 import org.moire.ultrasonic.service.DownloadService
-import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.util.ConfirmationDialog
-import org.moire.ultrasonic.util.Constants
 import org.moire.ultrasonic.util.ErrorDialog
 import org.moire.ultrasonic.util.FileUtil.albumArtDirectory
 import org.moire.ultrasonic.util.FileUtil.ultrasonicDirectory
@@ -61,14 +57,10 @@ class SettingsFragment :
     PreferenceFragmentCompat(),
     OnSharedPreferenceChangeListener,
     KoinComponent {
-    private var theme: ListPreference? = null
     private var cacheLocation: Preference? = null
-    private var showArtistPicture: CheckBoxPreference? = null
-    private var useId3TagsOffline: CheckBoxPreference? = null
-    private var resumeOnBluetoothDevice: Preference? = null
-    private var pauseOnBluetoothDevice: Preference? = null
-    private var debugLogToFile: CheckBoxPreference? = null
-    private var customCacheLocation: CheckBoxPreference? = null
+    private var useId3TagsOffline: SwitchPreferenceCompat? = null
+    private var debugLogToFile: SwitchPreferenceCompat? = null
+    private var customCacheLocation: SwitchPreferenceCompat? = null
     private var clearImageCache: Preference? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -78,13 +70,7 @@ class SettingsFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setTitle(this, R.string.menu_settings)
-        theme = findPreference(getString(R.string.setting_key_theme))
-        resumeOnBluetoothDevice =
-            findPreference(getString(R.string.setting_key_resume_on_bluetooth_device))
-        pauseOnBluetoothDevice =
-            findPreference(getString(R.string.setting_key_pause_on_bluetooth_device))
         debugLogToFile = findPreference(getString(R.string.setting_key_debug_log_to_file))
-        showArtistPicture = findPreference(getString(R.string.setting_key_show_artist_picture))
         useId3TagsOffline = findPreference(getString(R.string.setting_key_id3_tags_offline))
         customCacheLocation = findPreference(getString(R.string.setting_key_custom_cache_location))
         cacheLocation = findPreference(getString(R.string.setting_key_cache_location))
@@ -93,7 +79,6 @@ class SettingsFragment :
         setupClearSearchPreference()
         setupClearImageCachePreference()
         setupCacheLocationPreference()
-        setupBluetoothDevicePreferences()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,22 +111,12 @@ class SettingsFragment :
         updatePreferenceSummaries(key)
 
         when (key) {
-            getString(R.string.setting_key_hide_media) -> {
-                setHideMedia(sharedPreferences.getBoolean(key, false))
-            }
-
             getString(R.string.setting_key_debug_log_to_file) -> {
                 setDebugLogToFile(sharedPreferences.getBoolean(key, false))
             }
 
             getString(R.string.setting_key_id3_tags) -> {
-                val enabled = sharedPreferences.getBoolean(key, false)
-                showArtistPicture?.isEnabled = enabled
-                useId3TagsOffline?.isEnabled = enabled
-            }
-
-            getString(R.string.setting_key_theme) -> {
-                RxBus.themeChangedEventPublisher.onNext(Unit)
+                useId3TagsOffline?.isEnabled = sharedPreferences.getBoolean(key, false)
             }
 
             getString(R.string.setting_key_custom_cache_location) -> {
@@ -239,73 +214,6 @@ class SettingsFragment :
             }
         }
 
-    private fun setupBluetoothDevicePreferences() {
-        val resumeSetting = Settings.resumeOnBluetoothDevice
-        val pauseSetting = Settings.pauseOnBluetoothDevice
-        resumeOnBluetoothDevice!!.summary = bluetoothDevicePreferenceToString(resumeSetting)
-        pauseOnBluetoothDevice!!.summary = bluetoothDevicePreferenceToString(pauseSetting)
-        resumeOnBluetoothDevice!!.onPreferenceClickListener =
-            Preference.OnPreferenceClickListener {
-                showBluetoothDevicePreferenceDialog(
-                    R.string.settings_playback_resume_on_bluetooth_device,
-                    Settings.resumeOnBluetoothDevice
-                ) { choice: Int ->
-                    Settings.resumeOnBluetoothDevice = choice
-                    resumeOnBluetoothDevice!!.summary = bluetoothDevicePreferenceToString(choice)
-                }
-                true
-            }
-        pauseOnBluetoothDevice!!.onPreferenceClickListener =
-            Preference.OnPreferenceClickListener {
-                showBluetoothDevicePreferenceDialog(
-                    R.string.settings_playback_pause_on_bluetooth_device,
-                    Settings.pauseOnBluetoothDevice
-                ) { choice: Int ->
-                    Settings.pauseOnBluetoothDevice = choice
-                    pauseOnBluetoothDevice!!.summary = bluetoothDevicePreferenceToString(choice)
-                }
-                true
-            }
-    }
-
-    private fun showBluetoothDevicePreferenceDialog(
-        @StringRes title: Int,
-        defaultChoice: Int,
-        onChosen: (Int) -> Unit
-    ) {
-        val choice = intArrayOf(defaultChoice)
-        ConfirmationDialog.Builder(requireContext()).setTitle(title)
-            .setSingleChoiceItems(
-                R.array.bluetoothDeviceSettingNames,
-                defaultChoice
-            ) { _: DialogInterface?, i: Int -> choice[0] = i }
-            .setNegativeButton(R.string.common_cancel) { dialogInterface: DialogInterface, _: Int ->
-                dialogInterface.cancel()
-            }
-            .setPositiveButton(R.string.common_ok) { dialogInterface: DialogInterface, _: Int ->
-                onChosen(choice[0])
-                dialogInterface.dismiss()
-            }
-            .create().show()
-    }
-
-    private fun bluetoothDevicePreferenceToString(preferenceValue: Int): String =
-        when (preferenceValue) {
-            Constants.PREFERENCE_VALUE_ALL -> {
-                getString(R.string.settings_playback_bluetooth_all)
-            }
-
-            Constants.PREFERENCE_VALUE_A2DP -> {
-                getString(R.string.settings_playback_bluetooth_a2dp)
-            }
-
-            Constants.PREFERENCE_VALUE_DISABLED -> {
-                getString(R.string.settings_playback_bluetooth_disabled)
-            }
-
-            else -> ""
-        }
-
     private fun setupClearSearchPreference() {
         val clearSearchPreference =
             findPreference<Preference>(getString(R.string.setting_key_clear_search_history))
@@ -389,23 +297,7 @@ class SettingsFragment :
             debugLogToFile?.summary = ""
         }
 
-        showArtistPicture?.isEnabled = id3TagsEnabledOnline
         useId3TagsOffline?.isEnabled = id3TagsEnabledOnline
-    }
-
-    private fun setHideMedia(hide: Boolean) {
-        // TODO this only hides the media files in the Ultrasonic dir and not in the music cache
-        val nomediaDir = File(ultrasonicDirectory, ".nomedia")
-        if (hide && !nomediaDir.exists()) {
-            if (!nomediaDir.mkdir()) {
-                Timber.w("Failed to create %s", nomediaDir)
-            }
-        } else if (nomediaDir.exists()) {
-            if (!nomediaDir.delete()) {
-                Timber.w("Failed to delete %s", nomediaDir)
-            }
-        }
-        toast(R.string.settings_hide_media_toast, false)
     }
 
     private fun setCacheLocation(path: String) {

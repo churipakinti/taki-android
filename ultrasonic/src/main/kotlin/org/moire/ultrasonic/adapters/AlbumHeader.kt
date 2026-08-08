@@ -7,6 +7,11 @@ import org.moire.ultrasonic.util.Settings.shouldUseFolderForArtistName
 import org.moire.ultrasonic.util.Util.getGrandparent
 
 class AlbumHeader(var entries: List<MusicDirectory.Child>, var name: String?) : Identifiable {
+    // Optional album notes/review from the server's external metadata agent, only used by
+    // AlbumDetailHeaderBinder (Album Detail). Set after construction since it arrives from a
+    // separate, slower network call than the entries the header is built from.
+    var notes: String? = null
+
     var isAllVideo: Boolean
         private set
 

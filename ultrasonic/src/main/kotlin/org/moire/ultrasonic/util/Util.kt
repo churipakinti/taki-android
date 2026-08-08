@@ -93,29 +93,11 @@ object Util {
     @JvmStatic
     fun applyTheme(context: Context?) {
         if (context == null) return
-        val style = getStyleFromSettings(context)
-        // First set the theme (light, dark, etc.)
-        context.setTheme(style)
+        // The app has a single fixed dark theme -- no light/black/day-night variants or user
+        // picker (out-of-the-box, zero-config vision: nothing to configure besides the server).
+        context.setTheme(R.style.UltrasonicTheme_Dark)
         // Then set an overlay controlling the status bar behaviour etc.
         context.setTheme(R.style.UltrasonicTheme_Base)
-    }
-
-    private fun getStyleFromSettings(context: Context): Int = when (Settings.theme.lowercase()) {
-        context.getString(R.string.setting_key_theme_dark) -> {
-            R.style.UltrasonicTheme_Dark
-        }
-
-        context.getString(R.string.setting_key_theme_black) -> {
-            R.style.UltrasonicTheme_Black
-        }
-
-        context.getString(R.string.setting_key_theme_light) -> {
-            R.style.UltrasonicTheme_Light
-        }
-
-        else -> {
-            R.style.UltrasonicTheme_DayNight
-        }
     }
 
     fun getString(@StringRes resId: Int): String = applicationContext().resources.getString(resId)

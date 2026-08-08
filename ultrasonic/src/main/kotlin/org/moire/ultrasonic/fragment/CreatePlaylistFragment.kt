@@ -27,6 +27,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.R
@@ -62,6 +63,7 @@ class CreatePlaylistFragment : Fragment() {
     private var searchInput: TextInputEditText? = null
     private var pendingSelection: SortOrder? = null
     private var availableArtists: List<ArtistOrIndex> = emptyList()
+    private var loadJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -166,7 +168,10 @@ class CreatePlaylistFragment : Fragment() {
     }
 
     private fun loadOrder(order: SortOrder) {
-        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+        // Cancel any still-running load so a slow, stale response can't overwrite the list
+        // after the user has already switched to a different filter or search.
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)
             when (order) {
                 SortOrder.ALL_SONGS -> trackModel.getAllSongs(
@@ -187,7 +192,8 @@ class CreatePlaylistFragment : Fragment() {
             return
         }
         Util.hideKeyboard(activity)
-        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)
             val songs = searchModel.search(query)?.songs.orEmpty()
             showTracks(songs)
@@ -229,14 +235,16 @@ class CreatePlaylistFragment : Fragment() {
 
     private fun loadArtist(name: String) {
         val artist = availableArtists.firstOrNull { it.name == name } ?: return
-        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)
             trackModel.getSongsForArtist(artist.id, name, Settings.maxSongs, append = false)
         }
     }
 
     private fun loadGenre(name: String) {
-        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)
             trackModel.getSongsForGenre(name, Settings.maxSongs, offset = 0, append = false)
         }

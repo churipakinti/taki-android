@@ -11,6 +11,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import java.time.LocalDate
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -61,12 +62,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun fetch(type: AlbumListType, size: Int = SIZE): List<Album> =
         withContext(Dispatchers.IO) {
-            val service = MusicServiceFactory.getMusicService()
+            // A failure here (e.g. offline folder-based browsing, a transient network error)
+            // must not cancel the sibling async fetches in loadHomeScreen()'s coroutineScope.
+            try {
+                val service = MusicServiceFactory.getMusicService()
 
-            if (ActiveServerProvider.shouldUseId3Tags()) {
-                service.getAlbumList2(type, size, 0, null, null)
-            } else {
-                service.getAlbumList(type, size, 0, null)
+                if (ActiveServerProvider.shouldUseId3Tags()) {
+                    service.getAlbumList2(type, size, 0, null, null)
+                } else {
+                    service.getAlbumList(type, size, 0, null)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                emptyList()
             }
         }
 
@@ -76,19 +85,28 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
      * of reshuffling into something different every time Home reloads.
      */
     private suspend fun fetchOrRestoreMix(): GenreMix = withContext(Dispatchers.IO) {
-        val service = MusicServiceFactory.getMusicService()
-        val today = LocalDate.now().toString()
+        // Same reasoning as fetch(): a failure here must not cancel the sibling shelf
+        // fetches in loadHomeScreen()'s coroutineScope.
+        try {
+            val service = MusicServiceFactory.getMusicService()
+            val today = LocalDate.now().toString()
 
-        if (Settings.homeMixDate == today && Settings.homeMixGenre.isNotEmpty()) {
-            val restored = restoreMix(service, Settings.homeMixGenre, Settings.homeMixTrackIds)
-            if (restored.tracks.isNotEmpty()) return@withContext restored
+            if (Settings.homeMixDate == today && Settings.homeMixGenre.isNotEmpty()) {
+                val restored =
+                    restoreMix(service, Settings.homeMixGenre, Settings.homeMixTrackIds)
+                if (restored.tracks.isNotEmpty()) return@withContext restored
+            }
+
+            val fresh = generateMix(service)
+            Settings.homeMixDate = today
+            Settings.homeMixGenre = fresh.genreName ?: ""
+            Settings.homeMixTrackIds = fresh.tracks.joinToString(",") { it.id }
+            fresh
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            GenreMix(null, emptyList())
         }
-
-        val fresh = generateMix(service)
-        Settings.homeMixDate = today
-        Settings.homeMixGenre = fresh.genreName ?: ""
-        Settings.homeMixTrackIds = fresh.tracks.joinToString(",") { it.id }
-        fresh
     }
 
     private fun generateMix(service: MusicService): GenreMix {

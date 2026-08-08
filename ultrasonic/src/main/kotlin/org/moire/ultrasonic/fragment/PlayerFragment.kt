@@ -43,6 +43,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.StarRating
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -91,7 +92,6 @@ import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.subsonic.NetworkAndStorageChecker
-import org.moire.ultrasonic.subsonic.ShareHandler
 import org.moire.ultrasonic.util.CancellationToken
 import org.moire.ultrasonic.util.CommunicationError
 import org.moire.ultrasonic.util.ConfirmationDialog
@@ -128,7 +128,6 @@ class PlayerFragment :
     // Data & Services
     private val networkAndStorageChecker: NetworkAndStorageChecker by inject()
     private val mediaPlayerManager: MediaPlayerManager by inject()
-    private val shareHandler: ShareHandler by inject()
     private val imageLoaderProvider: ImageLoaderProvider by inject()
     private var currentSong: Track? = null
     private lateinit var viewManager: LinearLayoutManager
@@ -155,6 +154,8 @@ class PlayerFragment :
     private lateinit var nextButton: MaterialButton
     private lateinit var shuffleButton: View
     private lateinit var repeatButton: MaterialButton
+    private lateinit var queueButton: View
+    private lateinit var savePlaylistButton: View
     private lateinit var progressBar: SeekBar
     private lateinit var progressIndicator: CircularProgressIndicator
 
@@ -207,6 +208,8 @@ class PlayerFragment :
         nextButton = view.findViewById(R.id.button_next)
         previousButton = view.findViewById(R.id.button_previous)
         repeatButton = view.findViewById(R.id.button_repeat)
+        queueButton = view.findViewById(R.id.button_queue)
+        savePlaylistButton = view.findViewById(R.id.button_save_playlist)
         heartRatingImageView = view.findViewById(R.id.song_rating_heart)
     }
 
@@ -271,8 +274,14 @@ class PlayerFragment :
             gestureScanner.onTouchEvent(me)
         }
 
-        albumArtImageView.setOnClickListener {
+        queueButton.setOnClickListener {
             toggleFullScreenAlbumArt()
+        }
+
+        savePlaylistButton.setOnClickListener {
+            if (mediaPlayerManager.playlistSize > 0) {
+                showSavePlaylistDialog()
+            }
         }
 
         songTitleTextView.setOnClickListener {
@@ -535,15 +544,10 @@ class PlayerFragment :
         val goToArtist = menu.findItem(R.id.menu_show_artist)
         val jukeboxOption = menu.findItem(R.id.menu_item_jukebox)
         val equalizerMenuItem = menu.findItem(R.id.menu_item_equalizer)
-        val shareMenuItem = menu.findItem(R.id.menu_item_share)
-        val shareSongMenuItem = menu.findItem(R.id.menu_item_share_song)
         val bookmarkMenuItem = menu.findItem(R.id.menu_item_bookmark_set)
         val bookmarkRemoveMenuItem = menu.findItem(R.id.menu_item_bookmark_delete)
 
         if (isOffline()) {
-            if (shareMenuItem != null) {
-                shareMenuItem.isVisible = false
-            }
             if (bookmarkMenuItem != null) {
                 bookmarkMenuItem.isVisible = false
             }
@@ -563,11 +567,9 @@ class PlayerFragment :
         }
 
         if (currentSong != null) {
-            shareSongMenuItem.isVisible = true
             goToAlbum.isVisible = true
             goToArtist.isVisible = true
         } else {
-            shareSongMenuItem.isVisible = false
             goToAlbum.isVisible = false
             goToArtist.isVisible = false
         }
@@ -608,6 +610,28 @@ class PlayerFragment :
         popup.menu.findItem(R.id.menu_lyrics)?.isVisible = !isOffline()
         popup.show()
         return popup
+    }
+
+    @Suppress("MagicNumber")
+    private fun showRatingPopup(track: Track) {
+        val popup = PopupMenu(requireContext(), playlistView)
+        popup.menuInflater.inflate(R.menu.rating, popup.menu)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) popup.setForceShowIcon(true)
+
+        popup.setOnMenuItemClickListener {
+            val rating = when (it.itemId) {
+                R.id.popup_rate_1 -> 1
+                R.id.popup_rate_2 -> 2
+                R.id.popup_rate_3 -> 3
+                R.id.popup_rate_4 -> 4
+                R.id.popup_rate_5 -> 5
+                else -> 0
+            }
+            track.userRating = rating
+            RxBus.ratingSubmitter.onNext(RatingUpdate(track.id, StarRating(5, rating.toFloat())))
+            true
+        }
+        popup.show()
     }
 
     private fun onContextMenuItemSelected(menuItem: MenuItem, item: MusicDirectory.Child): Boolean {
@@ -671,6 +695,19 @@ class PlayerFragment :
 
             R.id.menu_shuffle -> {
                 toggleShuffle()
+                return true
+            }
+
+            R.id.song_menu_favorite -> {
+                if (track == null) return false
+                track.starred = !track.starred
+                RxBus.ratingSubmitter.onNext(RatingUpdate(track.id, HeartRating(track.starred)))
+                return true
+            }
+
+            R.id.song_menu_rate -> {
+                if (track == null) return false
+                showRatingPopup(track)
                 return true
             }
 
@@ -749,27 +786,6 @@ class PlayerFragment :
                     }
                 }.start()
                 toast(R.string.download_bookmark_removed)
-                return true
-            }
-
-            R.id.menu_item_share -> {
-                val tracks = mediaPlayerManager.playlist.map {
-                    it.toTrack()
-                }
-                shareHandler.createShare(
-                    this,
-                    tracks = tracks
-                )
-                return true
-            }
-
-            R.id.menu_item_share_song -> {
-                if (track == null) return true
-
-                shareHandler.createShare(
-                    this,
-                    listOf(track)
-                )
                 return true
             }
 
@@ -853,7 +869,11 @@ class PlayerFragment :
                 onContextMenuClick = { menu, id -> onContextMenuItemSelected(menu, id) },
                 checkable = false,
                 draggable = true,
-                lifecycleOwner = viewLifecycleOwner
+                lifecycleOwner = viewLifecycleOwner,
+                // The row's star rating icon was replaced with "Favorite"/"Rate" actions in the
+                // long-press context menu (see nowplaying_context.xml) -- less visual noise per
+                // row, same underlying rating/starred fields.
+                showRating = false
             ) { view, track -> onCreateContextMenu(view, track) }.apply {
                 this.startDrag = { holder ->
                     dragTouchHelper.startDrag(holder)

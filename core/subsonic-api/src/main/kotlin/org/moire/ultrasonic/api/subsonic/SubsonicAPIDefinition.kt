@@ -13,6 +13,7 @@ import org.moire.ultrasonic.api.subsonic.models.JukeboxAction
 import org.moire.ultrasonic.api.subsonic.response.BookmarksResponse
 import org.moire.ultrasonic.api.subsonic.response.ChatMessagesResponse
 import org.moire.ultrasonic.api.subsonic.response.GenresResponse
+import org.moire.ultrasonic.api.subsonic.response.GetAlbumInfo2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumList2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumListResponse
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumResponse
@@ -112,6 +113,9 @@ interface SubsonicAPIDefinition {
 
     @GET("getAlbum.view")
     fun getAlbum(@Query("id") id: String): Call<GetAlbumResponse>
+
+    @GET("getAlbumInfo2.view")
+    fun getAlbumInfo2(@Query("id") id: String): Call<GetAlbumInfo2Response>
 
     @GET("search.view")
     fun search(

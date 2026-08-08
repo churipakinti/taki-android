@@ -24,12 +24,6 @@ object Settings {
         get() = PreferenceManager.getDefaultSharedPreferences(Util.appContext())
 
     @JvmStatic
-    var theme by StringSetting(
-        getKey(R.string.setting_key_theme),
-        getKey(R.string.setting_key_theme_day_night)
-    )
-
-    @JvmStatic
     val maxBitRate: Int
         get() {
             return if (Util.isNetworkRestricted()) {
@@ -50,16 +44,9 @@ object Settings {
     val pinWithHighestQuality: Boolean
         get() = (maxBitRatePinning == 0)
 
-    @JvmStatic
-    val preloadCount: Int
-        get() {
-            val preloadCount =
-                preferences.getString(getKey(R.string.setting_key_preload_count), "-1")!!
-                    .toInt()
-            return if (preloadCount == -1) Int.MAX_VALUE else preloadCount
-        }
+    const val preloadCount = 3
 
-    val parallelDownloads by IntSetting(getKey(R.string.setting_key_parallel_downloads), 3)
+    const val parallelDownloads = 3
 
     @JvmStatic
     val cacheSizeMB: Int
@@ -92,69 +79,44 @@ object Settings {
     @JvmStatic
     var shareOnServer by BooleanSetting(getKey(R.string.setting_key_share_on_server), true)
 
-    @JvmStatic
-    var shouldDisplayBitrateWithArtist by BooleanSetting(
-        getKey(R.string.setting_key_display_bitrate_with_artist),
-        true
-    )
+    // Out-of-the-box vision: the only thing worth configuring is the server. These five used to
+    // be switches under Settings > Appearance; fixed to their prior real-world default so
+    // behavior doesn't change, just the ability to toggle them (see HANDOFF.md).
+    const val shouldDisplayBitrateWithArtist = false
 
-    @JvmStatic
-    var shouldUseFolderForArtistName
-        by BooleanSetting(getKey(R.string.setting_key_use_folder_for_album_artist), false)
+    const val shouldUseFolderForArtistName = false
 
-    @JvmStatic
-    var shouldShowTrackNumber
-        by BooleanSetting(getKey(R.string.setting_key_show_track_number), false)
+    const val shouldShowTrackNumber = false
 
-    @JvmStatic
-    var defaultAlbums
-        by StringIntSetting(getKey(R.string.setting_key_default_albums), 5)
+    // Search result caps -- also double as generic page-size defaults well beyond Search itself
+    // (Browse/library grids, "Play Random Songs," playlist creation, any track-collection screen
+    // invoked without an explicit size). Fixed at their prior defaults so none of those callers'
+    // behavior changes.
+    const val defaultAlbums = 5
 
-    @JvmStatic
-    var maxAlbums
-        by StringIntSetting(getKey(R.string.setting_key_max_albums), 20)
+    const val maxAlbums = 20
 
-    @JvmStatic
-    var defaultSongs
-        by StringIntSetting(getKey(R.string.setting_key_default_songs), 10)
+    const val defaultSongs = 10
 
-    @JvmStatic
-    var maxSongs
-        by StringIntSetting(getKey(R.string.setting_key_max_songs), 25)
+    const val maxSongs = 25
 
-    @JvmStatic
-    var maxArtists
-        by StringIntSetting(getKey(R.string.setting_key_max_artists), 10)
+    const val maxArtists = 10
 
-    @JvmStatic
-    var defaultArtists
-        by StringIntSetting(getKey(R.string.setting_key_default_artists), 3)
+    const val defaultArtists = 3
 
-    @JvmStatic
-    var seekInterval
-        by StringIntSetting(getKey(R.string.setting_key_increment_time), 5000)
+    const val seekInterval = 5000
 
     val seekIntervalMillis: Long
         get() = (seekInterval / 1000).toLong()
 
-    var resumePlayOnHeadphonePlug
-        by BooleanSetting(R.string.setting_key_resume_play_on_headphones_plug, true)
+    const val resumePlayOnHeadphonePlug = true
 
-    @JvmStatic
-    var resumeOnBluetoothDevice by IntSetting(
-        getKey(R.string.setting_key_resume_on_bluetooth_device),
-        Constants.PREFERENCE_VALUE_DISABLED
-    )
+    // Bluetooth resume/pause used to be separately configurable (all devices / A2DP-only /
+    // disabled); fixed to A2DP-only for both -- resuming/pausing only for actual audio devices
+    // (headphones, speakers, car audio), not any paired Bluetooth device, is standard behavior
+    // and needs no user decision. See BluetoothIntentReceiver.kt.
 
-    @JvmStatic
-    var pauseOnBluetoothDevice by IntSetting(
-        getKey(R.string.setting_key_pause_on_bluetooth_device),
-        Constants.PREFERENCE_VALUE_A2DP
-    )
-
-    @JvmStatic
-    var showNowPlaying
-        by BooleanSetting(getKey(R.string.setting_key_show_now_playing), true)
+    const val showNowPlaying = true
 
     @JvmStatic
     var shouldTransitionOnPlayback by BooleanSetting(
@@ -162,11 +124,10 @@ object Settings {
         true
     )
 
-    @JvmStatic
-    var showNowPlayingDetails
-        by BooleanSetting(getKey(R.string.setting_key_show_now_playing_details), false)
-
-    var scrobbleEnabled by BooleanSetting(getKey(R.string.setting_key_scrobble), false)
+    // No per-server capability flag exists for scrobble support (unlike chat/bookmarks/shares),
+    // so there's nothing to auto-detect -- always attempt it; a server with no scrobble target
+    // configured (e.g. no Last.fm link) just no-ops.
+    const val scrobbleEnabled = true
 
     // Normally you don't need to use these Settings directly,
     // use ActiveServerProvider.isID3Enabled() instead
@@ -179,26 +140,20 @@ object Settings {
 
     var activeServer by IntSetting(getKey(R.string.setting_key_server_instance), -1)
 
-    var serverScaling by BooleanSetting(getKey(R.string.setting_key_server_scaling), false)
+    const val serverScaling = true
 
     var firstRunExecuted by BooleanSetting(getKey(R.string.setting_key_first_run_executed), false)
 
-    val shouldShowArtistPicture
-        by BooleanSetting(getKey(R.string.setting_key_show_artist_picture), true)
+    const val shouldShowArtistPicture = true
 
-    @JvmStatic
-    var chatRefreshInterval by StringIntSetting(
-        getKey(R.string.setting_key_chat_refresh_interval),
-        5000
-    )
+    // Chat is unreachable from the UI (hidden drawer item, see HANDOFF.md); kept only so
+    // ChatFragment.kt -- deliberately not deleted, same "hide don't delete" pattern as the rest
+    // of that feature -- still compiles unchanged if ever reactivated.
+    const val chatRefreshInterval = 5000
 
-    var directoryCacheTime by StringIntSetting(
-        getKey(R.string.setting_key_directory_cache_time),
-        300
-    )
+    const val directoryCacheTime = 300
 
-    var shouldSortByDisc
-        by BooleanSetting(getKey(R.string.setting_key_disc_sort), false)
+    const val shouldSortByDisc = true
 
     var shouldClearBookmark
         by BooleanSetting(getKey(R.string.setting_key_clear_bookmark), false)

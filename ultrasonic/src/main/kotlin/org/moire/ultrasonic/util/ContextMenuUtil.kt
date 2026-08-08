@@ -9,15 +9,12 @@ package org.moire.ultrasonic.util
 
 import android.view.MenuItem
 import androidx.fragment.app.Fragment
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MediaPlayerManager
-import org.moire.ultrasonic.subsonic.ShareHandler
 
-object ContextMenuUtil : KoinComponent {
+object ContextMenuUtil {
 
     /*
      * Callback for menu items of collections (albums, artists etc)
@@ -138,9 +135,9 @@ object ContextMenuUtil : KoinComponent {
                 )
             }
 
-            R.id.song_menu_share -> {
-                val shareHandler: ShareHandler by inject()
-                shareHandler.createShare(
+            R.id.song_menu_delete -> {
+                DownloadUtil.justDownload(
+                    action = DownloadAction.DELETE,
                     fragment = fragment,
                     tracks = tracks
                 )

@@ -11,6 +11,12 @@
         android:id="@+id/toBookmarks"
         app:destination="@id/bookmarksFragment" />
     <action
+        android:id="@+id/toDownloads"
+        app:destination="@id/downloadsFragment" />
+    <action
+        android:id="@+id/toDownloadedAlbum"
+        app:destination="@id/downloadedAlbumFragment" />
+    <action
         android:id="@+id/toMediaLibrary"
         app:destination="@id/mediaLibraryFragment" />
     <action
@@ -260,6 +266,22 @@
     <fragment
         android:id="@+id/downloadsFragment"
         android:name="org.moire.ultrasonic.fragment.DownloadsFragment" />
+    <fragment
+        android:id="@+id/downloadedAlbumFragment"
+        android:name="org.moire.ultrasonic.fragment.DownloadedAlbumFragment">
+        <argument
+            android:name="id"
+            app:argType="string" />
+        <argument
+            android:name="name"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="isAlbum"
+            android:defaultValue="true"
+            app:argType="boolean" />
+    </fragment>
     <fragment
         android:id="@+id/sharesFragment"
         android:name="org.moire.ultrasonic.fragment.legacy.SharesFragment">

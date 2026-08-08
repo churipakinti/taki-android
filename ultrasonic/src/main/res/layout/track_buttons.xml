@@ -8,92 +8,6 @@
     android:padding="6dp" >
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_select"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:scaleType="fitCenter"
-        android:layout_weight="1"
-        android:visibility="gone"
-        android:contentDescription="@string/common.select_all"
-        app:icon="@drawable/ic_menu_select_all"
-        app:iconGravity="textEnd"
-        app:iconSize="26dp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_play_now"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:scaleType="fitCenter"
-        android:layout_weight="1"
-        android:visibility="gone"
-        android:contentDescription="@string/common.play_now"
-        app:icon="@drawable/media_start"
-        app:iconGravity="textEnd"
-        app:iconSize="26dp"
-        android:scrollbars="none" />
-    
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_play_next"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:scaleType="fitCenter"
-        android:layout_weight="1"
-        android:visibility="gone"
-        android:contentDescription="@string/common.play_next"
-        app:icon="@drawable/ic_play_next"
-        app:iconGravity="textEnd"
-        app:iconSize="26dp"
-        android:scrollbars="none" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_play_last"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:scaleType="fitCenter"
-        android:layout_weight="1"
-        android:visibility="gone"
-        android:contentDescription="@string/common.play_last"
-        app:icon="@drawable/ic_play_last"
-        app:iconGravity="textEnd"
-        app:iconSize="26dp"
-        android:scrollbars="none"
-        />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_pin"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:scaleType="fitCenter"
-        android:layout_weight="1"
-        android:visibility="gone"
-        android:contentDescription="@string/common.pin"
-        app:icon="@drawable/ic_menu_pin"
-        app:iconGravity="textEnd"
-        app:iconSize="26dp"
-        android:scrollbars="none"
-        />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_unpin"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:scaleType="fitCenter"
-        android:layout_weight="1"
-        android:visibility="gone"
-        android:contentDescription="@string/common.unpin"
-        app:icon="@drawable/ic_menu_unpin"
-        app:iconGravity="textEnd"
-        app:iconSize="26dp"
-        android:scrollbars="none"
-        />
-    
-    <com.google.android.material.button.MaterialButton
         android:id="@+id/select_album_download"
         style="@style/Widget.Material3.Button.IconButton"
         android:layout_width="0dp"
@@ -109,30 +23,15 @@
         />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_delete"
+        android:id="@+id/select_album_add_playlist"
         style="@style/Widget.Material3.Button.IconButton"
         android:layout_width="0dp"
         android:layout_height="32dp"
         android:scaleType="fitCenter"
         android:layout_weight="1"
         android:visibility="gone"
-        android:contentDescription="@string/common.delete"
-        app:icon="@drawable/ic_menu_close"
-        app:iconGravity="textEnd"
-        app:iconSize="26dp"
-        android:scrollbars="none"
-        />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/select_album_more"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:scaleType="fitCenter"
-        android:layout_weight="1"
-        android:visibility="gone"
-        android:contentDescription="@string/search.more"
-        app:icon="@drawable/media_forward"
+        android:contentDescription="@string/song.add_to_playlist_description"
+        app:icon="@drawable/ic_add_white"
         app:iconGravity="textEnd"
         app:iconSize="26dp"
         android:scrollbars="none"

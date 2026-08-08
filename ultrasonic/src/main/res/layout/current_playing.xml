@@ -51,6 +51,8 @@
 
         <include layout="@layout/media_buttons" />
 
+        <include layout="@layout/player_secondary_controls" />
+
     </LinearLayout>
 
 </LinearLayout>

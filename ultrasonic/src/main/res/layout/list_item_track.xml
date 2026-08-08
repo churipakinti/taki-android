@@ -17,8 +17,8 @@
         a:focusable="false"
         a:gravity="center_vertical"
         a:importantForAccessibility="no"
-        a:paddingStart="7dip"
-        a:paddingEnd="4dip"
+        a:paddingStart="11dip"
+        a:paddingEnd="7dip"
         a:src="@drawable/ic_drag_vertical"
         a:visibility="gone" />
 
@@ -26,8 +26,8 @@
         a:id="@+id/song_check"
         a:layout_width="38dp"
         a:layout_height="fill_parent"
-        a:checkMark="@drawable/btn_check_custom"
-        a:gravity="center_vertical"
+        a:checkMark="@drawable/btn_check_circle"
+        a:gravity="center"
         a:paddingEnd="4dip"
         a:visibility="gone" />
 
@@ -44,5 +44,17 @@
         a:gravity="center_vertical"
         a:paddingEnd="5dip"
         a:src="@drawable/rating_star_5" />
+
+    <com.google.android.material.button.MaterialButton
+        a:id="@+id/song_menu"
+        style="@style/Widget.Material3.Button.IconButton"
+        a:layout_width="32dp"
+        a:layout_height="32dp"
+        a:layout_gravity="center_vertical"
+        a:contentDescription="@string/search.more"
+        app:icon="@drawable/ic_more_vert"
+        app:iconSize="16dp"
+        app:iconTint="?attr/colorOnSurfaceVariant"
+        a:visibility="gone" />
 
 </LinearLayout>

@@ -52,14 +52,14 @@ class BookmarksFragment : TrackCollectionFragment() {
     }
 
     /**
-     * Set a custom listener to perform the playing, in order to be able to restore
-     * the playback position
+     * Tapping a bookmark resumes playback from its saved position, instead of the base
+     * class's default "play from here" (which would always start at position 0).
      */
-    override fun setupButtons(view: View) {
-        super.setupButtons(view)
-
-        playNowButton!!.setOnClickListener {
-            playNow(getSelectedTracks())
+    override fun onItemClick(item: MusicDirectory.Child) {
+        if (item is Track) {
+            playNow(listOf(item))
+        } else {
+            super.onItemClick(item)
         }
     }
 

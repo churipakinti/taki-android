@@ -25,34 +25,34 @@
             a:layout_marginEnd="6dp"
             a:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/playlist_action_container"
+            app:layout_constraintEnd_toStartOf="@id/album_action_container"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
-                a:id="@+id/playlist_name"
+                a:id="@+id/album_title"
                 style="@style/Ultrasonic.PrimaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
                 a:maxLines="1"
                 a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                tools:text="Daily Mix" />
+                tools:text="A Night at the Opera" />
 
             <TextView
-                a:id="@+id/playlist_song_count"
+                a:id="@+id/album_artist"
                 style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:layout_marginTop="2dp"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                 a:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="24 songs" />
+                tools:text="Queen" />
 
             <TextView
-                a:id="@+id/playlist_download_status"
+                a:id="@+id/album_track_count"
                 style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
@@ -60,57 +60,52 @@
                 a:maxLines="1"
                 a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                 a:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="Downloaded" />
+                tools:text="12 canciones" />
 
         </LinearLayout>
 
         <FrameLayout
-            a:id="@+id/playlist_action_container"
+            a:id="@+id/album_action_container"
             a:layout_width="42dp"
             a:layout_height="42dp"
             a:layout_marginEnd="5dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/playlist_cover_container"
+            app:layout_constraintEnd_toStartOf="@id/cover_art_container"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.button.MaterialButton
-                a:id="@+id/playlist_download"
+                a:id="@+id/album_remove_download"
                 style="@style/Widget.Material3.Button.IconButton"
                 a:layout_width="match_parent"
                 a:layout_height="match_parent"
                 a:focusable="false"
-                a:contentDescription="@string/playlist.download_description"
-                app:icon="@drawable/ic_menu_download"
+                a:contentDescription="@string/album.remove_download_description"
+                app:icon="@drawable/ic_menu_remove_all"
                 app:iconSize="20dp"
                 app:iconTint="?attr/colorOnSurfaceVariant" />
-
-            <ProgressBar
-                a:id="@+id/playlist_download_progress"
-                a:layout_width="21dp"
-                a:layout_height="21dp"
-                a:layout_gravity="center"
-                a:indeterminate="true"
-                a:visibility="gone"
-                tools:visibility="visible" />
 
         </FrameLayout>
 
         <com.google.android.material.card.MaterialCardView
-            a:id="@+id/playlist_cover_container"
+            a:id="@+id/cover_art_container"
             a:layout_width="76dp"
             a:layout_height="76dp"
-            a:layout_marginEnd="8dp"
-            a:rotation="6"
-            a:translationX="5dp"
+            a:layout_marginEnd="10dp"
             app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
             app:cardCornerRadius="4dp"
-            app:cardElevation="3dp"
+            app:cardElevation="1dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:strokeWidth="0dp">
 
-            <include layout="@layout/playlist_cover_collage" />
+            <ImageView
+                a:id="@+id/cover_art"
+                a:layout_width="match_parent"
+                a:layout_height="match_parent"
+                a:contentDescription="@string/albumArt"
+                a:scaleType="centerCrop"
+                a:src="@drawable/unknown_album" />
 
         </com.google.android.material.card.MaterialCardView>
 

@@ -36,6 +36,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_READY
 import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
@@ -48,6 +49,8 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeActivity
@@ -74,6 +77,12 @@ import org.moire.ultrasonic.util.Storage
 import org.moire.ultrasonic.util.UncaughtExceptionHandler
 import org.moire.ultrasonic.util.Util
 import timber.log.Timber
+
+// How long to wait after the last keystroke before firing a live search request against the
+// server, and the shortest query worth sending -- both exist purely to avoid hammering the
+// server with a request per keystroke.
+private const val LIVE_SEARCH_DEBOUNCE_MS = 400L
+private const val LIVE_SEARCH_MIN_QUERY_LENGTH = 2
 
 /**
  * The main (and only) Activity of Ultrasonic which loads all other screens as Fragments.
@@ -104,6 +113,9 @@ class NavigationActivity : ScopeActivity() {
     // We store the last search string in this variable.
     // Seems a bit like a hack, is there a better way?
     var searchQuery: String? = null
+
+    private var liveSearchJob: Job? = null
+    private var lastLiveSearchQuery: String? = null
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
@@ -215,10 +227,6 @@ class NavigationActivity : ScopeActivity() {
             }
         }
 
-        rxBusSubscription += RxBus.themeChangedEventObservable.subscribe {
-            recreate()
-        }
-
         rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
             updateNavigationHeaderForServer()
             setMenuForServerCapabilities()
@@ -272,6 +280,50 @@ class NavigationActivity : ScopeActivity() {
             searchView.clearFocus()
             // Restore search text only once!
             searchQuery = null
+        }
+
+        // Live filtering as the user types, debounced so we don't hammer the server on every
+        // keystroke. Explicit submit (IME search key / voice search) is untouched -- it still
+        // goes through the existing ACTION_SEARCH intent flow below, which also saves the query
+        // to recent suggestions; live keystrokes deliberately don't, or every partial fragment
+        // typed ("b", "be", "bea"...) would pollute that history.
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                scheduleLiveSearch(newText)
+                return true
+            }
+        })
+    }
+
+    private fun scheduleLiveSearch(text: String?) {
+        val query = text?.trim().orEmpty()
+        liveSearchJob?.cancel()
+
+        // An empty field means the user cleared the search -- forget the last query so
+        // re-entering the exact same text later (a fresh visit, not a live edit) fires again
+        // instead of being silently deduped against a stale value from a previous visit.
+        if (query.isEmpty()) {
+            lastLiveSearchQuery = null
+            return
+        }
+
+        if (query.length < LIVE_SEARCH_MIN_QUERY_LENGTH || query == lastLiveSearchQuery) return
+
+        liveSearchJob = lifecycleScope.launch {
+            delay(LIVE_SEARCH_DEBOUNCE_MS)
+            lastLiveSearchQuery = query
+
+            val navController = findNavController(R.id.nav_host_fragment)
+            val options = NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setPopUpTo(R.id.searchFragment, true)
+                .build()
+            navController.navigate(
+                NavigationGraphDirections.toSearchFragment(query, false),
+                options
+            )
         }
     }
 
@@ -377,6 +429,10 @@ class NavigationActivity : ScopeActivity() {
 
                 R.id.bookmarksFragment -> {
                     navController.navigate(NavigationGraphDirections.toBookmarks())
+                }
+
+                R.id.downloadsFragment -> {
+                    navController.navigate(NavigationGraphDirections.toDownloads())
                 }
 
                 R.id.trackCollectionFragment -> {

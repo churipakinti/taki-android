@@ -15,28 +15,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- The day & night theme. There is a night specific override in the values-night folder -->
-    <style name="UltrasonicTheme.DayNight" parent="Theme.Material3.DynamicColors.DayNight">
-        <item name="colorControlNormal">?attr/colorOnSurface</item>
-        <item name="colorControlHighlight">?attr/colorSecondary</item>
-        <item name="colorTertiary">@color/tertiary</item>
-    </style>
-
-    <style name="UltrasonicTheme.Black" parent="Theme.Material3.Dark">
-        <item name="colorPrimaryDark">?attr/backgroundColor</item>
-        <item name="android:colorBackground">@color/background_color_black</item>
-        <item name="colorControlNormal">?attr/colorOnSurface</item>
-        <item name="colorTertiary">@color/tertiary</item>
-    </style>
-
+    <!-- The app's only theme: always dark, no light/black/day-night variants or user picker. -->
     <style name="UltrasonicTheme.Dark" parent="Theme.Material3.DynamicColors.Dark">
         <item name="colorPrimaryDark">?attr/colorSurface</item>
-        <item name="colorControlNormal">?attr/colorOnSurface</item>
-        <item name="colorControlHighlight">?attr/colorSecondary</item>
-        <item name="colorTertiary">@color/tertiary</item>
-    </style>
-
-    <style name="UltrasonicTheme.Light" parent="Theme.Material3.DynamicColors.Light">
         <item name="colorControlNormal">?attr/colorOnSurface</item>
         <item name="colorControlHighlight">?attr/colorSecondary</item>
         <item name="colorTertiary">@color/tertiary</item>

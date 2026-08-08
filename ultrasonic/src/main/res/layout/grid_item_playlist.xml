@@ -54,16 +54,16 @@
             a:layout_height="42dp"
             a:layout_marginStart="4dp">
 
-            <ImageButton
+            <com.google.android.material.button.MaterialButton
                 a:id="@+id/playlist_download"
+                style="@style/Widget.Material3.Button.IconButton"
                 a:layout_width="match_parent"
                 a:layout_height="match_parent"
-                a:background="?attr/selectableItemBackgroundBorderless"
-                a:contentDescription="@string/playlist.download_description"
                 a:focusable="false"
-                a:padding="10dp"
-                a:src="@drawable/ic_menu_download"
-                app:tint="?attr/colorOnSurfaceVariant" />
+                a:contentDescription="@string/playlist.download_description"
+                app:icon="@drawable/ic_menu_download"
+                app:iconSize="20dp"
+                app:iconTint="?attr/colorOnSurfaceVariant" />
 
             <ProgressBar
                 a:id="@+id/playlist_download_progress"

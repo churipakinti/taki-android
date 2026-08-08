@@ -6,7 +6,7 @@
     a:layout_width="0dp"
     a:layout_height="?android:attr/listPreferredItemHeight"
     a:layout_gravity="center_vertical"
-    a:layout_marginStart="4dp"
+    a:layout_marginStart="6dp"
     a:layout_weight="1"
     a:orientation="vertical"
     tools:layout_height="?android:attr/listPreferredItemHeight"

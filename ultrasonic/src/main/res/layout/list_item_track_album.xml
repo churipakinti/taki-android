@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DON'T CONVERT TO ConstraintLayout! We have been there and it was slower than LinearLayout :) -->
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:id="@+id/song_layout"
+    a:layout_width="fill_parent"
+    a:layout_height="48dp"
+    a:gravity="center_vertical"
+    a:orientation="horizontal"
+    a:paddingStart="4dp"
+    a:paddingEnd="12dp">
+
+    <ImageView
+        a:id="@+id/song_drag"
+        a:layout_width="32dp"
+        a:layout_height="fill_parent"
+        a:background="@android:color/transparent"
+        a:focusable="false"
+        a:gravity="center_vertical"
+        a:importantForAccessibility="no"
+        a:src="@drawable/ic_drag_vertical"
+        a:visibility="gone" />
+
+    <CheckedTextView
+        a:id="@+id/song_check"
+        a:layout_width="32dp"
+        a:layout_height="fill_parent"
+        a:checkMark="@drawable/btn_check_circle"
+        a:gravity="center"
+        a:visibility="gone" />
+
+    <TextView
+        a:id="@+id/song_track"
+        style="@style/Ultrasonic.SecondaryText"
+        a:layout_width="28dp"
+        a:layout_height="wrap_content"
+        a:layout_marginStart="6dp"
+        a:gravity="center"
+        a:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+        a:textColor="?attr/colorOnSurfaceVariant"
+        a:visibility="gone"
+        tools:text="03"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        a:layout_width="0dp"
+        a:layout_height="wrap_content"
+        a:layout_marginStart="8dp"
+        a:layout_weight="1"
+        a:orientation="vertical">
+
+        <TextView
+            a:id="@+id/song_title"
+            style="@style/Ultrasonic.PrimaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            tools:text="Song title" />
+
+        <TextView
+            a:id="@+id/song_artist"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_marginTop="2dp"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Artist" />
+
+    </LinearLayout>
+
+    <ImageView
+        a:id="@+id/song_status_image"
+        a:layout_width="16dp"
+        a:layout_height="16dp"
+        a:layout_marginStart="8dp"
+        a:importantForAccessibility="no"
+        a:scaleType="fitCenter"
+        a:visibility="gone" />
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        a:id="@+id/song_status_progress"
+        a:layout_width="16dp"
+        a:layout_height="16dp"
+        a:layout_marginStart="8dp"
+        a:indeterminate="true"
+        a:visibility="gone"
+        app:indicatorColor="?attr/colorOnSurface"
+        app:indicatorSize="16dp"
+        app:trackColor="?attr/colorSurfaceVariant" />
+
+    <TextView
+        a:id="@+id/song_duration"
+        style="@style/Ultrasonic.SecondaryText"
+        a:layout_width="wrap_content"
+        a:layout_height="wrap_content"
+        a:layout_marginStart="8dp"
+        a:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+        a:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="3:42" />
+
+    <ImageView
+        a:id="@+id/song_star"
+        a:layout_width="0dp"
+        a:layout_height="0dp"
+        a:importantForAccessibility="no"
+        a:visibility="gone" />
+
+    <com.google.android.material.button.MaterialButton
+        a:id="@+id/song_menu"
+        style="@style/Widget.Material3.Button.IconButton"
+        a:layout_width="32dp"
+        a:layout_height="32dp"
+        a:layout_marginStart="4dp"
+        a:contentDescription="@string/search.more"
+        app:icon="@drawable/ic_more_vert"
+        app:iconSize="16dp"
+        app:iconTint="?attr/colorOnSurfaceVariant"
+        a:visibility="gone" />
+
+</LinearLayout>

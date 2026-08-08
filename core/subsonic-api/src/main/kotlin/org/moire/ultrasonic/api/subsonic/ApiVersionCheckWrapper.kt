@@ -25,6 +25,7 @@ import org.moire.ultrasonic.api.subsonic.models.JukeboxAction
 import org.moire.ultrasonic.api.subsonic.response.BookmarksResponse
 import org.moire.ultrasonic.api.subsonic.response.ChatMessagesResponse
 import org.moire.ultrasonic.api.subsonic.response.GenresResponse
+import org.moire.ultrasonic.api.subsonic.response.GetAlbumInfo2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumList2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumListResponse
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumResponse
@@ -95,6 +96,11 @@ internal class ApiVersionCheckWrapper(
     override fun getAlbum(id: String): Call<GetAlbumResponse> {
         checkVersion(V1_8_0)
         return api.getAlbum(id)
+    }
+
+    override fun getAlbumInfo2(id: String): Call<GetAlbumInfo2Response> {
+        checkVersion(V1_14_0)
+        return api.getAlbumInfo2(id)
     }
 
     override fun search2(

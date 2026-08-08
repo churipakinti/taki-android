@@ -57,7 +57,7 @@
                         a:shadowDx="0"
                         a:shadowDy="1"
                         a:shadowRadius="3"
-                        a:textAppearance="@style/TextAppearance.Material3.HeadlineLarge"
+                        a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         a:textColor="?attr/colorOnSurface"
                         tools:text="Héroes del Silencio" />
 
@@ -90,23 +90,28 @@
                 <com.google.android.material.button.MaterialButton
                     a:id="@+id/artist_detail_download"
                     style="@style/Widget.Material3.Button.IconButton"
-                    a:layout_width="48dp"
-                    a:layout_height="48dp"
-                    a:layout_marginEnd="12dp"
+                    a:layout_width="38dp"
+                    a:layout_height="38dp"
+                    a:layout_marginEnd="8dp"
                     a:contentDescription="@string/artist.download_description"
                     app:icon="@drawable/ic_menu_download"
-                    app:iconSize="25dp"
+                    app:iconSize="18dp"
                     app:iconTint="?attr/colorOnSurface" />
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     a:id="@+id/artist_detail_play"
-                    a:layout_width="56dp"
-                    a:layout_height="56dp"
+                    a:layout_width="38dp"
+                    a:layout_height="38dp"
+                    a:alpha="0.85"
                     a:contentDescription="@string/artist.play_description"
                     a:src="@drawable/media_start"
-                    app:backgroundTint="?attr/colorPrimary"
+                    app:backgroundTint="?attr/colorSurfaceContainerHighest"
                     app:borderWidth="0dp"
-                    app:tint="?attr/colorOnPrimary" />
+                    app:elevation="0dp"
+                    app:fabCustomSize="38dp"
+                    app:maxImageSize="16dp"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ultrasonic.Circle"
+                    app:tint="?attr/colorOnSurface" />
 
             </LinearLayout>
 

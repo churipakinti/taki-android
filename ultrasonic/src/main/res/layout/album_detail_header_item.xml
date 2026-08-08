@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:orientation="vertical">
+
+    <FrameLayout
+        a:id="@+id/album_detail_hero"
+        a:layout_width="match_parent"
+        a:layout_height="300dp">
+
+        <ImageView
+            a:id="@+id/album_detail_art"
+            a:layout_width="match_parent"
+            a:layout_height="match_parent"
+            a:contentDescription="@string/album.artwork_description"
+            a:scaleType="centerCrop"
+            a:src="@drawable/unknown_album" />
+
+        <View
+            a:layout_width="match_parent"
+            a:layout_height="match_parent"
+            a:background="@drawable/bg_artist_hero_gradient"
+            a:importantForAccessibility="no" />
+
+        <LinearLayout
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_gravity="bottom"
+            a:orientation="vertical"
+            a:paddingStart="20dp"
+            a:paddingEnd="20dp"
+            a:paddingBottom="16dp">
+
+            <TextView
+                a:id="@+id/album_detail_title"
+                style="@style/Ultrasonic.PrimaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:maxLines="2"
+                a:shadowColor="#99000000"
+                a:shadowDx="0"
+                a:shadowDy="1"
+                a:shadowRadius="3"
+                a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                a:textColor="?attr/colorOnSurface"
+                tools:text="El Duelo" />
+
+            <TextView
+                a:id="@+id/album_detail_subtitle"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginTop="4dp"
+                a:ellipsize="end"
+                a:singleLine="true"
+                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Héroes del Silencio · 1990 · 10 songs" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <LinearLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:gravity="center_vertical|end"
+        a:orientation="horizontal"
+        a:paddingStart="16dp"
+        a:paddingTop="10dp"
+        a:paddingEnd="16dp"
+        a:paddingBottom="6dp">
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/album_detail_download"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="38dp"
+            a:layout_height="38dp"
+            a:layout_marginEnd="4dp"
+            a:contentDescription="@string/album.download_description"
+            app:icon="@drawable/ic_menu_download"
+            app:iconSize="18dp"
+            app:iconTint="?attr/colorOnSurface" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/album_detail_shuffle"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="38dp"
+            a:layout_height="38dp"
+            a:layout_marginEnd="8dp"
+            a:contentDescription="@string/album.shuffle_description"
+            app:icon="@drawable/media_shuffle"
+            app:iconSize="16dp"
+            app:iconTint="?attr/colorOnSurface" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            a:id="@+id/album_detail_play"
+            a:layout_width="38dp"
+            a:layout_height="38dp"
+            a:alpha="0.85"
+            a:contentDescription="@string/album.play_description"
+            a:src="@drawable/media_start"
+            app:backgroundTint="?attr/colorSurfaceContainerHighest"
+            app:borderWidth="0dp"
+            app:elevation="0dp"
+            app:fabCustomSize="38dp"
+            app:maxImageSize="16dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ultrasonic.Circle"
+            app:tint="?attr/colorOnSurface" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        a:id="@+id/album_detail_about_section"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:orientation="vertical"
+        a:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            a:layout_width="wrap_content"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="16dp"
+            a:layout_marginTop="4dp"
+            a:layout_marginEnd="16dp"
+            a:layout_marginBottom="8dp"
+            a:text="@string/album.about"
+            a:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
+
+        <TextView
+            a:id="@+id/album_detail_notes"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_marginHorizontal="16dp"
+            a:ellipsize="end"
+            a:lineSpacingExtra="3dp"
+            a:maxLines="5"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Album notes supplied by the music server." />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/album_detail_notes_toggle"
+            style="@style/Widget.Material3.Button.TextButton"
+            a:layout_width="wrap_content"
+            a:layout_height="40dp"
+            a:layout_marginStart="4dp"
+            a:layout_marginBottom="4dp"
+            a:minHeight="40dp"
+            a:text="@string/artist.show_more"
+            a:textColor="?attr/colorOnSurface"
+            a:visibility="gone"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</LinearLayout>

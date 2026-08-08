@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="UltrasonicTheme.DayNight" parent="Theme.Material3.DynamicColors.DayNight">
-        <item name="colorPrimaryDark">?attr/colorSurface</item>
-        <item name="colorControlNormal">?attr/colorOnSurface</item>
-        <item name="colorControlHighlight">?attr/colorSecondary</item>
-        <item name="colorTertiary">@color/tertiary</item>
-    </style>
-</resources>

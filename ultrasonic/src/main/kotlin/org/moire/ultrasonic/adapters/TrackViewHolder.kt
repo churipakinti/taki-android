@@ -60,6 +60,7 @@ class TrackViewHolder(val view: View) :
 
     var check: CheckedTextView = view.findViewById(R.id.song_check)
     var drag: ImageView = view.findViewById(R.id.song_drag)
+    var menu: View = view.findViewById(R.id.song_menu)
     var observableChecked = MutableLiveData(false)
 
     private var star: ImageView = view.findViewById(R.id.song_star)
@@ -79,9 +80,20 @@ class TrackViewHolder(val view: View) :
 
     private var rxBusSubscription: CompositeDisposable? = null
 
-    @Suppress("ComplexMethod")
-    fun setSong(song: Track, checkable: Boolean, draggable: Boolean, isSelected: Boolean = false) {
+    @Suppress("ComplexMethod", "LongParameterList")
+    fun setSong(
+        song: Track,
+        checkable: Boolean,
+        draggable: Boolean,
+        isSelected: Boolean = false,
+        showArtist: Boolean = true,
+        showRating: Boolean = true,
+        trackNumberText: String? = null,
+        showRowActions: Boolean = false
+    ) {
         entry = song
+
+        menu.isVisible = showRowActions
 
         // Create new Disposable for the new Subscriptions
         rxBusSubscription = CompositeDisposable()
@@ -111,10 +123,14 @@ class TrackViewHolder(val view: View) :
         val entryDescription = Util.readableEntryDescription(song)
 
         artist.text = entryDescription.artist
+        artist.isGone = !showArtist
         title.text = entryDescription.title
         duration.text = entryDescription.duration
 
-        if (Settings.shouldShowTrackNumber && song.track != null && song.track!! > 0) {
+        if (trackNumberText != null) {
+            track.text = trackNumberText
+            if (track.isGone) track.isGone = false
+        } else if (Settings.shouldShowTrackNumber && song.track != null && song.track!! > 0) {
             track.text = entryDescription.trackNumber
         } else {
             if (!track.isGone) track.isGone = true
@@ -125,7 +141,7 @@ class TrackViewHolder(val view: View) :
         if (checkValue) initChecked(isSelected)
         if (drag.isVisible != draggable) drag.isVisible = draggable
 
-        if (ActiveServerProvider.isOffline()) {
+        if (!showRating || ActiveServerProvider.isOffline()) {
             star.isGone = true
         } else {
             setupRating(song)
@@ -280,7 +296,7 @@ class TrackViewHolder(val view: View) :
 
         when (status) {
             DownloadState.DONE -> {
-                showStatusImage(R.drawable.ic_downloaded)
+                showStatusImage(R.drawable.ic_downloaded_circle)
             }
 
             DownloadState.PINNED -> {

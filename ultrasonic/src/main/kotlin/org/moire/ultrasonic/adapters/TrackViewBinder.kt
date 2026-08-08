@@ -21,6 +21,14 @@ class TrackViewBinder(
     val checkable: Boolean,
     val draggable: Boolean,
     val lifecycleOwner: LifecycleOwner,
+    val layout: Int = R.layout.list_item_track,
+    val showArtist: (Track) -> Boolean = { true },
+    val showRating: Boolean = true,
+    val trackNumberText: ((Track) -> String?)? = null,
+    // Selection here means "tap toggles a checkbox instead of playing" -- off by default, only
+    // entered via long-press (see onEnterSelectionMode), not an always-on mode like it used to be.
+    val isSelectionModeActive: () -> Boolean = { false },
+    val onEnterSelectionMode: ((Track) -> Unit)? = null,
     val createContextMenu: (View, Track) -> PopupMenu = { view, _ ->
         Utils.createPopupMenu(
             view,
@@ -32,9 +40,6 @@ class TrackViewBinder(
 
     var startDrag: ((TrackViewHolder) -> Unit)? = null
 
-    // Set our layout files
-    val layout = R.layout.list_item_track
-
     override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): TrackViewHolder =
         TrackViewHolder(inflater.inflate(layout, parent, false))
 
@@ -44,41 +49,52 @@ class TrackViewBinder(
         val diffAdapter = adapter as BaseAdapter<*>
 
         val track = (item as? Track) ?: return
+        val selecting = checkable && isSelectionModeActive()
 
         // Remove observer before binding
         holder.observableChecked.removeObservers(lifecycleOwner)
 
         holder.setSong(
             song = track,
-            checkable = checkable,
+            checkable = selecting,
             draggable = draggable,
-            diffAdapter.isSelected(track.longId)
+            isSelected = diffAdapter.isSelected(track.longId),
+            showArtist = showArtist(track),
+            showRating = showRating,
+            trackNumberText = trackNumberText?.invoke(track),
+            showRowActions = checkable && !selecting && onContextMenuClick != null
         )
 
         holder.itemView.setOnLongClickListener {
-            if (onContextMenuClick != null) {
-                val popup = createContextMenu(holder.itemView, track)
-
-                popup.setOnMenuItemClickListener { menuItem ->
-                    onContextMenuClick.invoke(menuItem, track)
+            when {
+                checkable && !selecting -> onEnterSelectionMode?.invoke(track)
+                selecting && !track.isVideo -> holder.isChecked = !holder.check.isChecked
+                onContextMenuClick != null -> {
+                    val popup = createContextMenu(holder.itemView, track)
+                    popup.setOnMenuItemClickListener { menuItem ->
+                        onContextMenuClick.invoke(menuItem, track)
+                    }
                 }
-            } else {
-                // Minimize or maximize the Text view (if song title is very long)
-                if (!track.isDirectory) {
-                    holder.maximizeOrMinimize()
-                }
+                !track.isDirectory -> holder.maximizeOrMinimize()
             }
 
             true
         }
 
         holder.itemView.setOnClickListener {
-            if (checkable && !track.isVideo) {
+            if (selecting && !track.isVideo) {
                 val nowChecked = !holder.check.isChecked
                 holder.isChecked = nowChecked
             } else {
                 onItemClick(track, holder.bindingAdapterPosition)
             }
+        }
+
+        holder.menu.setOnClickListener { view ->
+            if (onContextMenuClick == null) return@setOnClickListener
+            // createContextMenu() already calls .show() internally (see Utils.createPopupMenu)
+            val popup = createContextMenu(view, track)
+            popup.setOnMenuItemClickListener { menuItem -> onContextMenuClick.invoke(menuItem, track) }
         }
 
         holder.drag.setOnTouchListener { _, event ->

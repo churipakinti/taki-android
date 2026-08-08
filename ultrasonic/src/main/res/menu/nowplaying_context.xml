@@ -13,5 +13,11 @@
     <item
         a:id="@+id/menu_shuffle"
         a:title="@string/download.menu_shuffle"/>
+    <item
+        a:id="@+id/song_menu_favorite"
+        a:title="@string/download.menu_favorite"/>
+    <item
+        a:id="@+id/song_menu_rate"
+        a:title="@string/download.menu_rate"/>
 
 </menu>

@@ -27,13 +27,6 @@ object Constants {
     const val INTENT_SHOW_PLAYER = "org.moire.ultrasonic.SHOW_PLAYER"
     const val INTENT_PLAY_RANDOM_SONGS = "org.moire.ultrasonic.CMD_RANDOM_SONGS"
 
-    // Legacy Preferences keys
-    // Warning: Don't add any new here!
-    // Use setting_keys.xml
-    const val PREFERENCE_VALUE_ALL = 0
-    const val PREFERENCE_VALUE_A2DP = 1
-    const val PREFERENCE_VALUE_DISABLED = 2
-
     const val FILENAME_PLAYLIST_SER = "downloadstate.ser"
     const val ALBUM_ART_FILE = "folder.jpeg"
     const val RESULT_CLOSE_ALL = 1337

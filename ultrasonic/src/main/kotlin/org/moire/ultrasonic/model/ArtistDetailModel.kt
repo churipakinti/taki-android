@@ -9,6 +9,7 @@ package org.moire.ultrasonic.model
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -78,29 +79,46 @@ class ArtistDetailModel :
         artistId: String,
         artistName: String
     ): List<Track> {
-        val criteria = SearchCriteria(
-            query = artistName,
-            artistCount = 0,
-            albumCount = 0,
-            songCount = TRACK_FETCH_SIZE,
-            musicFolderId = activeServerProvider.getActiveServer().musicFolderId,
-            artistId = artistId
-        )
+        // This is an optional fallback (top-songs already came back empty) — a failure here
+        // (network hiccup, old server) must not abort load() and leave albums.value unset.
+        return try {
+            val criteria = SearchCriteria(
+                query = artistName,
+                artistCount = 0,
+                albumCount = 0,
+                songCount = TRACK_FETCH_SIZE,
+                musicFolderId = activeServerProvider.getActiveServer().musicFolderId,
+                artistId = artistId
+            )
 
-        return service.search(criteria)?.songs.orEmpty()
-            .filter { track ->
-                track.artistId == artistId || track.artist.equals(artistName, ignoreCase = true)
-            }
-            .distinctBy { it.id }
+            service.search(criteria)?.songs.orEmpty()
+                .filter { track ->
+                    track.artistId == artistId ||
+                        track.artist.equals(artistName, ignoreCase = true)
+                }
+                .distinctBy { it.id }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            emptyList()
+        }
     }
 
     private suspend fun fetchTracksFromFirstAlbums(
         service: MusicService,
         albums: List<Album>
     ): List<Track> = withContext(Dispatchers.IO) {
-        albums.take(FALLBACK_ALBUM_COUNT).flatMap { album ->
-            service.getAlbumAsDir(album.id, album.title, false).getTracks()
-        }.distinctBy { it.id }
+        // Same reasoning as fetchArtistTracks(): this is the last fallback in the chain, a
+        // failure here must not prevent the already-fetched albums from being shown.
+        try {
+            albums.take(FALLBACK_ALBUM_COUNT).flatMap { album ->
+                service.getAlbumAsDir(album.id, album.title, false).getTracks()
+            }.distinctBy { it.id }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            emptyList()
+        }
     }
 
     companion object {
