@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:clickable="true"
+    a:focusable="true"
+    a:orientation="vertical"
+    a:paddingHorizontal="12dp"
+    a:paddingTop="10dp"
+    a:paddingBottom="10dp">
+
+    <org.moire.ultrasonic.view.SquareFrameLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content">
+
+        <ImageView
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:layout_gravity="center"
+            a:alpha="0.68"
+            a:background="@drawable/bg_playlist_create_icon"
+            a:contentDescription="@null"
+            a:padding="13dp"
+            a:src="@drawable/ic_add_white"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+    </org.moire.ultrasonic.view.SquareFrameLayout>
+
+    <TextView
+        style="@style/Ultrasonic.SecondaryText"
+        a:layout_width="match_parent"
+        a:layout_height="48dp"
+        a:layout_marginTop="7dp"
+        a:alpha="0.8"
+        a:gravity="center_vertical"
+        a:text="@string/playlist.create"
+        a:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
+</LinearLayout>

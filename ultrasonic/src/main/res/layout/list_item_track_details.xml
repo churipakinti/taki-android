@@ -75,6 +75,7 @@
 
         <TextView
             a:id="@+id/song_artist"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="0dip"
             a:layout_height="wrap_content"
             a:layout_gravity="top|left"
@@ -89,6 +90,7 @@
 
         <TextView
             a:id="@+id/song_duration"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_gravity="right|top"

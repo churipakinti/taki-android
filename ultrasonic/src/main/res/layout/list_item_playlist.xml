@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="96dp"
+    a:layout_marginHorizontal="10dp"
+    a:layout_marginVertical="5dp"
+    a:clickable="true"
+    a:focusable="true"
+    a:foreground="?android:attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+    app:cardCornerRadius="5dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        a:layout_width="match_parent"
+        a:layout_height="match_parent">
+
+        <LinearLayout
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="14dp"
+            a:layout_marginEnd="6dp"
+            a:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/playlist_action_container"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                a:id="@+id/playlist_name"
+                style="@style/Ultrasonic.PrimaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:ellipsize="end"
+                a:maxLines="1"
+                a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                tools:text="Daily Mix" />
+
+            <TextView
+                a:id="@+id/playlist_song_count"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginTop="2dp"
+                a:ellipsize="end"
+                a:maxLines="1"
+                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="24 songs" />
+
+            <TextView
+                a:id="@+id/playlist_download_status"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:ellipsize="end"
+                a:maxLines="1"
+                a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Downloaded" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            a:id="@+id/playlist_action_container"
+            a:layout_width="42dp"
+            a:layout_height="42dp"
+            a:layout_marginEnd="5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/playlist_cover_container"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                a:id="@+id/playlist_download"
+                a:layout_width="match_parent"
+                a:layout_height="match_parent"
+                a:background="?attr/selectableItemBackgroundBorderless"
+                a:contentDescription="@string/playlist.download_description"
+                a:focusable="false"
+                a:padding="10dp"
+                a:src="@drawable/ic_menu_download" />
+
+            <ProgressBar
+                a:id="@+id/playlist_download_progress"
+                a:layout_width="21dp"
+                a:layout_height="21dp"
+                a:layout_gravity="center"
+                a:indeterminate="true"
+                a:visibility="gone"
+                tools:visibility="visible" />
+
+        </FrameLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            a:id="@+id/playlist_cover_container"
+            a:layout_width="76dp"
+            a:layout_height="76dp"
+            a:layout_marginEnd="8dp"
+            a:rotation="6"
+            a:translationX="5dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="3dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="0dp">
+
+            <include layout="@layout/playlist_cover_collage" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

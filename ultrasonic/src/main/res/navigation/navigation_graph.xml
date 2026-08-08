@@ -28,6 +28,9 @@
     <action
         android:id="@+id/toPlaylistFragment"
         app:destination="@id/playlistsFragment" />
+    <action
+        android:id="@+id/toCreatePlaylist"
+        app:destination="@id/createPlaylistFragment" />
 
     <fragment
         android:id="@+id/mainFragment"
@@ -154,6 +157,10 @@
             android:name="offset"
             android:defaultValue="0"
             app:argType="integer" />
+        <argument
+            android:name="libraryRoot"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
     <fragment
         android:id="@+id/albumListFragment"
@@ -224,6 +231,13 @@
     <fragment
         android:id="@+id/playlistsFragment"
         android:name="org.moire.ultrasonic.fragment.legacy.PlaylistsFragment">
+    </fragment>
+    <fragment
+        android:id="@+id/createPlaylistFragment"
+        android:name="org.moire.ultrasonic.fragment.CreatePlaylistFragment">
+        <argument
+            android:name="playlistName"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/downloadsFragment"

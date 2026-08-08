@@ -159,7 +159,15 @@ open class RESTMusicService(
     @Throws(Exception::class)
     private fun searchOld(criteria: SearchCriteria): SearchResult {
         val response =
-            API.search(null, null, null, criteria.query, criteria.songCount, null, null)
+            API.search(
+                null,
+                null,
+                null,
+                criteria.query,
+                criteria.songCount,
+                criteria.songOffset,
+                null
+            )
                 .execute().throwOnFailure()
 
         return response.body()!!.searchResult.toDomainEntity(activeServerId)
@@ -174,11 +182,12 @@ open class RESTMusicService(
         val response = API.search2(
             criteria.query,
             criteria.artistCount,
-            null,
+            criteria.artistOffset,
             criteria.albumCount,
-            null,
+            criteria.albumOffset,
             criteria.songCount,
-            null
+            criteria.songOffset,
+            criteria.musicFolderId
         ).execute().throwOnFailure()
 
         return response.body()!!.searchResult.toDomainEntity(activeServerId)
@@ -190,11 +199,12 @@ open class RESTMusicService(
         val response = API.search3(
             criteria.query,
             criteria.artistCount,
-            null,
+            criteria.artistOffset,
             criteria.albumCount,
-            null,
+            criteria.albumOffset,
             criteria.songCount,
-            null
+            criteria.songOffset,
+            criteria.musicFolderId
         ).execute().throwOnFailure()
 
         return response.body()!!.searchResult.toDomainEntity(activeServerId)

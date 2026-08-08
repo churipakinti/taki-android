@@ -21,10 +21,13 @@
         android:layout_height="0dip"
         android:layout_weight="1.0">
 
-        <ListView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/select_genre_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="10dp"
+            tools:listitem="@layout/genre_card_item" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

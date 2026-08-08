@@ -5,9 +5,9 @@
     a:id="@+id/download_button_bar_flipper"
     a:layout_width="fill_parent"
     a:layout_height="wrap_content"
-    a:layout_marginStart="12dp"
-    a:layout_marginTop="10dp"
-    a:layout_marginEnd="12dp">
+    a:layout_marginStart="20dp"
+    a:layout_marginTop="6dp"
+    a:layout_marginEnd="20dp">
 
     <ImageView
         a:id="@+id/song_rating_heart"
@@ -24,6 +24,7 @@
 
     <TextView
         a:id="@+id/current_playing_song"
+        style="@style/Ultrasonic.PrimaryText"
         a:layout_width="0dp"
         a:layout_height="wrap_content"
         a:background="?android:attr/selectableItemBackground"
@@ -32,8 +33,7 @@
         a:focusable="true"
         a:gravity="left"
         a:singleLine="true"
-        a:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-        a:textStyle="bold"
+        a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
         app:layout_constraintEnd_toStartOf="@+id/song_rating_heart"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -41,14 +41,17 @@
 
     <TextView
         a:id="@+id/current_playing_artist"
+        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="0dp"
         a:layout_height="wrap_content"
+        a:layout_marginTop="6dp"
         a:layout_marginBottom="12dp"
         a:ellipsize="end"
         a:gravity="left"
         a:singleLine="true"
         a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
         a:textColor="?attr/colorOnSurfaceVariant"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/current_playing_song"

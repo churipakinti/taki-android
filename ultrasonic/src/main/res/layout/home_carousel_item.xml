@@ -27,6 +27,7 @@
 
         <TextView
             a:id="@+id/album_title"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:layout_marginHorizontal="10dp"
@@ -34,11 +35,11 @@
             a:ellipsize="end"
             a:singleLine="true"
             a:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-            a:textStyle="bold"
             tools:text="Title" />
 
         <TextView
             a:id="@+id/album_artist"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:layout_marginHorizontal="10dp"

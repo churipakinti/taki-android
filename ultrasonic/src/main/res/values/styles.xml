@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <style name="ShapeAppearanceOverlay.Ultrasonic.Circle" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="Ultrasonic.SecondaryText" parent="">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="Ultrasonic.PrimaryText" parent="">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
     <style name="Ultrasonic.AllCapsLabel" parent="">
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">?attr/colorPrimary</item>
@@ -52,7 +65,9 @@
 
     <style tools:ignore="PrivateResource" name="Widget.ChipDropdown" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
         <item name="shapeAppearance">?attr/shapeAppearanceSmallComponent</item>
-        <item name="boxStrokeColor">@color/m3_textfield_stroke_color</item>
+        <item name="boxStrokeColor">?attr/colorOutlineVariant</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">1dp</item>
     </style>
 
     <style name="Theme.AppWidget.AppWidgetContainerCropped" parent="Theme.AppWidget.AppWidgetContainer">

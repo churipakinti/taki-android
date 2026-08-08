@@ -14,13 +14,19 @@ import org.moire.ultrasonic.api.subsonic.models.Artist
 class APIArtistConverterTest : BaseTest() {
     @Test
     fun `Should convert artist entity`() {
-        val entity = Artist(id = "10", name = "artist-name", starred = Calendar.getInstance())
+        val entity = Artist(
+            id = "10",
+            name = "artist-name",
+            albumCount = 12,
+            starred = Calendar.getInstance()
+        )
 
         val convertedEntity = entity.toDomainEntity(serverId)
 
         with(convertedEntity) {
             id `should be equal to` entity.id
             name `should be equal to` entity.name
+            albumCount `should be equal to` entity.albumCount.toLong()
         }
     }
 

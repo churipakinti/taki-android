@@ -138,6 +138,22 @@ class OfflineMusicService :
     }
 
     override fun search(criteria: SearchCriteria): SearchResult {
+        criteria.artistId?.let { artistId ->
+            val songs = cachedTracks.byArtist(artistId)
+                .sortedBy { it.title.orEmpty().lowercase(Locale.ROOT) }
+                .drop(criteria.songOffset)
+                .take(criteria.songCount)
+            return SearchResult(songs = songs)
+        }
+
+        if (criteria.query.isBlank()) {
+            val songs = cachedTracks.get()
+                .sortedBy { it.title.orEmpty().lowercase(Locale.ROOT) }
+                .drop(criteria.songOffset)
+                .take(criteria.songCount)
+            return SearchResult(songs = songs)
+        }
+
         val artists: MutableList<ArtistOrIndex> = ArrayList()
         val albums: MutableList<Album> = ArrayList()
         val songs: MutableList<Track> = ArrayList()

@@ -30,6 +30,7 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.BaseAdapter
 import org.moire.ultrasonic.adapters.HomeAlbumDelegate
 import org.moire.ultrasonic.adapters.HomeShortcutDelegate
+import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.model.HomeViewModel
@@ -124,10 +125,22 @@ class HomeFragment : Fragment(), RefreshableFragment {
             findNavController().navigate(R.id.playlistsFragment)
         }
         view.findViewById<View>(R.id.home_quick_albums).setOnClickListener {
-            findNavController().navigate(R.id.mainFragment)
+            findNavController().navigate(
+                NavigationGraphDirections.toAlbumList(
+                    type = AlbumListType.NEWEST
+                )
+            )
         }
         view.findViewById<View>(R.id.home_quick_artists).setOnClickListener {
-            findNavController().navigate(NavigationGraphDirections.toMediaLibrary())
+            findNavController().navigate(NavigationGraphDirections.toArtistList())
+        }
+        view.findViewById<View>(R.id.home_quick_songs).setOnClickListener {
+            findNavController().navigate(
+                NavigationGraphDirections.toTrackCollection(libraryRoot = true)
+            )
+        }
+        view.findViewById<View>(R.id.home_quick_genres).setOnClickListener {
+            findNavController().navigate(NavigationGraphDirections.toGenreList())
         }
     }
 

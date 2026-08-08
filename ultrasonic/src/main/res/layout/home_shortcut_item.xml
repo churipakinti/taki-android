@@ -32,16 +32,17 @@
 
         <TextView
             a:id="@+id/shortcut_title"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:ellipsize="end"
             a:singleLine="true"
             a:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-            a:textStyle="bold"
             tools:text="Title" />
 
         <TextView
             a:id="@+id/shortcut_artist"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:ellipsize="end"

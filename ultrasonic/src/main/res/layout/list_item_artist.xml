@@ -14,7 +14,8 @@
     a:layout_height="wrap_content"
     a:background="?android:attr/selectableItemBackground"
     a:clickable="true"
-    a:focusable="true">
+    a:focusable="true"
+    a:minHeight="72dp">
 
     <TextView
         a:id="@+id/row_section"
@@ -31,28 +32,30 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         a:id="@+id/cover_art"
-        a:layout_width="40dp"
-        a:layout_height="40dp"
+        a:layout_width="56dp"
+        a:layout_height="56dp"
         a:layout_gravity="center_horizontal|center_vertical"
-        a:layout_marginStart="2dp"
+        a:layout_marginStart="8dp"
         a:layout_marginTop="8dp"
-        a:layout_marginEnd="10dp"
+        a:layout_marginEnd="12dp"
+        a:layout_marginBottom="8dp"
         a:layout_toEndOf="@+id/row_section"
-        a:scaleType="fitCenter"
-        a:src="@drawable/ic_contact_picture"
-        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent" />
+        a:scaleType="centerCrop"
+        a:src="@drawable/artist_placeholder"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ultrasonic.Circle" />
 
     <TextView
         a:id="@+id/row_artist_name"
+        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="fill_parent"
         a:layout_height="wrap_content"
         a:layout_marginEnd="12dp"
         a:layout_toEndOf="@+id/cover_art"
         a:drawablePadding="6dip"
         a:gravity="center_vertical"
-        a:minHeight="56dip"
+        a:minHeight="72dp"
         a:paddingStart="3dip"
         a:paddingEnd="3dip"
-        a:textAppearance="?android:attr/textAppearanceMedium" />
+        a:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
 
 </RelativeLayout>

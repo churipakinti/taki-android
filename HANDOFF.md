@@ -16,7 +16,7 @@ Turn Ultrasonic from a generic, feature-complete Subsonic client into a **music-
 
 ## How we work together
 
-- **The user tests in Android Studio; this environment cannot.** There is no Android SDK here — no `gradlew`, no emulator, no way to see the app render or get a stack trace except by asking the user to paste one from Logcat. Every change is validated by (a) XML well-formedness checks (PowerShell `[xml]` parsing), (b) careful manual reading for Kotlin/type correctness, and (c) the user actually running the app and reporting back — often with a screenshot, sometimes with a crash log. **Never claim something "works" — say what you verified and what you couldn't.**
+- **Build and device verification are available.** Use Android Studio's bundled JBR (`C:\Program Files\Android\Android Studio\jbr`) with `./gradlew.bat :ultrasonic:assembleDebug`. A Pixel 7 has been available through ADB for installation, UI hierarchy inspection, screenshots, and navigation checks; verify that it is still connected before relying on it. Continue to distinguish clearly between build verification, device interaction, and behavior that still needs user testing.
 - **Iterative and screenshot-driven.** The user shares a screenshot, gives specific feedback ("this shadow looks like a floating circle", "the corners are too round"), and expects a concrete fix, not a discussion — unless the request is genuinely ambiguous or has a real design tradeoff, in which case ask first (see next point).
 - **Ask before guessing on ambiguous or costly decisions.** Examples from this project: how to pick which artist/genre for the Mix, whether the Mix should regenerate every refresh or persist, how rounded corners should be, whether to hide or delete non-music features. Use targeted questions (2-4 options, not open-ended) rather than picking silently. For unambiguous, well-scoped asks, just implement — don't over-ask.
 - **Reuse existing patterns aggressively.** This codebase has established idioms for almost everything: `RefreshableFragment` + `toastingExceptionHandler()` for loading/error state, `BaseAdapter`/MultiType `ItemViewDelegate` classes for RecyclerView rows, `SettingsDelegate` subclasses (`StringSetting`, `BooleanSetting`, etc.) for SharedPreferences-backed state, `NavigationGraphDirections`/`PlayerFragmentDirections` for Safe Args navigation. **Search for the existing pattern before inventing a new one** — several bugs in this project came from not doing that carefully enough (see the bug write-ups in `CHANGES.md`, e.g. the `navArgs()` crash from bypassing a Safe Args action).
@@ -41,10 +41,14 @@ Turn Ultrasonic from a generic, feature-complete Subsonic client into a **music-
 4. **Full Player screen** trimmed to title/artist/progress; 5-star rating removed in favor of a single-line heart.
 5. **Podcasts/Video/Chat hidden** from UI only.
 6. Debug builds are labeled "ultrasonic-test".
+7. **Media Library redesigned**: Home now exposes horizontal shortcuts for Playlists, Artists, Albums, Songs, and Genres; artist and album lists support compact list/grid views and shared filtering; Songs has library-specific filters and playback behavior; Genres uses artwork-backed cards and opens its songs correctly.
+8. **Playlists are functional and redesigned**: server playlists open normally, new playlists can be created by selecting songs, download/removal state is visible, and list/grid modes use four-cover collages. List mode uses genre-inspired horizontal cards; grid mode uses two-column square artwork with labels below.
 
 ## Pending / next steps
 
-- **Apply the Home visual language to the rest of the app, one screen at a time** (explicitly agreed approach — not a big-bang rewrite). Not yet touched: Media Library (artist list), track/song lists (`TrackCollectionFragment`), Playlists, Search, Settings, Downloads, Bookmarks, Shares.
+- **Build a dedicated Spotify-inspired artist detail screen.** Selecting an artist currently routes to `AlbumListFragment` with `byArtist=true`, so the "detail" is only a toolbar title, filter control, and album grid. The agreed direction is a new `ArtistDetailFragment` with artwork/gradient hero, artist name, play/download actions, popular songs, and albums. The current API/domain data provides artist id, name, cover art, album count, albums, and searchable songs; biography/follower/similar-artist sections should be omitted unless a real data source is added.
+- **Continue internal detail screens one at a time:** album detail (`TrackCollectionFragment` + `list_header_album.xml`) needs a calmer header and less dominant track controls; the full player is already substantially restyled and should receive only a final compactness/toolbar pass after artist and album.
+- **Still pending visual passes:** Search, Settings, Downloads, Bookmarks, and Shares.
 - `Settings.showNowPlayingDetails` (a Settings screen toggle for genre/year/bitrate in the Player) is now a no-op since those fields were removed from that screen. Left in place, not deleted — flagged for the user to decide whether to remove it or resurrect the info elsewhere.
 - No commits had been made prior to this handoff being written; check `git log` for what's landed since.
 
@@ -55,5 +59,7 @@ Turn Ultrasonic from a generic, feature-complete Subsonic client into a **music-
 - `ultrasonic/src/main/res/layout/home_fragment.xml`, `home_*_item.xml` — Home's layouts.
 - `ultrasonic/src/main/res/layout/now_playing.xml` + `fragment/NowPlayingFragment.kt` — mini player bar.
 - `ultrasonic/src/main/res/layout/current_playing.xml`, `player_media_info.xml`, `player_slider.xml`, `media_buttons.xml` + `fragment/PlayerFragment.kt` — full player screen.
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/ArtistListFragment.kt`, `AlbumListFragment.kt`, and `TrackCollectionFragment.kt` — redesigned library entry points and the current routes that future artist/album detail work must split or refine.
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/legacy/PlaylistsFragment.kt` + `playlist_cover_collage.xml`, `list_item_playlist.xml`, and `grid_item_playlist.xml` — functional playlist list/grid and download state.
 - `ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/Settings.kt` / `SettingsDelegate.kt` — SharedPreferences-backed state pattern to reuse for any new persisted setting.
 - `CHANGES.md` — the real changelog. Read it before assuming something hasn't been tried.

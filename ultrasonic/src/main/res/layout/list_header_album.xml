@@ -27,6 +27,7 @@
 
     <TextView
         a:id="@+id/select_album_artist"
+        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
         a:layout_below="@+id/select_album_title"
@@ -38,6 +39,7 @@
 
     <TextView
         a:id="@+id/select_album_genre"
+        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
         a:layout_below="@+id/select_album_artist"
@@ -49,6 +51,7 @@
 
     <TextView
         a:id="@+id/select_album_year"
+        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
         a:layout_below="@+id/select_album_genre"
@@ -60,6 +63,7 @@
 
     <TextView
         a:id="@+id/select_album_song_count"
+        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
         a:layout_below="@+id/select_album_year"
@@ -71,6 +75,7 @@
 
     <TextView
         a:id="@+id/select_album_duration"
+        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
         a:layout_below="@+id/select_album_song_count"

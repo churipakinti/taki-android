@@ -117,6 +117,7 @@ interface SubsonicAPIDefinition {
         @Query("albumCount") albumCount: Int? = null,
         @Query("albumOffset") albumOffset: Int? = null,
         @Query("songCount") songCount: Int? = null,
+        @Query("songOffset") songOffset: Int? = null,
         @Query("musicFolderId") musicFolderId: String? = null
     ): Call<SearchTwoResponse>
 
@@ -128,6 +129,7 @@ interface SubsonicAPIDefinition {
         @Query("albumCount") albumCount: Int? = null,
         @Query("albumOffset") albumOffset: Int? = null,
         @Query("songCount") songCount: Int? = null,
+        @Query("songOffset") songOffset: Int? = null,
         @Query("musicFolderId") musicFolderId: String? = null
     ): Call<SearchThreeResponse>
 

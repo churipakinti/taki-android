@@ -65,6 +65,9 @@ class AlbumListFragment(
 
     private var selectedGenre: String? = null
 
+    private val isStandalone: Boolean
+        get() = parentFragment !is MainFragment
+
     /**
      * The central function to pass a query to the model and return a LiveData object
      */
@@ -215,6 +218,9 @@ class AlbumListFragment(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (orderType == null) {
+            orderType = navArgs.type.mapToSortOrder()
+        }
         if (savedInstanceState != null) {
             val orderTypeName = savedInstanceState.getString("order_type")
             if (orderTypeName != null) {
@@ -229,7 +235,7 @@ class AlbumListFragment(
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val layout = if (navArgs.byArtist) R.layout.list_layout_filterable else mainLayout
+        val layout = if (isStandalone) R.layout.list_layout_filterable else mainLayout
         return inflater.inflate(layout, container, false)
     }
 
@@ -263,8 +269,8 @@ class AlbumListFragment(
         // which provides its own FilterBar.
         // But when we are looking at the Albums of a specific Artist this Fragment is standalone,
         // so we need to setup the FilterBar here..
-        if (navArgs.byArtist) {
-            setTitle(navArgs.title)
+        if (isStandalone) {
+            setTitle(navArgs.title ?: getString(R.string.main_albums_title))
             setupFilterBar(view)
         }
 
@@ -296,21 +302,24 @@ class AlbumListFragment(
     }
 
     private fun setupFilterBar(view: View) {
-        // Load last layout from settings
-        layoutType = LayoutType.from(Settings.lastViewType)
+        // Standalone album screens use the cover grid as their visual baseline. The toolbar
+        // toggle still allows switching to the compact list when wanted.
+        layoutType = LayoutType.COVER
         filterButtonBar = view.findViewById(R.id.filter_button_bar)
         filterButtonBar!!.setOnLayoutTypeChangedListener(::setLayoutType)
         filterButtonBar!!.setOnOrderChangedListener(::setOrderType)
-        filterButtonBar!!.configureWithCapabilities(
+        val capabilities = if (navArgs.byArtist) {
             ViewCapabilities(
                 supportsGrid = true,
                 supportedSortOrders = listOf(
                     SortOrder.BY_NAME,
                     SortOrder.BY_YEAR
                 )
-            ),
-            orderType
-        )
+            )
+        } else {
+            viewCapabilities
+        }
+        filterButtonBar!!.configureWithCapabilities(capabilities, orderType)
 
         // Set layout toggle Chip to correct state
         filterButtonBar!!.setLayoutType(layoutType)
@@ -327,6 +336,7 @@ class AlbumListFragment(
     }
 
     private fun SortOrder.mapToAlbumListType(): AlbumListType = when (this) {
+        SortOrder.ALL_SONGS -> error("All songs is only supported by the song library")
         SortOrder.RANDOM -> AlbumListType.RANDOM
         SortOrder.NEWEST -> AlbumListType.NEWEST
         SortOrder.HIGHEST -> AlbumListType.HIGHEST
@@ -337,6 +347,19 @@ class AlbumListFragment(
         SortOrder.BY_GENRE -> AlbumListType.BY_GENRE
         SortOrder.STARRED -> AlbumListType.STARRED
         SortOrder.BY_YEAR -> AlbumListType.BY_YEAR
+    }
+
+    private fun AlbumListType.mapToSortOrder(): SortOrder = when (this) {
+        AlbumListType.RANDOM -> SortOrder.RANDOM
+        AlbumListType.NEWEST -> SortOrder.NEWEST
+        AlbumListType.HIGHEST -> SortOrder.HIGHEST
+        AlbumListType.FREQUENT -> SortOrder.FREQUENT
+        AlbumListType.RECENT -> SortOrder.RECENT
+        AlbumListType.SORTED_BY_NAME -> SortOrder.BY_NAME
+        AlbumListType.SORTED_BY_ARTIST -> SortOrder.BY_ARTIST
+        AlbumListType.BY_GENRE -> SortOrder.BY_GENRE
+        AlbumListType.STARRED -> SortOrder.STARRED
+        AlbumListType.BY_YEAR -> SortOrder.BY_YEAR
     }
 
     companion object {

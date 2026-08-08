@@ -23,6 +23,7 @@
 
         <TextView
             a:id="@+id/current_playing_position"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_alignParentLeft="true"
@@ -32,6 +33,7 @@
 
         <TextView
             a:id="@+id/current_playing_duration"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_alignParentRight="true"

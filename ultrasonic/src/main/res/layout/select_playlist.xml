@@ -1,9 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     a:layout_width="fill_parent"
     a:layout_height="fill_parent"
     a:orientation="vertical">
+
+    <FrameLayout
+        a:layout_width="match_parent"
+        a:layout_height="48dp">
+
+        <com.google.android.material.chip.Chip
+            a:id="@+id/playlist_view_toggle"
+            a:layout_width="40dp"
+            a:layout_height="40dp"
+            a:layout_gravity="center_vertical|end"
+            a:layout_marginEnd="8dp"
+            a:contentDescription="@string/grid_view"
+            a:minWidth="40dp"
+            app:chipBackgroundColor="@android:color/transparent"
+            app:chipIcon="@drawable/ic_baseline_view_grid"
+            app:chipIconSize="22dp"
+            app:chipEndPadding="8dp"
+            app:chipMinHeight="36dp"
+            app:chipStartPadding="8dp"
+            app:chipStrokeWidth="0dp"
+            app:ensureMinTouchTargetSize="false"
+            app:iconEndPadding="0dp"
+            app:iconStartPadding="0dp"
+            app:textEndPadding="0dp"
+            app:textStartPadding="0dp" />
+
+    </FrameLayout>
 
     <TextView
         a:id="@+id/select_playlist_empty"
@@ -21,10 +49,19 @@
         android:layout_height="0dip"
         android:layout_weight="1.0">
 
-        <ListView
+        <GridView
             android:id="@+id/select_playlist_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:columnWidth="160dp"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:horizontalSpacing="0dp"
+            android:numColumns="1"
+            android:paddingBottom="8dp"
+            android:clipToPadding="false"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="0dp" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

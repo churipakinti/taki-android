@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.textfield.TextInputLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:layout_marginHorizontal="24dp"
+    a:hint="@string/playlist.create_name">
+
+    <com.google.android.material.textfield.TextInputEditText
+        a:id="@+id/create_playlist_name"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:importantForAutofill="no"
+        a:inputType="textCapSentences"
+        a:maxLines="1" />
+
+</com.google.android.material.textfield.TextInputLayout>

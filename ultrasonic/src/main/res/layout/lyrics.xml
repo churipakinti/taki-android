@@ -24,6 +24,7 @@
                     a:paddingVertical="32dip">
                 <TextView
                         a:id="@+id/lyrics_artist"
+                        style="@style/Ultrasonic.SecondaryText"
                         a:textAppearance="?android:attr/textAppearanceMedium"
                         a:gravity="center_horizontal"
                         a:layout_width="fill_parent"

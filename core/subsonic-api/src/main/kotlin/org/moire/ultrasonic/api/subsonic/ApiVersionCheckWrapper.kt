@@ -87,6 +87,7 @@ internal class ApiVersionCheckWrapper(
         albumCount: Int?,
         albumOffset: Int?,
         songCount: Int?,
+        songOffset: Int?,
         musicFolderId: String?
     ): Call<SearchTwoResponse> {
         checkVersion(V1_4_0)
@@ -98,6 +99,7 @@ internal class ApiVersionCheckWrapper(
             albumCount,
             albumOffset,
             songCount,
+            songOffset,
             musicFolderId
         )
     }
@@ -109,6 +111,7 @@ internal class ApiVersionCheckWrapper(
         albumCount: Int?,
         albumOffset: Int?,
         songCount: Int?,
+        songOffset: Int?,
         musicFolderId: String?
     ): Call<SearchThreeResponse> {
         checkVersion(V1_8_0)
@@ -120,6 +123,7 @@ internal class ApiVersionCheckWrapper(
             albumCount,
             albumOffset,
             songCount,
+            songOffset,
             musicFolderId
         )
     }

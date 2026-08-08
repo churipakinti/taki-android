@@ -11,6 +11,7 @@ package org.moire.ultrasonic.view
  * This enum is very similar to AlbumListType, but not completely the same.
  */
 enum class SortOrder(val typeName: String) {
+    ALL_SONGS("allSongs"),
     RANDOM("random"),
     NEWEST("newest"),
     HIGHEST("highest"),

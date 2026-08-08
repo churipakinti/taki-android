@@ -30,7 +30,9 @@ class FilterButtonBar : ConstraintLayout {
     private var adapter: ArrayAdapter<TranslatedSortOrder>? = null
     private var orderChangedListener: ((SortOrder) -> Unit)? = null
     private var layoutTypeChangedListener: ((LayoutType) -> Unit)? = null
+    private var primaryActionListener: (() -> Unit)? = null
     private var layoutType: LayoutType = LayoutType.LIST
+    private var primaryAction: FilterPrimaryAction? = null
     private var viewTypeToggle: Chip? = null
     private var sortOrderMenu: TextInputLayout? = null
     private var sortOrderOptions: AppCompatAutoCompleteTextView? = null
@@ -53,8 +55,15 @@ class FilterButtonBar : ConstraintLayout {
      * @param currentSortOrder
      */
     fun configureWithCapabilities(caps: ViewCapabilities, currentSortOrder: SortOrder? = null) {
-        viewTypeToggle!!.isVisible = caps.supportsGrid
+        primaryAction = caps.primaryAction
+        viewTypeToggle!!.isVisible = caps.supportsGrid || primaryAction != null
         sortOrderMenu!!.isVisible = caps.supportedSortOrders.isNotEmpty()
+
+        if (primaryAction != null) {
+            updatePrimaryActionState(primaryAction!!)
+        } else {
+            updateToggleChipState(layoutType)
+        }
 
         if (caps.supportedSortOrders.isNotEmpty()) {
             Timber.i("Calculating order")
@@ -88,6 +97,10 @@ class FilterButtonBar : ConstraintLayout {
         layoutTypeChangedListener = callback
     }
 
+    fun setOnPrimaryActionClickListener(callback: () -> Unit) {
+        primaryActionListener = callback
+    }
+
     /**
      * This listener is called when the user has changed the sort order.
      * Register a callback from the linked fragment here, to trigger a resort
@@ -110,8 +123,12 @@ class FilterButtonBar : ConstraintLayout {
         sortOrderOptions = findViewById(R.id.sort_order_menu_options)
 
         viewTypeToggle!!.setOnClickListener {
-            val newType = setLayoutType()
-            layoutTypeChangedListener?.let { it(newType) }
+            if (primaryAction != null) {
+                primaryActionListener?.invoke()
+            } else {
+                val newType = setLayoutType()
+                layoutTypeChangedListener?.let { it(newType) }
+            }
         }
 
         @SuppressLint("PrivateResource")
@@ -135,7 +152,7 @@ class FilterButtonBar : ConstraintLayout {
      */
     fun setLayoutType(newType: LayoutType = toggleLayoutType()): LayoutType {
         layoutType = newType
-        updateToggleChipState(newType)
+        if (primaryAction == null) updateToggleChipState(newType)
         return newType
     }
 
@@ -163,22 +180,39 @@ class FilterButtonBar : ConstraintLayout {
             LayoutType.COVER -> {
                 viewTypeToggle!!.chipIcon = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.ic_baseline_view_grid
+                    R.drawable.ic_baseline_view_list
                 )
-                viewTypeToggle!!.text = context.getString(R.string.grid_view)
+                viewTypeToggle!!.text = null
+                viewTypeToggle!!.contentDescription = context.getString(R.string.list_view)
             }
 
             LayoutType.LIST -> {
                 viewTypeToggle!!.chipIcon = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.ic_baseline_view_list
+                    R.drawable.ic_baseline_view_grid
                 )
-                viewTypeToggle!!.text = context.getString(R.string.list_view)
+                viewTypeToggle!!.text = null
+                viewTypeToggle!!.contentDescription = context.getString(R.string.grid_view)
+            }
+        }
+    }
+
+    private fun updatePrimaryActionState(action: FilterPrimaryAction) {
+        when (action) {
+            FilterPrimaryAction.PLAY_ALL -> {
+                viewTypeToggle!!.chipIcon = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.media_start
+                )
+                viewTypeToggle!!.text = null
+                viewTypeToggle!!.contentDescription =
+                    context.getString(R.string.select_album_play_all)
             }
         }
     }
 
     private fun getStringForSortOrder(sortOrder: SortOrder): Int = when (sortOrder) {
+        SortOrder.ALL_SONGS -> R.string.main_songs_all
         SortOrder.RANDOM -> R.string.main_albums_random
         SortOrder.NEWEST -> R.string.main_albums_newest
         SortOrder.HIGHEST -> R.string.main_albums_highest
@@ -210,8 +244,13 @@ data class TranslatedSortOrder(val sortOrder: SortOrder, val string: String) {
  */
 data class ViewCapabilities(
     val supportsGrid: Boolean = false,
-    val supportedSortOrders: List<SortOrder>
+    val supportedSortOrders: List<SortOrder>,
+    val primaryAction: FilterPrimaryAction? = null
 )
+
+enum class FilterPrimaryAction {
+    PLAY_ALL
+}
 
 val EMPTY_CAPABILITIES = ViewCapabilities(
     supportsGrid = false,

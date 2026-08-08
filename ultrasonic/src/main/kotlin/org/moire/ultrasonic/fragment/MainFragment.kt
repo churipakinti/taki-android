@@ -80,6 +80,13 @@ class MainFragment :
             updateLayoutTypeOnCurrentFragment(it)
         }
 
+        filterButtonBar!!.setOnPrimaryActionClickListener {
+            val currentFragment = findCurrentFragment()
+            if (currentFragment is FilterableFragment) {
+                currentFragment.onPrimaryAction()
+            }
+        }
+
         filterButtonBar!!.setOnOrderChangedListener {
             updateSortOrderOnCurrentFragment(it)
         }
@@ -128,7 +135,8 @@ class MainFragment :
             curFrag.setLayoutType(it)
         }
 
-        Settings.lastViewType = layoutType.value
+        layoutType = it
+        Settings.lastViewType = it.value
     }
 
     private fun updateSortOrderOnCurrentFragment(it: SortOrder) {
@@ -196,9 +204,9 @@ class MusicCollectionAdapter(fragment: Fragment, initialType: LayoutType = Layou
         }
 
         val fragment = when (position) {
-            0 -> ArtistListFragment()
+            0 -> ArtistListFragment(layoutType)
             1 -> AlbumListFragment(layoutType)
-            2 -> TrackCollectionFragment(SortOrder.RANDOM)
+            2 -> TrackCollectionFragment(SortOrder.ALL_SONGS)
             else -> SelectGenreFragment()
         }
 
@@ -228,5 +236,6 @@ interface FilterableFragment {
     fun setLayoutType(newType: LayoutType) {}
     fun setOrderType(newOrder: SortOrder)
     fun getOrderType(): SortOrder? = null
+    fun onPrimaryAction() {}
     var viewCapabilities: ViewCapabilities
 }

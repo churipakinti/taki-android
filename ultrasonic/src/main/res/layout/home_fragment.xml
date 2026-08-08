@@ -60,7 +60,23 @@
                         style="@style/Widget.Material3.Button.TonalButton"
                         a:layout_width="wrap_content"
                         a:layout_height="wrap_content"
-                        a:text="@string/music_library.label" />
+                        a:layout_marginEnd="8dp"
+                        a:text="@string/main.artists_title" />
+
+                    <com.google.android.material.button.MaterialButton
+                        a:id="@+id/home_quick_songs"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        a:layout_width="wrap_content"
+                        a:layout_height="wrap_content"
+                        a:layout_marginEnd="8dp"
+                        a:text="@string/main.songs_title" />
+
+                    <com.google.android.material.button.MaterialButton
+                        a:id="@+id/home_quick_genres"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        a:layout_width="wrap_content"
+                        a:layout_height="wrap_content"
+                        a:text="@string/main.genres_title" />
 
                 </LinearLayout>
             </HorizontalScrollView>
@@ -121,16 +137,17 @@
 
                     <TextView
                         a:id="@+id/home_mix_title"
+                        style="@style/Ultrasonic.PrimaryText"
                         a:layout_width="match_parent"
                         a:layout_height="wrap_content"
                         a:ellipsize="end"
                         a:singleLine="true"
                         a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                        a:textStyle="bold"
                         tools:text="Mix: Reggae" />
 
                     <TextView
                         a:id="@+id/home_mix_subtitle"
+                        style="@style/Ultrasonic.SecondaryText"
                         a:layout_width="match_parent"
                         a:layout_height="wrap_content"
                         a:ellipsize="end"

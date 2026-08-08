@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:clickable="true"
+    a:focusable="true"
+    a:orientation="vertical"
+    a:paddingHorizontal="12dp"
+    a:paddingTop="10dp"
+    a:paddingBottom="10dp">
+
+    <org.moire.ultrasonic.view.SquareFrameLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content">
+
+        <com.google.android.material.card.MaterialCardView
+            a:id="@+id/playlist_cover_container"
+            a:layout_width="match_parent"
+            a:layout_height="match_parent"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
+            app:cardCornerRadius="5dp"
+            app:cardElevation="1dp"
+            app:strokeWidth="0dp">
+
+            <include layout="@layout/playlist_cover_collage" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </org.moire.ultrasonic.view.SquareFrameLayout>
+
+    <LinearLayout
+        a:layout_width="match_parent"
+        a:layout_height="48dp"
+        a:layout_marginTop="7dp"
+        a:gravity="center_vertical"
+        a:orientation="horizontal">
+
+        <TextView
+            a:id="@+id/playlist_name"
+            style="@style/Ultrasonic.PrimaryText"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_weight="1"
+            a:ellipsize="end"
+            a:maxLines="2"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            tools:text="Random Mix" />
+
+        <FrameLayout
+            a:id="@+id/playlist_action_container"
+            a:layout_width="42dp"
+            a:layout_height="42dp"
+            a:layout_marginStart="4dp">
+
+            <ImageButton
+                a:id="@+id/playlist_download"
+                a:layout_width="match_parent"
+                a:layout_height="match_parent"
+                a:background="?attr/selectableItemBackgroundBorderless"
+                a:contentDescription="@string/playlist.download_description"
+                a:focusable="false"
+                a:padding="10dp"
+                a:src="@drawable/ic_menu_download"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <ProgressBar
+                a:id="@+id/playlist_download_progress"
+                a:layout_width="20dp"
+                a:layout_height="20dp"
+                a:layout_gravity="center"
+                a:indeterminate="true"
+                a:indeterminateTint="?attr/colorOnSurfaceVariant"
+                a:visibility="gone"
+                tools:visibility="visible" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <TextView
+        a:id="@+id/playlist_song_count"
+        a:layout_width="0dp"
+        a:layout_height="0dp"
+        a:visibility="gone" />
+
+    <TextView
+        a:id="@+id/playlist_download_status"
+        a:layout_width="0dp"
+        a:layout_height="0dp"
+        a:visibility="gone" />
+
+</LinearLayout>

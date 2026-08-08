@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent">
+
+    <GridLayout
+        a:id="@+id/playlist_cover_grid"
+        a:layout_width="match_parent"
+        a:layout_height="match_parent"
+        a:columnCount="2"
+        a:padding="2dp"
+        a:rowCount="2">
+
+        <ImageView
+            a:id="@+id/playlist_cover_1"
+            a:layout_width="0dp"
+            a:layout_height="0dp"
+            a:layout_columnWeight="1"
+            a:layout_margin="2dp"
+            a:layout_rowWeight="1"
+            a:contentDescription="@null"
+            a:scaleType="centerCrop" />
+
+        <ImageView
+            a:id="@+id/playlist_cover_2"
+            a:layout_width="0dp"
+            a:layout_height="0dp"
+            a:layout_columnWeight="1"
+            a:layout_margin="2dp"
+            a:layout_rowWeight="1"
+            a:contentDescription="@null"
+            a:scaleType="centerCrop" />
+
+        <ImageView
+            a:id="@+id/playlist_cover_3"
+            a:layout_width="0dp"
+            a:layout_height="0dp"
+            a:layout_columnWeight="1"
+            a:layout_margin="2dp"
+            a:layout_rowWeight="1"
+            a:contentDescription="@null"
+            a:scaleType="centerCrop" />
+
+        <ImageView
+            a:id="@+id/playlist_cover_4"
+            a:layout_width="0dp"
+            a:layout_height="0dp"
+            a:layout_columnWeight="1"
+            a:layout_margin="2dp"
+            a:layout_rowWeight="1"
+            a:contentDescription="@null"
+            a:scaleType="centerCrop" />
+
+    </GridLayout>
+
+    <ImageView
+        a:id="@+id/playlist_default_icon"
+        a:layout_width="36dp"
+        a:layout_height="36dp"
+        a:layout_gravity="center"
+        a:alpha="0.74"
+        a:contentDescription="@null"
+        a:padding="5dp"
+        a:src="@drawable/ic_menu_playlists"
+        a:tint="@android:color/white" />
+
+</FrameLayout>

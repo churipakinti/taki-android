@@ -8,12 +8,15 @@
 package org.moire.ultrasonic.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -27,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.Collections
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -35,10 +39,12 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.AlbumHeader
 import org.moire.ultrasonic.adapters.AlbumRowDelegate
 import org.moire.ultrasonic.adapters.HeaderViewBinder
+import org.moire.ultrasonic.adapters.LibraryTrackBinder
 import org.moire.ultrasonic.adapters.TrackViewBinder
 import org.moire.ultrasonic.adapters.Utils
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.isOffline
+import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.MusicDirectory
 import org.moire.ultrasonic.domain.Track
@@ -58,6 +64,8 @@ import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util.navigateToCurrent
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
+import org.moire.ultrasonic.view.FilterButtonBar
+import org.moire.ultrasonic.view.FilterPrimaryAction
 import org.moire.ultrasonic.view.SortOrder
 import org.moire.ultrasonic.view.ViewCapabilities
 import timber.log.Timber
@@ -95,6 +103,12 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private val rxBusSubscription: CompositeDisposable = CompositeDisposable()
 
     private var sortOrder = initialOrder
+    private var selectedArtistId: String? = null
+    private var selectedArtistName: String? = null
+    private var selectedGenreName: String? = null
+    private var pendingFilterSelection: SortOrder? = null
+    private var availableArtists: List<ArtistOrIndex> = emptyList()
+    private var filterButtonBar: FilterButtonBar? = null
 
     /**
      * The id of the main layout
@@ -103,10 +117,22 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
     private val navArgs: TrackCollectionFragmentArgs by navArgs()
 
+    private val isMediaLibrarySongs: Boolean
+        get() = parentFragment is MainFragment || navArgs.libraryRoot
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (sortOrder == null && navArgs.libraryRoot) {
+            sortOrder = SortOrder.ALL_SONGS
+        }
         val sortOrderName = savedInstanceState?.getString("sort_order")
         sortOrderName?.let { sortOrder = SortOrder.valueOf(it) }
+        selectedArtistId = savedInstanceState?.getString(SELECTED_ARTIST_ID_KEY)
+        selectedArtistName = savedInstanceState?.getString(SELECTED_ARTIST_NAME_KEY)
+        selectedGenreName = savedInstanceState?.getString(SELECTED_GENRE_KEY)
+        pendingFilterSelection = savedInstanceState?.getString(PENDING_FILTER_KEY)?.let {
+            SortOrder.valueOf(it)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -121,6 +147,23 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
 
         setupButtons(view)
+
+        if (isMediaLibrarySongs) {
+            albumButtons?.isGone = true
+
+            if (navArgs.libraryRoot) {
+                filterButtonBar = view.findViewById(R.id.filter_button_bar)
+                filterButtonBar?.setOnOrderChangedListener(::setOrderType)
+                filterButtonBar?.setOnPrimaryActionClickListener(::onPrimaryAction)
+                filterButtonBar?.configureWithCapabilities(viewCapabilities, sortOrder)
+            }
+
+            childFragmentManager.setFragmentResultListener(
+                ItemSelectionDialogFragment.REQUEST_KEY,
+                viewLifecycleOwner,
+                ::handleFilterSelectionResult
+            )
+        }
 
         registerForContextMenu(listView!!)
 
@@ -147,18 +190,27 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             )
         )
 
-        viewAdapter.register(
-            TrackViewBinder(
-                onItemClick = { file, _ -> onItemClick(file) },
-                onContextMenuClick = { menu, id -> onContextMenuItemSelected(menu, id) },
-                checkable = true,
-                draggable = false,
-                lifecycleOwner = viewLifecycleOwner,
-                createContextMenu = { view, _ ->
-                    Utils.createPopupMenu(view, R.menu.context_menu_track_collection)
-                }
+        if (isMediaLibrarySongs) {
+            viewAdapter.register(
+                LibraryTrackBinder(
+                    onItemClick = ::onItemClick,
+                    onContextMenuClick = ::onContextMenuItemSelected
+                )
             )
-        )
+        } else {
+            viewAdapter.register(
+                TrackViewBinder(
+                    onItemClick = { file, _ -> onItemClick(file) },
+                    onContextMenuClick = { menu, id -> onContextMenuItemSelected(menu, id) },
+                    checkable = true,
+                    draggable = false,
+                    lifecycleOwner = viewLifecycleOwner,
+                    createContextMenu = { itemView, _ ->
+                        Utils.createPopupMenu(itemView, R.menu.context_menu_track_collection)
+                    }
+                )
+            )
+        }
 
         viewAdapter.register(
             AlbumRowDelegate(
@@ -200,10 +252,18 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString("sort_order", sortOrder?.name)
+        outState.putString(SELECTED_ARTIST_ID_KEY, selectedArtistId)
+        outState.putString(SELECTED_ARTIST_NAME_KEY, selectedArtistName)
+        outState.putString(SELECTED_GENRE_KEY, selectedGenreName)
+        outState.putString(PENDING_FILTER_KEY, pendingFilterSelection?.name)
     }
 
     private fun loadMoreTracks() {
-        if (displayRandom() || navArgs.genreName != null) {
+        if (
+            displayRandom() || selectedGenreName != null || navArgs.genreName != null ||
+            (selectedArtistId != null && listModel.canLoadMoreArtistSongs) ||
+            (displayAllSongs() && listModel.canLoadMoreAllSongs)
+        ) {
             getLiveData(append = true)
         }
     }
@@ -456,7 +516,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
 
         // Hide select button for video lists and singular selection lists
-        selectButton!!.isVisible = !allVideos && viewAdapter.hasMultipleSelection() && songCount > 0
+        selectButton?.isVisible = !isMediaLibrarySongs && !allVideos &&
+            viewAdapter.hasMultipleSelection() && songCount > 0
 
         // Show a text if we have no entries
         emptyView.isVisible = entryList.isEmpty()
@@ -465,8 +526,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         val isAlbumList = (navArgs.albumListType != null)
 
-        playAllButtonVisible = !(isAlbumList || entryList.isEmpty()) && !allVideos
-        shareButtonVisible = !isOffline() && songCount > 0
+        playAllButtonVisible = !isMediaLibrarySongs &&
+            !(isAlbumList || entryList.isEmpty()) && !allVideos
+        shareButtonVisible = !isMediaLibrarySongs && !isOffline() && songCount > 0
 
         playAllButton?.isVisible = playAllButtonVisible
         shareButton?.isVisible = shareButtonVisible
@@ -534,7 +596,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         val playlistName = navArgs.playlistName
         val shareId = navArgs.shareId
         val shareName = navArgs.shareName
-        val genreName = navArgs.genreName
+        val genreName = selectedGenreName ?: navArgs.genreName
+        val artistId = selectedArtistId
+        val artistName = selectedArtistName
 
         val getStarredTracks = displayStarred()
         val getVideos = navArgs.getVideos
@@ -542,6 +606,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         val size = if (navArgs.size < 0) Settings.maxSongs else navArgs.size
         val offset = navArgs.offset
         val refresh2 = navArgs.refresh || refresh
+
+        if (isMediaLibrarySongs) {
+            listModel.showHeader = false
+        }
 
         listModel.viewModelScope.launch(
             toastingExceptionHandler()
@@ -557,6 +625,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             } else if (shareId != null) {
                 setTitle(shareName)
                 listModel.getShare(shareId)
+            } else if (artistId != null && artistName != null) {
+                setTitle(artistName)
+                listModel.getSongsForArtist(artistId, artistName, size, append)
             } else if (genreName != null) {
                 setTitle(genreName)
                 listModel.getSongsForGenre(genreName, size, offset, append)
@@ -566,6 +637,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             } else if (getVideos) {
                 setTitle(R.string.main_videos)
                 listModel.getVideos(refresh2)
+            } else if (displayAllSongs()) {
+                setTitle(R.string.main_songs_title)
+                listModel.getAllSongs(size, offset, append)
             } else if (id == null || getRandomTracks) {
                 // There seems to be a bug in ViewPager when resuming the Activity that sub-fragments
                 // arguments are empty. If we have no id, just show some random tracks
@@ -589,6 +663,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private fun displayStarred() = (sortOrder == SortOrder.STARRED) || navArgs.getStarred
 
     private fun displayRandom() = (sortOrder == SortOrder.RANDOM) || navArgs.getRandom
+
+    private fun displayAllSongs() = sortOrder == SortOrder.ALL_SONGS
 
     override fun onContextMenuItemSelected(
         menuItem: MenuItem,
@@ -651,30 +727,152 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             }
 
             else -> {
-                triggerButtonUpdate()
+                if (isMediaLibrarySongs && item is Track) {
+                    playFromHere(item)
+                } else {
+                    triggerButtonUpdate()
+                }
             }
         }
     }
 
     override fun setOrderType(newOrder: SortOrder) {
         sortOrder = newOrder
-        getLiveData(refresh = true)
+        viewAdapter.setSelectionStatusOfAll(false)
+
+        when (newOrder) {
+            SortOrder.BY_ARTIST -> showArtistSelection()
+            SortOrder.BY_GENRE -> showGenreSelection()
+            else -> {
+                selectedArtistId = null
+                selectedArtistName = null
+                selectedGenreName = null
+                getLiveData(refresh = true)
+            }
+        }
     }
 
     override fun getOrderType(): SortOrder? = sortOrder
 
+    override fun onPrimaryAction() {
+        if (getAllTracks().isNotEmpty()) playAll()
+    }
+
     override var viewCapabilities: ViewCapabilities = ViewCapabilities(
         supportsGrid = false,
-        supportedSortOrders = getListOfSortOrders()
+        supportedSortOrders = getListOfSortOrders(),
+        primaryAction = FilterPrimaryAction.PLAY_ALL
     )
 
     private fun getListOfSortOrders(): List<SortOrder> {
         val isOnline = !isOffline()
-        val supported = mutableListOf(SortOrder.RANDOM)
+        val supported = mutableListOf(
+            SortOrder.ALL_SONGS,
+            SortOrder.RANDOM,
+            SortOrder.BY_ARTIST,
+            SortOrder.BY_GENRE
+        )
 
         if (isOnline) {
             supported.add(SortOrder.STARRED)
         }
         return supported
+    }
+
+    private fun showArtistSelection() {
+        pendingFilterSelection = SortOrder.BY_ARTIST
+        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+            swipeRefresh?.isRefreshing = true
+            availableArtists = try {
+                listModel.getArtists(true).sortedBy {
+                    it.name.orEmpty().lowercase(Locale.ROOT)
+                }
+            } finally {
+                swipeRefresh?.isRefreshing = false
+            }
+
+            showSelectionDialog(
+                R.string.main_artists_title,
+                availableArtists.mapNotNull { it.name }.toTypedArray()
+            )
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val layout = if (navArgs.libraryRoot) R.layout.list_layout_track_filterable else mainLayout
+        return inflater.inflate(layout, container, false)
+    }
+
+    private fun showGenreSelection() {
+        pendingFilterSelection = SortOrder.BY_GENRE
+        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+            swipeRefresh?.isRefreshing = true
+            val genres = try {
+                listModel.getGenres(true)
+            } finally {
+                swipeRefresh?.isRefreshing = false
+            }
+
+            showSelectionDialog(
+                R.string.main_genres_title,
+                genres.map { it.name }.sorted().toTypedArray()
+            )
+        }
+    }
+
+    private fun showSelectionDialog(title: Int, items: Array<String>) {
+        if (items.isEmpty()) return
+        if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
+            ItemSelectionDialogFragment.create(title, items)
+                .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
+        }
+    }
+
+    private fun handleFilterSelectionResult(requestKey: String, bundle: Bundle) {
+        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) {
+            pendingFilterSelection = null
+            swipeRefresh?.isRefreshing = false
+            return
+        }
+
+        val selectedName = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)
+            ?: return
+        when (pendingFilterSelection) {
+            SortOrder.BY_ARTIST -> applyArtistFilter(selectedName)
+            SortOrder.BY_GENRE -> {
+                selectedArtistId = null
+                selectedArtistName = null
+                selectedGenreName = selectedName
+                pendingFilterSelection = null
+                getLiveData(refresh = true)
+            }
+
+            else -> Unit
+        }
+    }
+
+    private fun applyArtistFilter(artistName: String) {
+        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+            val artist = availableArtists.firstOrNull { it.name == artistName }
+                ?: listModel.getArtists(false).firstOrNull { it.name == artistName }
+                ?: return@launch
+
+            selectedArtistId = artist.id
+            selectedArtistName = artist.name
+            selectedGenreName = null
+            pendingFilterSelection = null
+            getLiveData(refresh = true)
+        }
+    }
+
+    companion object {
+        private const val SELECTED_ARTIST_ID_KEY = "songs_selected_artist_id"
+        private const val SELECTED_ARTIST_NAME_KEY = "songs_selected_artist_name"
+        private const val SELECTED_GENRE_KEY = "songs_selected_genre"
+        private const val PENDING_FILTER_KEY = "songs_pending_filter"
     }
 }

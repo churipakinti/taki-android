@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    a:layout_width="match_parent"
+    a:layout_height="64dp"
+    a:background="?attr/selectableItemBackground"
+    a:clickable="true"
+    a:focusable="true"
+    a:gravity="center_vertical"
+    a:orientation="horizontal"
+    a:paddingHorizontal="16dp">
+
+    <ImageView
+        a:layout_width="36dp"
+        a:layout_height="36dp"
+        a:alpha="0.72"
+        a:background="@drawable/bg_playlist_create_icon"
+        a:contentDescription="@null"
+        a:padding="8dp"
+        a:src="@drawable/ic_add_white"
+        app:tint="?attr/colorOnSurface" />
+
+    <TextView
+        style="@style/Ultrasonic.SecondaryText"
+        a:layout_width="wrap_content"
+        a:layout_height="wrap_content"
+        a:layout_marginStart="14dp"
+        a:alpha="0.82"
+        a:text="@string/playlist.create"
+        a:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
+</LinearLayout>

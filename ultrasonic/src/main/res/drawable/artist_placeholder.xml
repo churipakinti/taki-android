@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:a="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape a:shape="oval">
+            <solid a:color="?attr/colorSurfaceContainerHighest" />
+        </shape>
+    </item>
+
+    <item
+        a:width="48dp"
+        a:height="48dp"
+        a:drawable="@drawable/artist_placeholder_icon"
+        a:gravity="center" />
+
+</layer-list>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="92dp"
+    a:layout_margin="6dp"
+    a:clickable="true"
+    a:focusable="true"
+    a:foreground="?android:attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+    app:cardCornerRadius="4dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        a:layout_width="match_parent"
+        a:layout_height="match_parent">
+
+        <TextView
+            a:id="@+id/genre_name"
+            style="@style/Ultrasonic.PrimaryText"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="14dp"
+            a:layout_marginEnd="6dp"
+            a:ellipsize="end"
+            a:maxLines="2"
+            a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/genre_cover_container"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Alternative Rock" />
+
+        <com.google.android.material.card.MaterialCardView
+            a:id="@+id/genre_cover_container"
+            a:layout_width="72dp"
+            a:layout_height="72dp"
+            a:rotation="10"
+            a:translationX="12dp"
+            app:cardCornerRadius="3dp"
+            app:cardElevation="3dp"
+            app:strokeWidth="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                a:id="@+id/genre_cover"
+                a:layout_width="match_parent"
+                a:layout_height="match_parent"
+                a:contentDescription="@string/albumArt"
+                a:scaleType="centerCrop"
+                a:src="@drawable/genre_placeholder" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

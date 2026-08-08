@@ -31,16 +31,18 @@
 
         <TextView
             a:id="@+id/now_playing_title"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_gravity="start"
             a:ellipsize="marquee"
             a:singleLine="true"
-            a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             tools:text="Title" />
 
         <TextView
             a:id="@+id/now_playing_artist"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_gravity="start"
@@ -48,7 +50,7 @@
             a:scrollHorizontally="true"
             a:singleLine="true"
             tools:text="Artist"
-            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
             a:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 

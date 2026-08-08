@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent"
+    a:orientation="vertical">
+
+    <com.google.android.material.textfield.TextInputLayout
+        a:id="@+id/playlist_song_search_layout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:layout_marginHorizontal="12dp"
+        a:layout_marginTop="8dp"
+        a:hint="@string/playlist.search_songs"
+        app:endIconDrawable="@drawable/ic_menu_search"
+        app:endIconMode="custom">
+
+        <com.google.android.material.textfield.TextInputEditText
+            a:id="@+id/playlist_song_search"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:imeOptions="actionSearch"
+            a:importantForAutofill="no"
+            a:inputType="text"
+            a:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <org.moire.ultrasonic.view.FilterButtonBar
+        a:id="@+id/playlist_song_filter_bar"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content" />
+
+    <ProgressBar
+        a:id="@+id/playlist_song_progress"
+        a:layout_width="32dp"
+        a:layout_height="32dp"
+        a:layout_gravity="center_horizontal"
+        a:layout_margin="12dp"
+        a:visibility="gone"
+        tools:visibility="visible" />
+
+    <TextView
+        a:id="@+id/playlist_song_empty"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:gravity="center"
+        a:padding="24dp"
+        a:text="@string/playlist.no_songs_found"
+        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        a:textColor="?attr/colorOnSurfaceVariant"
+        a:visibility="gone"
+        tools:visibility="visible" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        a:id="@+id/playlist_song_list"
+        a:layout_width="match_parent"
+        a:layout_height="0dp"
+        a:layout_weight="1"
+        a:clipToPadding="false"
+        a:paddingBottom="8dp"
+        tools:listitem="@layout/list_item_playlist_track_picker" />
+
+    <LinearLayout
+        a:layout_width="match_parent"
+        a:layout_height="64dp"
+        a:background="?attr/colorSurfaceContainer"
+        a:gravity="center_vertical"
+        a:orientation="horizontal"
+        a:paddingHorizontal="16dp">
+
+        <TextView
+            a:id="@+id/playlist_selected_count"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_weight="1"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            tools:text="3 songs selected" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/playlist_save"
+            a:layout_width="wrap_content"
+            a:layout_height="wrap_content"
+            a:enabled="false"
+            a:text="@string/common.save" />
+
+    </LinearLayout>
+
+</LinearLayout>

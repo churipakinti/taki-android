@@ -13,24 +13,26 @@
         a:layout_height="0dip"
         a:layout_weight="1" >
 
-        <RelativeLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             a:id="@+id/current_playing_album_art_layout"
             a:layout_width="fill_parent"
-            a:layout_height="fill_parent"
-            a:gravity="center"
-            a:orientation="vertical" >
+            a:layout_height="fill_parent">
 
             <com.google.android.material.imageview.ShapeableImageView
                 a:id="@+id/current_playing_album_art_image"
-                a:layout_width="match_parent"
-                a:layout_height="match_parent"
+                a:layout_width="0dp"
+                a:layout_height="0dp"
                 a:layout_margin="36dp"
-                a:layout_centerInParent="true"
                 a:scaleType="centerCrop"
                 a:contentDescription="@string/albumArt"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent"/>
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent" />
 
-        </RelativeLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <include layout="@layout/current_playlist" a:id="@+id/playlist"/>
     </ViewFlipper>

@@ -129,6 +129,18 @@ class SubsonicApiSearchTwoTest : SubsonicAPIClientTest() {
     }
 
     @Test
+    fun `Should pass song offset in request param`() {
+        val songOffset = 35
+
+        mockWebServerRule.assertRequestParam(
+            responseResourceName = "search2_ok.json",
+            expectedParam = "songOffset=$songOffset"
+        ) {
+            client.api.search2("some", songOffset = songOffset).execute()
+        }
+    }
+
+    @Test
     fun `Should pass music folder id in request param`() {
         val musicFolderId = "565"
 

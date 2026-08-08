@@ -35,15 +35,17 @@ import org.moire.ultrasonic.util.Util
 /**
  * Creates a Row in a RecyclerView which contains the details of an Artist
  */
-class ArtistRowBinder(
+open class ArtistRowBinder(
     val onItemClick: (ArtistOrIndex) -> Unit,
     val onContextMenuClick: (MenuItem, ArtistOrIndex) -> Boolean,
-    private val enableSections: Boolean = true
+    private val enableSections: Boolean = true,
+    private val layout: Int = R.layout.list_item_artist,
+    private val alwaysShowPicture: Boolean = false,
+    private val defaultPicture: Int = R.drawable.ic_contact_picture
 ) : ItemViewBinder<ArtistOrIndex, ArtistRowBinder.ViewHolder>(),
     KoinComponent,
     Utils.SectionedBinder {
 
-    val layout = R.layout.list_item_artist
     val contextMenuLayout = R.menu.context_menu_artist
 
     override fun onBindViewHolder(holder: ViewHolder, item: ArtistOrIndex) {
@@ -65,7 +67,7 @@ class ArtistRowBinder(
 
         val imageLoaderProvider: ImageLoaderProvider by inject()
 
-        if (showArtistPicture()) {
+        if (alwaysShowPicture || showArtistPicture()) {
             holder.coverArt.visibility = View.VISIBLE
             CoroutineScope(Dispatchers.IO).launch {
                 val key = FileUtil.getArtistArtKey(item.name, false)
@@ -78,7 +80,7 @@ class ArtistRowBinder(
                             key = key,
                             large = false,
                             size = 0,
-                            defaultResourceId = R.drawable.ic_contact_picture
+                            defaultResourceId = defaultPicture
                         )
                     }
                 }
@@ -144,3 +146,15 @@ class ArtistRowBinder(
         const val SECTION_KEY_DEFAULT = "#"
     }
 }
+
+class ArtistGridBinder(
+    onItemClick: (ArtistOrIndex) -> Unit,
+    onContextMenuClick: (MenuItem, ArtistOrIndex) -> Boolean
+) : ArtistRowBinder(
+    onItemClick = onItemClick,
+    onContextMenuClick = onContextMenuClick,
+    enableSections = false,
+    layout = R.layout.grid_item_artist,
+    alwaysShowPicture = true,
+    defaultPicture = R.drawable.artist_placeholder
+)

@@ -5,8 +5,12 @@
     a:id="@+id/card"
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
-    a:layout_margin="8dp"
-    style="?attr/materialCardViewFilledStyle">
+    a:layout_marginHorizontal="6dp"
+    a:layout_marginVertical="8dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         a:id="@+id/containing_layout"
@@ -20,10 +24,10 @@
             a:id="@+id/cover_art"
             a:layout_width="match_parent"
             a:layout_height="0dp"
-            a:layout_gravity="center_horizontal|center_vertical"
-            a:adjustViewBounds="true"
-            a:scaleType="fitCenter"
+            a:scaleType="centerCrop"
             a:src="@drawable/unknown_album"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             a:contentDescription="@string/albumArt" />
@@ -34,8 +38,8 @@
             a:layout_height="wrap_content"
             a:gravity="center_vertical"
             a:orientation="vertical"
-            a:padding="11dp"
-            a:paddingTop="0dp"
+            a:paddingTop="8dp"
+            a:paddingBottom="8dp"
             app:layout_constraintEnd_toEndOf="@+id/cover_art"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/cover_art">
@@ -44,17 +48,20 @@
                 a:id="@+id/album_title"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:ellipsize="marquee"
+                a:ellipsize="end"
                 a:singleLine="true"
-                a:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                 tools:text="Title" />
 
             <TextView
                 a:id="@+id/album_artist"
+                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
+                a:ellipsize="end"
                 a:singleLine="true"
-                a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                a:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Artist" />
 
         </LinearLayout>
@@ -68,6 +75,7 @@
             a:gravity="center_horizontal"
             a:padding="4dp"
             a:src="@drawable/rating_star_hollow"
+            a:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/cover_art"
             app:layout_constraintEnd_toEndOf="@+id/cover_art" />
 

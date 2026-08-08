@@ -18,7 +18,8 @@ fun APIArtist.toDomainEntity(serverId: Int): Artist = Artist(
     id = this@toDomainEntity.id,
     serverId = serverId,
     coverArt = this@toDomainEntity.coverArt,
-    name = this@toDomainEntity.name
+    name = this@toDomainEntity.name,
+    albumCount = this@toDomainEntity.albumCount.toLong()
 )
 
 // When we like to convert to an index (eg. a single directory).
@@ -26,7 +27,8 @@ fun APIArtist.toIndexEntity(serverId: Int): Index = Index(
     id = this@toIndexEntity.id,
     serverId = serverId,
     coverArt = this@toIndexEntity.coverArt,
-    name = this@toIndexEntity.name
+    name = this@toIndexEntity.name,
+    albumCount = this@toIndexEntity.albumCount.toLong()
 )
 
 fun APIArtist.toMusicDirectoryDomainEntity(serverId: Int): MusicDirectory = MusicDirectory().apply {

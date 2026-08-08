@@ -14,7 +14,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.data.ActiveServerProvider
+import org.moire.ultrasonic.domain.ArtistOrIndex
+import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.MusicDirectory
+import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
@@ -28,6 +31,14 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
 
     val currentList: MutableLiveData<List<MusicDirectory.Child>> = MutableLiveData()
     private var loadedUntil: Int = 0
+    private var allSongsNextOffset: Int = 0
+    private var allSongsLoading: Boolean = false
+    var canLoadMoreAllSongs: Boolean = true
+        private set
+    private var artistSongsNextOffset: Int = 0
+    private var artistSongsLoading: Boolean = false
+    var canLoadMoreArtistSongs: Boolean = true
+        private set
 
     /*
      * Especially when dealing with indexes, this method can return Albums, Entries or a mix of both!
@@ -104,6 +115,95 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         }
     }
 
+    suspend fun getAllSongs(count: Int, offset: Int, append: Boolean) {
+        if (allSongsLoading || (append && !canLoadMoreAllSongs)) return
+        allSongsLoading = true
+
+        try {
+            if (!append) {
+                allSongsNextOffset = offset
+                canLoadMoreAllSongs = true
+            }
+
+            withContext(Dispatchers.IO) {
+                val service = MusicServiceFactory.getMusicService()
+                val criteria = SearchCriteria(
+                    query = "",
+                    artistCount = 0,
+                    albumCount = 0,
+                    songCount = count,
+                    songOffset = allSongsNextOffset,
+                    musicFolderId = activeServer.musicFolderId
+                )
+                val songs = service.search(criteria)?.songs.orEmpty()
+                val musicDirectory = MusicDirectory().apply { addAll(songs) }
+
+                currentListIsSortable = false
+                updateList(musicDirectory, append)
+                allSongsNextOffset += songs.size
+                canLoadMoreAllSongs = songs.size == count
+            }
+        } finally {
+            allSongsLoading = false
+        }
+    }
+
+    suspend fun getSongsForArtist(
+        artistId: String,
+        artistName: String,
+        count: Int,
+        append: Boolean
+    ) {
+        if (artistSongsLoading || (append && !canLoadMoreArtistSongs)) return
+        artistSongsLoading = true
+
+        try {
+            if (!append) {
+                artistSongsNextOffset = 0
+                canLoadMoreArtistSongs = true
+            }
+
+            withContext(Dispatchers.IO) {
+                val service = MusicServiceFactory.getMusicService()
+                val criteria = SearchCriteria(
+                    query = artistName,
+                    artistCount = 0,
+                    albumCount = 0,
+                    songCount = count,
+                    songOffset = artistSongsNextOffset,
+                    musicFolderId = activeServer.musicFolderId,
+                    artistId = artistId
+                )
+                val searchSongs = service.search(criteria)?.songs.orEmpty()
+                val exactSongs = searchSongs.filter { track ->
+                    track.artistId == artistId || track.artist.equals(artistName, ignoreCase = true)
+                }
+                val musicDirectory = MusicDirectory().apply { addAll(exactSongs) }
+
+                currentListIsSortable = false
+                updateList(musicDirectory, append)
+                artistSongsNextOffset += searchSongs.size
+                canLoadMoreArtistSongs = searchSongs.size == count
+            }
+        } finally {
+            artistSongsLoading = false
+        }
+    }
+
+    suspend fun getArtists(refresh: Boolean): List<ArtistOrIndex> =
+        withContext(Dispatchers.IO) {
+            val service = MusicServiceFactory.getMusicService()
+            if (ActiveServerProvider.shouldUseId3Tags()) {
+                service.getArtists(refresh)
+            } else {
+                service.getIndexes(activeServer.musicFolderId, refresh)
+            }
+        }
+
+    suspend fun getGenres(refresh: Boolean): List<Genre> = withContext(Dispatchers.IO) {
+        MusicServiceFactory.getMusicService().getGenres(refresh)
+    }
+
     suspend fun getPlaylist(playlistId: String, playlistName: String) {
         withContext(Dispatchers.IO) {
             val service = MusicServiceFactory.getMusicService()
@@ -156,7 +256,7 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
     private fun updateList(root: MusicDirectory, append: Boolean = false) {
         val newList = if (append) {
             // Prevent duplicates.
-            (currentList.value!! + root.getChildren()).distinctBy { it.id }
+            (currentList.value.orEmpty() + root.getChildren()).distinctBy { it.id }
         } else {
             root.getChildren()
         }
