@@ -1,0 +1,22 @@
+{
+  "subsonic-response": {
+    "status": "ok",
+    "version": "1.16.1",
+    "artistInfo2": {
+      "biography": "An influential hard rock band.",
+      "musicBrainzId": "66c662b6-6e2f-4930-8610-912e24c63ed1",
+      "lastFmUrl": "https://www.last.fm/music/AC%2FDC",
+      "smallImageUrl": "https://example.test/acdc-small.jpg",
+      "mediumImageUrl": "https://example.test/acdc-medium.jpg",
+      "largeImageUrl": "https://example.test/acdc-large.jpg",
+      "similarArtist": [
+        {
+          "id": "artist-2",
+          "name": "Airbourne",
+          "coverArt": "ar-artist-2",
+          "albumCount": 5
+        }
+      ]
+    }
+  }
+}

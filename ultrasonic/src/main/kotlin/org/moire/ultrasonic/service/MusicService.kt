@@ -10,6 +10,7 @@ import java.io.InputStream
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Artist
+import org.moire.ultrasonic.domain.ArtistInfo
 import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.ChatMessage
 import org.moire.ultrasonic.domain.Genre
@@ -60,6 +61,12 @@ interface MusicService {
 
     @Throws(Exception::class)
     fun getAlbumsOfArtist(id: String, name: String?, refresh: Boolean): List<Album>
+
+    @Throws(Exception::class)
+    fun getArtistInfo(id: String): ArtistInfo? = null
+
+    @Throws(Exception::class)
+    fun getTopSongs(artistName: String, count: Int): List<Track> = emptyList()
 
     @Throws(Exception::class)
     fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory

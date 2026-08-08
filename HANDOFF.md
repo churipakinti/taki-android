@@ -43,14 +43,17 @@ Turn Ultrasonic from a generic, feature-complete Subsonic client into a **music-
 6. Debug builds are labeled "ultrasonic-test".
 7. **Media Library redesigned**: Home now exposes horizontal shortcuts for Playlists, Artists, Albums, Songs, and Genres; artist and album lists support compact list/grid views and shared filtering; Songs has library-specific filters and playback behavior; Genres uses artwork-backed cards and opens its songs correctly.
 8. **Playlists are functional and redesigned**: server playlists open normally, new playlists can be created by selecting songs, download/removal state is visible, and list/grid modes use four-cover collages. List mode uses genre-inspired horizontal cards; grid mode uses two-column square artwork with labels below.
+9. **Artist detail is now dedicated and functional**: selecting a real artist opens `ArtistDetailFragment` instead of the generic album grid. It has a full-width artwork/gradient hero, scroll-revealed toolbar title, play/download-all actions, five compact song shortcuts, and a horizontal album shelf. `getTopSongs` supplies the real Popular ranking when available; `getArtistInfo2` optionally adds an expandable biography and similar-artist carousel. Both endpoints fail softly to the existing search/album data when the server or its external metadata agents cannot supply them. Index/folder entries still follow the legacy track-collection route.
 
 ## Pending / next steps
 
-- **Build a dedicated Spotify-inspired artist detail screen.** Selecting an artist currently routes to `AlbumListFragment` with `byArtist=true`, so the "detail" is only a toolbar title, filter control, and album grid. The agreed direction is a new `ArtistDetailFragment` with artwork/gradient hero, artist name, play/download actions, popular songs, and albums. The current API/domain data provides artist id, name, cover art, album count, albums, and searchable songs; biography/follower/similar-artist sections should be omitted unless a real data source is added.
-- **Continue internal detail screens one at a time:** album detail (`TrackCollectionFragment` + `list_header_album.xml`) needs a calmer header and less dominant track controls; the full player is already substantially restyled and should receive only a final compactness/toolbar pass after artist and album.
+- **Agreed implementation order for internal screens:**
+  1. **Album detail next.** Refine `TrackCollectionFragment` + `list_header_album.xml` with a calmer header, compact metadata/actions, and less dominant track controls. Reuse the song-row language established by the artist's "Popular" section instead of designing another unrelated row.
+  2. **Full Player last.** It is already substantially restyled; give it only a final compactness, spacing, and toolbar pass after the artist and album patterns are stable.
 - **Still pending visual passes:** Search, Settings, Downloads, Bookmarks, and Shares.
 - `Settings.showNowPlayingDetails` (a Settings screen toggle for genre/year/bitrate in the Player) is now a no-op since those fields were removed from that screen. Left in place, not deleted — flagged for the user to decide whether to remove it or resurrect the info elsewhere.
-- No commits had been made prior to this handoff being written; check `git log` for what's landed since.
+- The work is checkpointed in local commits on `develop`; inspect `git log` before starting a
+  new visual pass. Never push to the configured upstream without a separate explicit request.
 
 ## Key files
 
@@ -60,6 +63,8 @@ Turn Ultrasonic from a generic, feature-complete Subsonic client into a **music-
 - `ultrasonic/src/main/res/layout/now_playing.xml` + `fragment/NowPlayingFragment.kt` — mini player bar.
 - `ultrasonic/src/main/res/layout/current_playing.xml`, `player_media_info.xml`, `player_slider.xml`, `media_buttons.xml` + `fragment/PlayerFragment.kt` — full player screen.
 - `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/ArtistListFragment.kt`, `AlbumListFragment.kt`, and `TrackCollectionFragment.kt` — redesigned library entry points and the current routes that future artist/album detail work must split or refine.
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/ArtistDetailFragment.kt` + `model/ArtistDetailModel.kt` + `artist_detail.xml` — dedicated artist hero/actions/songs/albums screen.
+- `core/subsonic-api/src/main/kotlin/org/moire/ultrasonic/api/subsonic/SubsonicAPIDefinition.kt` + `models/ArtistInfo.kt` — optional artist biography/similar-artists and real top-song endpoints.
 - `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/legacy/PlaylistsFragment.kt` + `playlist_cover_collage.xml`, `list_item_playlist.xml`, and `grid_item_playlist.xml` — functional playlist list/grid and download state.
 - `ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/Settings.kt` / `SettingsDelegate.kt` — SharedPreferences-backed state pattern to reuse for any new persisted setting.
 - `CHANGES.md` — the real changelog. Read it before assuming something hasn't been tried.

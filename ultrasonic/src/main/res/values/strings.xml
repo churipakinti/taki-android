@@ -17,6 +17,20 @@
     <string name="home.greeting_morning">Good morning</string>
     <string name="home.greeting_afternoon">Good afternoon</string>
     <string name="home.greeting_evening">Good evening</string>
+    <string name="artist.popular">Popular</string>
+    <string name="artist.albums">Albums</string>
+    <string name="artist.about">About</string>
+    <string name="artist.similar">Similar artists</string>
+    <string name="artist.show_more">Show more</string>
+    <string name="artist.show_less">Show less</string>
+    <string name="artist.empty">No music was found for this artist.</string>
+    <string name="artist.artwork_description">Artist artwork</string>
+    <string name="artist.download_description">Download this artist</string>
+    <string name="artist.play_description">Play this artist</string>
+    <plurals name="artist_album_count">
+        <item quantity="one">%1$d album</item>
+        <item quantity="other">%1$d albums</item>
+    </plurals>
     <string name="button_bar.now_playing">Now Playing</string>
     <string name="buttons.play">Play</string>
     <string name="buttons.pause">Pause</string>

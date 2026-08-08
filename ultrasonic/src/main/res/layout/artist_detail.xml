@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:id="@+id/swipe_refresh_view"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent"
+    tools:context="org.moire.ultrasonic.fragment.ArtistDetailFragment">
+
+    <androidx.core.widget.NestedScrollView
+        a:id="@+id/artist_detail_scroll"
+        a:layout_width="match_parent"
+        a:layout_height="match_parent"
+        a:fillViewport="true">
+
+        <LinearLayout
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:orientation="vertical"
+            a:paddingBottom="32dp">
+
+            <FrameLayout
+                a:id="@+id/artist_detail_hero"
+                a:layout_width="match_parent"
+                a:layout_height="300dp">
+
+                <ImageView
+                    a:id="@+id/artist_detail_art"
+                    a:layout_width="match_parent"
+                    a:layout_height="match_parent"
+                    a:contentDescription="@string/artist.artwork_description"
+                    a:scaleType="centerCrop"
+                    a:src="@drawable/artist_placeholder" />
+
+                <View
+                    a:layout_width="match_parent"
+                    a:layout_height="match_parent"
+                    a:background="@drawable/bg_artist_hero_gradient"
+                    a:importantForAccessibility="no" />
+
+                <LinearLayout
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:layout_gravity="bottom"
+                    a:orientation="vertical"
+                    a:paddingStart="20dp"
+                    a:paddingEnd="20dp"
+                    a:paddingBottom="16dp">
+
+                    <TextView
+                        a:id="@+id/artist_detail_name"
+                        style="@style/Ultrasonic.PrimaryText"
+                        a:layout_width="match_parent"
+                        a:layout_height="wrap_content"
+                        a:maxLines="2"
+                        a:shadowColor="#99000000"
+                        a:shadowDx="0"
+                        a:shadowDy="1"
+                        a:shadowRadius="3"
+                        a:textAppearance="@style/TextAppearance.Material3.HeadlineLarge"
+                        a:textColor="?attr/colorOnSurface"
+                        tools:text="Héroes del Silencio" />
+
+                    <TextView
+                        a:id="@+id/artist_detail_album_count"
+                        style="@style/Ultrasonic.SecondaryText"
+                        a:layout_width="wrap_content"
+                        a:layout_height="wrap_content"
+                        a:layout_marginTop="4dp"
+                        a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                        a:textColor="?attr/colorOnSurfaceVariant"
+                        a:visibility="invisible"
+                        tools:text="8 albums"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <LinearLayout
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:gravity="center_vertical|end"
+                a:orientation="horizontal"
+                a:paddingStart="16dp"
+                a:paddingTop="10dp"
+                a:paddingEnd="16dp"
+                a:paddingBottom="6dp">
+
+                <com.google.android.material.button.MaterialButton
+                    a:id="@+id/artist_detail_download"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    a:layout_width="48dp"
+                    a:layout_height="48dp"
+                    a:layout_marginEnd="12dp"
+                    a:contentDescription="@string/artist.download_description"
+                    app:icon="@drawable/ic_menu_download"
+                    app:iconSize="25dp"
+                    app:iconTint="?attr/colorOnSurface" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    a:id="@+id/artist_detail_play"
+                    a:layout_width="56dp"
+                    a:layout_height="56dp"
+                    a:contentDescription="@string/artist.play_description"
+                    a:src="@drawable/media_start"
+                    app:backgroundTint="?attr/colorPrimary"
+                    app:borderWidth="0dp"
+                    app:tint="?attr/colorOnPrimary" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/artist_detail_popular_section"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginStart="16dp"
+                    a:layout_marginTop="14dp"
+                    a:layout_marginEnd="16dp"
+                    a:layout_marginBottom="6dp"
+                    a:text="@string/artist.popular"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/artist_detail_tracks"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:nestedScrollingEnabled="false"
+                    tools:itemCount="5"
+                    tools:listitem="@layout/artist_popular_track_item" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/artist_detail_albums_section"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginStart="16dp"
+                    a:layout_marginTop="24dp"
+                    a:layout_marginEnd="16dp"
+                    a:layout_marginBottom="10dp"
+                    a:text="@string/artist.albums"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/artist_detail_albums"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:clipToPadding="false"
+                    a:paddingStart="16dp"
+                    a:paddingEnd="4dp"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/home_carousel_item" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/artist_detail_about_section"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical"
+                a:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginStart="16dp"
+                    a:layout_marginTop="24dp"
+                    a:layout_marginEnd="16dp"
+                    a:layout_marginBottom="8dp"
+                    a:text="@string/artist.about"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
+
+                <TextView
+                    a:id="@+id/artist_detail_biography"
+                    style="@style/Ultrasonic.SecondaryText"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:layout_marginHorizontal="16dp"
+                    a:ellipsize="end"
+                    a:lineSpacingExtra="3dp"
+                    a:maxLines="5"
+                    a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    a:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Artist biography supplied by the music server." />
+
+                <com.google.android.material.button.MaterialButton
+                    a:id="@+id/artist_detail_biography_toggle"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    a:layout_width="wrap_content"
+                    a:layout_height="40dp"
+                    a:layout_marginStart="4dp"
+                    a:minHeight="40dp"
+                    a:text="@string/artist.show_more"
+                    a:textColor="?attr/colorOnSurface"
+                    a:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/artist_detail_similar_section"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical"
+                a:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginStart="16dp"
+                    a:layout_marginTop="24dp"
+                    a:layout_marginEnd="16dp"
+                    a:layout_marginBottom="10dp"
+                    a:text="@string/artist.similar"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/artist_detail_similar"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:clipToPadding="false"
+                    a:paddingStart="16dp"
+                    a:paddingEnd="4dp"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/artist_similar_item" />
+
+            </LinearLayout>
+
+            <TextView
+                a:id="@+id/artist_detail_empty"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginTop="40dp"
+                a:gravity="center"
+                a:padding="32dp"
+                a:text="@string/artist.empty"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                a:visibility="gone" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

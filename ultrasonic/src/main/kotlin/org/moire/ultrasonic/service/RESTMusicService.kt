@@ -21,6 +21,7 @@ import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.shouldUseId3Tags
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Artist
+import org.moire.ultrasonic.domain.ArtistInfo
 import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.ChatMessage
 import org.moire.ultrasonic.domain.Genre
@@ -43,8 +44,11 @@ import org.moire.ultrasonic.domain.toDomainEntityList
 import org.moire.ultrasonic.domain.toIndexList
 import org.moire.ultrasonic.domain.toMusicDirectoryDomainEntity
 import org.moire.ultrasonic.domain.toTrackEntity
+import org.moire.ultrasonic.domain.toTrackList
 import org.moire.ultrasonic.util.FileUtil
 import timber.log.Timber
+
+private const val SIMILAR_ARTIST_COUNT = 12
 
 /**
  * This Music Service implementation connects to a server using the Subsonic REST API
@@ -125,6 +129,23 @@ open class RESTMusicService(
         val response = API.getArtist(id).execute().throwOnFailure()
 
         return response.body()!!.artist.toDomainEntityList(activeServerId)
+    }
+
+    @Throws(Exception::class)
+    override fun getArtistInfo(id: String): ArtistInfo {
+        val response = API.getArtistInfo2(
+            id = id,
+            count = SIMILAR_ARTIST_COUNT,
+            includeNotPresent = false
+        ).execute().throwOnFailure()
+
+        return response.body()!!.artistInfo.toDomainEntity(activeServerId)
+    }
+
+    @Throws(Exception::class)
+    override fun getTopSongs(artistName: String, count: Int): List<Track> {
+        val response = API.getTopSongs(artistName, count).execute().throwOnFailure()
+        return response.body()!!.songsList.toTrackList(activeServerId)
     }
 
     @Throws(Exception::class)

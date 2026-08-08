@@ -23,7 +23,6 @@ import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.ArtistGridBinder
 import org.moire.ultrasonic.adapters.ArtistRowBinder
-import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Index
@@ -217,13 +216,10 @@ class ArtistListFragment(
                 isArtist = false
             )
         } else {
-            NavigationGraphDirections.toAlbumList(
-                type = AlbumListType.SORTED_BY_NAME,
-                byArtist = true,
-                id = item.id,
-                title = item.name,
-                size = 1000,
-                offset = 0
+            NavigationGraphDirections.toArtistDetail(
+                artistId = item.id,
+                artistName = item.name ?: getString(R.string.common_artist),
+                artistCoverArt = item.coverArt
             )
         }
 

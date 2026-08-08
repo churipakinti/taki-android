@@ -10,6 +10,7 @@ package org.moire.ultrasonic.api.subsonic
 import okhttp3.ResponseBody
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions.V1_11_0
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions.V1_12_0
+import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions.V1_13_0
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions.V1_14_0
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions.V1_2_0
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIVersions.V1_3_0
@@ -28,6 +29,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetAlbumList2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumListResponse
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumResponse
 import org.moire.ultrasonic.api.subsonic.response.GetArtistResponse
+import org.moire.ultrasonic.api.subsonic.response.GetArtistInfo2Response
 import org.moire.ultrasonic.api.subsonic.response.GetArtistsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetLyricsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPlaylistsResponse
@@ -36,6 +38,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetRandomSongsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetSongsByGenreResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredTwoResponse
+import org.moire.ultrasonic.api.subsonic.response.GetTopSongsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetUserResponse
 import org.moire.ultrasonic.api.subsonic.response.JukeboxResponse
 import org.moire.ultrasonic.api.subsonic.response.SearchThreeResponse
@@ -73,6 +76,20 @@ internal class ApiVersionCheckWrapper(
     override fun getArtist(id: String): Call<GetArtistResponse> {
         checkVersion(V1_8_0)
         return api.getArtist(id)
+    }
+
+    override fun getArtistInfo2(
+        id: String,
+        count: Int?,
+        includeNotPresent: Boolean?
+    ): Call<GetArtistInfo2Response> {
+        checkVersion(V1_11_0)
+        return api.getArtistInfo2(id, count, includeNotPresent)
+    }
+
+    override fun getTopSongs(artist: String, count: Int?): Call<GetTopSongsResponse> {
+        checkVersion(V1_13_0)
+        return api.getTopSongs(artist, count)
     }
 
     override fun getAlbum(id: String): Call<GetAlbumResponse> {

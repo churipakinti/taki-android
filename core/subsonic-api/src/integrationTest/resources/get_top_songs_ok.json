@@ -1,0 +1,23 @@
+{
+  "subsonic-response": {
+    "status": "ok",
+    "version": "1.16.1",
+    "topSongs": {
+      "song": [
+        {
+          "id": "song-1",
+          "parent": "album-1",
+          "isDir": false,
+          "title": "Back in Black",
+          "album": "Back in Black",
+          "artist": "AC/DC",
+          "coverArt": "al-album-1",
+          "duration": 255,
+          "albumId": "album-1",
+          "artistId": "artist-1",
+          "type": "music"
+        }
+      ]
+    }
+  }
+}

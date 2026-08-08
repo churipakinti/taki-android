@@ -1,5 +1,50 @@
 # Changes
 
+## Pantalla interna de artista
+
+- Se agregó `ArtistDetailFragment`, una pantalla dedicada inspirada en Spotify que reemplaza
+  la antigua redirección del artista a una cuadrícula genérica de álbumes.
+- El encabezado usa la portada real del artista a todo lo ancho, degradado hacia la superficie,
+  nombre destacado, cantidad real de álbumes y un toolbar compacto que revela el nombre al
+  desplazarse.
+- Se incorporaron acciones funcionales para reproducir o descargar toda la discografía del
+  artista usando las rutas existentes de `MediaPlayerManager` y `DownloadUtil`.
+- La sección **Popular** muestra cinco accesos compactos con portada, álbum y duración. Al tocar
+  una canción se inicia la cola del artista recuperada por la búsqueda del servidor desde esa
+  posición.
+- La sección **Albums** reutiliza las tarjetas horizontales de Home, ordena la discografía por
+  año descendente y abre cada álbum en su colección normal de canciones.
+- La carga tiene pull-to-refresh, estado vacío seguro y un fallback que toma canciones de los
+  primeros álbumes cuando el servidor no devuelve coincidencias de búsqueda.
+- Se añadió soporte para `getTopSongs`: **Popular** usa ahora el ranking real del servidor y
+  conserva la búsqueda/primeros álbumes como fallback si el endpoint no está disponible o no
+  devuelve resultados para ese artista.
+- Se añadió soporte para `getArtistInfo2`: cuando el servidor lo entrega, la pantalla muestra
+  una biografía expandible y un carrusel de artistas similares, cuyas tarjetas abren su propia
+  página de artista. Ambos bloques se ocultan limpiamente cuando faltan metadatos.
+- La información externa es enriquecimiento opcional: fallos de agentes externos o servidores
+  Subsonic antiguos no impiden cargar la discografía ni reproducir el artista.
+- Se añadieron pruebas de contrato para el parseo y los parámetros de `getArtistInfo2` y
+  `getTopSongs`. El APK se compiló, instaló y verificó contra el servidor real: el ranking de
+  Rammstein devolvió canciones destacadas como “Du hast”, “Deutschland” y “Sonne”.
+- La lista general de artistas conserva sus vistas de lista/cuadrícula y filtros; solo cambió
+  el destino de sus tarjetas reales. Los índices/carpetas mantienen su navegación anterior.
+
+Archivos principales:
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/ArtistDetailFragment.kt`
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/model/ArtistDetailModel.kt`
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/adapters/ArtistPopularTrackDelegate.kt`
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/adapters/SimilarArtistDelegate.kt`
+- `ultrasonic/src/main/res/layout/artist_detail.xml`
+- `ultrasonic/src/main/res/layout/artist_popular_track_item.xml`
+- `ultrasonic/src/main/res/layout/artist_similar_item.xml`
+- `ultrasonic/src/main/res/drawable/bg_artist_hero_gradient.xml`
+- `ultrasonic/src/main/res/navigation/navigation_graph.xml`
+- `core/subsonic-api/src/main/kotlin/org/moire/ultrasonic/api/subsonic/SubsonicAPIDefinition.kt`
+- `core/subsonic-api/src/main/kotlin/org/moire/ultrasonic/api/subsonic/models/ArtistInfo.kt`
+- `core/subsonic-api/src/integrationTest/kotlin/org/moire/ultrasonic/api/subsonic/SubsonicApiGetArtistInfo2Test.kt`
+- `core/subsonic-api/src/integrationTest/kotlin/org/moire/ultrasonic/api/subsonic/SubsonicApiGetTopSongsTest.kt`
+
 - Simplified the playlist creation row label and softened its typography and icon treatment.
 - Added compact-list and two-column square-grid playlist views with a view toggle,
   four-cover collages, neutral surfaces, and integrated download actions.

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:id="@+id/artist_track_container"
+    a:layout_width="match_parent"
+    a:layout_height="68dp"
+    a:background="?android:attr/selectableItemBackground"
+    a:clickable="true"
+    a:focusable="true"
+    a:gravity="center_vertical"
+    a:orientation="horizontal"
+    a:paddingStart="12dp"
+    a:paddingEnd="16dp">
+
+    <TextView
+        a:id="@+id/artist_track_rank"
+        style="@style/Ultrasonic.SecondaryText"
+        a:layout_width="28dp"
+        a:layout_height="wrap_content"
+        a:gravity="center"
+        a:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+        a:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="1" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        a:id="@+id/artist_track_cover"
+        a:layout_width="48dp"
+        a:layout_height="48dp"
+        a:importantForAccessibility="no"
+        a:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent"
+        tools:src="@drawable/unknown_album" />
+
+    <LinearLayout
+        a:layout_width="0dp"
+        a:layout_height="wrap_content"
+        a:layout_marginStart="12dp"
+        a:layout_weight="1"
+        a:orientation="vertical">
+
+        <TextView
+            a:id="@+id/artist_track_title"
+            style="@style/Ultrasonic.PrimaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            tools:text="Song title" />
+
+        <TextView
+            a:id="@+id/artist_track_album"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_marginTop="2dp"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Album" />
+
+    </LinearLayout>
+
+    <TextView
+        a:id="@+id/artist_track_duration"
+        style="@style/Ultrasonic.SecondaryText"
+        a:layout_width="wrap_content"
+        a:layout_height="wrap_content"
+        a:layout_marginStart="8dp"
+        a:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+        a:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="3:42" />
+
+</LinearLayout>

@@ -17,6 +17,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetAlbumList2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumListResponse
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumResponse
 import org.moire.ultrasonic.api.subsonic.response.GetArtistResponse
+import org.moire.ultrasonic.api.subsonic.response.GetArtistInfo2Response
 import org.moire.ultrasonic.api.subsonic.response.GetArtistsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetIndexesResponse
 import org.moire.ultrasonic.api.subsonic.response.GetLyricsResponse
@@ -28,6 +29,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetRandomSongsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetSongsByGenreResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredTwoResponse
+import org.moire.ultrasonic.api.subsonic.response.GetTopSongsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetUserResponse
 import org.moire.ultrasonic.api.subsonic.response.JukeboxResponse
 import org.moire.ultrasonic.api.subsonic.response.LicenseResponse
@@ -94,6 +96,19 @@ interface SubsonicAPIDefinition {
 
     @GET("getArtist.view")
     fun getArtist(@Query("id") id: String): Call<GetArtistResponse>
+
+    @GET("getArtistInfo2.view")
+    fun getArtistInfo2(
+        @Query("id") id: String,
+        @Query("count") count: Int? = null,
+        @Query("includeNotPresent") includeNotPresent: Boolean? = null
+    ): Call<GetArtistInfo2Response>
+
+    @GET("getTopSongs.view")
+    fun getTopSongs(
+        @Query("artist") artist: String,
+        @Query("count") count: Int? = null
+    ): Call<GetTopSongsResponse>
 
     @GET("getAlbum.view")
     fun getAlbum(@Query("id") id: String): Call<GetAlbumResponse>

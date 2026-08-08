@@ -16,6 +16,7 @@ import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.MetaDatabase
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Artist
+import org.moire.ultrasonic.domain.ArtistInfo
 import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.ChatMessage
 import org.moire.ultrasonic.domain.Genre
@@ -176,6 +177,11 @@ class CachedMusicService(private val musicService: MusicService) :
         }
         return result
     }
+
+    override fun getArtistInfo(id: String): ArtistInfo? = musicService.getArtistInfo(id)
+
+    override fun getTopSongs(artistName: String, count: Int): List<Track> =
+        musicService.getTopSongs(artistName, count)
 
     @Throws(Exception::class)
     override fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory {
