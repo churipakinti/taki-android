@@ -63,7 +63,7 @@ class ServerSelectorFragment : Fragment() {
         listView?.onItemClickListener = AdapterView.OnItemClickListener { parent, _, position, _ ->
             val server = parent.getItemAtPosition(position) as ServerSetting
             activeServerProvider.setActiveServerById(server.id)
-            findNavController().popBackStack(R.id.mainFragment, false)
+            findNavController().popBackStack(R.id.homeFragment, false)
         }
 
         val fab = view.findViewById<FloatingActionButton>(R.id.server_add_fab)

@@ -34,7 +34,7 @@
         a:contentDescription="@string/buttons.previous"
         a:focusable="true"
         a:scaleType="fitCenter"
-        app:icon="@drawable/media_backward"
+        app:icon="@drawable/media_backward_shadow"
         app:iconGravity="textEnd"
         app:iconSize="32dp" />
 
@@ -49,7 +49,7 @@
         a:scaleType="fitCenter"
         tools:visibility="gone"
         a:contentDescription="@string/buttons.play"
-        app:icon="@drawable/media_start"
+        app:icon="@drawable/media_start_shadow"
         app:iconGravity="textEnd"
         app:iconSize="48dp" />
 
@@ -63,7 +63,7 @@
         a:contentDescription="@string/buttons.pause"
         a:focusable="true"
         a:scaleType="fitCenter"
-        app:icon="@drawable/media_pause"
+        app:icon="@drawable/media_pause_shadow"
         app:iconGravity="textEnd"
         app:iconSize="48dp" />
 
@@ -93,7 +93,7 @@
         a:contentDescription="@string/buttons.next"
         a:focusable="true"
         a:scaleType="fitCenter"
-        app:icon="@drawable/media_forward"
+        app:icon="@drawable/media_forward_shadow"
         app:iconGravity="textEnd"
         app:iconSize="32dp" />
 

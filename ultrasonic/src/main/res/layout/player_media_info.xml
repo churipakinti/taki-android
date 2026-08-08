@@ -9,16 +9,32 @@
     a:layout_marginTop="10dp"
     a:layout_marginEnd="12dp">
 
+    <ImageView
+        a:id="@+id/song_rating_heart"
+        a:layout_width="28dp"
+        a:layout_height="28dp"
+        a:background="@android:color/transparent"
+        a:contentDescription="@string/download.menu_star"
+        a:focusable="false"
+        a:importantForAccessibility="no"
+        a:scaleType="fitCenter"
+        a:src="@drawable/rating_heart_hollow_layered"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         a:id="@+id/current_playing_song"
-        a:layout_width="wrap_content"
+        a:layout_width="0dp"
         a:layout_height="wrap_content"
+        a:background="?android:attr/selectableItemBackground"
+        a:clickable="true"
         a:ellipsize="marquee"
+        a:focusable="true"
         a:gravity="left"
-        a:paddingRight="30dip"
         a:singleLine="true"
         a:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+        a:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/song_rating_heart"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Title" />
@@ -27,79 +43,15 @@
         a:id="@+id/current_playing_artist"
         a:layout_width="0dp"
         a:layout_height="wrap_content"
-        a:layout_marginEnd="10dp"
+        a:layout_marginBottom="12dp"
         a:ellipsize="end"
         a:gravity="left"
         a:singleLine="true"
         a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        app:layout_constraintEnd_toStartOf="@+id/current_playing_track"
+        a:textColor="?attr/colorOnSurfaceVariant"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/current_playing_song"
         tools:text="Artist" />
-
-    <TextView
-        a:id="@+id/current_playing_album"
-        a:layout_width="0dp"
-        a:layout_height="wrap_content"
-        a:layout_marginEnd="10dp"
-        a:ellipsize="end"
-        a:gravity="start|left"
-        a:singleLine="true"
-        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        app:layout_constraintEnd_toStartOf="@+id/current_total_duration"
-        app:layout_constraintStart_toStartOf="@+id/current_playing_artist"
-        app:layout_constraintTop_toBottomOf="@+id/current_playing_artist"
-        tools:text="Album" />
-
-    <TextView
-        a:id="@+id/current_playing_genre"
-        a:layout_width="0dp"
-        a:layout_height="wrap_content"
-        a:layout_marginEnd="10dp"
-        a:ellipsize="end"
-        a:gravity="left"
-        a:singleLine="true"
-        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        app:layout_constraintEnd_toStartOf="@+id/current_playing_bitrate_format"
-        app:layout_constraintStart_toStartOf="@+id/current_playing_album"
-        app:layout_constraintTop_toBottomOf="@+id/current_playing_album"
-        tools:text="Genre" />
-
-
-    <TextView
-        a:id="@+id/current_playing_track"
-        a:layout_width="0dp"
-        a:layout_height="wrap_content"
-        a:ellipsize="start"
-        a:gravity="right"
-        a:text="0 / 0"
-        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/current_playing_artist"
-        tools:ignore="HardcodedText" />
-
-    <TextView
-        a:id="@+id/current_total_duration"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:ellipsize="start"
-        a:gravity="right"
-        a:text="@string/util.no_time"
-        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/current_playing_track" />
-
-    <TextView
-        a:id="@+id/current_playing_bitrate_format"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:ellipsize="start"
-        a:gravity="right"
-        a:singleLine="true"
-        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/current_total_duration"
-        tools:text="Details" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

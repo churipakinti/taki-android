@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:id="@+id/swipe_refresh_view"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent"
+    tools:context="org.moire.ultrasonic.fragment.HomeFragment">
+
+    <androidx.core.widget.NestedScrollView
+        a:layout_width="match_parent"
+        a:layout_height="match_parent">
+
+        <LinearLayout
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:orientation="vertical"
+            a:paddingBottom="24dp">
+
+            <TextView
+                a:id="@+id/home_greeting"
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"
+                a:layout_marginHorizontal="16dp"
+                a:layout_marginTop="20dp"
+                a:layout_marginBottom="8dp"
+                a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                tools:text="@string/home.greeting_morning" />
+
+            <HorizontalScrollView
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginTop="4dp"
+                a:scrollbars="none">
+
+                <LinearLayout
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:orientation="horizontal"
+                    a:paddingHorizontal="16dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        a:id="@+id/home_quick_playlists"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        a:layout_width="wrap_content"
+                        a:layout_height="wrap_content"
+                        a:layout_marginEnd="8dp"
+                        a:text="@string/playlist.label" />
+
+                    <com.google.android.material.button.MaterialButton
+                        a:id="@+id/home_quick_albums"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        a:layout_width="wrap_content"
+                        a:layout_height="wrap_content"
+                        a:layout_marginEnd="8dp"
+                        a:text="@string/main.albums_title" />
+
+                    <com.google.android.material.button.MaterialButton
+                        a:id="@+id/home_quick_artists"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        a:layout_width="wrap_content"
+                        a:layout_height="wrap_content"
+                        a:text="@string/music_library.label" />
+
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <LinearLayout
+                a:id="@+id/home_shortcuts_shelf"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginHorizontal="16dp"
+                    a:layout_marginTop="20dp"
+                    a:layout_marginBottom="8dp"
+                    a:text="@string/main.albums_recent"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/home_shortcuts_list"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:nestedScrollingEnabled="false"
+                    a:paddingHorizontal="12dp"
+                    tools:listitem="@layout/home_shortcut_item" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/home_mix_shelf"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginHorizontal="16dp"
+                a:layout_marginTop="24dp"
+                a:background="@drawable/bg_home_shortcut_item"
+                a:clickable="true"
+                a:focusable="true"
+                a:gravity="center_vertical"
+                a:orientation="horizontal"
+                a:padding="10dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    a:id="@+id/home_mix_cover"
+                    a:layout_width="64dp"
+                    a:layout_height="64dp"
+                    a:layout_marginEnd="12dp"
+                    a:contentDescription="@string/albumArt"
+                    a:scaleType="centerCrop"
+                    a:src="@drawable/unknown_album"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent" />
+
+                <LinearLayout
+                    a:layout_width="0dp"
+                    a:layout_height="wrap_content"
+                    a:layout_weight="1"
+                    a:orientation="vertical">
+
+                    <TextView
+                        a:id="@+id/home_mix_title"
+                        a:layout_width="match_parent"
+                        a:layout_height="wrap_content"
+                        a:ellipsize="end"
+                        a:singleLine="true"
+                        a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        a:textStyle="bold"
+                        tools:text="Mix: Reggae" />
+
+                    <TextView
+                        a:id="@+id/home_mix_subtitle"
+                        a:layout_width="match_parent"
+                        a:layout_height="wrap_content"
+                        a:ellipsize="end"
+                        a:singleLine="true"
+                        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        a:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="25 songs" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/home_favorites_shelf"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginHorizontal="16dp"
+                    a:layout_marginTop="24dp"
+                    a:layout_marginBottom="8dp"
+                    a:text="@string/main.albums_starred"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/home_favorites_list"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:clipToPadding="false"
+                    a:paddingStart="16dp"
+                    a:paddingEnd="4dp"
+                    tools:listitem="@layout/home_carousel_item" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/home_newest_shelf"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginHorizontal="16dp"
+                    a:layout_marginTop="24dp"
+                    a:layout_marginBottom="8dp"
+                    a:text="@string/main.albums_newest"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/home_newest_list"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:clipToPadding="false"
+                    a:paddingStart="16dp"
+                    a:paddingEnd="4dp"
+                    tools:listitem="@layout/home_carousel_item" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/home_random_shelf"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginHorizontal="16dp"
+                    a:layout_marginTop="24dp"
+                    a:layout_marginBottom="8dp"
+                    a:text="@string/home.discover_title"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/home_random_list"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:clipToPadding="false"
+                    a:paddingStart="16dp"
+                    a:paddingEnd="4dp"
+                    tools:listitem="@layout/home_carousel_item" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                a:id="@+id/home_frequent_shelf"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:orientation="vertical">
+
+                <TextView
+                    a:layout_width="wrap_content"
+                    a:layout_height="wrap_content"
+                    a:layout_marginHorizontal="16dp"
+                    a:layout_marginTop="24dp"
+                    a:layout_marginBottom="8dp"
+                    a:text="@string/main.albums_frequent"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    a:id="@+id/home_frequent_list"
+                    a:layout_width="match_parent"
+                    a:layout_height="wrap_content"
+                    a:clipToPadding="false"
+                    a:paddingStart="16dp"
+                    a:paddingEnd="4dp"
+                    tools:listitem="@layout/home_carousel_item" />
+
+            </LinearLayout>
+
+            <TextView
+                a:id="@+id/home_empty_view"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginTop="40dp"
+                a:gravity="center"
+                a:padding="32dp"
+                a:text="@string/select_album.empty"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                a:visibility="gone" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

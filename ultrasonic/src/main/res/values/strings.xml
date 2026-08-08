@@ -10,6 +10,13 @@
     <string name="button_bar.bookmarks">Bookmarks</string>
     <string name="button_bar.browse">Media Library</string>
     <string name="button_bar.chat">Chat</string>
+    <string name="button_bar.home">Home</string>
+    <string name="home.mix_title">Mix: %1$s</string>
+    <string name="home.mix_song_count">%1$d songs</string>
+    <string name="home.discover_title">Discover</string>
+    <string name="home.greeting_morning">Good morning</string>
+    <string name="home.greeting_afternoon">Good afternoon</string>
+    <string name="home.greeting_evening">Good evening</string>
     <string name="button_bar.now_playing">Now Playing</string>
     <string name="buttons.play">Play</string>
     <string name="buttons.pause">Pause</string>

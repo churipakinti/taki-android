@@ -12,7 +12,6 @@ import android.graphics.Canvas
 import android.graphics.Color.argb
 import android.graphics.Point
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.LayerDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -44,7 +43,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.StarRating
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -52,7 +50,6 @@ import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_DRAG
 import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.R as RM
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -141,25 +138,15 @@ class PlayerFragment :
 
     // Views and UI Elements
     private lateinit var playlistNameView: EditText
-    private lateinit var fiveStar1ImageView: ImageView
-    private lateinit var fiveStar2ImageView: ImageView
-    private lateinit var fiveStar3ImageView: ImageView
-    private lateinit var fiveStar4ImageView: ImageView
-    private lateinit var fiveStar5ImageView: ImageView
     private lateinit var heartRatingImageView: ImageView
     private lateinit var playlistFlipper: ViewFlipper
     private lateinit var emptyTextView: TextView
     private lateinit var emptyView: ConstraintLayout
     private lateinit var songTitleTextView: TextView
     private lateinit var artistTextView: TextView
-    private lateinit var albumTextView: TextView
-    private lateinit var genreTextView: TextView
-    private lateinit var bitrateFormatTextView: TextView
     private lateinit var albumArtImageView: ImageView
     private lateinit var playlistView: RecyclerView
     private lateinit var positionTextView: TextView
-    private lateinit var downloadTrackTextView: TextView
-    private lateinit var downloadTotalDurationTextView: TextView
     private lateinit var durationTextView: TextView
     private lateinit var pauseButton: View
     private lateinit var stopButton: View
@@ -171,12 +158,8 @@ class PlayerFragment :
     private lateinit var progressBar: SeekBar
     private lateinit var progressIndicator: CircularProgressIndicator
 
-    private val hollowStar = R.drawable.rating_star_hollow_layered
-    private val fullStar = R.drawable.rating_star_full_layered
-    private val hollowHeart = R.drawable.rating_heart_hollow_layered
-    private val fullHeart = R.drawable.rating_heart_full_layered
-    private lateinit var hollowStarDrawable: Drawable
-    private lateinit var fullStarDrawable: Drawable
+    private val hollowHeart = R.drawable.rating_heart_hollow
+    private val fullHeart = R.drawable.rating_heart_full
     private lateinit var hollowHeartDrawable: Drawable
     private lateinit var fullHeartDrawable: Drawable
 
@@ -212,13 +195,8 @@ class PlayerFragment :
         progressIndicator = view.findViewById(R.id.progress_indicator)
         songTitleTextView = view.findViewById(R.id.current_playing_song)
         artistTextView = view.findViewById(R.id.current_playing_artist)
-        albumTextView = view.findViewById(R.id.current_playing_album)
-        genreTextView = view.findViewById(R.id.current_playing_genre)
-        bitrateFormatTextView = view.findViewById(R.id.current_playing_bitrate_format)
         albumArtImageView = view.findViewById(R.id.current_playing_album_art_image)
         positionTextView = view.findViewById(R.id.current_playing_position)
-        downloadTrackTextView = view.findViewById(R.id.current_playing_track)
-        downloadTotalDurationTextView = view.findViewById(R.id.current_total_duration)
         durationTextView = view.findViewById(R.id.current_playing_duration)
         progressBar = view.findViewById(R.id.current_playing_progress_bar)
         playlistView = view.findViewById(R.id.playlist_view)
@@ -229,11 +207,6 @@ class PlayerFragment :
         nextButton = view.findViewById(R.id.button_next)
         previousButton = view.findViewById(R.id.button_previous)
         repeatButton = view.findViewById(R.id.button_repeat)
-        fiveStar1ImageView = view.findViewById(R.id.song_five_star_1)
-        fiveStar2ImageView = view.findViewById(R.id.song_five_star_2)
-        fiveStar3ImageView = view.findViewById(R.id.song_five_star_3)
-        fiveStar4ImageView = view.findViewById(R.id.song_five_star_4)
-        fiveStar5ImageView = view.findViewById(R.id.song_five_star_5)
         heartRatingImageView = view.findViewById(R.id.song_rating_heart)
     }
 
@@ -287,25 +260,11 @@ class PlayerFragment :
         updateShuffleButtonState(mediaPlayerManager.isShufflePlayEnabled)
         updateRepeatButtonState(mediaPlayerManager.repeatMode)
 
-        hollowStarDrawable = ResourcesCompat.getDrawable(resources, hollowStar, null)!!
-        fullStarDrawable = ResourcesCompat.getDrawable(resources, fullStar, null)!!
-        setLayerDrawableColors(hollowStarDrawable as LayerDrawable)
-        setLayerDrawableColors(fullStarDrawable as LayerDrawable)
-
         hollowHeartDrawable = ResourcesCompat.getDrawable(resources, hollowHeart, null)!!
         fullHeartDrawable = ResourcesCompat.getDrawable(resources, fullHeart, null)!!
-        setLayerDrawableColors(hollowHeartDrawable as LayerDrawable)
-        setLayerDrawableColors(
-            fullHeartDrawable as LayerDrawable,
-            androidx.appcompat.R.attr.colorAccent,
-            RM.attr.colorSurface
-        )
+        hollowHeartDrawable.setTint(requireContext().themeColor(androidx.appcompat.R.attr.colorAccent))
+        fullHeartDrawable.setTint(requireContext().themeColor(androidx.appcompat.R.attr.colorAccent))
 
-        fiveStar1ImageView.setOnClickListener { setSongRating(1) }
-        fiveStar2ImageView.setOnClickListener { setSongRating(2) }
-        fiveStar3ImageView.setOnClickListener { setSongRating(3) }
-        fiveStar4ImageView.setOnClickListener { setSongRating(4) }
-        fiveStar5ImageView.setOnClickListener { setSongRating(5) }
         heartRatingImageView.setOnClickListener { setSongHeartRating() }
 
         albumArtImageView.setOnTouchListener { _, me ->
@@ -314,6 +273,10 @@ class PlayerFragment :
 
         albumArtImageView.setOnClickListener {
             toggleFullScreenAlbumArt()
+        }
+
+        songTitleTextView.setOnClickListener {
+            menuItemSelected(R.id.menu_show_album, currentSong)
         }
 
         previousButton.setOnClickListener {
@@ -1078,46 +1041,10 @@ class PlayerFragment :
         currentSong = mediaPlayerManager.currentMediaItem?.toTrack()
 
         scrollToCurrent()
-        val totalDuration = mediaPlayerManager.playListDuration
-        val totalSongs = mediaPlayerManager.playlistSize
-        val currentSongIndex = mediaPlayerManager.currentMediaItemIndex + 1
-        val duration = Util.formatTotalDuration(totalDuration)
-        val trackFormat =
-            String.format(Locale.getDefault(), "%d / %d", currentSongIndex, totalSongs)
         if (currentSong != null) {
             songTitleTextView.text = currentSong!!.title
             artistTextView.text = currentSong!!.artist
-            albumTextView.text = currentSong!!.album
-            if (currentSong!!.year != null && Settings.showNowPlayingDetails) {
-                albumTextView.append(String.format(Locale.ROOT, " (%d)", currentSong!!.year))
-            }
 
-            if (Settings.showNowPlayingDetails) {
-                genreTextView.text = currentSong!!.genre
-                genreTextView.isVisible =
-                    (currentSong!!.genre != null && currentSong!!.genre!!.isNotBlank())
-
-                var bitRate = ""
-                if (currentSong!!.bitRate != null && currentSong!!.bitRate!! > 0) {
-                    bitRate = String.format(
-                        Util.appContext().getString(R.string.song_details_kbps),
-                        currentSong!!.bitRate
-                    )
-                }
-                bitrateFormatTextView.text = String.format(
-                    Locale.ROOT,
-                    "%s %s",
-                    bitRate,
-                    currentSong!!.suffix
-                )
-                bitrateFormatTextView.isVisible = true
-            } else {
-                genreTextView.isVisible = false
-                bitrateFormatTextView.isVisible = false
-            }
-
-            downloadTrackTextView.text = trackFormat
-            downloadTotalDurationTextView.text = duration
             imageLoaderProvider.executeOn {
                 it.loadImage(albumArtImageView, currentSong, true, 0)
             }
@@ -1127,11 +1054,6 @@ class PlayerFragment :
             currentSong = null
             songTitleTextView.text = null
             artistTextView.text = null
-            albumTextView.text = null
-            genreTextView.text = null
-            bitrateFormatTextView.text = null
-            downloadTrackTextView.text = null
-            downloadTotalDurationTextView.text = null
             imageLoaderProvider.executeOn {
                 it.loadImage(albumArtImageView, null, true, 0)
             }
@@ -1299,14 +1221,7 @@ class PlayerFragment :
     override fun onSingleTapUp(e: MotionEvent): Boolean = false
 
     private fun updateSongRatingDisplay() {
-        val rating = currentSong?.userRating ?: 0
         val isHeartSet = currentSong?.starred ?: false
-
-        fiveStar1ImageView.setImageDrawable(getStarForRating(rating, 0))
-        fiveStar2ImageView.setImageDrawable(getStarForRating(rating, 1))
-        fiveStar3ImageView.setImageDrawable(getStarForRating(rating, 2))
-        fiveStar4ImageView.setImageDrawable(getStarForRating(rating, 3))
-        fiveStar5ImageView.setImageDrawable(getStarForRating(rating, 4))
 
         if (isHeartSet) {
             heartRatingImageView.setImageDrawable(fullHeartDrawable)
@@ -1315,32 +1230,6 @@ class PlayerFragment :
         }
     }
 
-    private fun getStarForRating(rating: Int, position: Int): Drawable =
-        if (rating > position) fullStarDrawable else hollowStarDrawable
-
-    private fun setLayerDrawableColors(
-        drawable: LayerDrawable,
-        innerColor: Int = RM.attr.colorSurface,
-        borderColor: Int = androidx.appcompat.R.attr.colorAccent
-    ) {
-        drawable.apply {
-            getDrawable(0).setTint(requireContext().themeColor(innerColor))
-            getDrawable(1).setTint(requireContext().themeColor(borderColor))
-        }
-    }
-
-    private fun setSongRating(rating: Int) {
-        if (currentSong == null) return
-        currentSong?.userRating = rating
-        updateSongRatingDisplay()
-
-        RxBus.ratingSubmitter.onNext(
-            RatingUpdate(
-                currentSong!!.id,
-                StarRating(5, rating.toFloat())
-            )
-        )
-    }
 
     private fun setSongHeartRating() {
         if (currentSong == null) return

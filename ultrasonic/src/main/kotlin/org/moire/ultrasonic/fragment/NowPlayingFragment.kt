@@ -43,6 +43,8 @@ class NowPlayingFragment : ScopeFragment() {
     private var downY = 0f
 
     private var playButton: MaterialButton? = null
+    private var previousButton: MaterialButton? = null
+    private var nextButton: MaterialButton? = null
     private var nowPlayingAlbumArtImage: ImageView? = null
     private var nowPlayingTrack: TextView? = null
     private var nowPlayingArtist: TextView? = null
@@ -64,6 +66,8 @@ class NowPlayingFragment : ScopeFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         playButton = view.findViewById(R.id.now_playing_control_play)
+        previousButton = view.findViewById(R.id.now_playing_control_previous)
+        nextButton = view.findViewById(R.id.now_playing_control_next)
         nowPlayingAlbumArtImage = view.findViewById(R.id.now_playing_image)
         nowPlayingTrack = view.findViewById(R.id.now_playing_title)
         nowPlayingArtist = view.findViewById(R.id.now_playing_artist)
@@ -84,9 +88,9 @@ class NowPlayingFragment : ScopeFragment() {
     private fun update() {
         try {
             if (mediaPlayerManager.isPlaying) {
-                playButton!!.setIconResource(R.drawable.media_pause)
+                playButton!!.setIconResource(R.drawable.media_pause_shadow)
             } else {
-                playButton!!.setIconResource(R.drawable.media_start)
+                playButton!!.setIconResource(R.drawable.media_start_shadow)
             }
 
             val file = mediaPlayerManager.currentMediaItem?.toTrack()
@@ -126,6 +130,8 @@ class NowPlayingFragment : ScopeFragment() {
             // This empty onClickListener is necessary for the onTouchListener to work
             requireView().setOnClickListener { }
             playButton!!.setOnClickListener { mediaPlayerManager.togglePlayPause() }
+            previousButton!!.setOnClickListener { mediaPlayerManager.seekToPrevious() }
+            nextButton!!.setOnClickListener { mediaPlayerManager.seekToNext() }
         } catch (all: Exception) {
             Timber.w(all, "Failed to get notification cover art")
         }
@@ -153,9 +159,9 @@ class NowPlayingFragment : ScopeFragment() {
                         mediaPlayerManager.seekToNext()
                     }
                 } else if (abs(deltaY) > MIN_DISTANCE) {
-                    if (deltaY < 0) {
-                        RxBus.dismissNowPlayingCommandPublisher.onNext(Unit)
-                    }
+                    // Swiping up/down no longer dismisses the bar - it should stay visible
+                    // whenever something is loaded, matching the "always visible" mini player
+                    // behavior of reference music apps.
                 } else {
                     Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
                         .navigate(R.id.playerFragment)

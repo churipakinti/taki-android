@@ -272,6 +272,17 @@ object Settings {
         0
     )
 
+    // Internal cache for the Home screen's daily genre Mix - not user-facing, so plain keys
+    // (not backed by a setting_keys.xml resource like the settings above).
+    @JvmStatic
+    var homeMixDate by StringSetting("home_mix_date", "")
+
+    @JvmStatic
+    var homeMixGenre by StringSetting("home_mix_genre", "")
+
+    @JvmStatic
+    var homeMixTrackIds by StringSetting("home_mix_track_ids", "")
+
     fun hasKey(key: String): Boolean = preferences.contains(key)
 
     private fun getKey(key: Int): String = appContext.getString(key)

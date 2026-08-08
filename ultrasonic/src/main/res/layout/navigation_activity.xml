@@ -17,7 +17,11 @@
         <com.google.android.material.appbar.MaterialToolbar
             a:id="@+id/toolbar"
             a:layout_width="match_parent"
-            a:layout_height="?attr/actionBarSize" />
+            a:layout_height="?attr/actionBarSize"
+            a:background="?attr/colorSurface"
+            a:elevation="3dp"
+            app:navigationIconTint="?attr/colorOnSurface"
+            app:titleTextColor="?attr/colorOnSurface" />
 
         <androidx.fragment.app.FragmentContainerView
             a:id="@+id/nav_host_fragment"
@@ -45,7 +49,15 @@
         a:maxWidth="300dp"
         a:layout_height="match_parent"
         a:layout_gravity="start"
+        a:background="@drawable/bg_navigation_drawer"
+        a:elevation="16dp"
         a:fitsSystemWindows="true"
+        app:itemHorizontalPadding="16dp"
+        app:itemIconPadding="16dp"
+        app:itemShapeInsetBottom="4dp"
+        app:itemShapeInsetEnd="12dp"
+        app:itemShapeInsetStart="12dp"
+        app:itemShapeInsetTop="4dp"
         app:headerLayout="@layout/navigation_header"
         app:menu="@menu/navigation_drawer"/>
 </androidx.drawerlayout.widget.DrawerLayout>

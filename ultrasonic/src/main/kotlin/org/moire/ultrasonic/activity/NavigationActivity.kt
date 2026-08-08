@@ -21,6 +21,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -97,6 +98,8 @@ class NavigationActivity : ScopeActivity() {
     private var selectServerButton: MaterialButton? = null
     private var selectServerDropdownImage: ImageView? = null
     private var headerBackgroundImage: ImageView? = null
+    private var headerWordmarkIcon: ImageView? = null
+    private var headerWordmarkText: TextView? = null
 
     // We store the last search string in this variable.
     // Seems a bit like a hack, is there a better way?
@@ -149,6 +152,7 @@ class NavigationActivity : ScopeActivity() {
 
         appBarConfiguration = AppBarConfiguration(
             setOf(
+                R.id.homeFragment,
                 R.id.mainFragment,
                 R.id.mediaLibraryFragment,
                 R.id.searchFragment,
@@ -356,6 +360,8 @@ class NavigationActivity : ScopeActivity() {
         selectServerButton?.setTextColor(foregroundColor)
         selectServerDropdownImage?.imageTintList = ColorStateList.valueOf(foregroundColor)
         headerBackgroundImage?.setBackgroundColor(backgroundColor)
+        headerWordmarkIcon?.imageTintList = ColorStateList.valueOf(foregroundColor)
+        headerWordmarkText?.setTextColor(foregroundColor)
     }
 
     private fun setupNavigationMenu(navController: NavController) {
@@ -419,6 +425,10 @@ class NavigationActivity : ScopeActivity() {
 
         headerBackgroundImage =
             navigationView?.getHeaderView(0)?.findViewById(R.id.img_header_bg)
+        headerWordmarkIcon =
+            navigationView?.getHeaderView(0)?.findViewById(R.id.header_wordmark_icon)
+        headerWordmarkText =
+            navigationView?.getHeaderView(0)?.findViewById(R.id.header_wordmark_text)
     }
 
     private val closeNavigationDrawerOnBack = object : OnBackPressedCallback(true) {
@@ -559,7 +569,7 @@ class NavigationActivity : ScopeActivity() {
                     val activeServerProvider: ActiveServerProvider by inject()
                     val demoIndex = serverSettingsModel.addDemoServer()
                     activeServerProvider.setActiveServerByIndex(demoIndex)
-                    findNavController(R.id.nav_host_fragment).navigate(R.id.mainFragment)
+                    findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
                     dialog.dismiss()
                 }.show()
         }

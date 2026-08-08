@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/navigation_graph"
-    app:startDestination="@id/mainFragment">
+    app:startDestination="@id/homeFragment">
 
     <action
         android:id="@+id/toTrackCollection"
@@ -34,6 +34,11 @@
         android:name="org.moire.ultrasonic.fragment.MainFragment"
         android:label="@string/common.appname">
     </fragment>
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="org.moire.ultrasonic.fragment.HomeFragment"
+        android:label="@string/button_bar.home" />
 
     <fragment
         android:id="@+id/mediaLibraryFragment"

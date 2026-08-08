@@ -6,6 +6,11 @@
         a:visible="true">
 
         <item
+            a:id="@+id/homeFragment"
+            a:checkable="true"
+            a:icon="@drawable/ic_menu_home"
+            a:title="@string/button_bar.home" />
+        <item
             a:id="@+id/mainFragment"
             a:checkable="true"
             a:icon="@drawable/ic_menu_browse"
@@ -35,21 +40,6 @@
             a:checkable="true"
             a:icon="@drawable/ic_menu_bookmark"
             a:title="@string/button_bar.bookmarks" />
-        <item
-            a:id="@+id/chatFragment"
-            a:checkable="true"
-            a:icon="@drawable/ic_menu_chat"
-            a:title="@string/button_bar.chat" />
-        <item
-            a:id="@+id/podcastFragment"
-            a:checkable="true"
-            a:icon="@drawable/ic_menu_podcasts"
-            a:title="@string/button_bar.podcasts" />
-        <item
-            a:id="@+id/trackCollectionFragment"
-            a:checkable="true"
-            a:icon="@drawable/ic_baseline_videos"
-            a:title="@string/main.videos" />
         <item
             a:id="@+id/playerFragment"
             a:checkable="true"

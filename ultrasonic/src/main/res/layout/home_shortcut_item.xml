@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:id="@+id/home_shortcut_container"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:layout_margin="4dp"
+    a:background="@drawable/bg_home_shortcut_item"
+    a:clickable="true"
+    a:focusable="true"
+    a:gravity="center_vertical"
+    a:orientation="horizontal"
+    a:paddingHorizontal="8dp"
+    a:paddingVertical="8dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        a:id="@+id/cover_art"
+        a:layout_width="48dp"
+        a:layout_height="48dp"
+        a:layout_marginEnd="10dp"
+        a:contentDescription="@string/albumArt"
+        a:scaleType="centerCrop"
+        a:src="@drawable/unknown_album"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent" />
+
+    <LinearLayout
+        a:layout_width="0dp"
+        a:layout_height="wrap_content"
+        a:layout_weight="1"
+        a:orientation="vertical">
+
+        <TextView
+            a:id="@+id/shortcut_title"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+            a:textStyle="bold"
+            tools:text="Title" />
+
+        <TextView
+            a:id="@+id/shortcut_artist"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Artist" />
+
+    </LinearLayout>
+
+</LinearLayout>

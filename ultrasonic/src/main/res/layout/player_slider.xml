@@ -12,7 +12,10 @@
         a:id="@+id/current_playing_progress_bar"
         a:layout_width="fill_parent"
         a:layout_height="32dp"
-        a:indeterminate="false" />
+        a:indeterminate="false"
+        a:progressBackgroundTint="?attr/colorSurfaceContainerHighest"
+        a:progressTint="?attr/colorPrimary"
+        a:thumbTint="?attr/colorPrimary" />
 
     <RelativeLayout
         a:layout_width="match_parent"

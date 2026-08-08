@@ -12,6 +12,7 @@
     a:id="@+id/view_container"
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
+    a:minHeight="176dp"
     a:gravity="bottom"
     a:orientation="vertical">
 
@@ -25,12 +26,40 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        a:id="@+id/header_wordmark_icon"
+        a:layout_width="22dp"
+        a:layout_height="22dp"
+        a:layout_marginStart="22dp"
+        a:layout_marginTop="40dp"
+        a:importantForAccessibility="no"
+        a:src="@drawable/ic_launcher_monochrome"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="?attr/colorOnPrimary"
+        tools:tint="@color/selected_menu_dark" />
+
+    <TextView
+        a:id="@+id/header_wordmark_text"
+        a:layout_width="wrap_content"
+        a:layout_height="wrap_content"
+        a:layout_marginStart="10dp"
+        a:letterSpacing="0.04"
+        a:text="@string/common.appname"
+        a:textAllCaps="true"
+        a:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+        a:textColor="?attr/colorOnPrimary"
+        app:layout_constraintBottom_toBottomOf="@id/header_wordmark_icon"
+        app:layout_constraintStart_toEndOf="@id/header_wordmark_icon"
+        app:layout_constraintTop_toTopOf="@id/header_wordmark_icon"
+        tools:textColor="@color/selected_menu_dark" />
+
     <Button
         a:id="@+id/header_select_server"
         style="@style/Widget.Material3.Button.TextButton.Icon"
         a:layout_width="0dp"
         a:layout_height="wrap_content"
-        a:layout_marginTop="48dp"
+        a:layout_marginTop="8dp"
         a:background="@drawable/default_ripple"
         a:gravity="center_vertical"
         a:paddingHorizontal="22dp"
@@ -46,7 +75,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/edit_server_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_wordmark_icon"
         tools:iconTint="@color/selected_menu_dark"
         tools:textColor="@color/selected_menu_dark" />
 
