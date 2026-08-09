@@ -21,6 +21,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetArtistResponse
 import org.moire.ultrasonic.api.subsonic.response.GetArtistInfo2Response
 import org.moire.ultrasonic.api.subsonic.response.GetArtistsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetIndexesResponse
+import org.moire.ultrasonic.api.subsonic.response.GetLyricsBySongIdResponse
 import org.moire.ultrasonic.api.subsonic.response.GetLyricsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetMusicDirectoryResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPlaylistResponse
@@ -195,6 +196,17 @@ interface SubsonicAPIDefinition {
         @Query("artist") artist: String? = null,
         @Query("title") title: String? = null
     ): Call<GetLyricsResponse>
+
+    /**
+     * OpenSubsonic extension. Returns time-synced lyrics when the server/track has them,
+     * plain unsynced lines otherwise. Not part of the core Subsonic protocol, so it isn't
+     * gated by [ApiVersionCheckWrapper] like the versioned calls above - servers that don't
+     * support it simply fail the call, which callers should catch and fall back to [getLyrics].
+     */
+    @GET("getLyricsBySongId.view")
+    fun getLyricsBySongId(
+        @Query("id") id: String
+    ): Call<GetLyricsBySongIdResponse>
 
     @GET("scrobble.view")
     fun scrobble(

@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ListView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -15,7 +15,6 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.ServerRowAdapter
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.OFFLINE_DB_ID
-import org.moire.ultrasonic.data.ServerSetting
 import org.moire.ultrasonic.model.ServerSettingsModel
 import org.moire.ultrasonic.util.ErrorDialog
 import org.moire.ultrasonic.util.Util
@@ -26,7 +25,7 @@ import timber.log.Timber
  */
 class ServerSelectorFragment : Fragment() {
 
-    private var listView: ListView? = null
+    private var listView: RecyclerView? = null
     private val serverSettingsModel: ServerSettingsModel by viewModel()
     private val activeServerProvider: ActiveServerProvider by inject()
     private var serverRowAdapter: ServerRowAdapter? = null
@@ -51,20 +50,18 @@ class ServerSelectorFragment : Fragment() {
         listView = view.findViewById(R.id.server_list)
         serverRowAdapter = ServerRowAdapter(
             view.context,
-            arrayOf(),
             serverSettingsModel,
             activeServerProvider,
+            onItemClick = { server ->
+                activeServerProvider.setActiveServerById(server.id)
+                findNavController().popBackStack(R.id.homeFragment, false)
+            },
             ::deleteServerById,
             ::editServerByIndex
         )
 
+        listView?.layoutManager = LinearLayoutManager(requireContext())
         listView?.adapter = serverRowAdapter
-
-        listView?.onItemClickListener = AdapterView.OnItemClickListener { parent, _, position, _ ->
-            val server = parent.getItemAtPosition(position) as ServerSetting
-            activeServerProvider.setActiveServerById(server.id)
-            findNavController().popBackStack(R.id.homeFragment, false)
-        }
 
         val fab = view.findViewById<FloatingActionButton>(R.id.server_add_fab)
         fab.setOnClickListener {

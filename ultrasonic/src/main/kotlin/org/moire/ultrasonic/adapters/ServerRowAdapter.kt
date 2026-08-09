@@ -1,44 +1,41 @@
 package org.moire.ultrasonic.adapters
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.isInvisible
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ServerSetting
 import org.moire.ultrasonic.model.ServerSettingsModel
 import org.moire.ultrasonic.util.ServerColor
+import org.moire.ultrasonic.util.Util.themeColor
 
 /**
- * Row Adapter to be used in the Server List
- * Converts a Server Setting into a displayable Row, and sets up the Row's context menu
- * clicking the row.
+ * Renders each configured server (plus the always-present Offline entry) as a card, and
+ * builds the row's "⋮" context menu (edit/delete/reorder).
  */
+@Suppress("LongParameterList")
 internal class ServerRowAdapter(
-    private var context: Context,
-    passedData: Array<ServerSetting>,
+    private val context: Context,
     private val model: ServerSettingsModel,
     private val activeServerProvider: ActiveServerProvider,
+    private val onItemClick: (ServerSetting) -> Unit,
     private val serverDeletedCallback: (Int) -> Unit,
     private val serverEditRequestedCallback: (Int) -> Unit
-) : BaseAdapter() {
+) : RecyclerView.Adapter<ServerRowAdapter.ViewHolder>() {
 
     private var data: MutableList<ServerSetting> = mutableListOf()
-
-    init {
-        setData(passedData)
-    }
 
     companion object {
         private const val MENU_ID_EDIT = 1
@@ -47,80 +44,46 @@ internal class ServerRowAdapter(
         private const val MENU_ID_DOWN = 4
     }
 
-    var inflater: LayoutInflater =
-        context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-
-    fun setData(data: Array<ServerSetting>) {
-        this.data.clear()
-
-        // Show the offline server as well
-        this.data.add(ActiveServerProvider.OFFLINE_DB)
-
-        this.data.addAll(data)
+    fun setData(newData: Array<ServerSetting>) {
+        data = mutableListOf(ActiveServerProvider.OFFLINE_DB)
+        data.addAll(newData)
         notifyDataSetChanged()
     }
 
-    override fun getCount(): Int = data.size
+    override fun getItemCount(): Int = data.size
 
-    override fun getItem(position: Int): Any = data[position]
-
-    override fun getItemId(position: Int): Long = position.toLong()
-
-    /**
-     * Creates the Row representation of a Server Setting
-     */
-    @Suppress("LongMethod")
-    override fun getView(pos: Int, convertView: View?, parent: ViewGroup?): View? {
-        var vi: View? = convertView
-        if (vi == null) vi = inflater.inflate(R.layout.server_row, parent, false)
-
-        val text = vi?.findViewById<TextView>(R.id.server_name)
-        val description = vi?.findViewById<TextView>(R.id.server_description)
-        val layout = vi?.findViewById<ConstraintLayout>(R.id.server_layout)
-        val image = vi?.findViewById<ImageView>(R.id.server_image)
-        val serverMenu = vi?.findViewById<ImageButton>(R.id.server_menu)
-        val setting = data.singleOrNull { t -> t.index == pos }
-
-        text?.text = setting?.name ?: ""
-        description?.text = setting?.url ?: ""
-        if (setting == null) serverMenu?.visibility = View.INVISIBLE
-
-        val icon: Drawable?
-        val background: Drawable?
-
-        // Configure icons for the row
-        if (setting?.id == ActiveServerProvider.OFFLINE_DB_ID) {
-            serverMenu?.visibility = View.INVISIBLE
-            icon = ContextCompat.getDrawable(context, R.drawable.ic_menu_screen_on_off)
-            background = ContextCompat.getDrawable(context, R.drawable.circle)
-        } else {
-            icon = ContextCompat.getDrawable(context, R.drawable.ic_menu_server)
-            background = ContextCompat.getDrawable(context, R.drawable.circle)
-        }
-
-        icon?.setTint(ServerColor.getForegroundColor(context, setting?.color))
-        background?.setTint(ServerColor.getBackgroundColor(context, setting?.color))
-
-        // Set the final drawables
-        image?.setImageDrawable(icon)
-        image?.background = background
-
-        // Highlight the Active Server's row by changing its background
-        if (pos == activeServerProvider.getActiveServer().index) {
-            layout?.background = ContextCompat.getDrawable(context, R.drawable.select_ripple)
-        } else {
-            layout?.background = ContextCompat.getDrawable(context, R.drawable.default_ripple)
-        }
-
-        // Add the context menu for the row
-        serverMenu?.background = ContextCompat.getDrawable(
-            context,
-            R.drawable.select_ripple_circle
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
+        ViewHolder(
+            LayoutInflater.from(parent.context).inflate(R.layout.server_row, parent, false)
         )
 
-        serverMenu?.setOnClickListener { view -> serverMenuClick(view, pos) }
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val setting = data[position]
+        val isOffline = setting.id == ActiveServerProvider.OFFLINE_DB_ID
 
-        return vi
+        holder.name.text = setting.name
+        holder.description.text = setting.url
+        holder.menu.isInvisible = isOffline
+
+        val icon = ContextCompat.getDrawable(
+            context,
+            if (isOffline) R.drawable.ic_menu_screen_on_off else R.drawable.ic_menu_server
+        )
+        val background = ContextCompat.getDrawable(context, R.drawable.circle)
+        icon?.setTint(ServerColor.getForegroundColor(context, setting.color))
+        background?.setTint(ServerColor.getBackgroundColor(context, setting.color))
+        holder.image.setImageDrawable(icon)
+        holder.image.background = background
+
+        val isActive = position == activeServerProvider.getActiveServer().index
+        holder.card.strokeColor = if (isActive) {
+            context.themeColor(androidx.appcompat.R.attr.colorPrimary)
+        } else {
+            android.graphics.Color.TRANSPARENT
+        }
+
+        holder.card.setOnClickListener { onItemClick(setting) }
+        holder.menu.setOnClickListener { view -> serverMenuClick(view, position) }
     }
 
     /**
@@ -129,7 +92,7 @@ internal class ServerRowAdapter(
     private fun serverMenuClick(view: View, position: Int) {
         val menu = PopupMenu(context, view)
         val firstServer = 1
-        val lastServer = count - 1
+        val lastServer = itemCount - 1
 
         menu.menu.add(
             Menu.NONE,
@@ -179,8 +142,7 @@ internal class ServerRowAdapter(
             }
 
             MENU_ID_DELETE -> {
-                val server = getItem(position) as ServerSetting
-                serverDeletedCallback.invoke(server.id)
+                serverDeletedCallback.invoke(data[position].id)
                 return true
             }
 
@@ -196,5 +158,13 @@ internal class ServerRowAdapter(
 
             else -> return false
         }
+    }
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val card: MaterialCardView = view as MaterialCardView
+        val name: TextView = view.findViewById(R.id.server_name)
+        val description: TextView = view.findViewById(R.id.server_description)
+        val image: ImageView = view.findViewById(R.id.server_image)
+        val menu: MaterialButton = view.findViewById(R.id.server_menu)
     }
 }

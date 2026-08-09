@@ -272,6 +272,10 @@ class CachedMusicService(private val musicService: MusicService) :
         musicService.getLyrics(artist, title)
 
     @Throws(Exception::class)
+    override fun getLyricsBySongId(id: String): Lyrics? =
+        musicService.getLyricsBySongId(id)
+
+    @Throws(Exception::class)
     override fun scrobble(id: String, submission: Boolean) {
         musicService.scrobble(id, submission)
     }

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="setting_key.server_instance" translatable="false">serverInstanceId</string>
+    <string name="setting_key.equalizer" translatable="false">equalizer</string>
+    <string name="setting_key.clear_downloads" translatable="false">clearDownloads</string>
     <string name="setting_key.max_bitrate_wifi" translatable="false">maxBitrateWifi</string>
     <string name="setting_key.max_bitrate_mobile" translatable="false">maxBitrateMobile</string>
     <string name="setting_key.max_bitrate_pinning" translatable="false">maxBitratePinning</string>

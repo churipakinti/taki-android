@@ -102,6 +102,11 @@ interface MusicService {
     @Throws(Exception::class)
     fun getLyrics(artist: String, title: String): Lyrics?
 
+    // OpenSubsonic extension; throws (rather than returning null) when the server doesn't
+    // support it so callers can distinguish "unsupported" from "no lyrics for this song".
+    @Throws(Exception::class)
+    fun getLyricsBySongId(id: String): Lyrics?
+
     @Throws(Exception::class)
     fun scrobble(id: String, submission: Boolean)
 

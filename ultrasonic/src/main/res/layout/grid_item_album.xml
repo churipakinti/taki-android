@@ -46,6 +46,7 @@
 
             <TextView
                 a:id="@+id/album_title"
+                style="@style/Ultrasonic.PrimaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
@@ -65,19 +66,6 @@
                 tools:text="Artist" />
 
         </LinearLayout>
-
-        <ImageView
-            a:id="@+id/album_star"
-            a:layout_width="38dp"
-            a:layout_height="38dp"
-            a:background="@android:color/transparent"
-            a:contentDescription="@string/download.menu_star"
-            a:gravity="center_horizontal"
-            a:padding="4dp"
-            a:src="@drawable/rating_star_hollow"
-            a:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/cover_art"
-            app:layout_constraintEnd_toEndOf="@+id/cover_art" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

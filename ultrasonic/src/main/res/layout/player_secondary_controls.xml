@@ -4,9 +4,7 @@
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
     a:layout_marginTop="4dp"
-    a:layout_marginStart="12dp"
-    a:layout_marginEnd="12dp"
-    a:gravity="center_vertical"
+    a:gravity="center"
     a:orientation="horizontal">
 
     <com.google.android.material.button.MaterialButton
@@ -14,21 +12,29 @@
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="40dp"
         a:layout_height="40dp"
+        a:layout_marginHorizontal="18dp"
         a:contentDescription="@string/download.menu_save"
         app:icon="@drawable/ic_add_white"
         app:iconSize="18dp"
         app:iconTint="?attr/colorOnSurfaceVariant" />
 
-    <View
-        a:layout_width="0dp"
-        a:layout_height="0dp"
-        a:layout_weight="1" />
+    <com.google.android.material.button.MaterialButton
+        a:id="@+id/button_lyrics"
+        style="@style/Widget.Material3.Button.IconButton"
+        a:layout_width="40dp"
+        a:layout_height="40dp"
+        a:layout_marginHorizontal="18dp"
+        a:contentDescription="@string/download.menu_lyrics"
+        app:icon="@drawable/ic_library"
+        app:iconSize="18dp"
+        app:iconTint="?attr/colorOnSurfaceVariant" />
 
     <com.google.android.material.button.MaterialButton
         a:id="@+id/button_queue"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="40dp"
         a:layout_height="40dp"
+        a:layout_marginHorizontal="18dp"
         a:contentDescription="@string/buttons.queue"
         app:icon="@drawable/media_toggle_list"
         app:iconSize="18dp"

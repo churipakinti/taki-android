@@ -1,44 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     a:id="@+id/select_folder_header"
-    a:layout_width="fill_parent"
+    a:layout_width="match_parent"
     a:layout_height="wrap_content"
     a:minHeight="?android:attr/listPreferredItemHeight"
     a:orientation="horizontal"
-    a:paddingBottom="2dip"
-    a:paddingStart="6dp"
-    a:paddingTop="2dip"
+    a:gravity="center_vertical"
+    a:paddingHorizontal="16dp"
+    a:paddingVertical="8dp"
     a:background="?android:attr/selectableItemBackground"
     a:clickable="true"
     a:focusable="true">
 
     <ImageView
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:layout_gravity="center_vertical"
+        a:layout_width="20dp"
+        a:layout_height="20dp"
         a:importantForAccessibility="no"
-        a:src="@drawable/ic_menu_select_folder" />
+        a:src="@drawable/ic_menu_select_folder"
+        app:tint="?attr/colorOnSurfaceVariant" />
 
     <LinearLayout
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
+        a:layout_marginStart="14dp"
         a:orientation="vertical" >
 
         <TextView
             a:id="@+id/select_folder_title"
-            a:layout_width="fill_parent"
+            style="@style/Ultrasonic.PrimaryText"
+            a:layout_width="wrap_content"
             a:layout_height="wrap_content"
-            a:layout_marginStart="10dip"
-            a:layout_marginTop="6dip"
             a:text="@string/select_artist.folder"
-            a:textAppearance="?android:attr/textAppearanceLarge" />
+            a:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
 
         <TextView
             a:id="@+id/select_folder_name"
-            a:layout_width="fill_parent"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="wrap_content"
             a:layout_height="wrap_content"
-            a:layout_marginStart="10dip"
-            a:textAppearance="?android:attr/textAppearanceSmall" />
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
 </LinearLayout>

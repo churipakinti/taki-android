@@ -62,6 +62,7 @@ import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
 import kotlin.math.max
@@ -112,7 +113,16 @@ class PlayerFragment :
     ScopeFragment(),
     GestureDetector.OnGestureListener,
     KoinScopeComponent,
-    CoroutineScope by CoroutineScope(Dispatchers.Main) {
+    CoroutineScope {
+
+    // Backs the CoroutineScope implementation below. Fragment instances survive being
+    // navigated away from and back to (e.g. Player -> Lyrics -> Player), but their view does
+    // not - onDestroyView cancels this scope, so it must be replaced with a fresh, live one
+    // each time onCreateView runs again, or every launch{} call after a first round trip
+    // silently becomes a no-op (the scope stays permanently cancelled).
+    private var mainScope: CoroutineScope = CoroutineScope(Dispatchers.Main)
+    override val coroutineContext: CoroutineContext
+        get() = mainScope.coroutineContext
 
     // Settings
     private var swipeDistance = 0
@@ -156,8 +166,14 @@ class PlayerFragment :
     private lateinit var repeatButton: MaterialButton
     private lateinit var queueButton: View
     private lateinit var savePlaylistButton: View
+    private lateinit var lyricsButton: View
     private lateinit var progressBar: SeekBar
     private lateinit var progressIndicator: CircularProgressIndicator
+
+    // While the user has a finger on the seek bar, the 500ms position-refresh loop must not
+    // overwrite its progress/enabled state, or the thumb snaps back mid-drag and dragging
+    // backward becomes effectively impossible.
+    private var isSeekBarDragging = false
 
     private val hollowHeart = R.drawable.rating_heart_hollow
     private val fullHeart = R.drawable.rating_heart_full
@@ -184,6 +200,7 @@ class PlayerFragment :
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        mainScope = CoroutineScope(Dispatchers.Main)
         _binding = CurrentPlayingBinding.inflate(layoutInflater, container, false)
         return binding.root
     }
@@ -210,6 +227,7 @@ class PlayerFragment :
         repeatButton = view.findViewById(R.id.button_repeat)
         queueButton = view.findViewById(R.id.button_queue)
         savePlaylistButton = view.findViewById(R.id.button_save_playlist)
+        lyricsButton = view.findViewById(R.id.button_lyrics)
         heartRatingImageView = view.findViewById(R.id.song_rating_heart)
     }
 
@@ -282,6 +300,10 @@ class PlayerFragment :
             if (mediaPlayerManager.playlistSize > 0) {
                 showSavePlaylistDialog()
             }
+        }
+
+        lyricsButton.setOnClickListener {
+            navigateToLyrics(currentSong)
         }
 
         songTitleTextView.setOnClickListener {
@@ -369,9 +391,13 @@ class PlayerFragment :
                 launch(CommunicationError.getHandler(context)) {
                     mediaPlayerManager.seekTo(progressBar.progress)
                 }
+                isSeekBarDragging = false
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                isSeekBarDragging = true
+            }
+
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {}
         })
 
@@ -675,9 +701,7 @@ class PlayerFragment :
             }
 
             R.id.menu_lyrics -> {
-                if (track?.artist == null || track.title == null) return false
-                val action = PlayerFragmentDirections.playerToLyrics(track.artist!!, track.title!!)
-                Navigation.findNavController(requireView()).navigate(action)
+                navigateToLyrics(track)
                 return true
             }
 
@@ -791,6 +815,20 @@ class PlayerFragment :
 
             else -> return false
         }
+    }
+
+    private fun navigateToLyrics(track: Track?) {
+        if (isOffline()) {
+            toast(R.string.download_lyrics_offline)
+            return
+        }
+        if (track?.artist == null || track.title == null) return
+        val action = PlayerFragmentDirections.playerToLyrics(
+            track.artist!!,
+            track.title!!,
+            track.id
+        )
+        Navigation.findNavController(requireView()).navigate(action)
     }
 
     private fun update(cancel: CancellationToken? = null) {
@@ -1097,11 +1135,15 @@ class PlayerFragment :
         val playbackState: Int = mediaPlayerManager.playbackState
 
         if (currentSong != null) {
-            positionTextView.text = Util.formatTotalDuration(millisPlayed.toLong(), true)
             durationTextView.text = Util.formatTotalDuration(duration.toLong(), true)
             progressBar.max = if (duration == 0) 100 else duration // Work-around for apparent bug.
-            progressBar.progress = millisPlayed
-            progressBar.isEnabled = mediaPlayerManager.isPlaying || isJukeboxEnabled
+            // Don't fight the user's finger: while dragging, the thumb/position must only
+            // reflect the drag gesture, not the real playback position.
+            if (!isSeekBarDragging) {
+                positionTextView.text = Util.formatTotalDuration(millisPlayed.toLong(), true)
+                progressBar.progress = millisPlayed
+                progressBar.isEnabled = mediaPlayerManager.isPlaying || isJukeboxEnabled
+            }
         } else {
             positionTextView.setText(R.string.util_zero_time)
             durationTextView.setText(R.string.util_no_time)

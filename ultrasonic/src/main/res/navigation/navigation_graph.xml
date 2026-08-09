@@ -40,6 +40,9 @@
     <action
         android:id="@+id/toCreatePlaylist"
         app:destination="@id/createPlaylistFragment" />
+    <action
+        android:id="@+id/toEqualizer"
+        app:destination="@id/equalizerFragment" />
 
     <fragment
         android:id="@+id/mainFragment"
@@ -298,7 +301,21 @@
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="org.moire.ultrasonic.fragment.SettingsFragment" />
+        android:name="org.moire.ultrasonic.fragment.SettingsFragment">
+        <argument
+            android:name="rootKey"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="groupTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/settingsToGroup"
+            app:destination="@id/settingsFragment" />
+    </fragment>
     <fragment
         android:id="@+id/aboutFragment"
         android:name="org.moire.ultrasonic.fragment.AboutFragment" />
@@ -330,6 +347,9 @@
             app:argType="string" />
         <argument
             android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="id"
             app:argType="string" />
     </fragment>
     <fragment

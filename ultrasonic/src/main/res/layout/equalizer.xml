@@ -1,43 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:padding="16dip">
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    a:orientation="vertical"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent"
+    a:paddingHorizontal="24dp"
+    a:paddingTop="20dp"
+    a:paddingBottom="16dp">
 
     <CheckBox
-            android:id="@+id/equalizer_enabled"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/equalizer.enabled"
-            android:textColor="#c0c0c0"
-            android:textAppearance="?android:attr/textAppearanceMedium"/>
+        a:id="@+id/equalizer_enabled"
+        style="@style/Ultrasonic.PrimaryText"
+        a:layout_width="wrap_content"
+        a:layout_height="wrap_content"
+        a:text="@string/equalizer.enabled"
+        a:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
 
     <ScrollView
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:layout_marginTop="8dp"
+        a:clipToPadding="false">
 
         <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
+            a:orientation="vertical"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content">
 
             <LinearLayout
-                    android:id="@+id/equalizer_layout"
-                    android:orientation="vertical"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"/>
+                a:id="@+id/equalizer_layout"
+                a:orientation="vertical"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content" />
 
-            <Button
-                    android:id="@+id/equalizer_preset"
-                    android:text="@string/equalizer.preset"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="20dip"
-                    android:paddingStart="40dip"
-                    android:paddingEnd="40dip"/>
+            <com.google.android.material.button.MaterialButton
+                a:id="@+id/equalizer_preset"
+                style="?attr/materialButtonOutlinedStyle"
+                a:text="@string/equalizer.preset"
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"
+                a:layout_gravity="center"
+                a:layout_marginTop="24dp" />
 
         </LinearLayout>
     </ScrollView>

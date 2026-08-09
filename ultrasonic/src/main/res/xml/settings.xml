@@ -4,21 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     a:title="@string/common.appname">
 
-    <PreferenceCategory
-        a:title="@string/settings.playback_control_title"
+    <PreferenceScreen
+        a:key="now_playing_group"
+        a:title="@string/settings.now_playing_title"
+        a:summary="@string/settings.now_playing_summary"
         app:iconSpaceReserved="false">
-        <SwitchPreferenceCompat
-            a:defaultValue="true"
-            a:key="@string/setting_key.id3_tags"
-            a:summary="@string/settings.use_id3_summary"
-            a:title="@string/settings.use_id3"
-            app:iconSpaceReserved="false"/>
-        <SwitchPreferenceCompat
-            a:defaultValue="true"
-            a:key="@string/setting_key.id3_tags_offline"
-            a:summary="@string/settings.use_id3_offline_summary"
-            a:title="@string/settings.use_id3_offline"
-            app:iconSpaceReserved="false"/>
         <SwitchPreferenceCompat
             a:defaultValue="true"
             a:key="@string/setting_key.download_transition"
@@ -44,9 +34,49 @@
             a:key="@string/setting_key.replaygain"
             a:title="@string/settings.replaygain_title"
             app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-    <PreferenceCategory
+        <Preference
+            a:key="@string/setting_key.equalizer"
+            a:persistent="false"
+            a:title="@string/settings.equalizer_title"
+            a:summary="@string/settings.equalizer_summary"
+            app:iconSpaceReserved="false"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        a:key="library_group"
+        a:title="@string/settings.library_title"
+        a:summary="@string/settings.library_summary"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            a:defaultValue="true"
+            a:key="@string/setting_key.id3_tags"
+            a:summary="@string/settings.use_id3_summary"
+            a:title="@string/settings.use_id3"
+            app:iconSpaceReserved="false"/>
+        <SwitchPreferenceCompat
+            a:defaultValue="true"
+            a:key="@string/setting_key.id3_tags_offline"
+            a:summary="@string/settings.use_id3_offline_summary"
+            a:title="@string/settings.use_id3_offline"
+            app:iconSpaceReserved="false"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        a:key="images_group"
+        a:title="@string/settings.images_title"
+        a:summary="@string/settings.images_summary"
+        app:iconSpaceReserved="false">
+        <Preference
+            a:key="@string/setting_key.clear_image_cache"
+            a:persistent="false"
+            a:title="@string/settings.clear_image_cache"
+            app:iconSpaceReserved="false"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        a:key="network_group"
         a:title="@string/settings.network_title"
+        a:summary="@string/settings.network_summary"
         app:iconSpaceReserved="false">
         <ListPreference
             a:defaultValue="256"
@@ -75,9 +105,12 @@
             a:summary="@string/settings.wifi_required_summary"
             a:title="@string/settings.wifi_required_title"
             app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-    <PreferenceCategory
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        a:key="music_cache_group"
         a:title="@string/settings.cache_title"
+        a:summary="@string/settings.cache_summary"
         app:iconSpaceReserved="false">
         <ListPreference
             a:defaultValue="500"
@@ -95,22 +128,17 @@
             a:title="@string/settings.cache_location"
             app:iconSpaceReserved="false"/>
         <Preference
-            a:key="@string/setting_key.clear_image_cache"
+            a:key="@string/setting_key.clear_downloads"
             a:persistent="false"
-            a:title="@string/settings.clear_image_cache"
+            a:title="@string/settings.clear_downloads"
+            a:summary="@string/settings.clear_downloads_summary"
             app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-    <PreferenceCategory
-        a:title="@string/settings.search_title"
-        app:iconSpaceReserved="false">
-        <Preference
-            a:key="@string/setting_key.clear_search_history"
-            a:persistent="false"
-            a:title="@string/settings.clear_search_history"
-            app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-    <PreferenceCategory
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        a:key="other_group"
         a:title="@string/settings.other_title"
+        a:summary="@string/settings.other_summary"
         app:iconSpaceReserved="false">
         <ListPreference
             a:defaultValue=""
@@ -126,9 +154,17 @@
             a:title="@string/settings.show_confirmation_dialog"
             a:summary="@string/settings.show_confirmation_dialog_summary"
             app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
-    <PreferenceCategory
+        <Preference
+            a:key="@string/setting_key.clear_search_history"
+            a:persistent="false"
+            a:title="@string/settings.clear_search_history"
+            app:iconSpaceReserved="false"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        a:key="debug_group"
         a:title="@string/settings.debug.title"
+        a:summary="@string/settings.debug_summary"
         app:iconSpaceReserved="false">
         <SwitchPreferenceCompat
             a:defaultValue="false"
@@ -136,6 +172,6 @@
             a:title="@string/settings.debug.log_to_file"
             a:summary=""
             app:iconSpaceReserved="false"/>
-    </PreferenceCategory>
+    </PreferenceScreen>
 
 </PreferenceScreen>

@@ -39,6 +39,7 @@
         a:layout_width="0dp"
         a:layout_height="88dp"
         a:layout_marginStart="12dp"
+        a:layout_marginEnd="12dp"
         a:drawablePadding="6dip"
         a:gravity="center_vertical"
         a:minHeight="56dip"
@@ -53,9 +54,10 @@
 
         <TextView
             a:id="@+id/album_title"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
-            a:ellipsize="marquee"
+            a:ellipsize="end"
             a:singleLine="true"
             a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
             tools:text="TITLE" />
@@ -72,23 +74,5 @@
             tools:text="ARTIST" />
 
     </LinearLayout>
-
-    <ImageView
-        a:id="@+id/album_star"
-        a:layout_width="38dp"
-        a:padding="4dp"
-        a:layout_height="38dp"
-        a:layout_marginStart="16dp"
-        a:layout_marginTop="16dp"
-        a:layout_marginEnd="20dp"
-        a:background="@android:color/transparent"
-        a:gravity="center_horizontal"
-        a:src="@drawable/rating_star_hollow"
-        a:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintLeft_toRightOf="@+id/row_album_details"
-        app:layout_constraintStart_toEndOf="@+id/row_album_details"
-        app:layout_constraintTop_toTopOf="parent"
-        a:contentDescription="@string/download.menu_star" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:a="http://schemas.android.com/apk/res/android"
-    a:orientation="vertical"
+<FrameLayout xmlns:a="http://schemas.android.com/apk/res/android"
     a:layout_width="match_parent"
     a:layout_height="match_parent">
 
-    <ListView
+    <androidx.recyclerview.widget.RecyclerView
         a:id="@+id/server_list"
-        a:layout_width="fill_parent"
-        a:layout_height="fill_parent"/>
+        a:layout_width="match_parent"
+        a:layout_height="match_parent"
+        a:clipToPadding="false"
+        a:paddingTop="8dp"
+        a:paddingBottom="88dp" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         a:id="@+id/server_add_fab"
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
-        a:layout_alignEnd="@id/server_list"
-        a:layout_alignBottom="@id/server_list"
+        a:layout_gravity="bottom|end"
         a:layout_margin="16dp"
         a:clickable="true"
         a:focusable="true"
         a:src="@drawable/ic_add_white"
         a:contentDescription="@string/server_editor.new_label" />
 
-</RelativeLayout>
+</FrameLayout>

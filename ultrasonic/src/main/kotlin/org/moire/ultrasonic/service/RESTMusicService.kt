@@ -330,6 +330,13 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
+    override fun getLyricsBySongId(id: String): Lyrics? {
+        val response = API.getLyricsBySongId(id).execute().throwOnFailure()
+
+        return response.body()!!.lyricsList.toDomainEntity()
+    }
+
+    @Throws(Exception::class)
     override fun scrobble(id: String, submission: Boolean) {
         API.scrobble(id, null, submission).execute().throwOnFailure()
     }

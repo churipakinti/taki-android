@@ -1,67 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:a="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:a="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    a:id="@+id/server_layout"
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
-    a:descendantFocusability="blocksDescendants"
-    a:orientation="horizontal">
+    a:layout_marginHorizontal="10dp"
+    a:layout_marginVertical="5dp"
+    a:clickable="true"
+    a:focusable="true"
+    a:foreground="?android:attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+    app:cardCornerRadius="5dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="2dp"
+    app:strokeColor="@android:color/transparent">
 
-    <ImageView
-        a:id="@+id/server_image"
-        a:layout_width="48dp"
-        a:layout_height="48dp"
-        a:layout_centerVertical="true"
-        a:layout_margin="10dp"
-        a:background="@drawable/circle"
-        a:focusable="false"
-        a:paddingHorizontal="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:src="@drawable/ic_menu_server"
-        a:importantForAccessibility="no" />
-
-    <TextView
-        a:id="@+id/server_name"
-        a:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        a:layout_width="match_parent"
         a:layout_height="wrap_content"
-        a:layout_marginStart="15dp"
-        a:textAppearance="?android:attr/textAppearanceListItem"
-        app:layout_constraintStart_toEndOf="@id/server_image"
-        app:layout_constraintTop_toTopOf="@id/server_image"
-        app:layout_constraintEnd_toStartOf="@id/server_menu"
-        tools:text="Server name" />
+        a:minHeight="76dp">
 
-    <TextView
-        a:id="@+id/server_description"
-        a:layout_width="0dp"
-        a:layout_height="wrap_content"
-        a:layout_marginStart="15dp"
-        a:textAppearance="?android:attr/textAppearanceSmall"
-        app:layout_constraintBottom_toBottomOf="@id/server_image"
-        app:layout_constraintStart_toEndOf="@id/server_image"
-        app:layout_constraintTop_toBottomOf="@id/server_name"
-        app:layout_constraintEnd_toStartOf="@id/server_menu"
-        tools:text="Server description" />
+        <ImageView
+            a:id="@+id/server_image"
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:layout_marginStart="14dp"
+            a:background="@drawable/circle"
+            a:focusable="false"
+            a:padding="10dp"
+            a:importantForAccessibility="no"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_menu_server" />
 
-    <ImageButton
-        a:id="@+id/server_menu"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:layout_alignParentEnd="true"
-        a:layout_alignParentRight="true"
-        a:layout_centerVertical="true"
-        a:layout_gravity="end"
-        a:layout_marginEnd="15dp"
-        a:contentDescription="@string/server_editor.advanced"
-        a:focusable="false"
-        a:src="@drawable/ic_more_vert"
-        app:layout_constraintTop_toTopOf="@id/server_name"
-        app:layout_constraintBottom_toBottomOf="@+id/server_description"
-        app:layout_constraintEnd_toEndOf="parent"
-        a:padding="5dp" />
+        <TextView
+            a:id="@+id/server_name"
+            style="@style/Ultrasonic.PrimaryText"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="14dp"
+            a:layout_marginEnd="6dp"
+            a:ellipsize="end"
+            a:maxLines="1"
+            a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+            app:layout_constraintStart_toEndOf="@id/server_image"
+            app:layout_constraintTop_toTopOf="@id/server_image"
+            app:layout_constraintEnd_toStartOf="@id/server_menu"
+            tools:text="Server name" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            a:id="@+id/server_description"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="14dp"
+            a:layout_marginEnd="6dp"
+            a:layout_marginTop="2dp"
+            a:ellipsize="end"
+            a:maxLines="1"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintStart_toEndOf="@id/server_image"
+            app:layout_constraintTop_toBottomOf="@id/server_name"
+            app:layout_constraintEnd_toStartOf="@id/server_menu"
+            app:layout_constraintBottom_toBottomOf="@id/server_image"
+            tools:text="https://music.example.com" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/server_menu"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="32dp"
+            a:layout_height="32dp"
+            a:layout_marginEnd="10dp"
+            a:contentDescription="@string/server_editor.advanced"
+            a:focusable="false"
+            app:icon="@drawable/ic_more_vert"
+            app:iconSize="16dp"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

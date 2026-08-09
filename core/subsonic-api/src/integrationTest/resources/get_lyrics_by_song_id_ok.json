@@ -1,0 +1,22 @@
+{
+  "subsonic-response": {
+    "status": "ok",
+    "version": "1.16.1",
+    "lyricsList": {
+      "structuredLyrics": [
+        {
+          "displayArtist": "Amorphis",
+          "displayTitle": "Alone",
+          "lang": "eng",
+          "synced": true,
+          "line": [
+            { "start": 0, "value": "Tear dimmed rememberance" },
+            { "start": 3200, "value": "In a womb of time" },
+            { "start": 6800, "value": "Breath upon me" },
+            { "start": 10100, "value": "Possessed by the" }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:id="@+id/lyrics_line_text"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:gravity="center"
+    a:paddingHorizontal="28dp"
+    a:paddingVertical="10dp"
+    a:lineSpacingMultiplier="1.15"
+    tools:text="A line of the song" />

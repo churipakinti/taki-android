@@ -127,23 +127,25 @@
 
         <TextView
             a:id="@+id/edit_server_color_text"
-            style="@style/Widget.AppCompat.CompoundButton.Switch"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_marginStart="5dp"
             a:layout_marginLeft="5dp"
             a:text="@string/settings.server_color"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintBottom_toBottomOf="@id/edit_server_color_picker"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/edit_server_color_picker" />
 
         <TextView
             a:id="@+id/edit_self_signed_title"
-            style="@style/Widget.AppCompat.CompoundButton.Switch"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_marginStart="5dp"
             a:text="@string/settings.title.allow_self_signed_certificate"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintBottom_toTopOf="@id/edit_plaintext_title"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/edit_server_color_text" />
@@ -163,22 +165,25 @@
 
         <TextView
             a:id="@+id/edit_plaintext_title"
-            style="@style/Widget.AppCompat.CompoundButton.Switch"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_marginStart="5dp"
             a:text="@string/settings.title.force_plain_text_password"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintBottom_toTopOf="@id/edit_plaintext_description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/edit_self_signed" />
 
         <TextView
             a:id="@+id/edit_plaintext_description"
-            style="@style/TextAppearance.AppCompat.Small"
+            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_marginStart="5dp"
             a:text="@string/settings.summary.force_plain_text_password"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
             app:layout_constraintBottom_toTopOf="@id/edit_jukebox"
             app:layout_constraintEnd_toStartOf="@id/edit_plaintext"
             app:layout_constraintStart_toStartOf="parent"
@@ -198,12 +203,13 @@
 
         <TextView
             a:id="@+id/edit_jukebox_title"
-            style="@style/Widget.AppCompat.CompoundButton.Switch"
+            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_marginStart="5dp"
             a:layout_marginTop="8dp"
             a:text="@string/jukebox.is_default"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/edit_plaintext_description" />
 
@@ -219,7 +225,7 @@
             app:layout_constraintStart_toEndOf="@id/edit_jukebox_title"
             app:layout_constraintTop_toBottomOf="@id/edit_plaintext_description" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             a:id="@+id/edit_test"
             style="?attr/materialButtonOutlinedStyle"
             a:layout_width="0dp"
@@ -234,7 +240,7 @@
             app:layout_constraintTop_toBottomOf="@id/edit_jukebox"
             app:layout_constraintVertical_bias="1.0" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             a:id="@+id/edit_save"
             style="?attr/materialButtonOutlinedStyle"
             a:layout_width="0dp"

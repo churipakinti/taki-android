@@ -15,15 +15,24 @@ import android.os.Bundle
 import android.provider.SearchRecentSuggestions
 import android.view.View
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreferenceCompat
 import kotlin.math.ceil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.app.UApp
+import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.log.FileLoggerTree
 import org.moire.ultrasonic.log.FileLoggerTree.Companion.deleteLogFiles
@@ -63,13 +72,34 @@ class SettingsFragment :
     private var customCacheLocation: SwitchPreferenceCompat? = null
     private var clearImageCache: Preference? = null
 
+    private val activeServerProvider: ActiveServerProvider by inject()
+
+    // null rootKey/groupTitle means the top-level screen (a list of groups); a non-null pair
+    // means this instance shows one group's actual settings, reached via onPreferenceTreeClick
+    // navigating this same destination to itself with a different rootKey -- see that override
+    // below for why this doesn't use PreferenceFragmentCompat's own nested-screen mechanism.
+    private val navArgs by navArgs<SettingsFragmentArgs>()
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.settings, rootKey)
+        setPreferencesFromResource(R.xml.settings, navArgs.rootKey)
+    }
+
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        if (preference is PreferenceScreen && preference.key != null) {
+            findNavController().navigate(
+                SettingsFragmentDirections.settingsToGroup(
+                    rootKey = preference.key,
+                    groupTitle = preference.title?.toString()
+                )
+            )
+            return true
+        }
+        return super.onPreferenceTreeClick(preference)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setTitle(this, R.string.menu_settings)
+        setTitle(this, navArgs.groupTitle ?: getString(R.string.menu_settings))
         debugLogToFile = findPreference(getString(R.string.setting_key_debug_log_to_file))
         useId3TagsOffline = findPreference(getString(R.string.setting_key_id3_tags_offline))
         customCacheLocation = findPreference(getString(R.string.setting_key_custom_cache_location))
@@ -79,6 +109,8 @@ class SettingsFragment :
         setupClearSearchPreference()
         setupClearImageCachePreference()
         setupCacheLocationPreference()
+        setupEqualizerPreference()
+        setupClearDownloadsPreference()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -252,6 +284,46 @@ class SettingsFragment :
                         .create().show()
                     false
                 }
+        }
+    }
+
+    private fun setupEqualizerPreference() {
+        val equalizerPreference =
+            findPreference<Preference>(getString(R.string.setting_key_equalizer))
+        equalizerPreference?.onPreferenceClickListener =
+            Preference.OnPreferenceClickListener {
+                findNavController().navigate(R.id.toEqualizer)
+                true
+            }
+    }
+
+    private fun setupClearDownloadsPreference() {
+        val clearDownloadsPreference =
+            findPreference<Preference>(getString(R.string.setting_key_clear_downloads))
+        clearDownloadsPreference?.onPreferenceClickListener =
+            Preference.OnPreferenceClickListener {
+                ConfirmationDialog.Builder(requireContext())
+                    .setMessage(R.string.settings_clear_downloads_confirm)
+                    .setNegativeButton(R.string.common_cancel) { dIf: DialogInterface, _: Int ->
+                        dIf.cancel()
+                    }
+                    .setPositiveButton(R.string.common_ok) { _: DialogInterface, _: Int ->
+                        clearAllDownloads()
+                    }
+                    .create().show()
+                false
+            }
+    }
+
+    private fun clearAllDownloads() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val tracks = withContext(Dispatchers.IO) {
+                activeServerProvider.offlineMetaDatabase.trackDao().get()
+            }
+            DownloadService.deleteAsync(tracks)
+            toast(
+                resources.getQuantityString(R.plurals.n_songs_deleted, tracks.size, tracks.size)
+            )
         }
     }
 

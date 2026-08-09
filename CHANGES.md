@@ -1059,3 +1059,265 @@ activar. Se armó una lista de candidatos entre las categorías restantes y se c
 
 Archivos: `Settings.kt`, `settings.xml` (xml/), `SettingsFragment.kt`,
 `BluetoothIntentReceiver.kt`, `Constants.kt`, `strings.xml`, `setting_keys.xml`, `arrays.xml`.
+
+## Settings: reagrupado siguiendo una app de referencia + Ecualizador ahora visible ahí
+
+El usuario mandó capturas de otra app de música (agrupa Settings en Now Playing/Library/Images/
+Audio/Playlists/etc.) y pidió comparar esa estructura contra lo que le quedó a Ultrasonic después
+de las dos rondas de recorte. Se armó un documento comparativo (grupos propuestos, qué falta, qué
+se puede construir, qué no aplica a nuestra arquitectura de cliente-servidor) y, con el visto
+bueno del usuario, se hizo la parte segura de esa comparación:
+
+- **Reagrupado sin sacar nada**: `settings.xml` pasó de "Playback Control/Network/Music Cache/
+  Search/Other/Debug" a **Now Playing** (Show Now Playing on Play, Clear Bookmark, Hardware
+  offload, ReplayGain, Equalizer), **Library** (ID3 tags online/offline), **Images** (Clear Image
+  Cache), **Network**, **Music Cache** y **Other** (ahí se sumó "Clear Search History", que antes
+  tenía su propia categoría con un solo ítem). Ningún ítem se eliminó, solo cambiaron de grupo.
+- **Ecualizador ahora tiene entrada en Settings**: ya existía completo (`EqualizerFragment` +
+  `EqualizerController`) pero solo se llegaba desde el menú del Reproductor — se agregó una acción
+  global `toEqualizer` en `navigation_graph.xml` y un `Preference` en "Now Playing" que navega ahí
+  directo.
+- **Se investigaron, pero NO se implementaron** (decisión explícita del usuario: "simplifiquemos
+  un poco, no nos metamos tan adentro por ahora") 4 funciones de la app de referencia que en el
+  documento inicial parecían simples y resultaron tener más complejidad real de la esperada:
+  volume slider (choca con el volumen que ya maneja ReplayGain automáticamente en cada cambio de
+  canción), toggle de "cache de imágenes" (hay dos capas de caché separadas — Coil para miniaturas
+  y una propia para portadas completas), "bajar volumen en vez de pausar al perder el foco de
+  audio" (es posible que Media3 ya lo haga solo, dado que `handleAudioFocus=true` ya está
+  configurado — habría que probarlo en dispositivo antes de escribir nada), y exportar playlist a
+  archivo (ya sabemos escribir `.m3u`, pero solo con rutas locales de canciones descargadas — una
+  exportación "real" necesita decidir qué guardar ahí). Quedan documentadas como pendientes, no
+  descartadas.
+
+Archivos: `settings.xml` (xml/), `navigation_graph.xml`, `SettingsFragment.kt`, `strings.xml`,
+`setting_keys.xml`.
+
+## Settings: estructura de dos niveles (como la app de referencia)
+
+El usuario volvió a mandar la misma captura y confirmó que sí quería replicar esa estructura:
+una pantalla principal con una tarjeta por grupo (título + subtítulo de lo que contiene), que al
+tocarla abre una pantalla aparte solo con las opciones de ese grupo — no una sola lista larga con
+títulos de sección como se había dejado antes.
+
+- **`settings.xml`**: cada categoría pasó de `PreferenceCategory` a `PreferenceScreen` anidado
+  (con su propia `a:key`/`a:title`/`a:summary`). AndroidX Preference ya soporta este patrón
+  nativamente vía el parámetro `rootKey` de `setPreferencesFromResource()` — no hizo falta
+  duplicar el XML en archivos separados.
+- **Navegación por Nav Component, no por el mecanismo nativo de Preference**: la librería
+  normalmente maneja el "entrar a una sub-pantalla" con `onNavigateToScreen` + transacciones
+  crudas de `FragmentManager` — pero como esta pantalla vive dentro del `NavHostFragment` que ya
+  usa toda la app, mezclar los dos sistemas de navegación podía romper el botón atrás. En cambio,
+  se agregó una acción que apunta a `settingsFragment` desde sí mismo (`toEqualizer`-style, con
+  argumentos `rootKey`/`groupTitle` nulables) y `SettingsFragment.onPreferenceTreeClick()` se
+  override para interceptar el tap en cada tarjeta de grupo y navegar con
+  `findNavController().navigate(...)`, igual que cualquier otra pantalla de la app. Esto mantiene
+  el botón atrás y el título de la barra superior consistentes con el resto de la navegación.
+- El título de la barra superior ahora es el nombre del grupo (o "Settings" en la pantalla
+  principal), usando el mismo `FragmentTitle.setTitle()` que ya usa toda la app.
+
+Archivos: `settings.xml` (xml/), `navigation_graph.xml` (acción `settingsToGroup` +
+argumentos `rootKey`/`groupTitle`), `SettingsFragment.kt`, `strings.xml` (subtítulos por grupo).
+
+## Settings: "Clear All Downloads" en Music Cache
+
+Nueva acción, con confirmación previa (no se puede deshacer): borra todas las canciones
+descargadas/fijadas de una — misma fuente de datos que ya usa la pantalla Downloads
+(`activeServerProvider.offlineMetaDatabase.trackDao().get()`) y el mismo
+`DownloadService.deleteAsync()` que borra por álbum ahí. `SettingsFragment` ganó acceso a
+`ActiveServerProvider` por Koin (no lo necesitaba hasta ahora) para poder consultar esa base.
+
+Archivos: `settings.xml` (xml/), `SettingsFragment.kt`, `strings.xml`, `setting_keys.xml`.
+
+## Search: fila de álbum modernizada (empieza el pase visual de Search)
+
+Comparando pantallas, la fila de álbum en resultados de Search (`AlbumRowDelegate`) era el
+elemento más viejo — estrella de rating siempre visible, título sin el estilo tipográfico que ya
+usa el resto de la app, `ellipsize="marquee"` (patrón que ya no se usa en ningún otro lado). Este
+delegate es compartido con `AlbumListFragment` (pantalla "Albums" de la librería) y con
+`TrackCollectionFragment` (navegación por carpetas mixtas) — el arreglo mejora las tres pantallas
+a la vez, no solo Search.
+
+- **Estrella eliminada** de `list_item_album.xml` y `grid_item_album.xml` — mismo criterio ya
+  aplicado a las filas de canción esta sesión (rating fuera de la fila; en Cola se movió al menú
+  contextual, acá no se agregó reemplazo, mismo trade-off aceptado sin pedirlo de nuevo).
+- **Título con `Ultrasonic.PrimaryText`** en ambos layouts (antes sin estilo, se veía más
+  "delgado" que el resto de los títulos de la app) y `ellipsize="end"` en vez de `marquee`.
+- `AlbumRowDelegate.kt`: se sacó toda la lógica de rating (`starDrawable`/`onStarClick`/
+  `RxBus.ratingSubmitter`) — quedó más chico y sin las dependencias de rating que ya no usa.
+
+Las filas de **canción** en Search no se tocaron — ya habían heredado el estilo moderno (fila
+compartida). Sigue pendiente, si se retoma: decidir si Search tiene su propio campo de búsqueda
+en pantalla en vez de depender de la barra del sistema (cambio de estructura más grande, no solo
+visual).
+
+## Migración visual de las últimas pantallas "viejas"
+
+Antes de pulir el Player y hacer la auditoría de consistencia (plan de 3 pasos acordado con el
+usuario), se buscaron las pantallas que todavía no habían recibido ningún paso de la migración
+visual de esta sesión. Se encontraron 4 pantallas completas y 2 detalles menores; todas comparten
+el mismo criterio ya usado en el resto de la app: tipografía `Ultrasonic.PrimaryText`/
+`Ultrasonic.SecondaryText` + `TextAppearance.Material3.*`, colores por atributo de tema
+(`?attr/colorOnSurfaceVariant` en vez de hex fijos), y `MaterialButton`/`MaterialCardView`
+explícitos en vez de widgets planos de `android.widget`.
+
+- **About** (`help.xml`): pasó de `RelativeLayout` sin estilo a un layout con jerarquía tipográfica
+  clara (título/cuerpo) y los dos botones (web/reportar bug) como `MaterialButton` con
+  `materialButtonOutlinedStyle`, igual que el resto de acciones secundarias de la app.
+  `AboutFragment.kt` actualizado al tipo `MaterialButton`.
+- **Lyrics** (`lyrics.xml`): reordenado para que el título de la canción sea la primera línea
+  destacada (antes el artista iba primero y en el mismo tono que el título); texto de letra con
+  interlineado más cómodo (`lineSpacingMultiplier=1.3`). El fallback de "no se encontró letra"
+  ahora se escribe sobre el título en vez del artista, ya que el título es el elemento visualmente
+  prominente.
+- **Configured servers** (`server_selector.xml` + `server_row.xml` + `ServerRowAdapter.kt` +
+  `ServerSelectorFragment.kt`): la pantalla pasó de `ListView`/`BaseAdapter` (patrón ya
+  abandonado en el resto de la app) a `RecyclerView`/`RecyclerView.Adapter`, con un FAB para
+  agregar servidor (antes un botón en la esquina). Cada servidor ahora es una `MaterialCardView`
+  igual que las filas de Playlists/Downloads, y el servidor activo se marca con un borde del color
+  primario del tema (`strokeColor`) en vez de cambiar el fondo. El botón "⋮" del menú contextual
+  pasó de `ImageButton` con padding manual (el mismo patrón de ícono borroso/sobredimensionado
+  encontrado y corregido varias veces esta sesión) a `MaterialButton` con `app:iconSize` explícito.
+- **Equalizer** (`equalizer.xml` + `equalizer_bar.xml`): texto gris fijo (`#c0c0c0`) reemplazado
+  por colores de tema, el checkbox "Enabled" y las etiquetas de frecuencia/dB ahora usan la misma
+  tipografía que el resto de la app, y el botón "Select Preset" pasó a `MaterialButton` con estilo
+  outlined. Sin cambios de lógica — `EqualizerFragment.kt` sigue intacto, solo referencia los
+  mismos ids de vista.
+- **Add/Edit server** (`server_edit.xml`, detalle menor): se encontraron 4 `TextView` (Server
+  color, Allow self-signed HTTPS certificate, Force plain password authentication, Jukebox By
+  Default) que usaban por error `style="@style/Widget.AppCompat.CompoundButton.Switch"` — un
+  estilo pensado para el texto interno de un widget Switch, no para una etiqueta de fila normal
+  junto a un `SwitchMaterial` aparte. Se reemplazaron por `Ultrasonic.PrimaryText` +
+  `TextAppearance.Material3.BodyMedium` (y `Ultrasonic.SecondaryText` para la descripción de
+  "Force plain password"), y los botones "Test Connection"/"Save" pasaron de `Button` genérico a
+  `MaterialButton` explícito.
+- **Selector de carpeta en listas** (`list_header_folder.xml`, detalle menor): fila que aparece
+  como primer ítem de Artistas/Álbumes/Canciones/Géneros cuando el servidor está en modo de
+  navegación por carpetas (no ID3) — actualizada a la misma tipografía y al ícono con tinte de
+  tema (`?attr/colorOnSurfaceVariant`) en vez de tamaño/color por defecto del sistema. No se pudo
+  verificar visualmente en dispositivo por no tener a mano un servidor configurado en modo
+  carpetas, pero los ids de vista (`select_folder_header`, `select_folder_title`,
+  `select_folder_name`) no cambiaron, así que `FolderSelectorBinder.kt` sigue funcionando igual.
+
+Verificado en dispositivo físico (dos servidores reales + Offline): navegación a cada pantalla,
+cambio de servidor activo desde Configured Servers, apertura de Equalizer desde Settings, y
+formulario de Add Server — sin crashes ni errores en logcat.
+
+Archivos: `help.xml`, `AboutFragment.kt`, `lyrics.xml`, `LyricsFragment.kt`, `server_selector.xml`,
+`server_row.xml`, `ServerRowAdapter.kt`, `ServerSelectorFragment.kt`, `equalizer.xml`,
+`equalizer_bar.xml`, `server_edit.xml`, `list_header_folder.xml`.
+
+Archivos: `list_item_album.xml`, `grid_item_album.xml`, `AlbumRowDelegate.kt`.
+
+## Letras sincronizadas (karaoke) + reparación de bug del reproductor
+
+El usuario pidió pulir la pantalla de Letras ("ahora son solo un texto estático y feo") y
+preguntó si se podía hacer sincronizado con texto grande. Investigando, la app solo tenía
+implementado el endpoint viejo de Subsonic (`getLyrics.view`, por artista/título, siempre texto
+plano) — nunca se había integrado la extensión de OpenSubsonic `getLyricsBySongId` (por id de
+canción, devuelve líneas con marca de tiempo cuando el servidor las tiene). Se verificó en vivo
+contra el servidor real del usuario (Navidrome) que sí soporta esa extensión.
+
+- **Capa API nueva** (`core/subsonic-api`): `StructuredLyrics.kt` (modelos `LyricsList`/
+  `StructuredLyrics`/`LyricsLine`), `GetLyricsBySongIdResponse.kt`, y el endpoint
+  `getLyricsBySongId` en `SubsonicAPIDefinition.kt`. No se agregó a `ApiVersionCheckWrapper` a
+  propósito — es una extensión de OpenSubsonic, no parte del protocolo versionado de Subsonic, así
+  que no tiene sentido controlarla contra `SubsonicAPIVersions`; si el servidor no la soporta la
+  llamada simplemente falla y el fallback se encarga.
+- **Dominio** (`core/domain/Lyrics.kt`): `Lyrics` ganó `synced: Boolean` y `lines: List<LyricsLine>`
+  (antes solo tenía un `text` plano). `APILyricsConverter.kt` sabe convertir tanto la respuesta
+  vieja (`Lyrics` → texto plano) como la nueva (`StructuredLyrics`/`LyricsList` → líneas con
+  tiempos, prefiriendo la entrada sincronizada si el servidor devuelve varias).
+- **Fallback en dos pasos** (`LyricsFragment.kt`): primero intenta `getLyricsBySongId`; si el
+  servidor no la soporta, falla, o no devuelve líneas, cae automáticamente al `getLyrics` viejo
+  (por artista/título) y separa el texto plano en líneas igual — así la letra siempre se ve grande
+  y por líneas, tenga o no sincronía.
+- **UI en líneas, no un bloque de texto** (`lyrics.xml`, `lyrics_line_item.xml`,
+  `LyricsLineAdapter.kt` nuevo): la pantalla pasó de un `TextView` único dentro de un
+  `NestedScrollView` a un `RecyclerView` con una fila grande y centrada por línea. Cuando hay
+  sincronía real, un loop de 300ms (mismo patrón del executor de 500ms que ya usa `PlayerFragment`
+  para la barra de progreso) calcula la línea activa según `mediaPlayerManager.playerPosition` y la
+  resalta (`TextAppearance.Material3.HeadlineSmall`, negrita, opaca) mientras atenúa el resto
+  (`TitleMedium`, alfa 0.6), haciendo scroll automático para mantenerla centrada — estilo karaoke.
+  Sin sincronía, todas las líneas se ven igual de grandes pero sin resaltado ni scroll automático.
+- **Indicador de sincronía, dos rondas de ajuste con el usuario**: preguntó cómo saber si una
+  letra está sincronizada sin depender de notar el resaltado en movimiento.
+  1. Primera versión: etiqueta de texto en mayúsculas ("SYNCED LYRICS", reusando
+     `Ultrasonic.AllCapsLabel`) debajo del artista, visible solo cuando había timestamps. El
+     usuario la encontró "grotesca" y pidió un ícono chico (check/X), mandando de referencia una
+     captura de Spotify.
+  2. Reemplazada por un ícono de 16dp (`ic_lyrics_synced.xml`/`ic_lyrics_unsynced.xml`, paths
+     estándar de Material "check"/"close"), **siempre visible** una vez carga la letra — no solo
+     cuando está sincronizada, para eliminar del todo la ambigüedad original ("no sincronizada"
+     vs. "todavía cargando" se veían igual de vacías antes). Check en `colorPrimary`, X en
+     `colorOnSurfaceVariant` (mate, no es un error).
+  3. El usuario aceptó el ícono pero pidió reubicarlo: en vez de una fila aparte debajo del
+     artista, a la derecha del nombre de la canción, en la misma línea. `lyrics_title` pasó a
+     compartir una fila horizontal con el ícono (`layout_weight="1"` + `ellipsize="end"` +
+     `singleLine="true"` para no chocar con el ícono en títulos largos), y se sacó la etiqueta de
+     texto ("Synced"/"Not synced") que la acompañaba — el ícono solo, contextual junto al título,
+     ya comunica el estado sin necesitar texto; ese texto pasó a `contentDescription` para
+     accesibilidad.
+- **Acceso directo desde el Player**: se agregó un tercer botón a la fila secundaria de controles
+  (`player_secondary_controls.xml`, junto a guardar-playlist y cola) que navega directo a Letras
+  de la canción actual, reusando el ícono `ic_library` ya usado para la misma función en el menú
+  superior. Los 3 botones ahora están centrados como grupo con espacio uniforme entre ellos
+  (`layout_marginHorizontal="18dp"` cada uno) en vez del patrón anterior de 2 botones a los
+  extremos con un spacer flexible en el medio. La navegación real vive en una función compartida
+  `PlayerFragment.navigateToLyrics(track)`, reusada tanto por el botón nuevo (con la canción
+  actual) como por el ítem de menú viejo (con la canción del row long-presseado en la cola) —
+  antes esa lógica solo existía inline en el `when` del menú. En modo offline, el botón muestra un
+  toast ("Lyrics are not available in offline mode") en vez de navegar, ya que la pantalla de
+  Letras siempre necesita red.
+- **Bug de arrastre del SeekBar, encontrado al mismo tiempo** (no relacionado a las letras, lo
+  reportó el usuario probando el Player): `updateSeekBar()` corre cada 500ms vía el mismo executor
+  que ya actualiza la posición, y pisaba `progressBar.progress` sin chequear si el usuario tenía el
+  dedo en la barra — al intentar retroceder, el thumb se "teletransportaba" de vuelta hacia
+  adelante antes de soltar, hacía casi imposible retroceder y se sentía "bugueado". Se agregó
+  `isSeekBarDragging` (true en `onStartTrackingTouch`, false en `onStopTrackingTouch` después de
+  aplicar el seek) y `updateSeekBar()` ahora se salta la actualización de posición/texto/estado
+  habilitado mientras ese flag está activo. Confirmado arreglado por el usuario en dispositivo real.
+- **Segundo bug del Player, más serio, encontrado después**: el usuario reportó que al entrar a
+  Letras y volver, los botones (play/pause/prev/next/etc.) y la barra de progreso dejaban de
+  responder por completo, sin ningún error visible. Causa real: `PlayerFragment` implementaba
+  `CoroutineScope by CoroutineScope(Dispatchers.Main)` — un delegado creado **una sola vez** al
+  construirse la instancia del fragment, pero cancelado (`cancel(...)`) en cada `onDestroyView()`
+  (que se dispara al navegar a cualquier otra pantalla, no solo Letras). Como la instancia del
+  fragment sobrevive en el backstack de Nav Component aunque su vista se destruya y se recree, al
+  volver ese `CoroutineScope` quedaba cancelado **para siempre** — y absolutamente todos los
+  botones del Player usan `launch { ... }` sobre ese mismo scope para ejecutar sus acciones
+  (`mediaPlayerManager.play()`/`.pause()`/`.seekToNext()`/etc.), así que después de un primer
+  ida-y-vuelta a cualquier pantalla, cada tap silenciosamente no hacía nada (una corrutina
+  lanzada sobre un scope cancelado no corre y no lanza excepción, por eso no había nada en el
+  log). **Esto no lo introdujo el trabajo de Letras de esta sesión — era un bug latente
+  preexistente que cualquier navegación fuera-y-vuelta del Player ya disparaba**, simplemente
+  nunca se había notado porque antes no había una forma tan directa y repetida de ir y volver
+  (el acceso directo a Letras lo hizo mucho más frecuente). Arreglado reemplazando el delegado
+  fijo por una implementación manual de `CoroutineScope` respaldada por un campo `mainScope`
+  reasignable: `mainScope = CoroutineScope(Dispatchers.Main)` ahora se ejecuta en cada
+  `onCreateView()` (no solo una vez), y `coroutineContext` se resuelve dinámicamente contra
+  `mainScope` en cada acceso — así ningún `launch { ... }` existente en el archivo necesitó
+  tocarse, todos siguen leyendo el scope "vivo" actual automáticamente. Confirmado arreglado en
+  dispositivo real: la posición volvió a avanzar sola después de reproducir tras un viaje a
+  Letras y de vuelta, algo que antes quedaba congelado indefinidamente.
+- **Tests nuevos**: `SubsonicApiGetLyricsBySongIdTest.kt` (contrato API, parseo de líneas
+  sincronizadas + parámetro `id`) y ampliación de `APILyricsConverterTest.kt` (conversión de
+  `StructuredLyrics`, preferencia por la entrada sincronizada al elegir entre varias, `null` cuando
+  la lista viene vacía) — mismo patrón de pruebas de contrato ya usado para `getArtistInfo2`/
+  `getTopSongs` esta sesión.
+
+Verificado en dispositivo físico contra el servidor Navidrome real del usuario, en dos rondas:
+primero con una canción sin datos de sincronía (letra grande y centrada, ícono X + "Not synced",
+sin resaltado — comportamiento correcto), y después con una canción que sí tenía LRC real en el
+servidor: el ícono de check + "Synced" apareció, y la línea activa se vio resaltada (más grande,
+negrita, blanca) mientras el resto quedaba atenuado — confirmando en vivo que el resaltado
+karaoke funciona de punta a punta, no solo el fallback a texto plano. Los 3 botones de la fila
+secundaria del Player también se ven centrados y parejos.
+
+Archivos: `core/subsonic-api/.../models/StructuredLyrics.kt`,
+`core/subsonic-api/.../response/GetLyricsBySongIdResponse.kt`, `SubsonicAPIDefinition.kt`,
+`core/domain/Lyrics.kt`, `APILyricsConverter.kt`, `MusicService.kt`, `RESTMusicService.kt`,
+`CachedMusicService.kt`, `OfflineMusicService.kt`, `navigation_graph.xml`, `lyrics.xml`,
+`ic_lyrics_synced.xml`, `ic_lyrics_unsynced.xml`,
+`lyrics_line_item.xml`, `LyricsLineAdapter.kt`, `LyricsFragment.kt`,
+`player_secondary_controls.xml`, `PlayerFragment.kt`, `strings.xml`,
+`SubsonicApiGetLyricsBySongIdTest.kt`, `APILyricsConverterTest.kt`.

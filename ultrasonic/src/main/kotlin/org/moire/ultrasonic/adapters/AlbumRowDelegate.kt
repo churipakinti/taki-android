@@ -15,15 +15,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.media3.common.HeartRating
 import androidx.recyclerview.widget.RecyclerView
 import com.drakeet.multitype.ItemViewDelegate
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.R
-import org.moire.ultrasonic.data.RatingUpdate
 import org.moire.ultrasonic.domain.Album
-import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.LayoutType
 
@@ -35,9 +32,6 @@ open class AlbumRowDelegate(
     open val onContextMenuClick: (MenuItem, Album) -> Boolean
 ) : ItemViewDelegate<Album, AlbumRowDelegate.ListViewHolder>(),
     KoinComponent {
-
-    private val starDrawable: Int = R.drawable.rating_star_full
-    private val starHollowDrawable: Int = R.drawable.rating_star_hollow
 
     open var layoutType = LayoutType.LIST
 
@@ -56,8 +50,6 @@ open class AlbumRowDelegate(
             true
         }
         holder.coverArtId = item.coverArt
-        holder.star.setImageResource(if (item.starred) starDrawable else starHollowDrawable)
-        holder.star.setOnClickListener { onStarClick(item, holder.star) }
 
         val imageLoaderProvider: ImageLoaderProvider by inject()
         imageLoaderProvider.executeOn {
@@ -80,7 +72,6 @@ open class AlbumRowDelegate(
         var artist: TextView
         var details: LinearLayout
         var coverArt: ImageView
-        var star: ImageView
         var coverArtId: String? = null
 
         constructor(parent: ViewGroup, inflater: LayoutInflater) : this(
@@ -92,7 +83,6 @@ open class AlbumRowDelegate(
             artist = view.findViewById(R.id.album_artist)
             details = view.findViewById(R.id.row_album_details)
             coverArt = view.findViewById(R.id.cover_art)
-            star = view.findViewById(R.id.album_star)
             coverArtId = null
         }
     }
@@ -103,21 +93,6 @@ open class AlbumRowDelegate(
     class CoverViewHolder(view: View) : ListViewHolder(view) {
         constructor(parent: ViewGroup, inflater: LayoutInflater) : this(
             inflater.inflate(R.layout.grid_item_album, parent, false)
-        )
-    }
-
-    /**
-     * Handles the star / unstar action for an album
-     */
-    private fun onStarClick(entry: Album, star: ImageView) {
-        entry.starred = !entry.starred
-        star.setImageResource(if (entry.starred) starDrawable else starHollowDrawable)
-
-        RxBus.ratingSubmitter.onNext(
-            RatingUpdate(
-                entry.id,
-                HeartRating(entry.starred)
-            )
         )
     }
 

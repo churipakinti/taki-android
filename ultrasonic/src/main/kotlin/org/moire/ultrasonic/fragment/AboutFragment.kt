@@ -12,10 +12,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import com.google.android.material.button.MaterialButton
 import java.util.Locale
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.util.Util.applyTheme
@@ -26,8 +26,8 @@ import org.moire.ultrasonic.util.Util.getVersionName
  */
 class AboutFragment : Fragment() {
     private var titleText: TextView? = null
-    private var webPageButton: Button? = null
-    private var reportBugButton: Button? = null
+    private var webPageButton: MaterialButton? = null
+    private var reportBugButton: MaterialButton? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         applyTheme(this.context)
