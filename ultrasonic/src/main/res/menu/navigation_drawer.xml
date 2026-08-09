@@ -31,11 +31,6 @@
             a:icon="@drawable/ic_menu_download"
             a:title="@string/menu.downloads" />
         <item
-            a:id="@+id/bookmarksFragment"
-            a:checkable="true"
-            a:icon="@drawable/ic_menu_bookmark"
-            a:title="@string/button_bar.bookmarks" />
-        <item
             a:id="@+id/playerFragment"
             a:checkable="true"
             a:icon="@drawable/media_start"

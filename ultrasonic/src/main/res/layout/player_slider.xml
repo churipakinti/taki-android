@@ -4,14 +4,14 @@
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
     a:orientation="vertical"
-    a:layout_marginTop="10dp"
-    a:layout_marginStart="12dp"
-    a:layout_marginEnd="12dp" >
+    a:layout_marginTop="4dp"
+    a:layout_marginStart="4dp"
+    a:layout_marginEnd="4dp" >
     
     <SeekBar
         a:id="@+id/current_playing_progress_bar"
         a:layout_width="fill_parent"
-        a:layout_height="32dp"
+        a:layout_height="28dp"
         a:indeterminate="false"
         a:progressBackgroundTint="?attr/colorSurfaceContainerHighest"
         a:progressTint="?attr/colorPrimary"
@@ -27,9 +27,10 @@
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_alignParentLeft="true"
-            a:layout_marginStart="12dip"
+            a:layout_marginStart="12dp"
             a:text="@string/util.no_time"
-            a:textAppearance="?android:attr/textAppearanceSmall" />
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant" />
 
         <TextView
             a:id="@+id/current_playing_duration"
@@ -37,9 +38,10 @@
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_alignParentRight="true"
-            a:layout_marginEnd="12dip"
+            a:layout_marginEnd="12dp"
             a:text="@string/util.no_time"
-            a:textAppearance="?android:attr/textAppearanceSmall"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
             tools:ignore="RelativeOverlap" />
 
     </RelativeLayout>

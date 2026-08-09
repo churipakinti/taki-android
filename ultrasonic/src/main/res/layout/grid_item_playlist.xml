@@ -20,7 +20,7 @@
             a:layout_width="match_parent"
             a:layout_height="match_parent"
             app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
-            app:cardCornerRadius="5dp"
+            app:cardCornerRadius="4dp"
             app:cardElevation="1dp"
             app:strokeWidth="0dp">
 

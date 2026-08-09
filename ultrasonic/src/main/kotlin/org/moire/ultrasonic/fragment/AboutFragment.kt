@@ -49,7 +49,7 @@ class AboutFragment : Fragment() {
         val title = String.format(
             Locale.getDefault(),
             "%s (%s)",
-            getString(R.string.common_appname),
+            getString(R.string.about_appname),
             versionName
         )
 

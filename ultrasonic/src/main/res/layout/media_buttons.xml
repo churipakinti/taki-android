@@ -5,8 +5,8 @@
     a:layout_width="fill_parent"
     a:layout_height="wrap_content"
     a:orientation="horizontal"
-    a:layout_marginStart="12dp"
-    a:layout_marginEnd="12dp" >
+    a:layout_marginStart="8dp"
+    a:layout_marginEnd="8dp" >
 
     <Button
         a:id="@+id/button_shuffle"
@@ -42,7 +42,7 @@
         a:id="@+id/button_start"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="0dip"
-        a:layout_height="74dp"
+        a:layout_height="64dp"
         a:layout_weight="2"
         a:adjustViewBounds="true"
         a:focusable="true"
@@ -51,13 +51,13 @@
         a:contentDescription="@string/buttons.play"
         app:icon="@drawable/media_start_shadow"
         app:iconGravity="textEnd"
-        app:iconSize="48dp" />
+        app:iconSize="44dp" />
 
     <Button
         a:id="@+id/button_pause"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="0dip"
-        a:layout_height="74dp"
+        a:layout_height="64dp"
         a:layout_weight="2"
         a:adjustViewBounds="true"
         a:contentDescription="@string/buttons.pause"
@@ -65,13 +65,13 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_pause_shadow"
         app:iconGravity="textEnd"
-        app:iconSize="48dp" />
+        app:iconSize="44dp" />
 
     <Button
         a:id="@+id/button_stop"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="0dip"
-        a:layout_height="74dp"
+        a:layout_height="64dp"
         a:layout_weight="2"
         a:adjustViewBounds="true"
         a:focusable="true"
@@ -80,7 +80,7 @@
         a:contentDescription="@string/buttons.stop"
         app:icon="@drawable/media_stop"
         app:iconGravity="textEnd"
-        app:iconSize="48dp" />
+        app:iconSize="44dp" />
 
     <org.moire.ultrasonic.view.AutoRepeatButton
         a:id="@+id/button_next"

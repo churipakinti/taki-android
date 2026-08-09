@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/library_hub_current" android:enabled="false" android:title="@string/library_hub.current" />
+    <item android:id="@+id/library_hub_switch" android:title="@string/library_hub.switch" />
+    <item android:id="@+id/library_hub_add" android:title="@string/library_hub.add" />
+    <item android:id="@+id/library_hub_settings" android:title="@string/menu.settings" />
+    <item android:id="@+id/library_hub_about" android:title="@string/menu.about" />
+</menu>

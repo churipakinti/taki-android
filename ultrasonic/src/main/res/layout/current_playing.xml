@@ -22,7 +22,7 @@
                 a:id="@+id/current_playing_album_art_image"
                 a:layout_width="0dp"
                 a:layout_height="0dp"
-                a:layout_margin="36dp"
+                a:layout_margin="28dp"
                 a:scaleType="centerCrop"
                 a:contentDescription="@string/albumArt"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -42,8 +42,8 @@
         a:layout_height="wrap_content"
         a:background="@drawable/bg_player_panel"
         a:orientation="vertical"
-        a:paddingTop="16dp"
-        a:paddingBottom="8dp">
+        a:paddingTop="12dp"
+        a:paddingBottom="4dp">
 
         <include layout="@layout/player_media_info" />
 

@@ -5,6 +5,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     a:orientation="vertical">
 
+    <LinearLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:gravity="center_vertical"
+        a:orientation="horizontal"
+        a:paddingStart="16dp"
+        a:paddingTop="12dp"
+        a:paddingEnd="12dp"
+        a:paddingBottom="4dp">
+
+        <TextView
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_weight="1"
+            a:text="@string/library_hub.bottom_label"
+            a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_manage_button"
+            style="@style/Widget.Material3.Button.TextButton"
+            a:layout_width="wrap_content"
+            a:layout_height="wrap_content"
+            a:text="@string/library_hub.title"
+            app:icon="@drawable/ic_menu_select_server" />
+
+    </LinearLayout>
+
     <com.google.android.material.tabs.TabLayout
         a:id="@+id/tab_layout"
         app:tabMode="scrollable"

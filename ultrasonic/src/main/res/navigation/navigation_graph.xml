@@ -8,9 +8,6 @@
         android:id="@+id/toTrackCollection"
         app:destination="@id/trackCollectionFragment" />
     <action
-        android:id="@+id/toBookmarks"
-        app:destination="@id/bookmarksFragment" />
-    <action
         android:id="@+id/toDownloads"
         app:destination="@id/downloadsFragment" />
     <action

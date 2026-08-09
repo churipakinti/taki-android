@@ -27,14 +27,23 @@
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                tools:text="Ultrasonic (4.0.0)" />
+                tools:text="Taki (4.0.0)" />
+
+            <TextView
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginTop="4dp"
+                a:text="@string/about.tagline"
+                a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                a:textColor="?attr/colorPrimary" />
 
             <TextView
                 a:id="@+id/help_text"
                 style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_marginTop="16dp"
+                a:layout_marginTop="20dp"
                 a:lineSpacingMultiplier="1.15"
                 a:text="@string/about.text"
                 a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
@@ -58,7 +67,9 @@
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:layout_marginBottom="12dp"
-            a:text="@string/about.webpage" />
+            a:text="@string/about.webpage"
+            a:visibility="gone"
+            tools:visibility="visible" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/help_report"

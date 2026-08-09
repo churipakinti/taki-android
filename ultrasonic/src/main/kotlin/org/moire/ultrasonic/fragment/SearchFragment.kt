@@ -38,7 +38,6 @@ import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.SearchListModel
 import org.moire.ultrasonic.service.MediaPlayerManager
-import org.moire.ultrasonic.subsonic.VideoPlayer.Companion.playVideo
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenu
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenuTracks
 import org.moire.ultrasonic.util.RefreshableFragment
@@ -166,11 +165,14 @@ class SearchFragment :
                 list.add(MoreButton(1, ::expandAlbums))
             }
         }
-        val songs = result.songs
+        // Music-only product surface: servers may return video entries through search3 even
+        // though Video has no visible destination. Do not leak those hidden items back into
+        // Search, where tapping them would otherwise launch the legacy video player.
+        val songs = result.songs.filterNot { it.isVideo }
         if (songs.isNotEmpty()) {
             list.add(DividerBinder.Divider(R.string.search_songs))
             list.addAll(songs)
-            if (searchResult!!.songs.size > songs.size) {
+            if (searchResult!!.songs.count { !it.isVideo } > songs.size) {
                 list.add(MoreButton(2, ::expandSongs))
             }
         }
@@ -241,13 +243,10 @@ class SearchFragment :
         toast(resources.getQuantityString(R.plurals.n_songs_added_to_end, 1, 1))
     }
 
-    private fun onVideoSelected(track: Track) {
-        playVideo(requireContext(), track)
-    }
-
     private fun autoplay() {
-        if (searchResult!!.songs.isNotEmpty()) {
-            onSongSelected(searchResult!!.songs[0], false)
+        val firstSong = searchResult!!.songs.firstOrNull { !it.isVideo }
+        if (firstSong != null) {
+            onSongSelected(firstSong, false)
         } else if (searchResult!!.albums.isNotEmpty()) {
             onAlbumSelected(searchResult!!.albums[0], true)
         }
@@ -259,13 +258,7 @@ class SearchFragment :
                 onArtistSelected(item)
             }
 
-            is Track -> {
-                if (item.isVideo) {
-                    onVideoSelected(item)
-                } else {
-                    onSongSelected(item, true)
-                }
-            }
+            is Track -> onSongSelected(item, true)
 
             is Album -> {
                 onAlbumSelected(item, false)

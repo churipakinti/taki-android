@@ -242,7 +242,7 @@ class PlayerFragment :
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         cancellationToken = CancellationToken()
-        setTitle(this, R.string.common_appname)
+        setTitle(this, R.string.button_bar_now_playing)
 
         val windowManager = requireActivity().windowManager
         val width: Int
@@ -570,17 +570,6 @@ class PlayerFragment :
         val goToArtist = menu.findItem(R.id.menu_show_artist)
         val jukeboxOption = menu.findItem(R.id.menu_item_jukebox)
         val equalizerMenuItem = menu.findItem(R.id.menu_item_equalizer)
-        val bookmarkMenuItem = menu.findItem(R.id.menu_item_bookmark_set)
-        val bookmarkRemoveMenuItem = menu.findItem(R.id.menu_item_bookmark_delete)
-
-        if (isOffline()) {
-            if (bookmarkMenuItem != null) {
-                bookmarkMenuItem.isVisible = false
-            }
-            if (bookmarkRemoveMenuItem != null) {
-                bookmarkRemoveMenuItem.isVisible = false
-            }
-        }
         if (equalizerMenuItem != null) {
             equalizerMenuItem.isEnabled = isEqualizerAvailable
             equalizerMenuItem.isVisible = isEqualizerAvailable
@@ -754,11 +743,6 @@ class PlayerFragment :
                 return true
             }
 
-            R.id.menu_item_toggle_list -> {
-                toggleFullScreenAlbumArt()
-                return true
-            }
-
             R.id.menu_item_clear_playlist -> {
                 mediaPlayerManager.isShufflePlayEnabled = false
                 mediaPlayerManager.clear()
@@ -770,46 +754,6 @@ class PlayerFragment :
                 if (mediaPlayerManager.playlistSize > 0) {
                     showSavePlaylistDialog()
                 }
-                return true
-            }
-
-            R.id.menu_item_bookmark_set -> {
-                if (track == null) return true
-
-                val songId = track.id
-                val playerPosition = mediaPlayerManager.playerPosition
-                track.bookmarkPosition = playerPosition
-                val bookmarkTime = Util.formatTotalDuration(playerPosition.toLong(), true)
-                Thread {
-                    val musicService = getMusicService()
-                    try {
-                        musicService.createBookmark(songId, playerPosition)
-                    } catch (all: Exception) {
-                        Timber.e(all)
-                    }
-                }.start()
-                val msg = resources.getString(
-                    R.string.download_bookmark_set_at_position,
-                    bookmarkTime
-                )
-                toast(msg)
-                return true
-            }
-
-            R.id.menu_item_bookmark_delete -> {
-                if (track == null) return true
-
-                val bookmarkSongId = track.id
-                track.bookmarkPosition = 0
-                Thread {
-                    val musicService = getMusicService()
-                    try {
-                        musicService.deleteBookmark(bookmarkSongId)
-                    } catch (all: Exception) {
-                        Timber.e(all)
-                    }
-                }.start()
-                toast(R.string.download_bookmark_removed)
                 return true
             }
 
@@ -1172,13 +1116,13 @@ class PlayerFragment :
                         R.string.download_playerstate_playing_shuffle
                     )
                 } else {
-                    setTitle(this@PlayerFragment, R.string.common_appname)
+                    setTitle(this@PlayerFragment, R.string.button_bar_now_playing)
                 }
             }
 
             Player.STATE_IDLE, Player.STATE_ENDED -> {}
 
-            else -> setTitle(this@PlayerFragment, R.string.common_appname)
+            else -> setTitle(this@PlayerFragment, R.string.button_bar_now_playing)
         }
     }
 

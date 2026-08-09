@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="library_hub.title">Your library</string>
+    <string name="library_hub.current">Current library</string>
+    <string name="library_hub.current_name">Current: %1$s</string>
+    <string name="library_hub.switch">Switch library</string>
+    <string name="library_hub.add">Add library</string>
+    <string name="library_hub.bottom_label">Library</string>
     <string name="background_task.network_error">A network error occurred. Please check the server address or try again later.</string>
     <string name="background_task.unsupported_api">Server API v%1$s does not support this function.</string>
     <string name="background_task.no_network">This program requires network access. Please turn on Wi-Fi or mobile network.</string>
@@ -385,9 +391,11 @@
     <string name="server_editor.advanced">Advanced settings</string>
     <string name="server_editor.disabled_feature">One or more features were disabled because the server doesn\'t support them.\nYou can run this test again anytime.</string>
     <string name="server_menu.demo">Demo Server</string>
-    <string name="about.webpage">Visit webpage</string>
-    <string name="about.report">Report a bug</string>
-    <string name="about.text"><b>Ultrasonic</b> is a free and open-source music streaming Android client for Subsonic API (version 1.7.0 or higher) compatible servers.\n\nWith <b>Ultrasonic</b> you can easily stream or download music from your home computer to your Android phone using your Subsonic compatible media server. The Subsonic server software requires additional configuration separate from Ultrasonic.\n\nBy default, Ultrasonic is not configured. Once you\'ve set up your own server, please change the server configuration so that it connects to your own computer.</string>
+    <string name="about.webpage">Visit website</string>
+    <string name="about.report">Original issue tracker</string>
+    <string name="about.appname" translatable="false">Taki</string>
+    <string name="about.tagline">Your music, without distractions.</string>
+    <string name="about.text"><b>Taki</b> is a focused player for personal and shared music collections. Listen online or download your music for offline playback, without letting the technology get in the way.\n\nTaki works with Navidrome and other servers compatible with the Subsonic and OpenSubsonic APIs.\n\nTaki is free and open-source software based on Ultrasonic and distributed under the GNU GPLv3 license. Ultrasonic and its contributors are credited as the original project.</string>
     <string name="about.webpage.url" translatable="false">https://ultrasonic.gitlab.io/</string>
     <string name="about.report.url" translatable="false">https://gitlab.com/ultrasonic/ultrasonic/issues</string>
     <plurals name="n_songs">

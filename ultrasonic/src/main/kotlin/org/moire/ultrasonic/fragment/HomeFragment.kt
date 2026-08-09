@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.adapters.BaseAdapter
 import org.moire.ultrasonic.adapters.HomeAlbumDelegate
 import org.moire.ultrasonic.adapters.HomeShortcutDelegate
@@ -68,6 +69,9 @@ class HomeFragment : Fragment(), RefreshableFragment {
         super.onViewCreated(view, savedInstanceState)
 
         setGreeting(view)
+        view.findViewById<View>(R.id.home_overflow).setOnClickListener {
+            (activity as? NavigationActivity)?.showLibraryHub(it)
+        }
         setupQuickAccessButtons(view)
         setupMixRow(view)
 

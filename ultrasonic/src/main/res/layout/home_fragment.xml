@@ -17,15 +17,33 @@
             a:orientation="vertical"
             a:paddingBottom="24dp">
 
-            <TextView
-                a:id="@+id/home_greeting"
-                a:layout_width="wrap_content"
+            <LinearLayout
+                a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:layout_marginHorizontal="16dp"
                 a:layout_marginTop="20dp"
                 a:layout_marginBottom="8dp"
-                a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-                tools:text="@string/home.greeting_morning" />
+                a:gravity="center_vertical"
+                a:orientation="horizontal">
+
+                <TextView
+                    a:id="@+id/home_greeting"
+                    a:layout_width="0dp"
+                    a:layout_height="wrap_content"
+                    a:layout_weight="1"
+                    a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                    tools:text="@string/home.greeting_morning" />
+
+                <com.google.android.material.button.MaterialButton
+                    a:id="@+id/home_overflow"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    a:layout_width="48dp"
+                    a:layout_height="48dp"
+                    a:contentDescription="@string/library_hub.title"
+                    app:icon="@drawable/ic_more_vert"
+                    app:iconSize="24dp" />
+
+            </LinearLayout>
 
             <HorizontalScrollView
                 a:layout_width="match_parent"

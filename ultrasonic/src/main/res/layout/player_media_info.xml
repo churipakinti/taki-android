@@ -5,9 +5,9 @@
     a:id="@+id/download_button_bar_flipper"
     a:layout_width="fill_parent"
     a:layout_height="wrap_content"
-    a:layout_marginStart="20dp"
-    a:layout_marginTop="6dp"
-    a:layout_marginEnd="20dp">
+    a:layout_marginStart="16dp"
+    a:layout_marginTop="4dp"
+    a:layout_marginEnd="16dp">
 
     <ImageView
         a:id="@+id/song_rating_heart"
@@ -33,7 +33,7 @@
         a:focusable="true"
         a:gravity="left"
         a:singleLine="true"
-        a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+        a:textAppearance="@style/TextAppearance.Material3.TitleLarge"
         app:layout_constraintEnd_toStartOf="@+id/song_rating_heart"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -44,8 +44,8 @@
         style="@style/Ultrasonic.SecondaryText"
         a:layout_width="0dp"
         a:layout_height="wrap_content"
-        a:layout_marginTop="6dp"
-        a:layout_marginBottom="12dp"
+        a:layout_marginTop="4dp"
+        a:layout_marginBottom="6dp"
         a:ellipsize="end"
         a:gravity="left"
         a:singleLine="true"

@@ -28,6 +28,7 @@ import org.koin.androidx.scope.ScopeFragment
 import org.koin.core.component.KoinScopeComponent
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.fragment.legacy.SelectGenreFragment
 import org.moire.ultrasonic.service.RxBus
@@ -64,6 +65,10 @@ class MainFragment :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         FragmentTitle.setTitle(this, R.string.music_library_label)
+
+        view.findViewById<View>(R.id.library_manage_button).setOnClickListener {
+            (activity as? NavigationActivity)?.showLibraryHub(it)
+        }
 
         // Load last layout from settings
         layoutType = LayoutType.from(Settings.lastViewType)

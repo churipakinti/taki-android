@@ -5,12 +5,6 @@
     >
 
     <item
-        a:id="@+id/menu_item_toggle_list"
-        a:icon="@drawable/media_toggle_list"
-        app:showAsAction="always"
-        a:title="@string/download.toggle_playlist"/>
-
-    <item
         a:id="@+id/menu_show_artist"
         a:title="@string/download.menu_show_artist"/>
     <item
@@ -20,7 +14,7 @@
     <item
         a:id="@+id/menu_item_save_playlist"
         a:icon="@drawable/ic_menu_save"
-        app:showAsAction="ifRoom|withText"
+        app:showAsAction="never"
         a:title="@string/download.menu_save"/>
     <item
         a:id="@+id/menu_item_clear_playlist"
@@ -32,16 +26,6 @@
         a:icon="@drawable/ic_library"
         app:showAsAction="ifRoom|withText"
         a:title="@string/download.menu_lyrics"/>
-    <item
-        a:id="@+id/menu_item_bookmark_set"
-        a:icon="@drawable/ic_menu_bookmark"
-        app:showAsAction="ifRoom|withText"
-        a:title="@string/download.bookmark_set"/>
-    <item
-        a:id="@+id/menu_item_bookmark_delete"
-        a:icon="@drawable/ic_menu_bookmark"
-        app:showAsAction="ifRoom|withText"
-        a:title="@string/download.bookmark_delete"/>
     <item
         a:id="@+id/menu_item_equalizer"
         app:showAsAction="never"
