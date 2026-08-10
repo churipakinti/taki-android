@@ -1,5 +1,19 @@
 # Changes
 
+## Identificación del cliente ante el servidor: Ultrasonic → Taki
+
+- El parámetro `c=` que la app manda en cada request a la API de
+  Subsonic/Navidrome (`REST_CLIENT_ID`) decía `"Ultrasonic"`. Es lo que
+  Navidrome usa para nombrar la fila en su panel de clientes/players
+  conectados, y seguía mostrando el nombre heredado ahí a pesar del rebrand.
+  Ahora dice `"Taki"`.
+- La fila anterior `Ultrasonic [okhttp]` en ese panel queda inactiva (Navidrome
+  identifica cada player por cliente+usuario) y aparece una fila nueva
+  `Taki [okhttp]` en el próximo request; no se puede migrar la fila vieja
+  automáticamente, se borra a mano desde Navidrome si se quiere.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/Constants.kt`.
+
 ## Corrección de bloqueo en el mini reproductor
 
 - La barra de progreso consultaba cada segundo `playerDuration` y

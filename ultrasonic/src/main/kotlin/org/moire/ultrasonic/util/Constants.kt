@@ -13,7 +13,7 @@ object Constants {
     // REST protocol version and client ID.
     // Note: Keep it as low as possible to maintain compatibility with older servers.
     const val REST_PROTOCOL_VERSION = "1.7.0"
-    const val REST_CLIENT_ID = "Ultrasonic"
+    const val REST_CLIENT_ID = "Taki"
 
     // Names for Intent Actions
     const val CMD_PROCESS_KEYCODE = "org.moire.ultrasonic.CMD_PROCESS_KEYCODE"
