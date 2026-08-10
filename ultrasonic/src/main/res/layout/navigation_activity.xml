@@ -18,14 +18,42 @@
         app:navigationIconTint="?attr/colorOnSurface"
         app:titleTextColor="?attr/colorOnSurface" />
 
-    <androidx.fragment.app.FragmentContainerView
-        a:id="@+id/nav_host_fragment"
-        a:name="androidx.navigation.fragment.NavHostFragment"
+    <LinearLayout
+        a:id="@+id/content_navigation_header"
+        a:layout_width="match_parent"
+        a:layout_height="56dp"
+        a:gravity="center_vertical"
+        a:orientation="horizontal"
+        a:paddingHorizontal="8dp"
+        a:visibility="gone"
+        tools:visibility="visible">
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/content_back_button"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:contentDescription="@string/common.navigate_back"
+            app:icon="@drawable/ic_arrow_back"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
+
+    </LinearLayout>
+
+    <FrameLayout
         a:layout_width="match_parent"
         a:layout_height="0dp"
-        a:layout_weight="1"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/navigation_graph" />
+        a:layout_weight="1">
+
+        <androidx.fragment.app.FragmentContainerView
+            a:id="@+id/nav_host_fragment"
+            a:name="androidx.navigation.fragment.NavHostFragment"
+            a:layout_width="match_parent"
+            a:layout_height="match_parent"
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/navigation_graph" />
+
+    </FrameLayout>
 
     <androidx.fragment.app.FragmentContainerView
         a:id="@+id/now_playing_fragment"
@@ -38,8 +66,8 @@
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
         a:background="?attr/colorSurfaceContainerHigh"
-        app:itemIconTint="?attr/colorOnSurface"
-        app:itemTextColor="?attr/colorOnSurface"
+        app:itemIconTint="@color/bottom_navigation_item"
+        app:itemTextColor="@color/bottom_navigation_item"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_navigation" />
 

@@ -7,50 +7,89 @@
     a:layout_height="match_parent">
 
     <LinearLayout
-        a:orientation="vertical"
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
-        a:paddingHorizontal="24dp"
-        a:paddingTop="20dp"
+        a:gravity="center_vertical"
+        a:orientation="horizontal"
+        a:paddingStart="8dp"
+        a:paddingTop="8dp"
+        a:paddingEnd="24dp"
         a:paddingBottom="4dp">
 
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/lyrics_back"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:layout_gravity="top"
+            a:contentDescription="@string/player.back"
+            app:icon="@drawable/ic_arrow_back"
+            app:iconTint="?attr/colorOnSurface" />
+
         <LinearLayout
-            a:layout_width="match_parent"
+            a:layout_width="0dp"
             a:layout_height="wrap_content"
-            a:gravity="center_vertical"
-            a:orientation="horizontal">
+            a:layout_marginStart="8dp"
+            a:layout_weight="1"
+            a:orientation="vertical">
+
+            <LinearLayout
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:gravity="center_vertical"
+                a:orientation="horizontal">
+
+                <TextView
+                    a:id="@+id/lyrics_title"
+                    style="@style/Ultrasonic.PrimaryText"
+                    a:layout_width="0dp"
+                    a:layout_height="wrap_content"
+                    a:layout_weight="1"
+                    a:ellipsize="marquee"
+                    a:marqueeRepeatLimit="marquee_forever"
+                    a:scrollHorizontally="true"
+                    a:singleLine="true"
+                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    tools:text="Song title" />
+
+                <LinearLayout
+                    a:layout_width="40dp"
+                    a:layout_height="wrap_content"
+                    a:layout_marginStart="10dp"
+                    a:gravity="center"
+                    a:orientation="vertical">
+
+                    <ImageView
+                        a:id="@+id/lyrics_sync_icon"
+                        a:layout_width="18dp"
+                        a:layout_height="18dp"
+                        a:visibility="gone"
+                        tools:src="@drawable/ic_lyrics_synced"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        a:layout_width="wrap_content"
+                        a:layout_height="wrap_content"
+                        a:layout_marginTop="1dp"
+                        a:text="@string/lyrics.sync"
+                        a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                        a:textColor="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <TextView
-                a:id="@+id/lyrics_title"
-                style="@style/Ultrasonic.PrimaryText"
-                a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                a:layout_width="0dp"
+                a:id="@+id/lyrics_artist"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_weight="1"
-                a:ellipsize="end"
-                a:singleLine="true"
-                tools:text="Song title" />
-
-            <ImageView
-                a:id="@+id/lyrics_sync_icon"
-                a:layout_width="16dp"
-                a:layout_height="16dp"
-                a:layout_marginStart="10dp"
-                a:visibility="gone"
-                tools:src="@drawable/ic_lyrics_synced"
-                tools:visibility="visible" />
+                a:layout_marginTop="2dp"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Artist" />
 
         </LinearLayout>
-
-        <TextView
-            a:id="@+id/lyrics_artist"
-            style="@style/Ultrasonic.SecondaryText"
-            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            a:textColor="?attr/colorOnSurfaceVariant"
-            a:layout_width="match_parent"
-            a:layout_height="wrap_content"
-            a:layout_marginTop="2dp"
-            tools:text="Artist" />
 
     </LinearLayout>
 

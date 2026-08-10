@@ -24,7 +24,7 @@
     <string name="button_bar.search">Поиск</string>
     <string name="chat.send_a_message">Отправить сообщение</string>
     <string name="common.album">Альбом</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">Артист</string>
     <string name="common.cancel">Отмена</string>
     <string name="common.comment">Комментарий</string>
@@ -106,9 +106,7 @@
     <string name="main.songs_starred">Отмеченные</string>
     <string name="main.songs_title">Песни</string>
     <string name="main.videos">Видео</string>
-    <string name="main.welcome_text_demo">Чтобы использовать Ultrasonic с вашей собственной музыкой, вам понадобится <b>собственный сервер</b>. \n\n➤ Если вы хотите сначала опробовать приложение, вы можете добавить демо-сервер прямо сейчас. \n\n➤ В противном случае вы можете настроить свой сервер в <b>настройках</b>.</string>
-    <string name="main.welcome_title">Добро пожаловать в Ultrasonic!</string>
-    <string name="main.welcome_cancel">Отведи меня в настройки</string>
+    <string name="main.welcome_title">Добро пожаловать в Taki!</string>
     <string name="menu.about">О приложении</string>
     <string name="menu.common">Общий</string>
     <string name="menu.deleted_playlist">Удалить плейлист %s</string>
@@ -336,7 +334,6 @@
     <string name="server_editor.authentication">Аутентификация</string>
     <string name="server_editor.advanced">Дополнительные настройки</string>
     <string name="server_editor.disabled_feature">Одна или несколько функций были отключены, потому что сервер их не поддерживает.\nВы можете запустить этот тест снова в любое время.</string>
-    <string name="server_menu.demo">Демо-сервер</string>
     <plurals name="n_songs">
         <item quantity="one">%d песня</item>
         <item quantity="few">%d песни</item>
@@ -352,7 +349,7 @@
     <string name="api.subsonic.param_missing">Требуемый параметр отсутствует.</string>
     <string name="api.subsonic.requested_data_was_not_found">Запрошенные данные не найдены.</string>
     <string name="api.subsonic.trial_period_is_over">Пробный период окончен.</string>
-    <string name="api.subsonic.upgrade_client">Несовместимые версии. Пожалуйста, обновите приложение Ultrasonic для Android.</string>
+    <string name="api.subsonic.upgrade_client">Несовместимые версии. Пожалуйста, обновите приложение Taki для Android.</string>
     <string name="api.subsonic.upgrade_server">Несовместимые версии. Пожалуйста, обновите Subsonic сервер.</string>
     <!-- Subsonic features  -->
 <string name="chat.send_button">Отправить</string>

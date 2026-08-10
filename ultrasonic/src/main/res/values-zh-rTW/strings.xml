@@ -134,7 +134,7 @@
     <string name="download.jukebox_server_too_old">不支援遠端控制，請升級您的 Subsonic 伺服器。</string>
     <string name="podcasts.label">播客</string>
     <string name="common.unpin_selection_confirmation">您真的要取消固定目前選取的項目嗎？</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="background_task.ssl_error">SSL 連線異常。請檢查伺服器憑證。</string>
     <string name="common.pin">固定</string>
     <string name="chat.send_button">傳送</string>
@@ -179,7 +179,6 @@
     <string name="background_task.not_found">找不到資源，請檢查伺服器位址。</string>
     <string name="download.repeat_single">單曲循環播放</string>
     <string name="language.hu">匈牙利語</string>
-    <string name="main.welcome_cancel">前往設定</string>
     <string name="language.zh_TW">繁體中文（臺灣）</string>
     <string name="download.repeat_off">關閉循環播放</string>
     <string name="jukebox.is_default">預設使用點唱機</string>
@@ -192,11 +191,6 @@
     <string name="main.songs_title">歌曲</string>
     <string name="main.welcome_title">歡迎！</string>
     <string name="menu.deleted_playlist">已刪除播放清單 %s</string>
-    <string name="main.welcome_text_demo">要使用 Ultrasonic 播放您的音樂，需要您 <b>自己的伺服器</b>。
-\n
-\n➤ 如果您想嘗試此應用程式， 可以添加一個演示伺服器。
-\n
-\n➤ 此外，可在 <b>設定</b> 中配置您的伺服器。</string>
     <string name="menu.deleted_playlist_error">播放清單刪除失敗 %s</string>
     <string name="search.no_match">沒有匹配的結果，請重試</string>
     <string name="select_album.empty">找不到媒體</string>

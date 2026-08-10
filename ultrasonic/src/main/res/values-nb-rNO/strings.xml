@@ -37,7 +37,7 @@
     <string name="buttons.stop">Stopp</string>
     <string name="button_bar.search">Søk</string>
     <string name="chat.send_a_message">Send en melding</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="button_bar.browse">Mediebibliotek</string>
     <string name="buttons.play">Spill</string>
     <string name="buttons.previous">Forrige</string>
@@ -170,7 +170,7 @@
     <string name="main.albums_alphaByArtist">Etter artist</string>
     <string name="main.songs_random">Tilfeldig</string>
     <string name="main.songs_starred">Stjernemerket</string>
-    <string name="main.welcome_title">Velkommen til Ultrasonic.</string>
+    <string name="main.welcome_title">Velkommen til Taki.</string>
     <string name="main.songs_title">Spor</string>
     <string name="main.videos">Videoer</string>
     <string name="menu.about">Om</string>
@@ -280,7 +280,6 @@
     <string name="server_selector.label">Oppsatte tjenere</string>
     <string name="server_editor.new_label">Legg til tjener</string>
     <string name="server_editor.advanced">Avanserte innstillinger</string>
-    <string name="server_menu.demo">Demo-tjener</string>
     <string name="about.webpage">Besøk nettsiden</string>
     <string name="settings.show_confirmation_dialog">Vis bekreftelsesdialog</string>
     <string name="settings.debug.title">Avlusningsvalg</string>
@@ -303,11 +302,11 @@
         <item quantity="one">%d spor slettet</item>
         <item quantity="other">%d spor løsnet</item>
     </plurals>
-    <string name="about.text"><b>Ultrasonic</b> er en gratis og fri Android-musikkstrømmingsklient Subsonic-API-et (v 1.7.0 eller høyere) for kompatible tjenere.
+    <string name="about.text"><b>Taki</b> er en gratis og fri Android-musikkstrømmingsklient Subsonic-API-et (v 1.7.0 eller høyere) for kompatible tjenere.
 \n
-\nMed <b>Ultrasonic</b> kan du enkelt strømme eller laste ned musikk fra din PC eller Android-enhet til ved bruk av din Subsonic-kompatible musikktjener. Subsonic-tjenerprogramvaren krever ytterligere oppsett, som ikke har med Ultrasonic å gjøre.
+\nMed <b>Taki</b> kan du enkelt strømme eller laste ned musikk fra din PC eller Android-enhet til ved bruk av din Subsonic-kompatible musikktjener. Subsonic-tjenerprogramvaren krever ytterligere oppsett, som ikke har med Taki å gjøre.
 \n
-\nUltrasonic må settes opp når du har laget deg en tjener. Endre tjeneroppsettet slik at det kobler seg til din egen datamaskin.</string>
+\nTaki må settes opp når du har laget deg en tjener. Endre tjeneroppsettet slik at det kobler seg til din egen datamaskin.</string>
     <string name="download.playlist_saving">Lagrer «%s»-spillelisten …</string>
     <string name="equalizer.preset">Velg forhåndsinnstilling</string>
     <string name="lyrics.nomatch">Fant ingen sangtekster</string>
@@ -319,11 +318,6 @@
     <string name="notification.permission_required">Merknader kreves for medieavspilling. Du kan innvilge tilgangen når som helst i Android-innstillingene.</string>
     <string name="settings.use_hw_offload_description">Prøv å spille medier ved bruk av maskinvaredekoding på enheten din. Kan bruke mindre batteri.</string>
     <string name="settings.display_bitrate_summary">Legg til artistnavn med bitrate og filendelse</string>
-    <string name="main.welcome_text_demo">For å bruke Ultrasonic med din egen musikk trenger du en <b>egen tjener</b>.
-\n
-\n➤ Hvis du vil prøve ut programmet først kan du legge til en demo-tjener nå.
-\n
-\n➤ Ellers kan du sette opp tjeneren din i <b>innstillingene</b>.</string>
     <string name="api.subsonic.param_missing">Påkrevd parameter mangler.</string>
     <string name="settings.share_description_default">Forvalgt beskrivelse av deling</string>
     <string name="settings.max_bitrate_32">32 kbps</string>
@@ -348,7 +342,6 @@
     <string name="language.pt_BR">Portugisisk (Brasil)</string>
     <string name="main.setup_server">%s — Tjeneroppsett</string>
     <string name="language.zh_TW">Kinesisk (Taiwan)</string>
-    <string name="main.welcome_cancel">Gå til innstillingene</string>
     <string name="menu.deleted_playlist">Slettet %s-spillelisten</string>
     <string name="playlist.updated_info">Oppdaterte spillelisteinfo for %s</string>
     <string name="playlist.updated_info_error">Klarte ikke å oppdatere spillelisteinfo for %s</string>
@@ -405,7 +398,7 @@
     <string name="settings.use_id3_offline">Bruk ID3-metode også når frakoblet</string>
     <string name="settings.sharing_title">Deling</string>
     <string name="menu_deleted_share">Slettet %s-deling</string>
-    <string name="settings.use_id3_offline_summary">Viser kun musikken som er lastet ned med Ultrasonic 4.0 eller senere. Tidligere nedlastinger har ikke nødvendig metadata nedlastet. Du kan veksle mellom festingsmodus og lagringsmodus for å utløse nedlasting av manglende metadata.</string>
+    <string name="settings.use_id3_offline_summary">Viser kun musikken som er lastet ned med Taki 4.0 eller senere. Tidligere nedlastinger har ikke nødvendig metadata nedlastet. Du kan veksle mellom festingsmodus og lagringsmodus for å utløse nedlasting av manglende metadata.</string>
     <string name="settings.show_artist_picture_summary">Viser artistbilde i artistlisten hvis tilgjengelig</string>
     <string name="settings.sharing_always_ask_for_details_summary">Alltid spør om beskrivelse og utløp ved opprettelse av deling på tjeneren</string>
     <string name="song_details.kbps">%d kbps</string>
@@ -428,7 +421,7 @@
     <string name="api.subsonic.not_authenticated">Feil brukernavn eller passord.</string>
     <string name="api.subsonic.requested_data_was_not_found">Fant ikke forespurt data.</string>
     <string name="api.subsonic.trial_period_is_over">Prøveperioden er over.</string>
-    <string name="api.subsonic.upgrade_client">Ukompatible versjoner. Oppgrader Ultrasonic-programmet for Android.</string>
+    <string name="api.subsonic.upgrade_client">Ukompatible versjoner. Oppgrader Taki-programmet for Android.</string>
     <string name="api.subsonic.upgrade_server">Ukompatible versjoner. Oppgrader Subsonic-tjeneren.</string>
     <string name="list_view">Liste</string>
     <string name="api.subsonic.not_authorized">Ikke identitetsbekreftet. Sjekk brukertilganger på Subsonic-tjeneren.</string>

@@ -51,6 +51,18 @@
     </LinearLayout>
 
     <ImageButton
+        a:id="@+id/library_track_heart"
+        a:layout_width="48dp"
+        a:layout_height="48dp"
+        a:background="?attr/selectableItemBackgroundBorderless"
+        a:contentDescription="@string/download.menu_favorite"
+        a:padding="12dp"
+        a:src="@drawable/rating_heart_full"
+        a:tint="@color/taki_accent_secondary"
+        a:visibility="gone"
+        tools:visibility="visible" />
+
+    <ImageButton
         a:id="@+id/library_track_menu"
         a:layout_width="48dp"
         a:layout_height="48dp"

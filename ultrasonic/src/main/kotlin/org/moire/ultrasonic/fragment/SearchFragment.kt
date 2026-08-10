@@ -7,16 +7,24 @@
 
 package org.moire.ultrasonic.fragment
 
+import android.app.SearchManager
+import android.content.Context
 import android.os.Bundle
+import android.provider.SearchRecentSuggestions
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinScopeComponent
 import org.koin.core.component.inject
@@ -37,6 +45,7 @@ import org.moire.ultrasonic.domain.SearchResult
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.SearchListModel
+import org.moire.ultrasonic.provider.SearchSuggestionProvider
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenu
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenuTracks
@@ -44,6 +53,9 @@ import org.moire.ultrasonic.util.RefreshableFragment
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
+
+private const val LIVE_SEARCH_DEBOUNCE_MS = 400L
+private const val LIVE_SEARCH_MIN_QUERY_LENGTH = 2
 
 /**
  * Initiates a search on the media library and displays the results
@@ -55,6 +67,8 @@ class SearchFragment :
     RefreshableFragment {
     private var searchResult: SearchResult? = null
     private var searchJob: Job? = null
+    private var liveSearchJob: Job? = null
+    private var lastLiveSearchQuery: String? = null
     override var swipeRefresh: SwipeRefreshLayout? = null
     private val mediaPlayerManager: MediaPlayerManager by inject()
     private val navArgs by navArgs<SearchFragmentArgs>()
@@ -64,6 +78,10 @@ class SearchFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setTitle(this, R.string.search_title)
+        emptyView.findViewById<ImageView>(R.id.empty_list_icon)
+            .setImageResource(R.drawable.ic_menu_search)
+        setupSearchField(view)
+        showSearchPrompt()
 
         listModel.searchResult.observe(
             viewLifecycleOwner
@@ -125,8 +143,60 @@ class SearchFragment :
     }
 
     override fun onDestroyView() {
+        liveSearchJob?.cancel()
         Util.hideKeyboard(activity)
         super.onDestroyView()
+    }
+
+    private fun setupSearchField(view: View) {
+        val searchView = view.findViewById<SearchView>(R.id.search_field)
+        val searchManager = requireContext().getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(requireActivity().componentName))
+        searchView.setIconifiedByDefault(false)
+        searchView.isIconified = false
+
+        navArgs.query?.let {
+            searchView.setQuery(it, false)
+            searchView.clearFocus()
+        }
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                val submitted = query?.trim().orEmpty()
+                if (submitted.isEmpty()) return true
+                SearchRecentSuggestions(
+                    requireContext(),
+                    SearchSuggestionProvider.AUTHORITY,
+                    SearchSuggestionProvider.MODE
+                ).saveRecentQuery(submitted, null)
+                search(submitted, false)
+                searchView.clearFocus()
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                scheduleLiveSearch(newText)
+                return true
+            }
+        })
+    }
+
+    private fun scheduleLiveSearch(text: String?) {
+        val query = text?.trim().orEmpty()
+        liveSearchJob?.cancel()
+        if (query.isEmpty()) {
+            lastLiveSearchQuery = null
+            searchResult = null
+            viewAdapter.submitList(emptyList())
+            showSearchPrompt()
+            return
+        }
+        if (query.length < LIVE_SEARCH_MIN_QUERY_LENGTH || query == lastLiveSearchQuery) return
+        liveSearchJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(LIVE_SEARCH_DEBOUNCE_MS)
+            lastLiveSearchQuery = query
+            search(query, false)
+        }
     }
 
     private fun search(query: String, autoplay: Boolean) {
@@ -134,6 +204,7 @@ class SearchFragment :
         // debounced queries in flight if the network is slow) -- cancel the older one so its
         // response can't land after and overwrite a newer query's results.
         searchJob?.cancel()
+        emptyView.isVisible = false
         searchJob = listModel.viewModelScope.launch(
             toastingExceptionHandler()
         ) {
@@ -144,6 +215,11 @@ class SearchFragment :
                 autoplay()
             }
         }
+    }
+
+    private fun showSearchPrompt() {
+        emptyView.findViewById<TextView>(R.id.empty_list_text).setText(R.string.search_prompt)
+        emptyView.isVisible = true
     }
 
     private fun populateList(result: SearchResult) {
@@ -178,6 +254,7 @@ class SearchFragment :
         }
 
         // Show/hide the empty text view
+        emptyView.findViewById<TextView>(R.id.empty_list_text).setText(R.string.search_no_match)
         emptyView.isVisible = list.isEmpty()
 
         viewAdapter.submitList(list)

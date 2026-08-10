@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:a="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    a:title="@string/common.appname">
+    a:title="@string/taki.appname">
 
     <PreferenceScreen
         a:key="now_playing_group"
@@ -15,31 +15,29 @@
             a:summary="@string/settings.download_transition_summary"
             a:title="@string/settings.download_transition"
             app:iconSpaceReserved="false"/>
-        <SwitchPreferenceCompat
-            a:defaultValue="false"
-            a:key="@string/setting_key.clear_bookmark"
-            a:summary="@string/settings.clear_bookmark_summary"
-            a:title="@string/settings.clear_bookmark"
-            app:iconSpaceReserved="false"/>
-        <SwitchPreferenceCompat
-            a:defaultValue="false"
-            a:key="@string/setting_key.hardware_offload"
-            a:summary="@string/settings.use_hw_offload_description"
-            a:title="@string/settings.use_hw_offload_title"
-            app:iconSpaceReserved="false" />
-        <ListPreference
-            a:defaultValue="@string/setting_key.replaygain_disabled"
-            a:entries="@array/replayGainNames"
-            a:entryValues="@array/replayGainValues"
-            a:key="@string/setting_key.replaygain"
-            a:title="@string/settings.replaygain_title"
-            app:iconSpaceReserved="false"/>
         <Preference
             a:key="@string/setting_key.equalizer"
             a:persistent="false"
             a:title="@string/settings.equalizer_title"
             a:summary="@string/settings.equalizer_summary"
             app:iconSpaceReserved="false"/>
+        <PreferenceCategory
+            a:title="@string/settings.advanced_playback"
+            app:iconSpaceReserved="false">
+            <ListPreference
+                a:defaultValue="@string/setting_key.replaygain_disabled"
+                a:entries="@array/replayGainNames"
+                a:entryValues="@array/replayGainValues"
+                a:key="@string/setting_key.replaygain"
+                a:title="@string/settings.replaygain_title"
+                app:iconSpaceReserved="false"/>
+            <SwitchPreferenceCompat
+                a:defaultValue="false"
+                a:key="@string/setting_key.hardware_offload"
+                a:summary="@string/settings.use_hw_offload_description"
+                a:title="@string/settings.use_hw_offload_title"
+                app:iconSpaceReserved="false" />
+        </PreferenceCategory>
     </PreferenceScreen>
 
     <PreferenceScreen

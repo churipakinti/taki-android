@@ -11,12 +11,20 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import java.util.regex.Pattern
+import kotlin.math.abs
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.app.UApp
 
 /**
  * Contains convenience functions for reading and writing preferences
  */
+private val supportedBitrateQualities = intArrayOf(96, 160, 256, 320)
+
+internal fun normalizeBitrateQuality(value: Int): Int {
+    if (value == 0) return 0
+    return supportedBitrateQualities.minBy { abs(it - value) }
+}
+
 object Settings {
 
     @JvmStatic
@@ -41,6 +49,15 @@ object Settings {
 
     var maxBitRatePinning
         by StringIntSetting(getKey(R.string.setting_key_max_bitrate_pinning))
+
+    fun normalizeBitrateQualitySettings() {
+        val normalizedWifi = normalizeBitrateQuality(maxBitRateWifi)
+        val normalizedMobile = normalizeBitrateQuality(maxBitRateMobile)
+        val normalizedPinning = normalizeBitrateQuality(maxBitRatePinning)
+        if (maxBitRateWifi != normalizedWifi) maxBitRateWifi = normalizedWifi
+        if (maxBitRateMobile != normalizedMobile) maxBitRateMobile = normalizedMobile
+        if (maxBitRatePinning != normalizedPinning) maxBitRatePinning = normalizedPinning
+    }
     val pinWithHighestQuality: Boolean
         get() = (maxBitRatePinning == 0)
 
@@ -170,7 +187,7 @@ object Settings {
             val context = Util.appContext()
             val defaultVal = String.format(
                 context.resources.getString(R.string.share_default_greeting),
-                context.resources.getString(R.string.common_appname)
+                context.resources.getString(R.string.taki_appname)
             )
             return preferences.getString(
                 getKey(R.string.setting_key_default_share_greeting),

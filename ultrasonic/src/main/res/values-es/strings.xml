@@ -27,9 +27,10 @@
     <string name="chat.send_button">Enviar</string>
     <string name="chat.user_avatar">Imagen de avatar</string>
     <string name="common.album">Álbum</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">Artista</string>
     <string name="common.cancel">Cancelar</string>
+    <string name="common.navigate_back">Volver</string>
     <string name="common.comment">Comentario</string>
     <string name="common.confirm">Confirmar</string>
     <string name="common.delete">Eliminar</string>
@@ -57,6 +58,7 @@
     <string name="download.empty">No se está descargando nada</string>
     <string name="album.remove_download_description">Eliminar álbum descargado</string>
     <string name="playlist.empty">La lista de reproducción está vacía</string>
+    <string name="playlist.move">Reordenar canción</string>
     <string name="download.jukebox_not_authorized">El control remoto no está activado. Activa el modo gramola (jukebox) en <b>Usuarios &gt; Configuración</b> en tu servidor Subsonic.</string>
     <string name="download.jukebox_off">Control remoto apagado. La música se reproduce en el dispositivo.</string>
     <string name="download.jukebox_offline">Control remoto no disponible en modo sin conexión.</string>
@@ -125,9 +127,10 @@
     <string name="main.songs_starred">Favoritas</string>
     <string name="main.songs_title">Canciones</string>
     <string name="main.videos">Vídeos</string>
-    <string name="main.welcome_text_demo">Para utilizar Ultrasonic con tu música necesitas un <b>servidor propio</b>.\n\n➤ En caso de que quieras probar la aplicación primero, se puede añadir ahora un servidor de demostración.\n\n➤ En caso contrario, puedes definir tu servidor personal en la <b>configuración</b>.</string>
-    <string name="main.welcome_title">¡Te damos la bienvenida a Ultrasonic!</string>
-    <string name="main.welcome_cancel">Llévame a la configuración</string>
+    <string name="main.welcome_title">Te damos la bienvenida a Taki</string>
+    <string name="main.welcome_text">Conecta Taki con tu colección de música para empezar a escuchar.</string>
+    <string name="main.welcome_add_collection">Agregar colección</string>
+    <string name="main.welcome_not_now">Ahora no</string>
     <string name="menu.about">Acerca de</string>
     <string name="menu.common">Común</string>
     <string name="menu.deleted_playlist">Eliminada lista de reproducción %s</string>
@@ -173,6 +176,7 @@
     <string name="search.no_match">Sin resultados; por favor inténtalo de nuevo</string>
     <string name="search.songs">Canciones</string>
     <string name="search.title">Buscar</string>
+    <string name="search.prompt">Busca artistas, álbumes y canciones</string>
     <string name="select_album.empty">No se han encontrado medios</string>
     <string name="select_album.n_selected">%d pistas seleccionadas</string>
     <string name="select_album.no_network">Atención: no hay ninguna red utilizable disponible.\n Si estás utilizando datos móviles, es posible que tengas que permitir las descargas en conexiones con tarificación o en itinerancia en la configuración.</string>
@@ -256,9 +260,15 @@
     <string name="settings.max_bitrate_64">64 Kbps</string>
     <string name="settings.max_bitrate_80">80 Kbps</string>
     <string name="settings.max_bitrate_96">96 Kbps</string>
-    <string name="settings.max_bitrate_mobile">Tasa de bits máxima - Móvil</string>
+    <string name="settings.max_bitrate_mobile">Calidad por datos móviles</string>
     <string name="settings.max_bitrate_unlimited">Ilimitado</string>
-    <string name="settings.max_bitrate_wifi">Tasa de bits máxima - Wifi</string>
+    <string name="settings.max_bitrate_wifi">Calidad por Wi-Fi</string>
+    <string name="settings.quality_low">Baja · 96 Kbps</string>
+    <string name="settings.quality_normal">Normal · 160 Kbps</string>
+    <string name="settings.quality_high">Alta · 256 Kbps</string>
+    <string name="settings.quality_maximum">Máxima · 320 Kbps</string>
+    <string name="settings.quality_original">Original · Sin límite</string>
+    <string name="settings.advanced_playback">Reproducción avanzada</string>
     <string name="settings.max_songs">Máximo de canciones</string>
     <string name="settings.network_timeout">Tiempo de espera de la red</string>
     <string name="settings.network_timeout_105000">105 segundos</string>
@@ -309,7 +319,7 @@
     <string name="settings.search_history_cleared">Se ha borrado el historial de búsqueda</string>
     <string name="settings.search_title">Configuración de la búsqueda</string>
     <string name="settings.server_address">Dirección del servidor</string>
-    <string name="settings.server_name">Nombre</string>
+    <string name="settings.server_name">Nombre de la colección</string>
     <string name="settings.server_password">Contraseña</string>
     <string name="settings.server_scaling_summary">Descarga imágenes escaladas del servidor en lugar del tamaño completo (ahorra ancho de banda)</string>
     <string name="settings.server_scaling_title">Escalado de portadas en el servidor</string>
@@ -335,7 +345,7 @@
     <string name="settings.use_id3">Navegar usando las etiquetas ID3</string>
     <string name="settings.use_id3_summary">Usar el método de etiquetas ID3 en lugar del método basado en el sistema de ficheros</string>
     <string name="settings.use_id3_offline">Utilizar etiquetas ID3 también cuando se está sin conexión</string>
-    <string name="settings.use_id3_offline_summary">Si activas esta opción, solo se mostrará la música que hayas descargado con Ultrasonic 4.0 o posterior. Las descargas anteriores no incluyen los metadatos necesarios. Puedes alternar entre el modo anclar y guardar para activar la descarga de los metadatos que faltan.</string>
+    <string name="settings.use_id3_offline_summary">Si activas esta opción, solo se mostrará la música descargada que incluya los metadatos necesarios. Puedes alternar entre los modos Anclar y Guardar para descargar los metadatos que falten.</string>
     <string name="settings.show_artist_picture">Mostrar la imagen del artista en la lista de artistas</string>
     <string name="settings.show_artist_picture_summary">Muestra la imagen del artista en la lista de artistas si está disponible</string>
     <string name="main.video" tools:ignore="UnusedResources">Vídeo</string>
@@ -408,10 +418,14 @@
     <string name="server_editor.authentication">Autenticación</string>
     <string name="server_editor.advanced">Configuración avanzada</string>
     <string name="server_editor.disabled_feature">Una o más funciones se han desactivado porque el servidor no las admite.\nPuedes ejecutar esta prueba nuevamente en cualquier momento.</string>
-    <string name="server_menu.demo">Servidor de demostración</string>
-    <string name="about.webpage">Visitar la página web</string>
-    <string name="about.report">Informar de un error</string>
-    <string name="about.text"><b>Ultrasonic</b> es un cliente Android de streaming de música gratuito y de código abierto para servidores compatibles con la API de Subsonic (versión 1.7.0 o superior).\n\nCon <b>Ultrasonic</b> puedes transmitir o descargar fácilmente música desde tu ordenador de casa a tu dispositivo Android utilizando tu servidor multimedia compatible con la API de Subsonic. El software del servidor Subsonic requiere una configuración adicional aparte de Ultrasonic.\n\nPor defecto, Ultrasonic no está configurado. Una vez que hayas montado tu propio servidor, por favor ajusta la configuración del servidor para que se conecte al mismo.</string>
+    <string name="library_hub.switch_collection">Cambiar colección</string>
+    <string name="library_hub.current_name">%1$s</string>
+    <string name="library_hub.switch">Cambiar colección</string>
+    <string name="library_hub.add">Añadir colección</string>
+    <string name="library.downloaded_music">Música descargada</string>
+    <string name="about.webpage">Visitar el sitio web</string>
+    <string name="about.report">Reportar un problema</string>
+    <string name="about.text"><b>Taki</b> es un reproductor enfocado en colecciones musicales personales y compartidas. Escucha en línea o descarga tu música para reproducirla sin conexión, sin dejar que la tecnología se interponga.\n\nTaki funciona con Navidrome y otros servidores compatibles con las APIs de Subsonic y OpenSubsonic.\n\nTaki es software libre y de código abierto basado en Ultrasonic y distribuido bajo la licencia GNU GPLv3. Ultrasonic y sus colaboradores reciben crédito como proyecto original.</string>
     <plurals name="n_songs">
         <item quantity="one">%d canción</item>
         <item quantity="many">%d de canciones</item>
@@ -456,7 +470,7 @@
     <string name="api.subsonic.param_missing">Falta el parámetro requerido.</string>
     <string name="api.subsonic.requested_data_was_not_found">No se encontraron los datos solicitados.</string>
     <string name="api.subsonic.trial_period_is_over">El período de prueba ha terminado.</string>
-    <string name="api.subsonic.upgrade_client">Versiones incompatibles. Por favor actualiza la aplicación Ultrasonic para Android.</string>
+    <string name="api.subsonic.upgrade_client">Versiones incompatibles. Actualiza Taki.</string>
     <string name="api.subsonic.upgrade_server">Versiones incompatibles. Por favor actualiza el servidor Subsonic.</string>
     <!-- Subsonic features  -->
     <string name="settings.use_hw_offload_title">Utilizar la reproducción por hardware (experimental)</string>
@@ -471,7 +485,7 @@
     <string name="supported_server_features">Funciones soportadas</string>
     <string name="foreground_exception_title">No se puede reanudar la reproducción</string>
     <string name="foreground_exception_text">Pulsa el botón de reproducción en la notificación multimedia si aún está presente; de lo contrario, abre la aplicación para iniciar la reproducción y vuelve a conectar la sesión al controlador</string>
-    <string name="settings.max_bitrate_pinning">Tasa de bits máxima - Al fijar una canción de forma permanente</string>
+    <string name="settings.max_bitrate_pinning">Calidad de descarga</string>
     <string name="shortcut_play_random_songs_short">Canciones aleatorias</string>
     <string name="shortcut_play_random_songs_long">Reproducir las canciones aleatoriamente</string>
     <plurals name="n_songs_added_play_now">

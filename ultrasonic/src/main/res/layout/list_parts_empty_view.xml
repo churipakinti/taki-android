@@ -9,6 +9,7 @@
     >
 
     <ImageView
+        a:id="@+id/empty_list_icon"
         a:layout_width="100dip"
         a:layout_height="100dip"
         a:layout_marginStart="50dp"

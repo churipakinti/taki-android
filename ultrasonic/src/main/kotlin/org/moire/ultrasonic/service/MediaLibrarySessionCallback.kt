@@ -888,11 +888,6 @@ class MediaLibrarySessionCallback :
             mediaType = MEDIA_TYPE_FOLDER_ALBUMS
         )
 
-        // Other
-        mediaItems.add(R.string.button_bar_shares, MEDIA_SHARE_ID, null)
-        mediaItems.add(R.string.button_bar_bookmarks, MEDIA_BOOKMARK_ID, null)
-        mediaItems.add(R.string.button_bar_podcasts, MEDIA_PODCAST_ID, null)
-
         return Futures.immediateFuture(LibraryResult.ofItemList(mediaItems, null))
     }
 

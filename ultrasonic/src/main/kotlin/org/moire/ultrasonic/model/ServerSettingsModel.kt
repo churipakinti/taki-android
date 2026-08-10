@@ -9,8 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.moire.ultrasonic.R
-import org.moire.ultrasonic.app.UApp
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.OFFLINE_DB_ID
 import org.moire.ultrasonic.data.ServerSetting
@@ -135,22 +133,6 @@ class ServerSettingsModel(
     }
 
     /**
-     * Inserts a new Setting into the database
-     * @return The id of the demo server
-     */
-    fun addDemoServer(): Int {
-        val demo = DEMO_SERVER_CONFIG.copy()
-
-        runBlocking {
-            demo.index = (repository.count() ?: 0) + 1
-            repository.insert(demo)
-            Timber.d("Added demo server")
-        }
-
-        return demo.index
-    }
-
-    /**
      * Checks if there are any missing indexes in the ServerSetting list
      * For displaying the Server Settings in a ListView, it is mandatory that their indexes
      * aren't missing. Ideally the indexes are continuous, but some circumstances (e.g.
@@ -187,23 +169,4 @@ class ServerSettingsModel(
         return indexesInDatabase
     }
 
-    companion object {
-        private val DEMO_SERVER_CONFIG = ServerSetting(
-            id = 0,
-            index = 0,
-            name = UApp.applicationContext().getString(R.string.server_menu_demo),
-            url = "https://demo.ampache.dev",
-            userName = "ultrasonic_demo",
-            password = "W7DumQ3ZUR89Se3",
-            jukeboxByDefault = false,
-            allowSelfSignedCertificate = false,
-            forcePlainTextPassword = false,
-            musicFolderId = null,
-            minimumApiVersion = "1.13.0",
-            chatSupport = true,
-            bookmarkSupport = true,
-            shareSupport = true,
-            podcastSupport = true
-        )
-    }
 }

@@ -2,10 +2,17 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="library_hub.title">Your library</string>
     <string name="library_hub.current">Current library</string>
-    <string name="library_hub.current_name">Current: %1$s</string>
-    <string name="library_hub.switch">Switch library</string>
-    <string name="library_hub.add">Add library</string>
+    <string name="library_hub.current_name">%1$s</string>
+    <string name="library_hub.switch">Switch collection</string>
+    <string name="library_hub.switch_collection">Switch collection</string>
+    <string name="library_hub.add">Add collection</string>
     <string name="library_hub.bottom_label">Library</string>
+    <string name="library.your_music">Your music</string>
+    <string name="library.collection">Collection</string>
+    <string name="library.downloaded_music">Downloaded music</string>
+    <string name="library.liked_songs">Liked Songs</string>
+    <string name="player.back">Back</string>
+    <string name="player.options">Player options</string>
     <string name="background_task.network_error">A network error occurred. Please check the server address or try again later.</string>
     <string name="background_task.unsupported_api">Server API v%1$s does not support this function.</string>
     <string name="background_task.no_network">This program requires network access. Please turn on Wi-Fi or mobile network.</string>
@@ -61,9 +68,11 @@
     <string name="chat.send_button">Send</string>
     <string name="chat.user_avatar">Avatar image</string>
     <string name="common.album">Album</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
+    <string name="taki.appname" translatable="false">Taki</string>
     <string name="common.artist">Artist</string>
     <string name="common.cancel">Cancel</string>
+    <string name="common.navigate_back">Go back</string>
     <string name="common.comment">Comment</string>
     <string name="common.confirm">Confirm</string>
     <string name="common.delete">Delete</string>
@@ -92,6 +101,7 @@
     <string name="download.empty">Nothing is downloading</string>
     <string name="album.remove_download_description">Remove downloaded album</string>
     <string name="playlist.empty">Playlist is empty</string>
+    <string name="playlist.move">Reorder song</string>
     <string name="download.jukebox_not_authorized">Remote control is not allowed. Please enable jukebox mode in <b>Users &gt; Settings</b> on your Subsonic server.</string>
     <string name="download.jukebox_off">Turned off remote control. Music is played on phone.</string>
     <string name="download.jukebox_offline">Remote control is not available in offline mode.</string>
@@ -129,6 +139,7 @@
     <string name="lyrics.nomatch">No lyrics found</string>
     <string name="lyrics.synced">Synced</string>
     <string name="lyrics.not_synced">Not synced</string>
+    <string name="lyrics.sync">Sync</string>
     <string name="language.default">System default</string>
     <string name="language.zh_CN">Chinese (China)</string>
     <string name="language.zh_TW">Chinese (Taiwan)</string>
@@ -161,12 +172,13 @@
     <string name="main.setup_server">%s - Set up Server</string>
     <string name="main.songs_all">All songs</string>
     <string name="main.songs_random">Random</string>
-    <string name="main.songs_starred">Favorites</string>
+    <string name="main.songs_starred">Liked Songs</string>
     <string name="main.songs_title">Songs</string>
     <string name="main.videos">Videos</string>
-    <string name="main.welcome_text_demo">To use Ultrasonic with your own music you will need your <b>own server</b>. \n\n➤ In case you want to try out the app first, it can add a demo server now. \n\n➤ Otherwise you can configure your server in the <b>settings</b>.</string>
-    <string name="main.welcome_title">Welcome to Ultrasonic!</string>
-    <string name="main.welcome_cancel">Take me to the settings</string>
+    <string name="main.welcome_title">Welcome to Taki</string>
+    <string name="main.welcome_text">Connect Taki to your music collection to start listening.</string>
+    <string name="main.welcome_add_collection">Add collection</string>
+    <string name="main.welcome_not_now">Not now</string>
     <string name="menu.about">About</string>
     <string name="menu.common">Common</string>
     <string name="menu.deleted_playlist">Deleted playlist %s</string>
@@ -218,6 +230,7 @@
     <string name="search.no_match">No matches, please try again</string>
     <string name="search.songs">Songs</string>
     <string name="search.title">Search</string>
+    <string name="search.prompt">Search artists, albums, and songs</string>
     <string name="select_album.empty">No media found</string>
     <string name="select_album.n_selected">%d tracks selected</string>
     <string name="select_album.no_network">Warning: No usable network available.\n If you are using mobile data, you may need to allow downloads on metered connections in the settings.</string>
@@ -285,10 +298,16 @@
     <string name="settings.max_bitrate_64">64 Kbps</string>
     <string name="settings.max_bitrate_80">80 Kbps</string>
     <string name="settings.max_bitrate_96">96 Kbps</string>
-    <string name="settings.max_bitrate_mobile">Max Bitrate - Mobile</string>
+    <string name="settings.max_bitrate_mobile">Mobile streaming quality</string>
     <string name="settings.max_bitrate_unlimited">Unlimited</string>
-    <string name="settings.max_bitrate_wifi">Max Bitrate - Wi-Fi</string>
-    <string name="settings.max_bitrate_pinning">Max Bitrate - When pinning a song permanently</string>
+    <string name="settings.max_bitrate_wifi">Wi-Fi streaming quality</string>
+    <string name="settings.max_bitrate_pinning">Download quality</string>
+    <string name="settings.quality_low">Low · 96 Kbps</string>
+    <string name="settings.quality_normal">Normal · 160 Kbps</string>
+    <string name="settings.quality_high">High · 256 Kbps</string>
+    <string name="settings.quality_maximum">Maximum · 320 Kbps</string>
+    <string name="settings.quality_original">Original · No limit</string>
+    <string name="settings.advanced_playback">Advanced playback</string>
     <string name="settings.network_title">Network</string>
     <string name="settings.network_summary">Bitrate limits, Wi-Fi only downloads</string>
     <string name="settings.now_playing_title">Now Playing</string>
@@ -306,7 +325,7 @@
     <string name="settings.override_language_summary">You need to restart the app after changing the language</string>
     <string name="settings.search_history_cleared">Search history cleared</string>
     <string name="settings.server_address">Server Address</string>
-    <string name="settings.server_name">Name</string>
+    <string name="settings.server_name">Collection name</string>
     <string name="settings.server_password">Password</string>
     <string name="settings.server_username">Username</string>
     <string name="settings.server_color">Server color</string>
@@ -317,7 +336,7 @@
     <string name="settings.use_id3">Browse Using ID3 Tags</string>
     <string name="settings.use_id3_summary">Use ID3 tag methods instead of file system based methods</string>
     <string name="settings.use_id3_offline">Use ID3 method also when offline</string>
-    <string name="settings.use_id3_offline_summary">If you enable this Setting it will only show the music that you have downloaded with Ultrasonic 4.0 or later. Earlier downloads don\'t have the necessary metadata downloaded. You can toggle between Pin and Save mode to trigger the download of the missing metadata.</string>
+    <string name="settings.use_id3_offline_summary">If you enable this setting, only downloaded music with the required metadata will be shown. You can toggle between Pin and Save mode to download any missing metadata.</string>
     <string name="main.video" tools:ignore="UnusedResources">Video</string>
     <string name="settings.wifi_required_summary">Only download media on unmetered connections</string>
     <string name="settings.wifi_required_title">Download on Wi-Fi only</string>
@@ -390,14 +409,13 @@
     <string name="server_editor.authentication">Authentication</string>
     <string name="server_editor.advanced">Advanced settings</string>
     <string name="server_editor.disabled_feature">One or more features were disabled because the server doesn\'t support them.\nYou can run this test again anytime.</string>
-    <string name="server_menu.demo">Demo Server</string>
     <string name="about.webpage">Visit website</string>
-    <string name="about.report">Original issue tracker</string>
+    <string name="about.report">Report a problem</string>
     <string name="about.appname" translatable="false">Taki</string>
     <string name="about.tagline">Your music, without distractions.</string>
     <string name="about.text"><b>Taki</b> is a focused player for personal and shared music collections. Listen online or download your music for offline playback, without letting the technology get in the way.\n\nTaki works with Navidrome and other servers compatible with the Subsonic and OpenSubsonic APIs.\n\nTaki is free and open-source software based on Ultrasonic and distributed under the GNU GPLv3 license. Ultrasonic and its contributors are credited as the original project.</string>
-    <string name="about.webpage.url" translatable="false">https://ultrasonic.gitlab.io/</string>
-    <string name="about.report.url" translatable="false">https://gitlab.com/ultrasonic/ultrasonic/issues</string>
+    <string name="about.webpage.url" translatable="false">https://github.com/churipakinti/taki-android</string>
+    <string name="about.report.url" translatable="false">https://github.com/churipakinti/taki-android/issues</string>
     <plurals name="n_songs">
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
@@ -439,7 +457,7 @@
     <string name="api.subsonic.param_missing">Required param is missing.</string>
     <string name="api.subsonic.requested_data_was_not_found">Requested data was not found.</string>
     <string name="api.subsonic.trial_period_is_over">Trial period is over.</string>
-    <string name="api.subsonic.upgrade_client">Incompatible versions. Please upgrade Ultrasonic Android app.</string>
+    <string name="api.subsonic.upgrade_client">Incompatible versions. Please upgrade Taki.</string>
     <string name="api.subsonic.upgrade_server">Incompatible versions. Please upgrade Subsonic server.</string>
     <!-- Subsonic features  -->
     <string name="settings.use_hw_offload_title">Use hardware playback (experimental)</string>

@@ -19,11 +19,8 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.MenuProvider
 import androidx.fragment.app.FragmentContainerView
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player.STATE_BUFFERING
@@ -41,17 +38,13 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeActivity
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.app.UApp
 import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.model.ServerSettingsModel
 import org.moire.ultrasonic.provider.SearchSuggestionProvider
 import org.moire.ultrasonic.service.MediaPlayerLifecycleSupport
 import org.moire.ultrasonic.service.MediaPlayerManager
@@ -68,12 +61,6 @@ import org.moire.ultrasonic.util.UncaughtExceptionHandler
 import org.moire.ultrasonic.util.Util
 import timber.log.Timber
 
-// How long to wait after the last keystroke before firing a live search request against the
-// server, and the shortest query worth sending -- both exist purely to avoid hammering the
-// server with a request per keystroke.
-private const val LIVE_SEARCH_DEBOUNCE_MS = 400L
-private const val LIVE_SEARCH_MIN_QUERY_LENGTH = 2
-
 /**
  * The main (and only) Activity of Ultrasonic which loads all other screens as Fragments.
  * Because this is the only Activity we have to manage the apps lifecycle through this activity
@@ -84,27 +71,20 @@ class NavigationActivity : ScopeActivity() {
     private var nowPlayingView: FragmentContainerView? = null
     private var nowPlayingHidden = false
     private var bottomNavigation: BottomNavigationView? = null
+    private var contentBackButton: View? = null
+    private var contentNavigationHeader: View? = null
     private var toolbar: Toolbar? = null
     private var host: NavHostFragment? = null
-
-    // We store the last search string in this variable.
-    // Seems a bit like a hack, is there a better way?
-    var searchQuery: String? = null
-
-    private var liveSearchJob: Job? = null
-    private var lastLiveSearchQuery: String? = null
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
     private var rxBusSubscription: CompositeDisposable = CompositeDisposable()
 
-    private val serverSettingsModel: ServerSettingsModel by viewModel()
     private val lifecycleSupport: MediaPlayerLifecycleSupport by inject()
     private val mediaPlayerManager: MediaPlayerManager by inject()
     private val activeServerProvider: ActiveServerProvider by inject()
 
     private var currentFragmentId: Int = 0
-
     override fun onCreate(savedInstanceState: Bundle?) {
         Timber.d("onCreate called")
 
@@ -125,6 +105,8 @@ class NavigationActivity : ScopeActivity() {
         setContentView(R.layout.navigation_activity)
         nowPlayingView = findViewById(R.id.now_playing_fragment)
         bottomNavigation = findViewById(R.id.bottom_navigation)
+        contentBackButton = findViewById(R.id.content_back_button)
+        contentNavigationHeader = findViewById(R.id.content_navigation_header)
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
@@ -132,6 +114,11 @@ class NavigationActivity : ScopeActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment? ?: return
 
         val navController = host!!.navController
+        contentBackButton?.setOnClickListener {
+            if (!navController.navigateUp()) {
+                navController.navigate(R.id.mainFragment)
+            }
+        }
 
         appBarConfiguration = AppBarConfiguration(
             setOf(
@@ -145,8 +132,15 @@ class NavigationActivity : ScopeActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         bottomNavigation?.setupWithNavController(navController)
+        bottomNavigation?.setOnItemReselectedListener { item ->
+            if (navController.currentDestination?.id != item.itemId) {
+                if (!navController.popBackStack(item.itemId, false)) {
+                    navController.navigate(item.itemId)
+                }
+            }
+        }
 
-        navController.addOnDestinationChangedListener { _, destination, _ ->
+        navController.addOnDestinationChangedListener { _, destination, arguments ->
             val dest: String = try {
                 resources.getResourceName(destination.id)
             } catch (ignored: Resources.NotFoundException) {
@@ -155,11 +149,46 @@ class NavigationActivity : ScopeActivity() {
             Timber.d("Navigated to $dest")
 
             currentFragmentId = destination.id
-            if (destination.id == R.id.homeFragment || destination.id == R.id.mainFragment) {
+            val isLibraryTrackCollection = destination.id == R.id.trackCollectionFragment &&
+                (arguments?.getBoolean("libraryRoot") == true ||
+                    arguments?.getBoolean("getStarred") == true)
+            val isAlbumDetail = destination.id == R.id.trackCollectionFragment &&
+                arguments?.getBoolean("isAlbum") == true
+            val usesContentHeader = destination.id in setOf(
+                R.id.homeFragment,
+                R.id.mainFragment,
+                R.id.searchFragment,
+                R.id.downloadsFragment,
+                R.id.playlistsFragment,
+                R.id.playerFragment,
+                R.id.lyricsFragment,
+                R.id.artistListFragment,
+                R.id.albumListFragment,
+                R.id.selectGenreFragment,
+                R.id.serverSelectorFragment,
+                R.id.editServerFragment,
+                R.id.aboutFragment
+            ) || isLibraryTrackCollection || isAlbumDetail ||
+                destination.id == R.id.settingsFragment ||
+                destination.id == R.id.equalizerFragment
+            if (usesContentHeader) {
                 supportActionBar?.hide()
             } else {
                 supportActionBar?.show()
             }
+            val showsContentBackButton = destination.id in setOf(
+                R.id.playlistsFragment,
+                R.id.artistListFragment,
+                R.id.albumListFragment,
+                R.id.selectGenreFragment,
+                R.id.serverSelectorFragment,
+                R.id.editServerFragment,
+                R.id.aboutFragment
+            ) || isLibraryTrackCollection || isAlbumDetail ||
+                destination.id == R.id.settingsFragment ||
+                destination.id == R.id.equalizerFragment
+            contentNavigationHeader?.visibility =
+                if (showsContentBackButton) View.VISIBLE else View.GONE
             bottomNavigation?.visibility = if (destination.id in setOf(
                     R.id.playerFragment,
                     R.id.settingsFragment,
@@ -182,8 +211,8 @@ class NavigationActivity : ScopeActivity() {
         // Determine if this is a first run
         val showWelcomeScreen = UApp.instance!!.isFirstRun
 
-        // This is a first run with only the demo entry inside the database
-        // We set the active server to the demo one and show the welcome dialog
+        // On first run, invite the listener to connect a collection. Taki deliberately ships
+        // without a bundled demo or third-party credentials.
         if (showWelcomeScreen) {
             showWelcomeDialog()
         }
@@ -215,59 +244,11 @@ class NavigationActivity : ScopeActivity() {
             ShortcutUtil.registerShortcuts(this)
         }
 
-        // Register our options menu
-        addMenuProvider(
-            searchMenuProvider,
-            this,
-            Lifecycle.State.RESUMED
-        )
-        addMenuProvider(
-            libraryHubMenuProvider,
-            this,
-            Lifecycle.State.RESUMED
-        )
-    }
-
-    private val searchMenuProvider: MenuProvider = object : MenuProvider {
-        override fun onPrepareMenu(menu: Menu) {
-            val searchItem = menu.findItem(R.id.action_search) ?: return
-            val isSearchDestination = currentFragmentId == R.id.searchFragment
-            searchItem.isVisible = isSearchDestination
-            if (isSearchDestination) {
-                setupSearchField(menu)
-                searchItem.expandActionView()
-            }
-        }
-
-        override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
-            inflater.inflate(R.menu.search_view_menu, menu)
-        }
-
-        override fun onMenuItemSelected(item: MenuItem): Boolean = false
-    }
-
-    private val libraryHubMenuProvider: MenuProvider = object : MenuProvider {
-        override fun onPrepareMenu(menu: Menu) {
-            menu.findItem(R.id.action_library_hub)?.isVisible = currentFragmentId in setOf(
-                R.id.downloadsFragment
-            )
-        }
-
-        override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
-            inflater.inflate(R.menu.library_hub_action, menu)
-        }
-
-        override fun onMenuItemSelected(item: MenuItem): Boolean {
-            if (item.itemId != R.id.action_library_hub) return false
-            showLibraryHub()
-            return true
-        }
     }
 
     fun showLibraryHub(anchorView: View? = null) {
         val currentToolbar = toolbar
         val anchor = anchorView
-            ?: currentToolbar?.findViewById(R.id.action_library_hub)
             ?: currentToolbar
             ?: return
         val popup = androidx.appcompat.widget.PopupMenu(this, anchor)
@@ -293,70 +274,6 @@ class NavigationActivity : ScopeActivity() {
         popup.show()
     }
 
-    fun setupSearchField(menu: Menu) {
-        Timber.i("Recreating search field")
-        val searchManager = getSystemService(SEARCH_SERVICE) as SearchManager
-        val searchItem = menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as SearchView
-        val searchableInfo = searchManager.getSearchableInfo(this.componentName)
-        searchView.setSearchableInfo(searchableInfo)
-        searchView.setIconifiedByDefault(false)
-
-        if (searchQuery != null) {
-            Timber.e("Found existing search query")
-            searchItem.expandActionView()
-            searchView.isIconified = false
-            searchView.setQuery(searchQuery, false)
-            searchView.clearFocus()
-            // Restore search text only once!
-            searchQuery = null
-        }
-
-        // Live filtering as the user types, debounced so we don't hammer the server on every
-        // keystroke. Explicit submit (IME search key / voice search) is untouched -- it still
-        // goes through the existing ACTION_SEARCH intent flow below, which also saves the query
-        // to recent suggestions; live keystrokes deliberately don't, or every partial fragment
-        // typed ("b", "be", "bea"...) would pollute that history.
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                scheduleLiveSearch(newText)
-                return true
-            }
-        })
-    }
-
-    private fun scheduleLiveSearch(text: String?) {
-        val query = text?.trim().orEmpty()
-        liveSearchJob?.cancel()
-
-        // An empty field means the user cleared the search -- forget the last query so
-        // re-entering the exact same text later (a fresh visit, not a live edit) fires again
-        // instead of being silently deduped against a stale value from a previous visit.
-        if (query.isEmpty()) {
-            lastLiveSearchQuery = null
-            return
-        }
-
-        if (query.length < LIVE_SEARCH_MIN_QUERY_LENGTH || query == lastLiveSearchQuery) return
-
-        liveSearchJob = lifecycleScope.launch {
-            delay(LIVE_SEARCH_DEBOUNCE_MS)
-            lastLiveSearchQuery = query
-
-            val navController = findNavController(R.id.nav_host_fragment)
-            val options = NavOptions.Builder()
-                .setLaunchSingleTop(true)
-                .setPopUpTo(R.id.searchFragment, true)
-                .build()
-            navController.navigate(
-                NavigationGraphDirections.toSearchFragment(query, false),
-                options
-            )
-        }
-    }
-
     override fun onResume() {
         Timber.d("onResume called")
         super.onResume()
@@ -368,7 +285,6 @@ class NavigationActivity : ScopeActivity() {
         }
 
         updateBottomNavigationAvailability()
-
         // Lifecycle support's constructor registers some event receivers so it should be created early
         lifecycleSupport.onCreate()
 
@@ -426,13 +342,11 @@ class NavigationActivity : ScopeActivity() {
             }
 
             Intent.ACTION_SEARCH -> {
-                searchQuery = intent.getStringExtra(SearchManager.QUERY)
-                handleSearchIntent(searchQuery, false)
+                handleSearchIntent(intent.getStringExtra(SearchManager.QUERY), false)
             }
 
             MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH -> {
-                searchQuery = intent.getStringExtra(SearchManager.QUERY)
-                handleSearchIntent(searchQuery, true)
+                handleSearchIntent(intent.getStringExtra(SearchManager.QUERY), true)
             }
         }
     }
@@ -500,20 +414,17 @@ class NavigationActivity : ScopeActivity() {
 
             InfoDialog.Builder(this)
                 .setTitle(R.string.main_welcome_title)
-                .setMessage(R.string.main_welcome_text_demo)
-                .setNegativeButton(R.string.main_welcome_cancel) { dialog, _ ->
+                .setMessage(R.string.main_welcome_text)
+                .setNegativeButton(R.string.main_welcome_not_now) { dialog, _ ->
                     UApp.instance!!.setupDialogDisplayed = true
-                    // Go to the settings screen
                     dialog.dismiss()
-                    findNavController(R.id.nav_host_fragment).navigate(R.id.serverSelectorFragment)
                 }
-                .setPositiveButton(R.string.common_ok) { dialog, _ ->
+                .setPositiveButton(R.string.main_welcome_add_collection) { dialog, _ ->
                     UApp.instance!!.setupDialogDisplayed = true
-                    // Add the demo server
-                    val activeServerProvider: ActiveServerProvider by inject()
-                    val demoIndex = serverSettingsModel.addDemoServer()
-                    activeServerProvider.setActiveServerByIndex(demoIndex)
-                    findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
+                    findNavController(R.id.nav_host_fragment).navigate(
+                        R.id.editServerFragment,
+                        Bundle().apply { putInt("index", -1) }
+                    )
                     dialog.dismiss()
                 }.show()
         }

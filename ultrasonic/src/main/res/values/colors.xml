@@ -1,7 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background_color_black">#000000</color>
-    <color name="selected_menu_dark">#F3F3F3</color>
-    <color name="selected_menu_light">#000000</color>
-    <color name="tertiary">#ec407a</color>
+    <color name="taki_accent">#B7D63C</color>
+    <color name="taki_accent_pressed">#91AD30</color>
+    <color name="taki_accent_secondary">#91AD30</color>
+    <color name="taki_progress">#7C9229</color>
+    <color name="taki_selected_container">#293217</color>
+    <color name="taki_on_accent">#11130D</color>
+    <color name="taki_black">#090B09</color>
+    <color name="taki_surface_low">#111410</color>
+    <color name="taki_surface">#171A16</color>
+    <color name="taki_surface_high">#1D211B</color>
+    <color name="taki_selected_neutral">#14FFFFFF</color>
+    <color name="taki_ivory">#F1F2ED</color>
+    <color name="taki_gray">#A7AAA2</color>
+    <color name="taki_outline">#1FFFFFFF</color>
+    <color name="taki_divider">#0DFFFFFF</color>
+    <color name="taki_track">#12FFFFFF</color>
+    <color name="taki_error">#FFB4AB</color>
+    <color name="taki_on_error_container">#FFDAD6</color>
+    <color name="taki_deep_black">@color/taki_surface_low</color>
+    <color name="background_color_black">@color/taki_black</color>
+    <color name="selected_menu_dark">@color/taki_ivory</color>
+    <color name="selected_menu_light">@color/taki_black</color>
+    <color name="tertiary">@color/taki_accent_secondary</color>
 </resources>

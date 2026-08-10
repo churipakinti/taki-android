@@ -24,6 +24,7 @@ class TrackViewBinder(
     val layout: Int = R.layout.list_item_track,
     val showArtist: (Track) -> Boolean = { true },
     val showRating: Boolean = true,
+    val queueStyle: Boolean = false,
     val trackNumberText: ((Track) -> String?)? = null,
     // Selection here means "tap toggles a checkbox instead of playing" -- off by default, only
     // entered via long-press (see onEnterSelectionMode), not an always-on mode like it used to be.
@@ -61,6 +62,7 @@ class TrackViewBinder(
             isSelected = diffAdapter.isSelected(track.longId),
             showArtist = showArtist(track),
             showRating = showRating,
+            queueStyle = queueStyle,
             trackNumberText = trackNumberText?.invoke(track),
             showRowActions = checkable && !selecting && onContextMenuClick != null
         )

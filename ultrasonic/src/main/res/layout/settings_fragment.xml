@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent"
+    a:orientation="vertical">
+
+    <TextView
+        a:id="@+id/settings_header"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:paddingStart="24dp"
+        a:paddingTop="16dp"
+        a:paddingEnd="24dp"
+        a:paddingBottom="8dp"
+        a:text="@string/menu.settings"
+        a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+
+    <FrameLayout
+        a:id="@+id/settings_content"
+        a:layout_width="match_parent"
+        a:layout_height="0dp"
+        a:layout_weight="1" />
+
+</LinearLayout>

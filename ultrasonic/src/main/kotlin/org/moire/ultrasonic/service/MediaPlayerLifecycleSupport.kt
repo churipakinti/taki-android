@@ -76,11 +76,11 @@ class MediaPlayerLifecycleSupport(
     }
 
     private fun restoreLastSession(autoPlay: Boolean, afterRestore: Runnable?) {
-        playbackStateSerializer.deserialize {
-            if (it == null) return@deserialize null
-            Timber.i("Restoring %s songs", it.songs.size)
-
-            mediaPlayerManager.restore(it, autoPlay)
+        playbackStateSerializer.deserialize { state ->
+            if (state != null && state.songs.isNotEmpty()) {
+                Timber.i("Restoring %s songs", state.songs.size)
+                mediaPlayerManager.restore(state, autoPlay)
+            }
             afterRestore?.run()
         }
     }

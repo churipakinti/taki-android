@@ -5,9 +5,6 @@
     <solid android:color="?attr/colorSurfaceContainerHigh" />
 
     <corners
-        android:topLeftRadius="20dp"
-        android:topRightRadius="20dp"
-        android:bottomLeftRadius="0dp"
-        android:bottomRightRadius="0dp" />
+        android:radius="@dimen/player_panel_corner_radius" />
 
 </shape>

@@ -53,7 +53,6 @@ import org.moire.ultrasonic.data.ActiveServerProvider.Companion.isOffline
 import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.fragment.CreatePlaylistFragment
-import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
@@ -125,7 +124,6 @@ class PlaylistsFragment :
         updateLayoutMode()
         registerForContextMenu(playlistsView!!)
         observeDownloadStates()
-        setTitle(this, R.string.playlist_label)
         findNavController().currentBackStackEntry?.savedStateHandle
             ?.getLiveData<Boolean>(CreatePlaylistFragment.PLAYLIST_CREATED_RESULT)
             ?.observe(viewLifecycleOwner) { created ->

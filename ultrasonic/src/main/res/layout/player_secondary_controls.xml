@@ -3,41 +3,41 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
-    a:layout_marginTop="2dp"
+    a:layout_marginTop="@dimen/player_section_spacing"
     a:gravity="center"
     a:orientation="horizontal">
 
     <com.google.android.material.button.MaterialButton
         a:id="@+id/button_save_playlist"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="36dp"
-        a:layout_height="36dp"
-        a:layout_marginHorizontal="14dp"
+        a:layout_width="@dimen/player_secondary_target"
+        a:layout_height="@dimen/player_secondary_target"
+        a:layout_marginHorizontal="@dimen/player_secondary_spacing"
         a:contentDescription="@string/download.menu_save"
         app:icon="@drawable/ic_add_white"
-        app:iconSize="18dp"
+        app:iconSize="@dimen/player_secondary_icon"
         app:iconTint="?attr/colorOnSurfaceVariant" />
 
     <com.google.android.material.button.MaterialButton
         a:id="@+id/button_lyrics"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="36dp"
-        a:layout_height="36dp"
-        a:layout_marginHorizontal="14dp"
+        a:layout_width="@dimen/player_secondary_target"
+        a:layout_height="@dimen/player_secondary_target"
+        a:layout_marginHorizontal="@dimen/player_secondary_spacing"
         a:contentDescription="@string/download.menu_lyrics"
         app:icon="@drawable/ic_library"
-        app:iconSize="18dp"
+        app:iconSize="@dimen/player_secondary_icon"
         app:iconTint="?attr/colorOnSurfaceVariant" />
 
     <com.google.android.material.button.MaterialButton
         a:id="@+id/button_queue"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="36dp"
-        a:layout_height="36dp"
-        a:layout_marginHorizontal="14dp"
+        a:layout_width="@dimen/player_secondary_target"
+        a:layout_height="@dimen/player_secondary_target"
+        a:layout_marginHorizontal="@dimen/player_secondary_spacing"
         a:contentDescription="@string/buttons.queue"
         app:icon="@drawable/media_toggle_list"
-        app:iconSize="18dp"
+        app:iconSize="@dimen/player_secondary_icon"
         app:iconTint="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

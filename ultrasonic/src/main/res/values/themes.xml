@@ -16,11 +16,41 @@
     </style>
 
     <!-- The app's only theme: always dark, no light/black/day-night variants or user picker. -->
-    <style name="UltrasonicTheme.Dark" parent="Theme.Material3.DynamicColors.Dark">
-        <item name="colorPrimaryDark">?attr/colorSurface</item>
-        <item name="colorControlNormal">?attr/colorOnSurface</item>
-        <item name="colorControlHighlight">?attr/colorSecondary</item>
-        <item name="colorTertiary">@color/tertiary</item>
+    <style name="UltrasonicTheme.Dark" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/taki_accent</item>
+        <item name="colorOnPrimary">@color/taki_on_accent</item>
+        <item name="colorPrimaryContainer">@color/taki_selected_container</item>
+        <item name="colorOnPrimaryContainer">@color/taki_ivory</item>
+        <item name="colorSecondary">@color/taki_accent_secondary</item>
+        <item name="colorOnSecondary">@color/taki_on_accent</item>
+        <item name="colorSecondaryContainer">@color/taki_selected_neutral</item>
+        <item name="colorOnSecondaryContainer">@color/taki_ivory</item>
+        <item name="colorTertiary">@color/taki_accent_secondary</item>
+        <item name="colorOnTertiary">@color/taki_on_accent</item>
+        <item name="android:colorBackground">@color/taki_black</item>
+        <item name="colorOnBackground">@color/taki_ivory</item>
+        <item name="colorSurface">@color/taki_black</item>
+        <item name="colorSurfaceVariant">@color/taki_surface</item>
+        <item name="colorSurfaceContainerLow">@color/taki_surface_low</item>
+        <item name="colorSurfaceContainer">@color/taki_surface_low</item>
+        <item name="colorSurfaceContainerHigh">@color/taki_surface</item>
+        <item name="colorSurfaceContainerHighest">@color/taki_surface_high</item>
+        <item name="colorOnSurface">@color/taki_ivory</item>
+        <item name="colorOnSurfaceVariant">@color/taki_gray</item>
+        <item name="colorOutline">@color/taki_outline</item>
+        <item name="colorOutlineVariant">@color/taki_divider</item>
+        <item name="colorError">@color/taki_error</item>
+        <item name="colorOnErrorContainer">@color/taki_on_error_container</item>
+        <item name="colorPrimaryDark">@color/taki_black</item>
+        <item name="colorAccent">@color/taki_accent</item>
+        <item name="colorControlNormal">@color/taki_ivory</item>
+        <item name="colorControlActivated">@color/taki_accent</item>
+        <item name="colorControlHighlight">@color/taki_accent_pressed</item>
+        <item name="android:colorControlHighlight">@color/taki_accent_pressed</item>
+        <item name="android:colorAccent">@color/taki_accent</item>
+        <item name="android:navigationBarColor">@color/taki_black</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
 </resources>

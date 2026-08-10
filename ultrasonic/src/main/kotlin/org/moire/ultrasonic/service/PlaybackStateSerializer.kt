@@ -77,10 +77,11 @@ class PlaybackStateSerializer : KoinComponent {
         )
 
         Timber.i(
-            "Serialized currentPlayingIndex: %d, currentPlayingPosition: %d, shuffle: %b",
+            "Serialized currentPlayingIndex: %d, currentPlayingPosition: %d, shuffle: %b, repeat: %d",
             state.currentPlayingIndex,
             state.currentPlayingPosition,
-            state.shufflePlay
+            state.shufflePlay,
+            state.repeatMode
         )
 
         FileUtil.serialize(context, state, Constants.FILENAME_PLAYLIST_SER)
@@ -110,10 +111,11 @@ class PlaybackStateSerializer : KoinComponent {
         ) ?: return null
 
         Timber.i(
-            "Deserialized currentPlayingIndex: %d, currentPlayingPosition: %d, shuffle: %b",
+            "Deserialized currentPlayingIndex: %d, currentPlayingPosition: %d, shuffle: %b, repeat: %d",
             state.currentPlayingIndex,
             state.currentPlayingPosition,
-            state.shufflePlay
+            state.shufflePlay,
+            state.repeatMode
         )
 
         return state

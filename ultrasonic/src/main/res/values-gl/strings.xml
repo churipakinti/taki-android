@@ -42,7 +42,7 @@
     <string name="common.select_all">Seleccionar todo</string>
     <string name="common.unpin">Desancorar</string>
     <string name="common.unpin_selection_confirmation">Realmente queres desancorar a selección actual?</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.title">Título</string>
     <string name="common.artist">Artista</string>
     <string name="common.cancel">Cancelar</string>
@@ -146,13 +146,7 @@
     <string name="download.jukebox_offline">O control remoto non está dispoñible no modo sen conexión.</string>
     <string name="download.jukebox_on">Control remoto acendido. A música reprodúcese desde o servidor.</string>
     <string name="download.jukebox_server_too_old">Non hai soporte para control remoto. Debes usar unha versión superior do servidor Subsonic.</string>
-    <string name="main.welcome_text_demo">Para usar Ultrasonic coa túa propia música precisas un <b>servidor propio</b>.
-\n
-\n➤ Se primeiro queres probar a app, podemos engadir un servidor de demostración.
-\n
-\n ➤ Se non, entón podes engadir o teu servidor nos <b>axustes</b>.</string>
-    <string name="main.welcome_title">Benvida a Ultrasonic!</string>
-    <string name="main.welcome_cancel">Lévame aos axustes</string>
+    <string name="main.welcome_title">Benvida a Taki!</string>
     <string name="menu.deleted_playlist_error">Fallou a eliminación da lista %s</string>
     <string name="menu.downloads">Descargas</string>
     <string name="menu.exit">Saír</string>
@@ -274,14 +268,14 @@
     <string name="server_menu.delete">Retirar</string>
     <string name="server_menu.move_up">Mover arriba</string>
     <string name="about.report">Informar de fallos</string>
-    <string name="about.text"><b>Ultrasonic</b> é un cliente Android libre e de código aberto para a API de servidores compatibles Subsonic (versión 1.7.0 ou superior).
+    <string name="about.text"><b>Taki</b> é un cliente Android libre e de código aberto para a API de servidores compatibles Subsonic (versión 1.7.0 ou superior).
 \n
-\nCon <b>Ultrasonic</b> podes escoitar ou descargar música desde a túa computadora ao teu móbil Android usando un servidor multimedia Subsonic compatible. O servidor Subsonic require configuración adicional independente de Ultrasonic.
+\nCon <b>Taki</b> podes escoitar ou descargar música desde a túa computadora ao teu móbil Android usando un servidor multimedia Subsonic compatible. O servidor Subsonic require configuración adicional independente de Taki.
 \n
-\nPor defecto, Ultrasonic non inclúe unha configuración. Unha vez teñas o teu propio servidor configurado, cambia os axustes na sección Servidores para conectar con el.</string>
+\nPor defecto, Taki non inclúe unha configuración. Unha vez teñas o teu propio servidor configurado, cambia os axustes na sección Servidores para conectar con el.</string>
     <string name="api.subsonic.token_auth_not_supported_for_ldap">Non hai soporte para Autenticación por Token para usuarias LDAP.</string>
     <string name="api.subsonic.not_authenticated">Credenciais incorrectas.</string>
-    <string name="api.subsonic.upgrade_client">Versións non compatibles. Instala unha versión superior da app Ultrasonic.</string>
+    <string name="api.subsonic.upgrade_client">Versións non compatibles. Instala unha versión superior da app Taki.</string>
     <string name="api.subsonic.trial_period_is_over">O período de proba rematou.</string>
     <string name="foreground_exception_text">Preme no botón de reprodución na notificación multimedia se aínda está presente, se non, abre a app para iniciar a reprodución e volver conectar a sesión ao controlador</string>
     <string name="settings.network_timeout_45000">45 segundos</string>
@@ -411,7 +405,7 @@
     <string name="settings.search_500">500</string>
     <string name="settings.server_username">Identificador</string>
     <string name="settings.use_id3_offline">Usar método ID3 tamén sen conexión</string>
-    <string name="settings.use_id3_offline_summary">Se activas este axuste só se mostrará a música que ti descargaches con Ultrasonic 4.0 ou superior. As descargas anteriores non teñen os metadatos necesarios descargados. Podes cambiar entre os modos Fixar e Gardar para activar a descarga dos metadatos que falten.</string>
+    <string name="settings.use_id3_offline_summary">Se activas este axuste só se mostrará a música que ti descargaches con Taki 4.0 ou superior. As descargas anteriores non teñen os metadatos necesarios descargados. Podes cambiar entre os modos Fixar e Gardar para activar a descarga dos metadatos que falten.</string>
     <string name="settings.show_artist_picture">Mostar foto do artista na lista de artistas</string>
     <string name="main.video" tools:ignore="UnusedResources">Vídeo</string>
     <string name="settings.wifi_required_title">Descargar só con Wi-Fi</string>
@@ -434,7 +428,6 @@
     <string name="server_editor.authentication">Autenticación</string>
     <string name="server_editor.disabled_feature">Desactiváronse unha ou máis características porque o servidor non ten soporte para elas.
 \nPodes volver a facer esta proba cando queiras.</string>
-    <string name="server_menu.demo">Servidor de demostración</string>
     <string name="about.webpage">Visitar páxina web</string>
     <string name="server_editor.leave_confirmation">Tes a certeza de querer saír sen gardar os cambios?</string>
     <string name="notification.permission_required">Requírense as notificacións para a reprodución multimedia. Poder conceder o permiso en calquera momento nos axustes de Android.</string>

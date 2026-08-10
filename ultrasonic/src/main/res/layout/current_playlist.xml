@@ -5,6 +5,26 @@
     a:layout_height="fill_parent"
     a:orientation="vertical">
 
+    <TextView
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:paddingStart="16dp"
+        a:paddingTop="16dp"
+        a:paddingEnd="16dp"
+        a:text="@string/buttons.queue"
+        a:textAppearance="@style/TextAppearance.Material3.HeadlineMedium" />
+
+    <TextView
+        a:id="@+id/queue_summary"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:paddingStart="16dp"
+        a:paddingTop="2dp"
+        a:paddingEnd="16dp"
+        a:paddingBottom="12dp"
+        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        a:textColor="?attr/colorOnSurfaceVariant" />
+
     <com.google.android.material.progressindicator.CircularProgressIndicator
         a:id="@+id/progress_indicator"
         a:layout_width="wrap_content"
@@ -23,8 +43,7 @@
         a:layout_height="0dip"
         a:layout_weight="1"
         a:clipToPadding="false"
-        a:paddingTop="8dp"
-        a:paddingBottom="8dp"
+        a:paddingBottom="12dp"
         app:fastScrollAutoHide="true"
         app:fastScrollAutoHideDelay="2000"
         app:fastScrollPopupBackgroundSize="42dp"

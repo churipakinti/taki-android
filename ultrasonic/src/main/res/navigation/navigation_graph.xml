@@ -44,7 +44,7 @@
     <fragment
         android:id="@+id/mainFragment"
         android:name="org.moire.ultrasonic.fragment.MainFragment"
-        android:label="@string/common.appname">
+        android:label="@string/taki.appname">
     </fragment>
 
     <fragment

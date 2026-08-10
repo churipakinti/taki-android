@@ -17,7 +17,7 @@
     <string name="button_bar.podcasts">Podcasty</string>
     <string name="button_bar.search">Szukaj</string>
     <string name="chat.send_a_message">Wyślij wiadomość</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.cancel">Anuluj</string>
     <string name="common.comment">Komentarz</string>
     <string name="common.confirm">Potwierdź</string>
@@ -314,7 +314,7 @@
     <string name="api.subsonic.param_missing">Brak wymaganego parametru.</string>
     <string name="api.subsonic.requested_data_was_not_found">Brak wymaganych danych.</string>
     <string name="api.subsonic.trial_period_is_over">Okres próbny się zakończył.</string>
-    <string name="api.subsonic.upgrade_client">Brak zgodności wersji. Uaktualnij aplikację Ultrasonic na Androida.</string>
+    <string name="api.subsonic.upgrade_client">Brak zgodności wersji. Uaktualnij aplikację Taki na Androida.</string>
     <string name="api.subsonic.upgrade_server">Brak zgodności wersji. Uaktualnij serwer Subsonic.</string>
     <!-- Subsonic features  -->
     <string name="settings.show_confirmation_dialog_summary">Pokaż okno potwierdzające usunięcie lub odpięcie utworów</string>
@@ -331,7 +331,6 @@
     <string name="download.menu_shuffle_on">Włączony tryb losowy</string>
     <string name="buttons.next">Następne</string>
     <string name="main.albums_by_year">Chronologicznie</string>
-    <string name="main.welcome_cancel">Otwórz ustawienia</string>
     <string name="language.cs">Czeski</string>
     <string name="chat.send_button">Wyślij</string>
     <string name="select_album.n_selected">Zaznaczono %d utworów</string>
@@ -422,7 +421,7 @@
     <string name="settings.parallel_downloads">Ilość równocześnie pobieranych piosenek</string>
     <string name="settings.preload_100">100 piosenek</string>
     <string name="settings.scrobble_title">Scrobbluj moje odtworzenia</string>
-    <string name="settings.use_id3_offline_summary">Jeśli włączysz to ustawienie, będzie ono wyświetlać tylko muzykę pobraną za pomocą Ultrasonic w wersji 4.0 lub nowszej. Wcześniejsze pobrane pliki nie zawierają wymaganych metadanych. Możesz przełączać się między trybami Przypinania i Zapisywania, aby wyzwolić pobieranie brakujących metadanych.</string>
+    <string name="settings.use_id3_offline_summary">Jeśli włączysz to ustawienie, będzie ono wyświetlać tylko muzykę pobraną za pomocą Taki w wersji 4.0 lub nowszej. Wcześniejsze pobrane pliki nie zawierają wymaganych metadanych. Możesz przełączać się między trybami Przypinania i Zapisywania, aby wyzwolić pobieranie brakujących metadanych.</string>
     <string name="settings.show_artist_picture_summary">Wyświetla obraz wykonawcy na liście wykonawców, jeśli jest dostępny</string>
     <string name="settings.wifi_required_summary">Pobieraj tylko podczas połączeń niepłatnych</string>
     <string name="download.share_song">Udostępnij obecnie odtwarzaną piosenkę</string>
@@ -432,7 +431,6 @@
     <string name="notification.permission_required">Powiadomienia są wymagane do odtwarzania multimediów. Możesz przyznać uprawnienie do nich w dowolnym momencie w ustawieniach Androida.</string>
     <string name="server_editor.disabled_feature">Jedna lub więcej funkcji zostało wyłączonych ponieważ serwer ich nie obsługiwał.
 \nMożesz uruchomić ten test ponownie kiedykolwiek.</string>
-    <string name="server_menu.demo">Serwer demonstracyjny</string>
     <string name="list_view">Lista</string>
     <string name="grid_view">Okładka</string>
     <string name="settings.use_hw_offload_description">Spróbuj odtworzyć pliki multimedialne za pomocą układu dekodującego w telefonie. Może to zmniejszyć zużycie baterii!</string>
@@ -448,15 +446,10 @@
         <item quantity="many">Wstawiono %d utworów po bieżącym utworze</item>
         <item quantity="other">Wstawiono %d utworów po bieżącym utworze</item>
     </plurals>
-    <string name="about.text"><b>Ultrasonic</b> to darmowy i otwarty klient strumieniowego przesyłania muzyki dla serwerów kompatybilnych z API Subsonic (wersja 1.7.0 lub nowsza).
+    <string name="about.text"><b>Taki</b> to darmowy i otwarty klient strumieniowego przesyłania muzyki dla serwerów kompatybilnych z API Subsonic (wersja 1.7.0 lub nowsza).
 \n
-\nDzięki <b>Ultrasonic</b> możesz łatwo przesyłać strumieniowo lub pobierać muzykę z komputera domowego na telefon za pomocą serwera multimediów kompatybilnego z Subsonic. Oprogramowanie serwera Subsonic wymaga oddzielnej konfiguracji od Ultrasonic.
+\nDzięki <b>Taki</b> możesz łatwo przesyłać strumieniowo lub pobierać muzykę z komputera domowego na telefon za pomocą serwera multimediów kompatybilnego z Subsonic. Oprogramowanie serwera Subsonic wymaga oddzielnej konfiguracji od Taki.
 \n
-\nDomyślnie Ultrasonic jest nieskonfigurowany. Po skonfigurowaniu własnego serwera zmień ustawienia serwera, aby połączyć się z komputerem.</string>
-    <string name="main.welcome_text_demo">Aby używać Ultrasonic z własną muzyką, potrzebujesz <b>własnego serwera</b>.
-\n
-\n➤ Jeśli chcesz najpierw wypróbować aplikację, możesz teraz dodać serwer demonstracyjny.
-\n
-\n➤ W przeciwnym razie możesz skonfigurować serwer w <b>ustawieniach</b>.</string>
+\nDomyślnie Taki jest nieskonfigurowany. Po skonfigurowaniu własnego serwera zmień ustawienia serwera, aby połączyć się z komputerem.</string>
     <string name="settings.max_bitrate_pinning">Maksymalny bitrate - Przy trwałym przypięciu utworu</string>
 </resources>

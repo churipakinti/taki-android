@@ -52,6 +52,7 @@ import timber.log.Timber
 
 private const val CONTROLLER_SWITCH_DELAY = 500L
 private const val VOLUME_DELTA = 0.05f
+private const val PLAYBACK_CHECKPOINT_INTERVAL = 5_000L
 
 /**
  * The Media Player Manager can forward commands to the Media3 controller as
@@ -84,6 +85,19 @@ class MediaPlayerManager(
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
 
     private var controller: Player? = null
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    /**
+     * Position changes do not emit regular Media3 state events. Checkpoint while playing so an
+     * abrupt process death restores close to the last audible position.
+     */
+    private val playbackCheckpoint = object : Runnable {
+        override fun run() {
+            if (isPlaying) serializeCurrentSession()
+            mainHandler.postDelayed(this, PLAYBACK_CHECKPOINT_INTERVAL)
+        }
+    }
 
     private var listeners: Player.Listener = object : Player.Listener {
 
@@ -174,6 +188,11 @@ class MediaPlayerManager(
                 )
                 Timber.d("Shuffle: windowIndex: $windowIndex, at: $count")
             }
+            publishPlaybackState()
+        }
+
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            publishPlaybackState()
         }
     }
 
@@ -270,6 +289,8 @@ class MediaPlayerManager(
 
             Timber.i("MediaController Instance received")
             controller?.addListener(listeners)
+            mainHandler.removeCallbacks(playbackCheckpoint)
+            mainHandler.postDelayed(playbackCheckpoint, PLAYBACK_CHECKPOINT_INTERVAL)
             onCreated()
             Timber.i("MediaPlayerController creation complete")
         }, MoreExecutors.directExecutor())
@@ -327,6 +348,7 @@ class MediaPlayerManager(
 
         // First stop listening to events
         rxBusSubscription.dispose()
+        mainHandler.removeCallbacks(playbackCheckpoint)
         releaseController()
 
         // Shutdown the rest

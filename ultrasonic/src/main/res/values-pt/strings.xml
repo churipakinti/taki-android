@@ -17,7 +17,7 @@
     <string name="button_bar.podcasts">Podcast</string>
     <string name="button_bar.search">Pesquisa</string>
     <string name="chat.send_a_message">Enviar uma mensagem</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.cancel">Cancelar</string>
     <string name="common.comment">Comentar</string>
     <string name="common.confirm">Confirmar</string>
@@ -313,12 +313,11 @@
     <string name="api.subsonic.param_missing">O parâmetro requerido está faltando.</string>
     <string name="api.subsonic.requested_data_was_not_found">Os dados solicitados não foram encontrados.</string>
     <string name="api.subsonic.trial_period_is_over">O período de avaliação acabou.</string>
-    <string name="api.subsonic.upgrade_client">Versões incompativeis. Atualize o aplicativo Ultrasonic para Android.</string>
-    <string name="api.subsonic.upgrade_server">Versões incompativeis. Atualize o servidor Ultrasonic.</string>
+    <string name="api.subsonic.upgrade_client">Versões incompativeis. Atualize o aplicativo Taki para Android.</string>
+    <string name="api.subsonic.upgrade_server">Versões incompativeis. Atualize o servidor Taki.</string>
     <!-- Subsonic features  -->
     <string name="server_editor.disabled_feature">Um ou mais recursos foram desativados porque o servidor não os suporta.
 \nPode executar este teste novamente a qualquer momento.</string>
-    <string name="server_menu.demo">Servidor Demonstração</string>
     <string name="about.webpage">Visitar a página web</string>
     <string name="about.report">Reportar um erro</string>
     <plurals name="n_songs_pinned">
@@ -373,7 +372,7 @@
     <string name="settings.use_id3_offline">Usar método ID3 quando offline também</string>
     <string name="settings.show_artist_picture">Mostrar Foto do Artista na Lista</string>
     <string name="settings.show_artist_picture_summary">Mostrar a imagem do artista na lista de artistas, se disponível</string>
-    <string name="settings.use_id3_offline_summary">Se ativar essa configuração, mostrará apenas a música que descarregou com o Ultrasonic 4.0 ou posterior. Descargas anteriores não têm os metadados necessários baixados. Pode alternar entre os modos Pin e Save para acionar a descarga dos metadados ausentes.</string>
+    <string name="settings.use_id3_offline_summary">Se ativar essa configuração, mostrará apenas a música que descarregou com o Taki 4.0 ou posterior. Descargas anteriores não têm os metadados necessários baixados. Pode alternar entre os modos Pin e Save para acionar a descarga dos metadados ausentes.</string>
     <string name="settings.sharing_always_ask_for_details_summary">Sempre pedir descrição e expiração ao criar um compartilhamento no servidor</string>
     <string name="share_on_server">Criar Compartilhamento no Servidor</string>
     <string name="albumArt">Capa do álbum</string>
@@ -403,12 +402,6 @@
     <string name="language.pt_BR">Português (Brasil)</string>
     <string name="language.ru">Russo</string>
     <string name="main.setup_server">%s - Configurar Servidor</string>
-    <string name="main.welcome_text_demo">Para usar o Ultrasonic com a sua própria música, precisará de um <b>servidor próprio</b>.
-\n
-\n➤ Caso queira primeiro experimentar a app, pode adicionar um servidor de demonstração agora.
-\n
-\n➤ Caso contrário, configure o seu servidor nas <b>configurações</b>.</string>
-    <string name="main.welcome_cancel">Vá às configurações</string>
     <string name="select_album.no_network">Atenção: Nenhuma rede encontrada.
 \nSe usa dados móveis, deve permitir descargas em conexões deste tipo, nas configurações.</string>
     <string name="settings.display_bitrate">Mostrar Taxa de Bits e Sufixo de Ficheiro</string>
@@ -432,11 +425,11 @@
     <string name="settings.debug.log_deleted">Ficheiros de log excluídos.</string>
     <string name="notification.downloading_title">Descarregado mídia em segundo plano…</string>
     <string name="notification.permission_required">As notificações são necessárias para a reprodução de média. Pode conceder a permissão a qualquer momento nas configurações do Android.</string>
-    <string name="about.text"><b>Ultrasonic</b> é um cliente gratuito e open-source para Android de streaming de música para API de servidores compatíveis com Subsonic (version 1.7.0 ou maior).
+    <string name="about.text"><b>Taki</b> é um cliente gratuito e open-source para Android de streaming de música para API de servidores compatíveis com Subsonic (version 1.7.0 ou maior).
 \n
-\nCom <b>Ultrasonic</b>, pode facilmente reproduzir online ou descarregar música do seu computador doméstico para o seu telefone Android usando um servidor de mídia compatível com Subsonic. O software do servidor Subsonic necessita uma configuração independente do Ultrasonic.
+\nCom <b>Taki</b>, pode facilmente reproduzir online ou descarregar música do seu computador doméstico para o seu telefone Android usando um servidor de mídia compatível com Subsonic. O software do servidor Subsonic necessita uma configuração independente do Taki.
 \n
-\nPor padrão, o servidor Ultrasonic não é configurado. Uma vez que configurou o seu próprio servidor, altere a configuração no Ultrasonic para poder conectá-lo.</string>
+\nPor padrão, o servidor Taki não é configurado. Uma vez que configurou o seu próprio servidor, altere a configuração no Taki para poder conectá-lo.</string>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d música selecionada a ser descarregada</item>
         <item quantity="many">%d músicas selecionadas para serem baixadas</item>

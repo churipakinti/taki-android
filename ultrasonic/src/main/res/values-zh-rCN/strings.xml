@@ -25,7 +25,7 @@
     <string name="chat.send_a_message">发送消息</string>
     <string name="chat.send_button">发送</string>
     <string name="common.album">专辑</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">艺术家</string>
     <string name="common.cancel">取消</string>
     <string name="common.comment">评论</string>
@@ -103,13 +103,7 @@
     <string name="main.songs_starred">收藏夹</string>
     <string name="main.songs_title">歌曲</string>
     <string name="main.videos">视频</string>
-    <string name="main.welcome_text_demo">使用 Ultrasonic 来播放您的音乐，需要您自己的 <b>服务器</b>。
-\n
-\n➤ 如果您想试试此应用， 可以添加试用服务器。
-\n
-\n➤ 可在 <b>设置</b> 中编辑服务器配置信息。</string>
     <string name="main.welcome_title">欢迎！</string>
-    <string name="main.welcome_cancel">点击前往设置</string>
     <string name="menu.about">关于</string>
     <string name="menu.common">公共</string>
     <string name="menu.deleted_playlist">已删除播放列表 %s</string>
@@ -352,14 +346,13 @@
     <string name="server_editor.advanced">高级设置</string>
     <string name="server_editor.disabled_feature">一项或多项功能被禁用，因为此服务器不支持它们。
 \n可以随时再次运行此测试。</string>
-    <string name="server_menu.demo">试用服务器</string>
     <string name="about.webpage">访问网页</string>
     <string name="about.report">提交漏洞报告</string>
-    <string name="about.text"><b>Ultrasonic</b> 是一个免费且开源的安卓流式音乐客户端，支持 Subsonic API（1.7.0版本以上）兼容的服务端。
+    <string name="about.text"><b>Taki</b> 是一个免费且开源的安卓流式音乐客户端，支持 Subsonic API（1.7.0版本以上）兼容的服务端。
 \n
-\n通过使用 <b>Ultrasonic</b> 你可以轻松的从你的电脑上的 Subsonic 兼容服务端流式传输或者下载音乐。 Subsonic 服务端与 Ultrasonic 都需要额外的配置才可使用。
+\n通过使用 <b>Taki</b> 你可以轻松的从你的电脑上的 Subsonic 兼容服务端流式传输或者下载音乐。 Subsonic 服务端与 Taki 都需要额外的配置才可使用。
 \n
-\n默认情况下，Ultrasonic 并未进行配置，当服务端配置完成后，请确保配置允许客户端连接到你的计算机。</string>
+\n默认情况下，Taki 并未进行配置，当服务端配置完成后，请确保配置允许客户端连接到你的计算机。</string>
     <plurals name="n_songs">
         <item quantity="other">%d 首曲目</item>
     </plurals>
@@ -390,11 +383,11 @@
     <string name="api.subsonic.param_missing">缺少必需的参数。</string>
     <string name="api.subsonic.requested_data_was_not_found">未找到请求的数据。</string>
     <string name="api.subsonic.trial_period_is_over">试用期结束。</string>
-    <string name="api.subsonic.upgrade_client">版本不兼容，请升级 Ultrasonic 应用。</string>
+    <string name="api.subsonic.upgrade_client">版本不兼容，请升级 Taki 应用。</string>
     <string name="api.subsonic.upgrade_server">版本不兼容，请升级 Subsonic 服务器。</string>
     <!-- Subsonic features  -->
     <string name="settings.preload_500">500 首歌</string>
-    <string name="settings.use_id3_offline_summary">如果您启用此设置，它将只显示您使用 Ultrasonic 4.0 或更高版本下载的音乐。较早的下载没有下载必要的元数据。您可以在固定和保存模式之间切换，以触发缺失元数据的下载。</string>
+    <string name="settings.use_id3_offline_summary">如果您启用此设置，它将只显示您使用 Taki 4.0 或更高版本下载的音乐。较早的下载没有下载必要的元数据。您可以在固定和保存模式之间切换，以触发缺失元数据的下载。</string>
     <string name="foreground_exception_text">如果媒体通知仍然存在，请按媒体通知中的播放按钮；否则请打开应用程序开始播放，并重新连接会话到控制器</string>
     <string name="foreground_exception_title">无法恢复播放</string>
     <string name="chat.user_avatar">头像图片</string>

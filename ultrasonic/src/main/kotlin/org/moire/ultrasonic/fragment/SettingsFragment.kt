@@ -14,6 +14,10 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
 import android.view.View
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -80,6 +84,19 @@ class SettingsFragment :
     // below for why this doesn't use PreferenceFragmentCompat's own nested-screen mechanism.
     private val navArgs by navArgs<SettingsFragmentArgs>()
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val preferenceView = super.onCreateView(inflater, container, savedInstanceState)
+        val wrapper = inflater.inflate(R.layout.settings_fragment, container, false)
+        wrapper.findViewById<FrameLayout>(R.id.settings_content).addView(preferenceView)
+        wrapper.findViewById<TextView>(R.id.settings_header).text =
+            navArgs.groupTitle ?: getString(R.string.menu_settings)
+        return wrapper
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.settings, navArgs.rootKey)
     }
@@ -115,6 +132,8 @@ class SettingsFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Settings.normalizeBitrateQualitySettings()
 
         // Get all setting keys and populate the summaries
         Settings.getAllKeys().forEach {

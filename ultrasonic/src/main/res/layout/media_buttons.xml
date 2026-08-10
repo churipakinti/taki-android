@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     a:layout_width="fill_parent"
     a:layout_height="wrap_content"
-    a:orientation="horizontal"
-    a:layout_marginStart="8dp"
-    a:layout_marginEnd="8dp" >
+    a:layout_marginTop="@dimen/player_section_spacing"
+    a:gravity="center_vertical"
+    a:orientation="horizontal" >
 
     <Button
         a:id="@+id/button_shuffle"
@@ -21,7 +21,7 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_shuffle"
         app:iconGravity="textEnd"
-        app:iconSize="20dp" />
+        app:iconSize="@dimen/player_mode_icon" />
 
     <org.moire.ultrasonic.view.AutoRepeatButton
         a:id="@+id/button_previous"
@@ -36,13 +36,14 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_backward_shadow"
         app:iconGravity="textEnd"
-        app:iconSize="32dp" />
+        app:iconSize="@dimen/player_skip_icon"
+        app:iconTint="?attr/colorOnSurface" />
 
     <Button
         a:id="@+id/button_start"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="0dip"
-        a:layout_height="64dp"
+        a:layout_height="@dimen/player_transport_height"
         a:layout_weight="2"
         a:adjustViewBounds="true"
         a:focusable="true"
@@ -51,13 +52,15 @@
         a:contentDescription="@string/buttons.play"
         app:icon="@drawable/media_start_shadow"
         app:iconGravity="textEnd"
-        app:iconSize="44dp" />
+        app:backgroundTint="?attr/colorOnSurface"
+        app:iconSize="@dimen/player_transport_icon"
+        app:iconTint="@color/taki_on_accent" />
 
     <Button
         a:id="@+id/button_pause"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="0dip"
-        a:layout_height="64dp"
+        a:layout_height="@dimen/player_transport_height"
         a:layout_weight="2"
         a:adjustViewBounds="true"
         a:contentDescription="@string/buttons.pause"
@@ -65,13 +68,15 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_pause_shadow"
         app:iconGravity="textEnd"
-        app:iconSize="44dp" />
+        app:backgroundTint="?attr/colorOnSurface"
+        app:iconSize="@dimen/player_transport_icon"
+        app:iconTint="@color/taki_on_accent" />
 
     <Button
         a:id="@+id/button_stop"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="0dip"
-        a:layout_height="64dp"
+        a:layout_height="@dimen/player_transport_height"
         a:layout_weight="2"
         a:adjustViewBounds="true"
         a:focusable="true"
@@ -80,7 +85,7 @@
         a:contentDescription="@string/buttons.stop"
         app:icon="@drawable/media_stop"
         app:iconGravity="textEnd"
-        app:iconSize="44dp" />
+        app:iconSize="@dimen/player_transport_icon" />
 
     <org.moire.ultrasonic.view.AutoRepeatButton
         a:id="@+id/button_next"
@@ -95,7 +100,8 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_forward_shadow"
         app:iconGravity="textEnd"
-        app:iconSize="32dp" />
+        app:iconSize="@dimen/player_skip_icon"
+        app:iconTint="?attr/colorOnSurface" />
 
     <Button
         a:id="@+id/button_repeat"
@@ -110,6 +116,6 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_repeat_off"
         app:iconGravity="textEnd"
-        app:iconSize="20dp" />
+        app:iconSize="@dimen/player_mode_icon" />
 
     </LinearLayout>

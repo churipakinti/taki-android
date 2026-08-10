@@ -15,6 +15,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.drakeet.multitype.ItemViewBinder
 import org.koin.core.component.KoinComponent
@@ -27,7 +28,9 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 /** A compact, playback-first song row used by the Media Library Songs tab. */
 class LibraryTrackBinder(
     private val onItemClick: (Track) -> Unit,
-    private val onContextMenuClick: (MenuItem, Track) -> Boolean
+    private val onContextMenuClick: (MenuItem, Track) -> Boolean,
+    private val showHeart: Boolean = false,
+    private val onHeartClick: (Track) -> Unit = {}
 ) : ItemViewBinder<Identifiable, LibraryTrackBinder.ViewHolder>(), KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
@@ -49,10 +52,26 @@ class LibraryTrackBinder(
             true
         }
         holder.menu.setOnClickListener { showMenu(holder.menu, track) }
+        holder.heart.isVisible = showHeart
+        if (showHeart) {
+            updateHeart(holder, track)
+            holder.heart.setOnClickListener {
+                onHeartClick(track)
+                updateHeart(holder, track)
+            }
+        } else {
+            holder.heart.setOnClickListener(null)
+        }
 
         imageLoaderProvider.executeOn {
             it.loadImage(holder.cover, track, false, 0, R.drawable.unknown_album)
         }
+    }
+
+    private fun updateHeart(holder: ViewHolder, track: Track) {
+        holder.heart.setImageResource(
+            if (track.starred) R.drawable.rating_heart_full else R.drawable.rating_heart_hollow
+        )
     }
 
     private fun showMenu(anchor: View, track: Track) {
@@ -68,6 +87,7 @@ class LibraryTrackBinder(
         val cover: ImageView = view.findViewById(R.id.library_track_cover)
         val title: TextView = view.findViewById(R.id.library_track_title)
         val subtitle: TextView = view.findViewById(R.id.library_track_subtitle)
+        val heart: ImageButton = view.findViewById(R.id.library_track_heart)
         val menu: ImageButton = view.findViewById(R.id.library_track_menu)
     }
 

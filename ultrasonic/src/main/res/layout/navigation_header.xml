@@ -45,7 +45,7 @@
         a:layout_height="wrap_content"
         a:layout_marginStart="10dp"
         a:letterSpacing="0.04"
-        a:text="@string/common.appname"
+        a:text="@string/taki.appname"
         a:textAllCaps="true"
         a:textAppearance="@style/TextAppearance.Material3.LabelLarge"
         a:textColor="?attr/colorOnPrimary"

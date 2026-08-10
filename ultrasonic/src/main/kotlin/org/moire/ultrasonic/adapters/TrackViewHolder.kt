@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isGone
@@ -26,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.RatingUpdate
@@ -34,6 +36,7 @@ import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.themeColor
@@ -50,13 +53,10 @@ class TrackViewHolder(val view: View) :
     KoinComponent,
     CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
-    companion object {
-        val COLOR_HIGHLIGHT = com.google.android.material.R.attr.colorSecondaryContainer
-    }
-
     var entry: Track? = null
         private set
     private var songLayout: LinearLayout = view.findViewById(R.id.song_layout)
+    private val imageLoaderProvider: ImageLoaderProvider by inject()
 
     var check: CheckedTextView = view.findViewById(R.id.song_check)
     var drag: ImageView = view.findViewById(R.id.song_drag)
@@ -66,6 +66,8 @@ class TrackViewHolder(val view: View) :
     private var star: ImageView = view.findViewById(R.id.song_star)
     private var track: TextView = view.findViewById(R.id.song_track)
     private var title: TextView = view.findViewById(R.id.song_title)
+    private val defaultTitleColors: ColorStateList = title.textColors
+    private val albumArt: ImageView? = view.findViewById(R.id.song_album_art)
     private var artist: TextView = view.findViewById(R.id.song_artist)
     private var duration: TextView = view.findViewById(R.id.song_duration)
     private var statusImage: ImageView = view.findViewById(R.id.song_status_image)
@@ -77,6 +79,7 @@ class TrackViewHolder(val view: View) :
     private var isMaximized = false
     private var cachedStatus = DownloadState.UNKNOWN
     private var isPlayingCached = false
+    private var usesQueueStyle = false
 
     private var rxBusSubscription: CompositeDisposable? = null
 
@@ -88,17 +91,27 @@ class TrackViewHolder(val view: View) :
         isSelected: Boolean = false,
         showArtist: Boolean = true,
         showRating: Boolean = true,
+        queueStyle: Boolean = false,
         trackNumberText: String? = null,
         showRowActions: Boolean = false
     ) {
         entry = song
+        usesQueueStyle = queueStyle
+
+        albumArt?.let { cover ->
+            imageLoaderProvider.executeOn {
+                it.loadImage(cover, song, false, 0, R.drawable.unknown_album)
+            }
+        }
 
         menu.isVisible = showRowActions
 
         // Create new Disposable for the new Subscriptions
         rxBusSubscription = CompositeDisposable()
         rxBusSubscription!! += RxBus.playerStateObservable.subscribe {
-            setPlayIcon(it.track?.id == song.id && it.index == bindingAdapterPosition)
+            val sameTrack = it.track?.id == song.id
+            val sameQueueOccurrence = !usesQueueStyle || it.index == bindingAdapterPosition
+            setPlayIcon(sameTrack && sameQueueOccurrence)
         }
 
         rxBusSubscription!! += RxBus.trackDownloadStateObservable.subscribe {
@@ -169,23 +182,29 @@ class TrackViewHolder(val view: View) :
         rxBusSubscription?.dispose()
     }
 
-    private val playingIcon by lazy {
-        ContextCompat.getDrawable(view.context, R.drawable.ic_stat_play)!!
+    private val queuePlayingIcon by lazy {
+        ContextCompat.getDrawable(view.context, R.drawable.ic_queue_playing)!!
     }
 
     @Suppress("MagicNumber")
     private fun setPlayIcon(isPlaying: Boolean) {
+        if (usesQueueStyle) title.isSelected = isPlaying
         if (isPlaying && !isPlayingCached) {
             isPlayingCached = true
             title.setCompoundDrawablesWithIntrinsicBounds(
-                playingIcon,
+                queuePlayingIcon,
                 null,
                 null,
                 null
             )
-            val color = MaterialColors.getColor(view, COLOR_HIGHLIGHT)
-            songLayout.setBackgroundColor(color)
-            songLayout.elevation = 3F
+            title.setTextColor(
+                MaterialColors.getColor(
+                    view,
+                    androidx.appcompat.R.attr.colorPrimary
+                )
+            )
+            songLayout.setBackgroundColor(Color.TRANSPARENT)
+            songLayout.elevation = 0F
         } else if (!isPlaying && isPlayingCached) {
             isPlayingCached = false
             title.setCompoundDrawablesWithIntrinsicBounds(
@@ -194,6 +213,7 @@ class TrackViewHolder(val view: View) :
                 0,
                 0
             )
+            title.setTextColor(defaultTitleColors)
             songLayout.setBackgroundColor(Color.TRANSPARENT)
             songLayout.elevation = 0F
         }

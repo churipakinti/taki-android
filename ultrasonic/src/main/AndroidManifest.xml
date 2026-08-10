@@ -31,12 +31,12 @@
         android:fullBackupContent="@xml/backup_descriptor"
         android:hasFragileUserData="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/common.appname"
+        android:label="@string/taki.appname"
         android:networkSecurityConfig="@xml/network_security_config"
         android:preserveLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:theme="@style/Theme.Material3.DynamicColors.Dark"
+        android:theme="@style/UltrasonicTheme.Dark"
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute"
         tools:targetApi="q">
@@ -71,14 +71,14 @@
 
         <service
             android:name=".service.DownloadService"
-            android:label="Ultrasonic Media Player Service"
+            android:label="@string/taki.appname"
             android:foregroundServiceType="dataSync"
             android:exported="false">
         </service>
 
         <!-- Needs to be exported: https://android.googlesource.com/platform/developers/build/+/4de32d4/prebuilts/gradle/MediaBrowserService/README.md -->
         <service android:name=".service.PlaybackService"
-            android:label="@string/common.appname"
+            android:label="@string/taki.appname"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true"
             tools:ignore="ExportedService">
@@ -120,7 +120,7 @@
         </receiver>
         <receiver
             android:name=".provider.UltrasonicAppWidgetProvider"
-            android:label="Ultrasonic"
+            android:label="@string/taki.appname"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>

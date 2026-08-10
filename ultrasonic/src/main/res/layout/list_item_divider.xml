@@ -10,7 +10,10 @@
         a:layout_width="fill_parent"
         a:layout_height="wrap_content"
         a:gravity="center_vertical"
-        a:paddingStart="6dp"
+        a:paddingStart="16dp"
+        a:paddingTop="20dp"
+        a:paddingEnd="16dp"
+        a:paddingBottom="8dp"
         a:theme="@style/Ultrasonic.AllCapsLabel" />
 </LinearLayout>
 

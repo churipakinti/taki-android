@@ -1,51 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     a:layout_width="match_parent"
     a:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    a:orientation="vertical">
+    a:clipToPadding="false"
+    a:fillViewport="true">
 
     <LinearLayout
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
-        a:gravity="center_vertical"
-        a:orientation="horizontal"
+        a:orientation="vertical"
         a:paddingStart="16dp"
         a:paddingTop="12dp"
-        a:paddingEnd="12dp"
-        a:paddingBottom="4dp">
+        a:paddingEnd="16dp"
+        a:paddingBottom="24dp">
+
+        <LinearLayout
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:gravity="center_vertical"
+            a:orientation="horizontal"
+            a:paddingBottom="12dp">
+
+            <TextView
+                a:layout_width="0dp"
+                a:layout_height="wrap_content"
+                a:layout_weight="1"
+                a:text="@string/library_hub.bottom_label"
+                a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+
+            <com.google.android.material.button.MaterialButton
+                a:id="@+id/library_manage_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"
+                a:contentDescription="@string/library_hub.switch_collection"
+                a:text="@string/library_hub.title"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                app:icon="@drawable/ic_library"
+                app:iconTint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
 
         <TextView
-            a:layout_width="0dp"
+            style="@style/Ultrasonic.AllCapsLabel"
+            a:layout_width="match_parent"
             a:layout_height="wrap_content"
-            a:layout_weight="1"
-            a:text="@string/library_hub.bottom_label"
-            a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+            a:layout_marginBottom="8dp"
+            a:text="@string/library.your_music" />
 
         <com.google.android.material.button.MaterialButton
-            a:id="@+id/library_manage_button"
-            style="@style/Widget.Material3.Button.TextButton"
-            a:layout_width="wrap_content"
+            a:id="@+id/library_liked_songs"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:layout_marginBottom="8dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/library.liked_songs"
+            app:icon="@drawable/rating_heart_full"
+            app:iconGravity="textStart"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_playlists"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:layout_marginBottom="20dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/playlist.label"
+            app:icon="@drawable/ic_menu_playlists"
+            app:iconGravity="textStart"
+            app:iconTint="@color/taki_gray" />
+
+        <TextView
+            style="@style/Ultrasonic.AllCapsLabel"
+            a:layout_width="match_parent"
             a:layout_height="wrap_content"
-            a:text="@string/library_hub.title"
-            app:icon="@drawable/ic_menu_select_server" />
+            a:layout_marginBottom="8dp"
+            a:text="@string/library.collection" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_albums"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:layout_marginBottom="8dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/main.albums_title"
+            app:icon="@drawable/ic_menu_browse"
+            app:iconGravity="textStart"
+            app:iconTint="@color/taki_gray" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_artists"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:layout_marginBottom="8dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/main.artists_title"
+            app:icon="@drawable/ic_artist"
+            app:iconGravity="textStart"
+            app:iconTint="@color/taki_gray" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_songs"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:layout_marginBottom="8dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/main.songs_title"
+            app:icon="@drawable/ic_library"
+            app:iconGravity="textStart"
+            app:iconTint="@color/taki_gray" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_genres"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/main.genres_title"
+            app:icon="@drawable/genre_placeholder_icon"
+            app:iconGravity="textStart"
+            app:iconTint="@color/taki_gray" />
 
     </LinearLayout>
 
-    <com.google.android.material.tabs.TabLayout
-        a:id="@+id/tab_layout"
-        app:tabMode="scrollable"
-        a:layout_width="match_parent"
-        a:layout_height="wrap_content" />
-
-    <org.moire.ultrasonic.view.FilterButtonBar
-        a:id="@+id/filter_button_bar"
-        a:layout_width="match_parent"
-        a:layout_height="wrap_content" />
-
-    <androidx.viewpager2.widget.ViewPager2
-        a:id="@+id/pager"
-        a:layout_width="match_parent"
-        a:layout_height="match_parent" />
-
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -27,7 +27,7 @@
         a:paddingStart="8dip"
         a:paddingEnd="8dip"
         a:textAppearance="?android:attr/textAppearanceLarge"
-        a:textColor="?attr/colorPrimary"
+        a:textColor="?attr/colorOnSurfaceVariant"
         tools:text="A" />
 
     <com.google.android.material.imageview.ShapeableImageView

@@ -8,6 +8,7 @@
 package org.moire.ultrasonic.fragment
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Color.argb
 import android.graphics.Point
@@ -36,10 +37,7 @@ import android.widget.Toast
 import android.widget.ViewFlipper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.MenuHost
-import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
-import androidx.lifecycle.Lifecycle
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -162,13 +160,14 @@ class PlayerFragment :
     private lateinit var playButton: View
     private lateinit var previousButton: MaterialButton
     private lateinit var nextButton: MaterialButton
-    private lateinit var shuffleButton: View
+    private lateinit var shuffleButton: MaterialButton
     private lateinit var repeatButton: MaterialButton
     private lateinit var queueButton: View
     private lateinit var savePlaylistButton: View
     private lateinit var lyricsButton: View
     private lateinit var progressBar: SeekBar
     private lateinit var progressIndicator: CircularProgressIndicator
+    private lateinit var queueSummaryTextView: TextView
 
     // While the user has a finger on the seek bar, the 500ms position-refresh loop must not
     // overwrite its progress/enabled state, or the thumb snaps back mid-drag and dragging
@@ -212,12 +211,14 @@ class PlayerFragment :
         emptyView = view.findViewById(R.id.emptyListView)
         progressIndicator = view.findViewById(R.id.progress_indicator)
         songTitleTextView = view.findViewById(R.id.current_playing_song)
+        songTitleTextView.isSelected = true
         artistTextView = view.findViewById(R.id.current_playing_artist)
         albumArtImageView = view.findViewById(R.id.current_playing_album_art_image)
         positionTextView = view.findViewById(R.id.current_playing_position)
         durationTextView = view.findViewById(R.id.current_playing_duration)
         progressBar = view.findViewById(R.id.current_playing_progress_bar)
         playlistView = view.findViewById(R.id.playlist_view)
+        queueSummaryTextView = view.findViewById(R.id.queue_summary)
 
         pauseButton = view.findViewById(R.id.button_pause)
         stopButton = view.findViewById(R.id.button_stop)
@@ -261,12 +262,10 @@ class PlayerFragment :
             height = size.y
         }
 
-        // Register our options menu
-        (requireActivity() as MenuHost).addMenuProvider(
-            menuProvider,
-            viewLifecycleOwner,
-            Lifecycle.State.RESUMED
-        )
+        view.findViewById<View>(R.id.player_back)?.setOnClickListener {
+            findNavController().navigateUp()
+        }
+        view.findViewById<View>(R.id.player_overflow)?.setOnClickListener(::showPlayerMenu)
 
         swipeDistance = (width + height) * PERCENTAGE_OF_SCREEN_FOR_SWIPE / 100
         swipeVelocity = swipeDistance
@@ -283,8 +282,11 @@ class PlayerFragment :
 
         hollowHeartDrawable = ResourcesCompat.getDrawable(resources, hollowHeart, null)!!
         fullHeartDrawable = ResourcesCompat.getDrawable(resources, fullHeart, null)!!
-        hollowHeartDrawable.setTint(requireContext().themeColor(androidx.appcompat.R.attr.colorAccent))
-        fullHeartDrawable.setTint(requireContext().themeColor(androidx.appcompat.R.attr.colorAccent))
+        val secondaryActive = requireContext().themeColor(
+            com.google.android.material.R.attr.colorTertiary
+        )
+        hollowHeartDrawable.setTint(secondaryActive)
+        fullHeartDrawable.setTint(secondaryActive)
 
         heartRatingImageView.setOnClickListener { setSongHeartRating() }
 
@@ -462,34 +464,39 @@ class PlayerFragment :
     }
 
     private fun updateShuffleButtonState(isEnabled: Boolean) {
-        if (isEnabled) {
-            shuffleButton.alpha = ALPHA_FULL
-        } else {
-            shuffleButton.alpha = ALPHA_DEACTIVATED
-        }
+        shuffleButton.alpha = ALPHA_FULL
+        shuffleButton.iconTint = ColorStateList.valueOf(playerModeColor(isEnabled))
     }
 
     private fun updateRepeatButtonState(repeatMode: Int) {
         when (repeatMode) {
             0 -> {
                 repeatButton.setIconResource(R.drawable.media_repeat_off)
-                repeatButton.alpha = ALPHA_DEACTIVATED
+                repeatButton.alpha = ALPHA_FULL
+                repeatButton.iconTint = ColorStateList.valueOf(playerModeColor(false))
             }
 
             1 -> {
                 repeatButton.setIconResource(R.drawable.media_repeat_one)
                 repeatButton.alpha = ALPHA_FULL
+                repeatButton.iconTint = ColorStateList.valueOf(playerModeColor(true))
             }
 
             2 -> {
                 repeatButton.setIconResource(R.drawable.media_repeat_all)
                 repeatButton.alpha = ALPHA_FULL
+                repeatButton.iconTint = ColorStateList.valueOf(playerModeColor(true))
             }
 
             else -> {
             }
         }
     }
+
+    private fun playerModeColor(isActive: Boolean): Int = requireContext().themeColor(
+        if (isActive) androidx.appcompat.R.attr.colorPrimary
+        else com.google.android.material.R.attr.colorOnSurfaceVariant
+    )
 
     private fun toggleShuffle() {
         val isEnabled = mediaPlayerManager.toggleShuffle()
@@ -549,17 +556,14 @@ class PlayerFragment :
         super.onDestroyView()
     }
 
-    private val menuProvider: MenuProvider = object : MenuProvider {
-        override fun onPrepareMenu(menu: Menu) {
-            setupOptionsMenu(menu)
-        }
-
-        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-            menuInflater.inflate(R.menu.nowplaying, menu)
-        }
-
-        override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
+    private fun showPlayerMenu(anchor: View) {
+        val popup = PopupMenu(anchor.context, anchor)
+        popup.menuInflater.inflate(R.menu.nowplaying, popup.menu)
+        setupOptionsMenu(popup.menu)
+        popup.setOnMenuItemClickListener { menuItem ->
             menuItemSelected(menuItem.itemId, currentSong)
+        }
+        popup.show()
     }
 
     @Suppress("ComplexMethod", "LongMethod", "NestedBlockDepth")
@@ -855,7 +859,9 @@ class PlayerFragment :
                 // The row's star rating icon was replaced with "Favorite"/"Rate" actions in the
                 // long-press context menu (see nowplaying_context.xml) -- less visual noise per
                 // row, same underlying rating/starred fields.
-                showRating = false
+                showRating = false,
+                queueStyle = true,
+                layout = R.layout.list_item_queue_track
             ) { view, track -> onCreateContextMenu(view, track) }.apply {
                 this.startDrag = { holder ->
                     dragTouchHelper.startDrag(holder)
@@ -1035,6 +1041,11 @@ class PlayerFragment :
         viewAdapter.submitList(list.map(MediaItem::toTrack))
         progressIndicator.isVisible = false
         emptyView.isVisible = list.isEmpty()
+        queueSummaryTextView.text = resources.getQuantityString(
+            R.plurals.n_songs,
+            list.size,
+            list.size
+        )
 
         updateRepeatButtonState(mediaPlayerManager.repeatMode)
     }

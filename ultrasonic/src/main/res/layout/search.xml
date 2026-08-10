@@ -1,8 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     a:layout_width="match_parent"
     a:layout_height="match_parent"
     a:orientation="vertical">
+
+    <TextView
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:paddingStart="16dp"
+        a:paddingTop="16dp"
+        a:paddingEnd="16dp"
+        a:paddingBottom="8dp"
+        a:text="@string/search.title"
+        a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+
+    <com.google.android.material.card.MaterialCardView
+        a:layout_width="match_parent"
+        a:layout_height="52dp"
+        a:layout_marginHorizontal="16dp"
+        a:layout_marginBottom="12dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
+
+        <androidx.appcompat.widget.SearchView
+            a:id="@+id/search_field"
+            a:layout_width="match_parent"
+            a:layout_height="match_parent"
+            a:contentDescription="@string/button_bar.search"
+            app:iconifiedByDefault="false"
+            app:queryHint="@string/button_bar.search" />
+
+    </com.google.android.material.card.MaterialCardView>
 
     <include layout="@layout/list_parts_empty_view" />
 

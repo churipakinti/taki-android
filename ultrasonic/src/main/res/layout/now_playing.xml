@@ -7,7 +7,6 @@
     a:layout_height="wrap_content"
     a:layout_margin="8dp"
     a:background="@drawable/bg_now_playing"
-    a:alpha="0.85"
     a:gravity="center_vertical"
     tools:ignore="Overdraw">
 
@@ -32,10 +31,12 @@
         <TextView
             a:id="@+id/now_playing_title"
             style="@style/Ultrasonic.PrimaryText"
-            a:layout_width="wrap_content"
+            a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:layout_gravity="start"
             a:ellipsize="marquee"
+            a:marqueeRepeatLimit="marquee_forever"
+            a:scrollHorizontally="true"
             a:singleLine="true"
             a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             tools:text="Title" />

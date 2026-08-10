@@ -70,6 +70,7 @@ class NowPlayingFragment : ScopeFragment() {
         nextButton = view.findViewById(R.id.now_playing_control_next)
         nowPlayingAlbumArtImage = view.findViewById(R.id.now_playing_image)
         nowPlayingTrack = view.findViewById(R.id.now_playing_title)
+        nowPlayingTrack?.isSelected = true
         nowPlayingArtist = view.findViewById(R.id.now_playing_artist)
         rxBusSubscription = RxBus.playerStateObservable.subscribe { update() }
     }

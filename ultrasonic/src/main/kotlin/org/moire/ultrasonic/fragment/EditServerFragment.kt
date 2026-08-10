@@ -441,29 +441,12 @@ class EditServerFragment : Fragment() {
     }
 
     private fun getProgress(serverSetting: ServerSetting): String {
-        val isAnyDisabled = arrayOf(
-            serverSetting.chatSupport,
-            serverSetting.bookmarkSupport,
-            serverSetting.shareSupport,
-            serverSetting.podcastSupport,
-            serverSetting.videoSupport,
-            serverSetting.jukeboxSupport
-        ).any { x -> x == false }
+        val isAnyDisabled = serverSetting.jukeboxSupport == false
 
         var progressString = String.format(
             """
-                    |%s - ${resources.getString(R.string.button_bar_chat)}
-                    |%s - ${resources.getString(R.string.button_bar_bookmarks)}
-                    |%s - ${resources.getString(R.string.button_bar_shares)}
-                    |%s - ${resources.getString(R.string.button_bar_podcasts)}
-                    |%s - ${resources.getString(R.string.main_videos)}
                     |%s - ${resources.getString(R.string.jukebox)}
             """.trimMargin(),
-            boolToMark(serverSetting.chatSupport),
-            boolToMark(serverSetting.bookmarkSupport),
-            boolToMark(serverSetting.shareSupport),
-            boolToMark(serverSetting.podcastSupport),
-            boolToMark(serverSetting.videoSupport),
             boolToMark(serverSetting.jukeboxSupport)
         )
         if (isAnyDisabled) {

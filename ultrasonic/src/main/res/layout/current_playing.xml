@@ -7,6 +7,40 @@
     a:background="?attr/colorSurface"
     a:orientation="vertical" >
 
+    <LinearLayout
+        a:layout_width="match_parent"
+        a:layout_height="56dp"
+        a:gravity="center_vertical"
+        a:orientation="horizontal"
+        a:paddingHorizontal="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/player_back"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:contentDescription="@string/player.back"
+            app:icon="@drawable/ic_arrow_back"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
+
+        <Space
+            a:layout_width="0dp"
+            a:layout_height="1dp"
+            a:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/player_overflow"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:contentDescription="@string/player.options"
+            app:icon="@drawable/ic_more_vert"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
+
+    </LinearLayout>
+
     <ViewFlipper
         a:id="@+id/current_playing_playlist_flipper"
         a:layout_width="fill_parent"
@@ -22,7 +56,10 @@
                 a:id="@+id/current_playing_album_art_image"
                 a:layout_width="0dp"
                 a:layout_height="0dp"
-                a:layout_margin="28dp"
+                a:layout_marginStart="28dp"
+                a:layout_marginTop="12dp"
+                a:layout_marginEnd="28dp"
+                a:layout_marginBottom="16dp"
                 a:scaleType="centerCrop"
                 a:contentDescription="@string/albumArt"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -30,6 +67,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.42"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -40,10 +78,14 @@
     <LinearLayout
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
+        a:layout_marginHorizontal="@dimen/player_panel_outer_margin"
+        a:layout_marginBottom="@dimen/player_panel_outer_margin"
         a:background="@drawable/bg_player_panel"
         a:orientation="vertical"
-        a:paddingTop="12dp"
-        a:paddingBottom="4dp">
+        a:paddingStart="@dimen/player_panel_horizontal_padding"
+        a:paddingTop="@dimen/player_panel_top_padding"
+        a:paddingEnd="@dimen/player_panel_horizontal_padding"
+        a:paddingBottom="@dimen/player_panel_bottom_padding">
 
         <include layout="@layout/player_media_info" />
 

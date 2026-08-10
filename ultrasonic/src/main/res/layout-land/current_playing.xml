@@ -1,136 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    a:layout_width="fill_parent"
-    a:layout_height="fill_parent"
-    a:baselineAligned="false"
-    a:orientation="horizontal">
+<ViewFlipper xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    a:id="@+id/current_playing_playlist_flipper"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent"
+    a:background="@color/taki_black">
 
-    <ViewFlipper
-        a:id="@+id/current_playing_playlist_flipper"
-        a:layout_width="0dp"
-        a:layout_height="fill_parent"
-        a:layout_weight="1"
-        tools:ignore="UselessParent">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        a:id="@+id/current_playing_album_art_layout"
+        a:layout_width="match_parent"
+        a:layout_height="match_parent"
+        a:padding="16dp">
 
-        <FrameLayout
-            a:id="@+id/current_playing_album_art_layout"
-            a:layout_width="fill_parent"
-            a:layout_height="fill_parent"
-            a:gravity="start"
-            a:orientation="horizontal">
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/player_back"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:contentDescription="@string/player.back"
+            app:icon="@drawable/ic_arrow_back"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                a:id="@+id/current_playing_album_art_image"
-                a:layout_width="fill_parent"
-                a:layout_height="fill_parent"
-                a:alpha="0.2"
-                a:contentDescription="@string/albumArt"
-                a:scaleType="centerCrop" />
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/player_overflow"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="48dp"
+            a:layout_height="48dp"
+            a:contentDescription="@string/player.options"
+            app:icon="@drawable/ic_more_vert"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <LinearLayout
-                a:id="@+id/album_art_inside"
-                a:layout_width="fill_parent"
-                a:layout_height="fill_parent"
-                a:gravity="bottom"
-                a:orientation="vertical">
+        <com.google.android.material.imageview.ShapeableImageView
+            a:id="@+id/current_playing_album_art_image"
+            a:layout_width="0dp"
+            a:layout_height="0dp"
+            a:layout_marginStart="48dp"
+            a:layout_marginTop="12dp"
+            a:layout_marginEnd="32dp"
+            a:layout_marginBottom="20dp"
+            a:contentDescription="@string/albumArt"
+            a:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toStartOf="@id/player_land_controls"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/player_back"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Taki.Medium" />
 
-                <include layout="@layout/player_media_info" />
+        <LinearLayout
+            a:id="@+id/player_land_controls"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="16dp"
+            a:layout_marginEnd="48dp"
+            a:gravity="center_vertical"
+            a:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/current_playing_album_art_image"
+            app:layout_constraintTop_toBottomOf="@id/player_overflow">
 
-                <LinearLayout
-                    a:id="@+id/song_rating"
-                    a:layout_width="match_parent"
-                    a:layout_height="60dip"
-                    a:layout_gravity="center"
-                    a:layout_marginHorizontal="60dip"
-                    a:layout_marginVertical="10dip"
-                    a:orientation="horizontal">
+            <include layout="@layout/player_media_info" />
 
-                    <ImageView
-                        a:id="@+id/song_five_star_1"
-                        a:layout_width="0dip"
-                        a:layout_height="fill_parent"
-                        a:layout_weight="1"
-                        a:background="@android:color/transparent"
-                        a:focusable="false"
-                        a:gravity="center_vertical"
-                        a:importantForAccessibility="no"
-                        a:scaleType="fitCenter"
-                        a:src="@drawable/rating_star_hollow_layered" />
+            <include layout="@layout/player_slider" />
 
-                    <ImageView
-                        a:id="@+id/song_five_star_2"
-                        a:layout_width="0dip"
-                        a:layout_height="fill_parent"
-                        a:layout_weight="1"
-                        a:background="@android:color/transparent"
-                        a:focusable="false"
-                        a:gravity="center_vertical"
-                        a:importantForAccessibility="no"
-                        a:scaleType="fitCenter"
-                        a:src="@drawable/rating_star_hollow_layered" />
+            <include layout="@layout/media_buttons" />
 
-                    <ImageView
-                        a:id="@+id/song_five_star_3"
-                        a:layout_width="0dip"
-                        a:layout_height="fill_parent"
-                        a:layout_weight="1"
-                        a:background="@android:color/transparent"
-                        a:focusable="false"
-                        a:gravity="center_vertical"
-                        a:importantForAccessibility="no"
-                        a:scaleType="fitCenter"
-                        a:src="@drawable/rating_star_hollow_layered" />
+            <include layout="@layout/player_secondary_controls" />
 
-                    <ImageView
-                        a:id="@+id/song_five_star_4"
-                        a:layout_width="0dip"
-                        a:layout_height="fill_parent"
-                        a:layout_weight="1"
-                        a:background="@android:color/transparent"
-                        a:focusable="false"
-                        a:gravity="center_vertical"
-                        a:importantForAccessibility="no"
-                        a:scaleType="fitCenter"
-                        a:src="@drawable/rating_star_hollow_layered" />
+        </LinearLayout>
 
-                    <ImageView
-                        a:id="@+id/song_five_star_5"
-                        a:layout_width="0dip"
-                        a:layout_height="fill_parent"
-                        a:layout_weight="1"
-                        a:background="@android:color/transparent"
-                        a:focusable="false"
-                        a:gravity="center_vertical"
-                        a:importantForAccessibility="no"
-                        a:scaleType="fitCenter"
-                        a:src="@drawable/rating_star_hollow_layered" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-                    <ImageView
-                        a:id="@+id/song_rating_heart"
-                        a:layout_width="0dip"
-                        a:layout_height="fill_parent"
-                        a:layout_weight="1"
-                        a:background="@android:color/transparent"
-                        a:focusable="false"
-                        a:gravity="center_vertical"
-                        a:importantForAccessibility="no"
-                        a:layout_marginStart="10dip"
-                        a:paddingTop="8dip"
-                        a:paddingBottom="4dip"
-                        a:scaleType="fitCenter"
-                        a:src="@drawable/rating_heart_hollow_layered" />
+    <include
+        a:id="@+id/playlist"
+        layout="@layout/current_playlist" />
 
-                </LinearLayout>
-
-                <include layout="@layout/player_slider" />
-
-                <include layout="@layout/media_buttons" />
-
-            </LinearLayout>
-        </FrameLayout>
-
-        <include layout="@layout/current_playlist" a:id="@+id/playlist"/>
-    </ViewFlipper>
-
-</LinearLayout>
+</ViewFlipper>

@@ -23,7 +23,7 @@
     <string name="button_bar.podcasts">Podcast</string>
     <string name="button_bar.search">Keresés</string>
     <string name="chat.send_a_message">Üzenet küldése</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.cancel">Mégse</string>
     <string name="common.comment">Megjegyzés</string>
     <string name="common.confirm">Jóváhagyás</string>
@@ -330,7 +330,7 @@
     <string name="api.subsonic.param_missing">A szükséges param hiányzik.</string>
     <string name="api.subsonic.requested_data_was_not_found">A keresett adatokat nem találtuk.</string>
     <string name="api.subsonic.trial_period_is_over">A próbaidő vége.</string>
-    <string name="api.subsonic.upgrade_client">Nem kompatibilis verzió. Kérjük, frissítse az Ultrasonic Android alkalmazást!</string>
+    <string name="api.subsonic.upgrade_client">Nem kompatibilis verzió. Kérjük, frissítse az Taki Android alkalmazást!</string>
     <string name="api.subsonic.upgrade_server">Nem kompatibilis verzió. Kérjük, frissítse a Subsonic kiszolgálót!</string>
     <!-- Subsonic features  -->
     <string name="chat.send_button">Küldés</string>

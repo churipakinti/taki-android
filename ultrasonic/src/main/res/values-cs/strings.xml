@@ -17,7 +17,7 @@
     <string name="button_bar.podcasts">Podcasty</string>
     <string name="button_bar.search">Hledat</string>
     <string name="chat.send_a_message">Poslat zprávu</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.cancel">Zrušit</string>
     <string name="common.comment">Komentář</string>
     <string name="common.confirm">Potvrdit</string>
@@ -324,7 +324,7 @@
     <string name="api.subsonic.param_missing">Vyžadovaný parametr chybí.</string>
     <string name="api.subsonic.requested_data_was_not_found">Vyžadovaná data nenalezena.</string>
     <string name="api.subsonic.trial_period_is_over">Zkušební doba vypršela.</string>
-    <string name="api.subsonic.upgrade_client">Nekompatibilní verze. Aktualizujte prosím Ultrasonic Android aplikaci.</string>
+    <string name="api.subsonic.upgrade_client">Nekompatibilní verze. Aktualizujte prosím Taki Android aplikaci.</string>
     <string name="api.subsonic.upgrade_server">Nekompatibilní verze. Aktualizujte prosím Subsonic server.</string>
     <!-- Subsonic features  -->
 </resources>

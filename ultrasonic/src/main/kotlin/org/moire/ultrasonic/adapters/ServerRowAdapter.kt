@@ -75,7 +75,7 @@ internal class ServerRowAdapter(
         holder.image.setImageDrawable(icon)
         holder.image.background = background
 
-        val isActive = position == activeServerProvider.getActiveServer().index
+        val isActive = setting.id == ActiveServerProvider.getActiveServerId()
         holder.card.strokeColor = if (isActive) {
             context.themeColor(androidx.appcompat.R.attr.colorPrimary)
         } else {

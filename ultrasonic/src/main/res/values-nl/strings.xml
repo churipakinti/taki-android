@@ -26,7 +26,7 @@
     <string name="chat.send_button">Versturen</string>
     <string name="chat.user_avatar">Profielfoto</string>
     <string name="common.album">Album</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">Artiest</string>
     <string name="common.cancel">Annuleren</string>
     <string name="common.comment">Reageren</string>
@@ -120,9 +120,7 @@
     <string name="main.songs_starred">Favorieten</string>
     <string name="main.songs_title">Nummers</string>
     <string name="main.videos">Video\'s</string>
-    <string name="main.welcome_text_demo">Om in Ultrasonic naar je eigen muziek te luisteren, heb je je <b>eigen server</b> nodig. \n\n➤ Maar als je de app eerst wilt uitproberen, dan kun je voorlopig de demoserver gebruiken. \n\n➤ In de <b>instellingen</b> kun je je eigen server instellen.</string>
     <string name="main.welcome_title">Welkom!</string>
-    <string name="main.welcome_cancel">Open de instellingen</string>
     <string name="menu.about">Over</string>
     <string name="menu.common">Algemeen</string>
     <string name="menu.deleted_playlist">Afspeellijst %s verwijderd</string>
@@ -377,10 +375,9 @@
     <string name="server_editor.authentication">Authenticatie</string>
     <string name="server_editor.advanced">Geavanceerde instellingen</string>
     <string name="server_editor.disabled_feature">Eén of meerdere functies zijn uitgeschakeld omdat de server ze niet ondersteunt.\nVoer deze test later opnieuw uit.</string>
-    <string name="server_menu.demo">Demoserver</string>
     <string name="about.webpage">Website openen</string>
     <string name="about.report">Bug melden</string>
-    <string name="about.text"><b>Ultrasonic</b> is een gratis, open source muziekstreamingclient voor Android, die gebruikmaakt van servers die compatibel zijn met de Subsonic-api (versie 1.7.0 of hoger).\n\nMet <b>Ultrasonic</b> kun je eenvoudig muziek streamen of downloaden van je computer naar je Android-telefoon met behulp van een met Subsonic compatibele mediaserver. Let op: de Subsonic-serversoftware vereist aanvullende configuratie.\n\nStandaard is Ultrasonic niet ingesteld. Zet je eigen server op en wijzig de serverconfiguratie in die van je eigen.</string>
+    <string name="about.text"><b>Taki</b> is een gratis, open source muziekstreamingclient voor Android, die gebruikmaakt van servers die compatibel zijn met de Subsonic-api (versie 1.7.0 of hoger).\n\nMet <b>Taki</b> kun je eenvoudig muziek streamen of downloaden van je computer naar je Android-telefoon met behulp van een met Subsonic compatibele mediaserver. Let op: de Subsonic-serversoftware vereist aanvullende configuratie.\n\nStandaard is Taki niet ingesteld. Zet je eigen server op en wijzig de serverconfiguratie in die van je eigen.</string>
     <plurals name="n_songs">
         <item quantity="one">%d nummer</item>
         <item quantity="other">%d nummers</item>
@@ -418,7 +415,7 @@
     <string name="api.subsonic.param_missing">Vereiste parameter ontbreekt.</string>
     <string name="api.subsonic.requested_data_was_not_found">De opgevraagde gegevens kunnen niet worden gevonden.</string>
     <string name="api.subsonic.trial_period_is_over">Proefperiode is afgelopen.</string>
-    <string name="api.subsonic.upgrade_client">Incompatibele versies. Werk de Ultrasonic Android-app bij.</string>
+    <string name="api.subsonic.upgrade_client">Incompatibele versies. Werk de Taki Android-app bij.</string>
     <string name="api.subsonic.upgrade_server">Incompatibele versies. Werk je Subsonic-server bij.</string>
     <!-- Subsonic features  -->
     <string name="settings.use_hw_offload_title">Hardwarematig afspelen (experimenteel)</string>

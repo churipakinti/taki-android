@@ -25,7 +25,7 @@
     <string name="chat.send_a_message">Enviar uma mensagem</string>
     <string name="chat.send_button">Enviar</string>
     <string name="common.album">Álbum</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">Artista</string>
     <string name="common.cancel">Cancelar</string>
     <string name="common.comment">Comentar</string>
@@ -118,9 +118,7 @@
     <string name="main.songs_starred">Favoritas</string>
     <string name="main.songs_title">Músicas</string>
     <string name="main.videos">Vídeos</string>
-    <string name="main.welcome_text_demo">Para usar o Ultrasonic com sua própria música, você precisará de um <b>servidor próprio</b>.\n\n➤ Caso queira experimentar o aplicativo primeiro, você pode adicionar um servidor de demonstração agora.\n\n➤ Caso contrário, configure seu servidor nas <b>configurações</b>.</string>
-    <string name="main.welcome_title">Bem-vindo ao Ultrasonic!</string>
-    <string name="main.welcome_cancel">Vá para as configurações</string>
+    <string name="main.welcome_title">Bem-vindo ao Taki!</string>
     <string name="menu.about">Sobre</string>
     <string name="menu.common">Comum</string>
     <string name="menu.deleted_playlist">Playlist excluída %s</string>
@@ -374,10 +372,9 @@
     <string name="server_editor.authentication">Autenticação</string>
     <string name="server_editor.advanced">Configurações avançadas</string>
     <string name="server_editor.disabled_feature">Um ou mais recursos foram desativados porque o servidor não os suporta.\nVocê pode rodar este teste novamente a qualquer momento.</string>
-    <string name="server_menu.demo">Servidor Demonstração</string>
     <string name="about.webpage">Visitar a página web</string>
     <string name="about.report">Reportar um erro</string>
-    <string name="about.text"><b>Ultrasonic</b> é um cliente gratuito e open-source para Android de streaming de música para API de servidores compatíveis com Subsonic (version 1.7.0 ou maior).\n\nCom <b>Ultrasonic</b> você pode facilmente reproduzir online ou baixar música de seu computador doméstico para seu telefone Android usando um servidor de mídia compatível com Subsonic. O software do servidor Subsonic necessita uma configuração independente do Ultrasonic.\n\nPor padrão, o servidor Ultrasonic não é configurado. Uma vez que você configurou seu próprio servidor, altere a configuração no Ultrasonic para poder conectá-lo.</string>
+    <string name="about.text"><b>Taki</b> é um cliente gratuito e open-source para Android de streaming de música para API de servidores compatíveis com Subsonic (version 1.7.0 ou maior).\n\nCom <b>Taki</b> você pode facilmente reproduzir online ou baixar música de seu computador doméstico para seu telefone Android usando um servidor de mídia compatível com Subsonic. O software do servidor Subsonic necessita uma configuração independente do Taki.\n\nPor padrão, o servidor Taki não é configurado. Uma vez que você configurou seu próprio servidor, altere a configuração no Taki para poder conectá-lo.</string>
     <plurals name="n_songs">
         <item quantity="one">%d música</item>
         <item quantity="many">%d músicas</item>
@@ -422,15 +419,15 @@
     <string name="api.subsonic.param_missing">O parâmetro requerido está faltando.</string>
     <string name="api.subsonic.requested_data_was_not_found">Os dados solicitados não foram encontrados.</string>
     <string name="api.subsonic.trial_period_is_over">O período de avaliação acabou.</string>
-    <string name="api.subsonic.upgrade_client">Versões incompativeis. Atualize o aplicativo Ultrasonic para Android.</string>
-    <string name="api.subsonic.upgrade_server">Versões incompativeis. Atualize o servidor Ultrasonic.</string>
+    <string name="api.subsonic.upgrade_client">Versões incompativeis. Atualize o aplicativo Taki para Android.</string>
+    <string name="api.subsonic.upgrade_server">Versões incompativeis. Atualize o servidor Taki.</string>
     <!-- Subsonic features  -->
     <string name="settings.use_hw_offload_title">Usar Reprodução por Hardware (experimental)</string>
     <string name="settings.use_hw_offload_description">Tenta reproduzir a mídia usando o chip decodificador de mídia do telefone. Isso pode melhorar o uso da bateria. Alguns usuários relatam falhas na reprodução ao ativar esta opção!</string>
     <string name="jukebox">Jukebox</string>
     <string name="settings.preload_1000">1000 músicas</string>
     <string name="settings.share_options">Opções</string>
-    <string name="settings.use_id3_offline_summary">Se você ativar esta configuração, ela mostrará apenas as músicas que você baixou com o Ultrasonic 4.0 ou posterior. Os downloads anteriores não têm os metadados necessários baixados. Você pode alternar entre os modos Fixar e Salvar para acionar o download dos metadados ausentes.</string>
+    <string name="settings.use_id3_offline_summary">Se você ativar esta configuração, ela mostrará apenas as músicas que você baixou com o Taki 4.0 ou posterior. Os downloads anteriores não têm os metadados necessários baixados. Você pode alternar entre os modos Fixar e Salvar para acionar o download dos metadados ausentes.</string>
     <string name="albumArt">Arte do álbum</string>
     <string name="settings.preload_100">100 músicas</string>
     <string name="supported_server_features">Recursos suportados</string>

@@ -36,7 +36,7 @@
                 a:layout_marginTop="4dp"
                 a:text="@string/about.tagline"
                 a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                a:textColor="?attr/colorPrimary" />
+                a:textColor="?attr/colorOnSurfaceVariant" />
 
             <TextView
                 a:id="@+id/help_text"

@@ -41,7 +41,8 @@
                     a:layout_height="48dp"
                     a:contentDescription="@string/library_hub.title"
                     app:icon="@drawable/ic_more_vert"
-                    app:iconSize="24dp" />
+                    app:iconSize="24dp"
+                    app:iconTint="?attr/colorOnSurfaceVariant" />
 
             </LinearLayout>
 
@@ -59,7 +60,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         a:id="@+id/home_quick_playlists"
-                        style="@style/Widget.Material3.Button.TonalButton"
+                        style="@style/Widget.Taki.NeutralChip"
                         a:layout_width="wrap_content"
                         a:layout_height="wrap_content"
                         a:layout_marginEnd="8dp"
@@ -67,7 +68,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         a:id="@+id/home_quick_albums"
-                        style="@style/Widget.Material3.Button.TonalButton"
+                        style="@style/Widget.Taki.NeutralChip"
                         a:layout_width="wrap_content"
                         a:layout_height="wrap_content"
                         a:layout_marginEnd="8dp"
@@ -75,7 +76,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         a:id="@+id/home_quick_artists"
-                        style="@style/Widget.Material3.Button.TonalButton"
+                        style="@style/Widget.Taki.NeutralChip"
                         a:layout_width="wrap_content"
                         a:layout_height="wrap_content"
                         a:layout_marginEnd="8dp"
@@ -83,18 +84,11 @@
 
                     <com.google.android.material.button.MaterialButton
                         a:id="@+id/home_quick_songs"
-                        style="@style/Widget.Material3.Button.TonalButton"
+                        style="@style/Widget.Taki.NeutralChip"
                         a:layout_width="wrap_content"
                         a:layout_height="wrap_content"
                         a:layout_marginEnd="8dp"
                         a:text="@string/main.songs_title" />
-
-                    <com.google.android.material.button.MaterialButton
-                        a:id="@+id/home_quick_genres"
-                        style="@style/Widget.Material3.Button.TonalButton"
-                        a:layout_width="wrap_content"
-                        a:layout_height="wrap_content"
-                        a:text="@string/main.genres_title" />
 
                 </LinearLayout>
             </HorizontalScrollView>

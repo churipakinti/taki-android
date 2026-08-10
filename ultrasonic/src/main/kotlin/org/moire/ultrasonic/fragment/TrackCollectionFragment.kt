@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.HeartRating
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -50,6 +51,7 @@ import org.moire.ultrasonic.adapters.TrackViewBinder
 import org.moire.ultrasonic.adapters.Utils
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.isOffline
+import org.moire.ultrasonic.data.RatingUpdate
 import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.MusicDirectory
@@ -122,7 +124,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private val navArgs: TrackCollectionFragmentArgs by navArgs()
 
     private val isMediaLibrarySongs: Boolean
-        get() = parentFragment is MainFragment || navArgs.libraryRoot
+        get() = parentFragment is MainFragment || navArgs.libraryRoot || navArgs.getStarred
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -220,7 +222,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             viewAdapter.register(
                 LibraryTrackBinder(
                     onItemClick = ::onItemClick,
-                    onContextMenuClick = ::onContextMenuItemSelected
+                    onContextMenuClick = ::onContextMenuItemSelected,
+                    showHeart = navArgs.getStarred,
+                    onHeartClick = ::toggleLibraryHeart
                 )
             )
         } else {
@@ -319,6 +323,15 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
+    private fun toggleLibraryHeart(track: Track) {
+        track.starred = !track.starred
+        RxBus.ratingSubmitter.onNext(RatingUpdate(track.id, HeartRating(track.starred)))
+        if (navArgs.getStarred && !track.starred) {
+            listModel.currentList.value = listModel.currentList.value.orEmpty()
+                .filterNot { it.id == track.id }
+        }
+    }
+
     private fun albumShowArtist(@Suppress("UNUSED_PARAMETER") track: Track): Boolean =
         albumHasMultipleArtists
 
@@ -385,14 +398,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
     private val menuProvider: MenuProvider = object : MenuProvider {
         override fun onPrepareMenu(menu: Menu) {
-            // Hide search button (from xml)
-            menu.findItem(R.id.action_search).isVisible = false
-
             playAllButton = menu.findItem(R.id.select_album_play_all)
-
-            if (playAllButton != null) {
-                playAllButton!!.isVisible = playAllButtonVisible
-            }
+            playAllButton?.isVisible = playAllButtonVisible
         }
 
         override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {

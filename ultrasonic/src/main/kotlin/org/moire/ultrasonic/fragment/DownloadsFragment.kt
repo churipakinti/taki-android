@@ -39,6 +39,7 @@ import org.moire.ultrasonic.util.toastingExceptionHandler
  */
 class DownloadsFragment : MultiListFragment<Album>() {
     override val listModel: TrackCollectionModel by viewModels()
+    override val mainLayout: Int = R.layout.downloads
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

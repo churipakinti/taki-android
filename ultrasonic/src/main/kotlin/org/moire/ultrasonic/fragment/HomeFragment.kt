@@ -16,7 +16,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -143,9 +143,6 @@ class HomeFragment : Fragment(), RefreshableFragment {
                 NavigationGraphDirections.toTrackCollection(libraryRoot = true)
             )
         }
-        view.findViewById<View>(R.id.home_quick_genres).setOnClickListener {
-            findNavController().navigate(NavigationGraphDirections.toGenreList())
-        }
     }
 
     /**
@@ -190,7 +187,7 @@ class HomeFragment : Fragment(), RefreshableFragment {
     }
 
     private fun load() {
-        homeViewModel.viewModelScope.launch(toastingExceptionHandler()) {
+        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             swipeRefresh?.isRefreshing = true
             homeViewModel.loadHomeScreen()
             swipeRefresh?.isRefreshing = false

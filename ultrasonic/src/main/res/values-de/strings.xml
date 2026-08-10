@@ -25,7 +25,7 @@
     <string name="chat.send_a_message">Nachricht senden</string>
     <string name="chat.send_button">Senden</string>
     <string name="common.album">Album</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">Künstler</string>
     <string name="common.cancel">Abbrechen</string>
     <string name="common.comment">Kommentar</string>
@@ -118,9 +118,7 @@
     <string name="main.songs_starred">Mit Stern</string>
     <string name="main.songs_title">Titel</string>
     <string name="main.videos">Filme</string>
-    <string name="main.welcome_text_demo">Um Ultrasonic mit Deiner eigenen Musik zu verwenden, benötigst Du einen <b>eigenen Server</b>. \n\n➤ Wenn Du die App erst einmal testen möchtest, kann jetzt ein Demo Server hinzugefügt werden. \n\n➤ Sonst kannst Du Deinen Server in den <b>Einstellungen</b> konfigurieren.</string>
-    <string name="main.welcome_title">Willkommen zu Ultrasonic!</string>
-    <string name="main.welcome_cancel">Zu den Einstellungen</string>
+    <string name="main.welcome_title">Willkommen zu Taki!</string>
     <string name="menu.about">Über</string>
     <string name="menu.common">Allgemein</string>
     <string name="menu.deleted_playlist">Wiedergabeliste %s gelöscht</string>
@@ -372,7 +370,6 @@
     <string name="server_editor.authentication">Authentifizierung</string>
     <string name="server_editor.advanced">Erweiterte Einstellungen</string>
     <string name="server_editor.disabled_feature">Einer oder mehrere Funktionen wurden deaktiviert, da der Server diese nicht unterstützt.\nDu kannst diesen Test jederzeit nochmals ausführen.</string>
-    <string name="server_menu.demo">Demo Server</string>
     <string name="about.webpage">Website besuchen</string>
     <string name="about.report">Einen Fehler melden</string>
     <plurals name="n_songs">
@@ -412,14 +409,14 @@
     <string name="api.subsonic.param_missing">Erforderlicher Parameter fehlt.</string>
     <string name="api.subsonic.requested_data_was_not_found">Angeforderte Daten nicht gefunden.</string>
     <string name="api.subsonic.trial_period_is_over">Der Testzeitraum ist abgelaufen.</string>
-    <string name="api.subsonic.upgrade_client">Inkompatible Versionen. Bitte die Ultrasonic App aktualisieren.</string>
+    <string name="api.subsonic.upgrade_client">Inkompatible Versionen. Bitte die Taki App aktualisieren.</string>
     <string name="api.subsonic.upgrade_server">Inkompatible Versionen. Bitte den Subsonic Server aktualisieren.</string>
     <!-- Subsonic features  -->
-    <string name="about.text"><b>Ultrasonic</b> ist ein kostenloser und quelloffener Android-Musikstreaming-Client für Subsonic API (Version 1.7.0 oder höher) kompatible Server.
+    <string name="about.text"><b>Taki</b> ist ein kostenloser und quelloffener Android-Musikstreaming-Client für Subsonic API (Version 1.7.0 oder höher) kompatible Server.
 \n
-\nMit <b>Ultrasonic</b> können Sie mit Ihrem Subsonic-kompatiblen Medienserver ganz einfach Musik von Ihrem Heimcomputer auf Ihr Android-Telefon streamen oder herunterladen. Die Subsonic-Server-Software erfordert eine zusätzliche, von Ultrasonic unabhängige Konfiguration.
+\nMit <b>Taki</b> können Sie mit Ihrem Subsonic-kompatiblen Medienserver ganz einfach Musik von Ihrem Heimcomputer auf Ihr Android-Telefon streamen oder herunterladen. Die Subsonic-Server-Software erfordert eine zusätzliche, von Taki unabhängige Konfiguration.
 \n
-\nUltrasonic ist standardmäßig nicht konfiguriert. Wenn Sie Ihren eigenen Server eingerichtet haben, ändern Sie bitte die Serverkonfiguration so, dass er sich mit Ihrem eigenen Computer verbindet.</string>
+\nTaki ist standardmäßig nicht konfiguriert. Wenn Sie Ihren eigenen Server eingerichtet haben, ändern Sie bitte die Serverkonfiguration so, dass er sich mit Ihrem eigenen Computer verbindet.</string>
     <string name="foreground_exception_title">Wiedergabe kann nicht fortgesetzt werden</string>
     <string name="settings.preload_500">500 Titel</string>
     <string name="foreground_exception_text">Drücke auf die Wiedergabetaste der Medienbenachrichtigung, wenn diese noch vorhanden ist, andernfalls öffne die App, um die Wiedergabe zu starten, und verbinde die Sitzung erneut mit dem Controller</string>
@@ -429,7 +426,7 @@
     <string name="settings.preload_100">100 Titel</string>
     <string name="settings.preload_1000">1000 Titel</string>
     <string name="settings.theme_day_night">Tag &amp; Nacht</string>
-    <string name="settings.use_id3_offline_summary">Wenn Du diese Einstellung aktivierst, wird nur die Musik angezeigt, die Du mit Ultrasonic 4.0 oder höher heruntergeladen hast. Bei früheren Downloads werden die erforderlichen Metadaten nicht heruntergeladen. Du kannst zwischen Pin- und Speichermodus umschalten, um den Download der fehlenden Metadaten auszulösen.</string>
+    <string name="settings.use_id3_offline_summary">Wenn Du diese Einstellung aktivierst, wird nur die Musik angezeigt, die Du mit Taki 4.0 oder höher heruntergeladen hast. Bei früheren Downloads werden die erforderlichen Metadaten nicht heruntergeladen. Du kannst zwischen Pin- und Speichermodus umschalten, um den Download der fehlenden Metadaten auszulösen.</string>
     <string name="albumArt">Album-Artwork</string>
     <string name="notification.permission_required">Benachrichtigungen sind für die Medienwiedergabe erforderlich. Du kannst die Erlaubnis jederzeit in den Android-Einstellungen erteilen.</string>
     <string name="settings.use_hw_offload_title">Hardware-Wiedergabe verwenden (experimentell)</string>

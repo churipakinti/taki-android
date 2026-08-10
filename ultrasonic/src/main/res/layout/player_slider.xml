@@ -4,22 +4,21 @@
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
     a:orientation="vertical"
-    a:layout_marginTop="4dp"
-    a:layout_marginStart="4dp"
-    a:layout_marginEnd="4dp" >
+    a:layout_marginTop="@dimen/player_section_spacing_large" >
     
     <SeekBar
         a:id="@+id/current_playing_progress_bar"
         a:layout_width="fill_parent"
-        a:layout_height="28dp"
+        a:layout_height="24dp"
         a:indeterminate="false"
         a:progressBackgroundTint="?attr/colorSurfaceContainerHighest"
-        a:progressTint="?attr/colorPrimary"
-        a:thumbTint="?attr/colorPrimary" />
+        a:progressTint="@color/taki_progress"
+        a:thumbTint="@color/taki_progress" />
 
     <RelativeLayout
         a:layout_width="match_parent"
-        a:layout_height="match_parent">
+        a:layout_height="wrap_content"
+        a:layout_marginTop="@dimen/player_time_spacing">
 
         <TextView
             a:id="@+id/current_playing_position"

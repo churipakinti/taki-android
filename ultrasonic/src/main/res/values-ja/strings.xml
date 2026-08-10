@@ -13,7 +13,7 @@
     <string name="buttons.shuffle">シャッフル</string>
     <string name="buttons.stop">停止</string>
     <string name="chat.send_a_message">メッセージ送信</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">アーティスト</string>
     <string name="common.cancel">キャンセル</string>
     <string name="common.comment">コメント</string>
@@ -87,12 +87,7 @@
     <string name="main.songs_random">ランダム</string>
     <string name="main.songs_starred">スター付き</string>
     <string name="main.videos">動画</string>
-    <string name="main.welcome_text_demo">自分の曲をUltrasonicで再生するには <b>自身のサーバー</b> が必要です。
-\n
-\n➤ アプリを試したい場合、デモサーバーを追加できます。
-\n
-\n➤ それ以外の場合、 <b>設定</b> でサーバーを設定できます。</string>
-    <string name="main.welcome_title">ようこそ、Ultrasonicへ!</string>
+    <string name="main.welcome_title">ようこそ、Takiへ!</string>
     <string name="menu.about">アプリについて</string>
     <string name="menu.common">一般</string>
     <string name="menu.deleted_playlist">プレイリスト %s を削除しました</string>
@@ -292,7 +287,6 @@
     <string name="server_editor.advanced">詳細設定</string>
     <string name="server_editor.disabled_feature">サーバーがサポート外のため、いくつかの機能が無効になりました。
 \nこのテストはいつでも再実行することができます。</string>
-    <string name="server_menu.demo">デモサーバー</string>
     <string name="about.webpage">Webページにアクセス</string>
     <string name="about.report">バグを報告</string>
     <plurals name="n_songs">
@@ -323,7 +317,7 @@
     <string name="api.subsonic.not_authorized">許可されていません。 Subsonic サーバーのユーザー権限を確認してください。</string>
     <string name="api.subsonic.param_missing">必要なパラメータが不足しています。</string>
     <string name="api.subsonic.requested_data_was_not_found">要求されたデータが見つかりませんでした。</string>
-    <string name="api.subsonic.upgrade_client">互換性のないバージョンです。UltrasonicのAndroidアプリをバージョンアップしてください。</string>
+    <string name="api.subsonic.upgrade_client">互換性のないバージョンです。TakiのAndroidアプリをバージョンアップしてください。</string>
     <string name="api.subsonic.upgrade_server">互換性のないバージョンです。Subsonicサーバーをバージョンアップしてください。</string>
     <string name="list_view">リスト</string>
     <string name="grid_view">カバー</string>
@@ -363,7 +357,6 @@
     <string name="error.label">エラー</string>
     <string name="main.albums_alphaByName">名前別</string>
     <string name="main.songs_title">曲</string>
-    <string name="main.welcome_cancel">設定に移動</string>
     <string name="menu.refresh">再読み込み</string>
     <string name="music_library.label">メディアライブラリ</string>
     <string name="music_library.label_offline">オフラインメディア</string>
@@ -406,7 +399,7 @@
     <string name="settings.search_500">500</string>
     <string name="settings.theme_black">ブラック</string>
     <string name="settings.theme_title">テーマ</string>
-    <string name="settings.use_id3_offline_summary">この設定を有効にすると、Ultrasonic 4.0以降でダウンロードした音楽のみが表示されます。それ以前のバージョンでダウンロードしたファイルには、必要なメタデータが含まれていません。固定モードと保存モードを切り替えることで、不足メタデータのダウンロードができます。</string>
+    <string name="settings.use_id3_offline_summary">この設定を有効にすると、Taki 4.0以降でダウンロードした音楽のみが表示されます。それ以前のバージョンでダウンロードしたファイルには、必要なメタデータが含まれていません。固定モードと保存モードを切り替えることで、不足メタデータのダウンロードができます。</string>
     <string name="settings.show_now_playing_details">再生中に詳細を表示</string>
     <string name="widget.sdcard_busy">SDカード利用不可</string>
     <string name="settings.sharing_always_ask_for_details">常に詳細を確認</string>
@@ -426,11 +419,11 @@
     <string name="server_editor.label">サーバーの編集</string>
     <string name="server_menu.move_down">下に移動</string>
     <string name="server_editor.authentication">認証</string>
-    <string name="about.text"><b>Ultrasonic</b> はフリーでオープンソースであり、Subsonic API (バージョン 1.7.0 以上) 互換サーバーに対応した音楽ストリーミングAndroidクライアントです。
+    <string name="about.text"><b>Taki</b> はフリーでオープンソースであり、Subsonic API (バージョン 1.7.0 以上) 互換サーバーに対応した音楽ストリーミングAndroidクライアントです。
 \n
-\n<b>Ultrasonic</b> はSubsonic互換サーバーに接続することで、自宅コンピューターからAndroid端末へ簡単に音楽をストリーミングしたりダウンロードできます。Subsonicサーバーソフトは、Ultrasonicと別に設定が必要です。
+\n<b>Taki</b> はSubsonic互換サーバーに接続することで、自宅コンピューターからAndroid端末へ簡単に音楽をストリーミングしたりダウンロードできます。Subsonicサーバーソフトは、Takiと別に設定が必要です。
 \n
-\nデフォルトでは、Ultrasonicは何も設定されていません。自分用サーバーを構築した後に、そのサーバーに接続するように設定を変更してください。</string>
+\nデフォルトでは、Takiは何も設定されていません。自分用サーバーを構築した後に、そのサーバーに接続するように設定を変更してください。</string>
     <string name="api.subsonic.trial_period_is_over">試用期間は終了しました。</string>
     <string name="settings.use_hw_offload_title">ハードウェア再生を使用する (実験的)</string>
     <string name="settings.use_hw_offload_description">端末のメディアデコーダーチップを使用してメディアを再生するよう試行します。これにより、バッテリー使用量を改善できます。このオプションを有効化することで、再生の不具合が起こる場合も報告されています!</string>

@@ -19,6 +19,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,7 +35,6 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.LyricsLineAdapter
 import org.moire.ultrasonic.domain.Lyrics
 import org.moire.ultrasonic.domain.LyricsLine
-import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.util.RefreshableFragment
@@ -79,8 +79,9 @@ class LyricsFragment :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Timber.d("Lyrics set title")
-        setTitle(this, R.string.download_menu_lyrics)
+        view.findViewById<View>(R.id.lyrics_back).setOnClickListener {
+            findNavController().navigateUp()
+        }
         swipeRefresh = view.findViewById(R.id.lyrics_refresh)
         swipeRefresh?.isEnabled = false
         artistView = view.findViewById(R.id.lyrics_artist)
@@ -144,6 +145,7 @@ class LyricsFragment :
         }
 
         titleView?.text = result.title
+        titleView?.isSelected = true
         artistView?.text = result.artist
         lyricsLines = result.lines
         isSynced = result.synced && result.lines.any { it.start != null }

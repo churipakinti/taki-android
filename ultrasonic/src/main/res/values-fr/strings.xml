@@ -25,7 +25,7 @@
     <string name="chat.send_a_message">Envoyer un message</string>
     <string name="chat.send_button">Envoyer</string>
     <string name="common.album">Album</string>
-    <string name="common.appname">Ultrasonic</string>
+    <string name="common.appname">Taki</string>
     <string name="common.artist">Artiste</string>
     <string name="common.cancel">Annuler</string>
     <string name="common.comment">Commenter</string>
@@ -116,9 +116,7 @@
     <string name="main.songs_starred">Favoris</string>
     <string name="main.songs_title">Titres</string>
     <string name="main.videos">Vidéos</string>
-    <string name="main.welcome_text_demo">Pour utiliser Ultrasonic avec votre propre musique vous allez avoir besoin de <b>votre propre serveur</b>. \n\n➤ Si vous souhaitez essayer l’application d’abord, il est possible d’ajouter un serveur de démo dès maintenant. \n\n➤ Autrement, vous pouvez configurer votre serveur dans les <b>paramètres</b>.</string>
-    <string name="main.welcome_title">Bienvenue sur Ultrasonic !</string>
-    <string name="main.welcome_cancel">Aller aux paramètres</string>
+    <string name="main.welcome_title">Bienvenue sur Taki !</string>
     <string name="menu.about">À propos</string>
     <string name="menu.common">Général</string>
     <string name="menu.deleted_playlist">Liste de lecture supprimée %s</string>
@@ -278,7 +276,7 @@
     <string name="settings.server_username">Nom d\'utilisateur</string>
     <string name="settings.server_color">Couleur du serveur</string>
     <string name="settings.show_now_playing">Montrer la lecture en cours</string>
-    <string name="settings.show_now_playing_summary">Afficher les pistes en cours de lecture dans les autres activités d\'Ultrasonic</string>
+    <string name="settings.show_now_playing_summary">Afficher les pistes en cours de lecture dans les autres activités d\'Taki</string>
     <string name="settings.show_track_number">Afficher le numéro du titre</string>
     <string name="settings.show_track_number_summary">Inclure son numéro lors de l\'affichage d\'un titre</string>
     <string name="settings.test_connection_title">Tester la connexion</string>
@@ -360,10 +358,9 @@
     <string name="server_editor.authentication">Authentification</string>
     <string name="server_editor.advanced">Paramètres avancés</string>
     <string name="server_editor.disabled_feature">Une ou plusieurs fonctionnalités ont été désactivées car le serveur ne les prend pas en charge.\nVous pouvez réexécuter ce test à tout moment.</string>
-    <string name="server_menu.demo">Serveur de démo</string>
     <string name="about.webpage">Visiter la page web</string>
     <string name="about.report">Signaler un bug</string>
-    <string name="about.text"><b>Ultrasonic</b> est un client Android de streaming musical gratuit et open-source pour les serveurs compatibles avec l\'API Subsonic (version 1.7.0 ou supérieure). Avec <b>Ultrasonic</b>, vous pouvez facilement diffuser ou télécharger de la musique depuis votre ordinateur personnel vers votre téléphone Android en utilisant votre serveur multimédia compatible Subsonic. Le logiciel du serveur Subsonic nécessite une configuration supplémentaire distincte d\'Ultrasonic. Par défaut, Ultrasonic n\'est pas configuré. Une fois que vous avez mis en place votre propre serveur, veuillez modifier la configuration du serveur afin qu\'il se connecte à votre ordinateur.</string>
+    <string name="about.text"><b>Taki</b> est un client Android de streaming musical gratuit et open-source pour les serveurs compatibles avec l\'API Subsonic (version 1.7.0 ou supérieure). Avec <b>Taki</b>, vous pouvez facilement diffuser ou télécharger de la musique depuis votre ordinateur personnel vers votre téléphone Android en utilisant votre serveur multimédia compatible Subsonic. Le logiciel du serveur Subsonic nécessite une configuration supplémentaire distincte d\'Taki. Par défaut, Taki n\'est pas configuré. Une fois que vous avez mis en place votre propre serveur, veuillez modifier la configuration du serveur afin qu\'il se connecte à votre ordinateur.</string>
     <plurals name="n_songs">
         <item quantity="one">%d titre</item>
         <item quantity="many">%d titres</item>
@@ -378,7 +375,7 @@
     <string name="api.subsonic.param_missing">Paramètre nécessaire manquant.</string>
     <string name="api.subsonic.requested_data_was_not_found">Les données demandées n\'ont pas été trouvées.</string>
     <string name="api.subsonic.trial_period_is_over">La période d\'essai est terminée.</string>
-    <string name="api.subsonic.upgrade_client">Versions incompatibles. Veuillez mette à jour l\'application Android Ultrasonic.</string>
+    <string name="api.subsonic.upgrade_client">Versions incompatibles. Veuillez mette à jour l\'application Android Taki.</string>
     <string name="api.subsonic.upgrade_server">Versions incompatibles. Veuillez mette à jour le serveur Subsonic.</string>
     <!-- Subsonic features  -->
     <string name="main.albums_by_year">Chronologique</string>
@@ -404,7 +401,7 @@
     <string name="settings.use_id3_offline">Utiliser la méthode ID3 même hors ligne</string>
     <string name="settings.show_now_playing_details">Afficher les détails en cours de lecture</string>
     <string name="settings.summary.force_plain_text_password">Ceci force l\'application à toujours envoyer le mot de passe en clair. Utile si le serveur Subsonic ne prend pas en charge la nouvelle API d\'authentification pour les utilisateurs.</string>
-    <string name="settings.use_id3_offline_summary">Si vous activez ce paramètre, il n\'affichera que la musique que vous avez téléchargée avec Ultrasonic 4.0 ou une version ultérieure. Les téléchargements antérieurs n\'ont pas les métadonnées nécessaires téléchargées. Vous pouvez basculer entre le mode Épingler et le mode Enregistrer pour déclencher le téléchargement des métadonnées manquantes.</string>
+    <string name="settings.use_id3_offline_summary">Si vous activez ce paramètre, il n\'affichera que la musique que vous avez téléchargée avec Taki 4.0 ou une version ultérieure. Les téléchargements antérieurs n\'ont pas les métadonnées nécessaires téléchargées. Vous pouvez basculer entre le mode Épingler et le mode Enregistrer pour déclencher le téléchargement des métadonnées manquantes.</string>
     <string name="settings.show_confirmation_dialog">Afficher le dialogue de confirmation</string>
     <string name="notification.permission_required">Les notifications sont nécessaires pour la lecture des médias. Vous pouvez accorder cette autorisation à tout moment dans les paramètres Android.</string>
     <string name="settings.use_hw_offload_description">Essayez de lire le média à l\'aide de la puce de décodage média de votre téléphone. Ceci peut augmenter l\'utilisation de la batterie. Certains utilisateurs signalent des problèmes de lecture lorsqu\'ils activent cette option !</string>
