@@ -177,6 +177,10 @@
     <string name="search.songs">Canciones</string>
     <string name="search.title">Buscar</string>
     <string name="search.prompt">Busca artistas, álbumes y canciones</string>
+    <string name="search.recent">Búsquedas recientes</string>
+    <string name="search.clear_all">Borrar todo</string>
+    <string name="search.remove_recent">Eliminar de búsquedas recientes</string>
+    <string name="search.history_cleared">Historial de búsqueda eliminado</string>
     <string name="select_album.empty">No se han encontrado medios</string>
     <string name="select_album.n_selected">%d pistas seleccionadas</string>
     <string name="select_album.no_network">Atención: no hay ninguna red utilizable disponible.\n Si estás utilizando datos móviles, es posible que tengas que permitir las descargas en conexiones con tarificación o en itinerancia en la configuración.</string>

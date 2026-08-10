@@ -14,9 +14,9 @@ variables:
   JVM_OPTS: ${MEMORY_CONFIG}
   JAVA_TOOL_OPTIONS: ${MEMORY_CONFIG}
   GRADLE_OPTS: ${MEMORY_CONFIG}
-  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/Ultrasonic/${CI_COMMIT_TAG}"
-  PACKAGE_APK: "ultrasonic-${CI_COMMIT_TAG}.apk"
-  PACKAGE_APK_IDSIG: "ultrasonic-${CI_COMMIT_TAG}.apk.idsig"
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/Taki/${CI_COMMIT_TAG}"
+  PACKAGE_APK: "taki-${CI_COMMIT_TAG}.apk"
+  PACKAGE_APK_IDSIG: "taki-${CI_COMMIT_TAG}.apk.idsig"
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   # The project id of https://gitlab.com/ultrasonic/ultrasonic/
   ROOT_PROJECT_ID: 37671564
@@ -78,7 +78,7 @@ Assemble Release:
     - sed -i 's/applicationId \"org.moire.ultrasonic\"/applicationId "org.moire.ultrasonic.gitlab"/' ultrasonic/build.gradle
     - ./gradlew assembleRelease
   artifacts:
-    name: ultrasonic-release-unsigned-${CI_COMMIT_SHA}
+    name: taki-release-unsigned-${CI_COMMIT_SHA}
     paths:
       - ultrasonic/build/outputs/apk/release/ultrasonic-release-unsigned.apk
   rules:
@@ -106,7 +106,7 @@ Generate Signed APK:
     # Or when adding a new commit to develop (but never inside merge events)
     - if: $CI_COMMIT_REF_NAME == "develop" && $CI_PROJECT_ID == $ROOT_PROJECT_ID && $CI_PIPELINE_SOURCE != "merge_request_event"
       variables:
-        PACKAGE_APK: ultrasonic-${CI_COMMIT_SHA}.apk
+        PACKAGE_APK: taki-${CI_COMMIT_SHA}.apk
 
 
 Publish Signed APK:
@@ -161,6 +161,6 @@ RoboTest:
     # Because it would not have access to the protected keys.
     - if: $CI_COMMIT_MESSAGE =~ /^\[ROBO\].*/ && $CI_PROJECT_ID == $ROOT_PROJECT_ID && $CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE != "merge_request_event"
       variables:
-        PACKAGE_APK: ultrasonic-${CI_COMMIT_SHA}.apk
+        PACKAGE_APK: taki-${CI_COMMIT_SHA}.apk
   allow_failure: true
 

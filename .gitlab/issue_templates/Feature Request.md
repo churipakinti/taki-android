@@ -1,7 +1,7 @@
 ## Proposal
 
 Describe your proposed feature request here. Use this template only to
-request a new feature that does not exist in Ultrasonic. If you are
+request a new feature that does not exist in Taki. If you are
 requesting an enhancement to a current feature, please use the enhancement
 template.
 
@@ -10,9 +10,9 @@ template.
 Include this section only if you consider that is relevant to this ticket,
 otherwise you may remove it.
 
-### Ultrasonic client
+### Taki client
 
- * **Ultrasonic version**: *version of the app*
+ * **Taki version**: *version of the app*
  * **Android version**: *Version of Android OS on the device*
  * **Device info**: *Device manufacturer, model*
 

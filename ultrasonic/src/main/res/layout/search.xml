@@ -36,6 +36,44 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <LinearLayout
+        a:id="@+id/recent_searches_panel"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:orientation="vertical"
+        a:paddingHorizontal="16dp"
+        a:visibility="gone">
+
+        <LinearLayout
+            a:layout_width="match_parent"
+            a:layout_height="48dp"
+            a:gravity="center_vertical"
+            a:orientation="horizontal">
+
+            <TextView
+                a:layout_width="0dp"
+                a:layout_height="wrap_content"
+                a:layout_weight="1"
+                a:text="@string/search.recent"
+                a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <com.google.android.material.button.MaterialButton
+                a:id="@+id/recent_searches_clear"
+                style="@style/Widget.Material3.Button.TextButton"
+                a:layout_width="wrap_content"
+                a:layout_height="48dp"
+                a:text="@string/search.clear_all" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            a:id="@+id/recent_searches_list"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:orientation="vertical" />
+
+    </LinearLayout>
+
     <include layout="@layout/list_parts_empty_view" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

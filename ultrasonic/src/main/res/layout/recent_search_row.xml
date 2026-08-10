@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    a:layout_width="match_parent"
+    a:layout_height="56dp"
+    a:gravity="center_vertical"
+    a:orientation="horizontal">
+
+    <ImageView
+        a:layout_width="48dp"
+        a:layout_height="48dp"
+        a:importantForAccessibility="no"
+        a:padding="12dp"
+        a:src="@drawable/ic_history" />
+
+    <TextView
+        a:id="@+id/recent_search_query"
+        a:layout_width="0dp"
+        a:layout_height="match_parent"
+        a:layout_weight="1"
+        a:ellipsize="end"
+        a:gravity="center_vertical"
+        a:maxLines="1"
+        a:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+
+    <com.google.android.material.button.MaterialButton
+        a:id="@+id/recent_search_remove"
+        style="@style/Widget.Material3.Button.IconButton"
+        a:layout_width="48dp"
+        a:layout_height="48dp"
+        a:contentDescription="@string/search.remove_recent"
+        app:icon="@drawable/ic_menu_close"
+        app:iconSize="18dp"
+        app:iconTint="?attr/colorOnSurfaceVariant" />
+
+</LinearLayout>

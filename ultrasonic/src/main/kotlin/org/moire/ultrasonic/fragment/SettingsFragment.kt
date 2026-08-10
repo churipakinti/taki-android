@@ -51,6 +51,7 @@ import org.moire.ultrasonic.util.ErrorDialog
 import org.moire.ultrasonic.util.FileUtil.albumArtDirectory
 import org.moire.ultrasonic.util.FileUtil.ultrasonicDirectory
 import org.moire.ultrasonic.util.InfoDialog
+import org.moire.ultrasonic.util.RecentSearches
 import org.moire.ultrasonic.util.SelectCacheActivityContract
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Settings.id3TagsEnabledOnline
@@ -277,6 +278,7 @@ class SettingsFragment :
                         SearchSuggestionProvider.MODE
                     )
                     suggestions.clearHistory()
+                    RecentSearches(requireContext()).clear()
                     toast(R.string.settings_search_history_cleared)
                     false
                 }

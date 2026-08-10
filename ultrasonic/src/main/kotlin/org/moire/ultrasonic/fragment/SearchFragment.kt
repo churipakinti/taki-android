@@ -14,8 +14,13 @@ import android.provider.SearchRecentSuggestions
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.viewModelScope
@@ -23,6 +28,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -50,6 +56,7 @@ import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenu
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenuTracks
 import org.moire.ultrasonic.util.RefreshableFragment
+import org.moire.ultrasonic.util.RecentSearches
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
@@ -69,6 +76,11 @@ class SearchFragment :
     private var searchJob: Job? = null
     private var liveSearchJob: Job? = null
     private var lastLiveSearchQuery: String? = null
+    private var activeQuery: String? = null
+    private lateinit var searchView: SearchView
+    private lateinit var recentSearches: RecentSearches
+    private lateinit var recentSearchesPanel: View
+    private lateinit var recentSearchesList: LinearLayout
     override var swipeRefresh: SwipeRefreshLayout? = null
     private val mediaPlayerManager: MediaPlayerManager by inject()
     private val navArgs by navArgs<SearchFragmentArgs>()
@@ -78,9 +90,23 @@ class SearchFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setTitle(this, R.string.search_title)
+        recentSearches = RecentSearches(requireContext())
+        recentSearchesPanel = view.findViewById(R.id.recent_searches_panel)
+        recentSearchesList = view.findViewById(R.id.recent_searches_list)
         emptyView.findViewById<ImageView>(R.id.empty_list_icon)
             .setImageResource(R.drawable.ic_menu_search)
+        view.findViewById<View>(R.id.recent_searches_clear).setOnClickListener {
+            recentSearches.clear()
+            SearchRecentSuggestions(
+                requireContext(),
+                SearchSuggestionProvider.AUTHORITY,
+                SearchSuggestionProvider.MODE
+            ).clearHistory()
+            renderRecentSearches()
+            Snackbar.make(view, R.string.search_history_cleared, Snackbar.LENGTH_SHORT).show()
+        }
         setupSearchField(view)
+        setupImeBackHandling(view)
         showSearchPrompt()
 
         listModel.searchResult.observe(
@@ -149,13 +175,16 @@ class SearchFragment :
     }
 
     private fun setupSearchField(view: View) {
-        val searchView = view.findViewById<SearchView>(R.id.search_field)
+        searchView = view.findViewById(R.id.search_field)
         val searchManager = requireContext().getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setSearchableInfo(searchManager.getSearchableInfo(requireActivity().componentName))
         searchView.setIconifiedByDefault(false)
         searchView.isIconified = false
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (hasFocus && searchView.query.isNullOrBlank()) showSearchPrompt()
+        }
 
-        navArgs.query?.let {
+        (navArgs.query ?: activeQuery)?.let {
             searchView.setQuery(it, false)
             searchView.clearFocus()
         }
@@ -164,11 +193,7 @@ class SearchFragment :
             override fun onQueryTextSubmit(query: String?): Boolean {
                 val submitted = query?.trim().orEmpty()
                 if (submitted.isEmpty()) return true
-                SearchRecentSuggestions(
-                    requireContext(),
-                    SearchSuggestionProvider.AUTHORITY,
-                    SearchSuggestionProvider.MODE
-                ).saveRecentQuery(submitted, null)
+                saveRecentQuery(submitted)
                 search(submitted, false)
                 searchView.clearFocus()
                 return true
@@ -179,6 +204,25 @@ class SearchFragment :
                 return true
             }
         })
+    }
+
+    private fun setupImeBackHandling(view: View) {
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    val insets = ViewCompat.getRootWindowInsets(view)
+                    if (insets?.isVisible(WindowInsetsCompat.Type.ime()) == true) {
+                        WindowInsetsControllerCompat(requireActivity().window, view)
+                            .hide(WindowInsetsCompat.Type.ime())
+                        return
+                    }
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        )
     }
 
     private fun scheduleLiveSearch(text: String?) {
@@ -204,6 +248,8 @@ class SearchFragment :
         // debounced queries in flight if the network is slow) -- cancel the older one so its
         // response can't land after and overwrite a newer query's results.
         searchJob?.cancel()
+        activeQuery = query.trim().ifEmpty { null }
+        recentSearchesPanel.isVisible = false
         emptyView.isVisible = false
         searchJob = listModel.viewModelScope.launch(
             toastingExceptionHandler()
@@ -218,8 +264,49 @@ class SearchFragment :
     }
 
     private fun showSearchPrompt() {
+        renderRecentSearches()
+        val hasRecentSearches = recentSearches.get().isNotEmpty()
         emptyView.findViewById<TextView>(R.id.empty_list_text).setText(R.string.search_prompt)
-        emptyView.isVisible = true
+        emptyView.isVisible = !hasRecentSearches
+    }
+
+    private fun renderRecentSearches() {
+        val queries = recentSearches.get()
+        recentSearchesList.removeAllViews()
+        queries.forEach { query ->
+            val row = layoutInflater.inflate(
+                R.layout.recent_search_row,
+                recentSearchesList,
+                false
+            )
+            row.findViewById<TextView>(R.id.recent_search_query).text = query
+            row.setOnClickListener {
+                saveRecentQuery(query)
+                searchView.setQuery(query, false)
+                liveSearchJob?.cancel()
+                lastLiveSearchQuery = query
+                search(query, false)
+                searchView.clearFocus()
+            }
+            row.findViewById<View>(R.id.recent_search_remove).setOnClickListener {
+                recentSearches.remove(query)
+                renderRecentSearches()
+                if (recentSearches.get().isEmpty()) showSearchPrompt()
+            }
+            recentSearchesList.addView(row)
+        }
+        recentSearchesPanel.isVisible = queries.isNotEmpty() && searchView.query.isNullOrBlank()
+    }
+
+    private fun saveRecentQuery(query: String) {
+        val normalized = query.trim()
+        if (normalized.isEmpty()) return
+        recentSearches.save(normalized)
+        SearchRecentSuggestions(
+            requireContext(),
+            SearchSuggestionProvider.AUTHORITY,
+            SearchSuggestionProvider.MODE
+        ).saveRecentQuery(normalized, null)
     }
 
     private fun populateList(result: SearchResult) {
@@ -330,6 +417,8 @@ class SearchFragment :
     }
 
     override fun onItemClick(item: Identifiable) {
+        activeQuery?.let(::saveRecentQuery)
+        Util.hideKeyboard(activity)
         when (item) {
             is ArtistOrIndex -> {
                 onArtistSelected(item)

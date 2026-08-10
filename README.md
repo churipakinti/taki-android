@@ -1,68 +1,57 @@
-# Ultrasonic
+# Taki for Android
 
-Ultrasonic is free and open-source music streaming Android client for
-[Subsonic][subsonic] [API][subapi] (version 1.7.0 or higher) compatible
-servers.
+**Your music, without distractions.**
 
-## Help wanted
+Taki is a focused Android player for personal and shared music collections.
+Listen online or download your music for offline playback, without letting the
+technology get in the way.
 
-We currently don't have that much time to spend developing Subsonic, so any
-contributions or active developers are always welcomed.
-Have a look at [CONTRIBUTING](docs/CONTRIBUTING.md) to get started.
+Taki works with [Navidrome](https://www.navidrome.org/) and other servers
+compatible with the [Subsonic](http://www.subsonic.org/pages/api.jsp) and
+[OpenSubsonic](https://opensubsonic.netlify.app/) APIs.
 
-## Download
+> Taki is currently in beta. It is not yet published on Google Play or F-Droid;
+> builds linked to the original Ultrasonic project are not Taki releases.
 
-App is available to download at following stores:
+## Features
 
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get it on Google Play" height="70">](https://play.google.com/store/apps/details?id=org.moire.ultrasonic)
-[<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="70">](https://f-droid.org/packages/org.moire.ultrasonic/)
-[<img src="https://ultrasonic.gitlab.io/assets/img/get-it-on-gitlab.png" alt="Get it on GitLab" height="70">](https://gitlab.com/ultrasonic/ultrasonic/-/releases)
+- Stream personal and shared music collections
+- Download music for offline playback
+- Connect to multiple compatible servers
+- Browse playlists, albums, artists, songs, genres, and liked songs
+- Search across your library
+- Dark, distraction-free interface
+- Android Auto and media-session integration
 
-**Warning**: All three versions (Google Play, F-Droid and the APKs) are not
-compatible (not signed by the same key)! You must uninstall one to install
-the other, which will delete all your data.
+## Development
 
-If you want to use the version downloaded from F-Droid or from GitLab with
-**Android Auto**, you must enable Unknown Sources as it is described in
-[this wiki page][wikiaa].
+The project requires a recent Android Studio installation and the Android SDK.
+To build the debug application from the command line:
 
-## Bugs and issues
+```shell
+./gradlew :ultrasonic:assembleDebug
+```
 
-First, see if your issue haven’t been yet reported [here][issues], otherwise
-open [a new issue][newissue].
+The Gradle module and Java/Kotlin package still use the legacy `ultrasonic` and
+`org.moire.ultrasonic` identifiers for compatibility. They do not represent the
+public product name.
 
-## Documentation
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) before proposing a change.
 
-See [documentation](docs/).
+The source repository is hosted at
+[github.com/churipakinti/taki-android](https://github.com/churipakinti/taki-android).
 
-## Contributing
+## Issues
 
-See [CONTRIBUTING](docs/CONTRIBUTING.md).
+Report bugs and request features in the
+[Taki issue tracker](https://github.com/churipakinti/taki-android/issues).
 
-## Supported (tested) Subsonic API implementations
+## License and credits
 
-- [Subsonic][subsonic]
-- [Airsonic-Advanced][airsonic]
-- [Supysonic][supysonic]
-- [Ampache][ampache]
+Taki is free and open-source software distributed under the
+[GNU General Public License v3](LICENSE). See [NOTICE](NOTICE.md) for the Taki
+project notice and upstream attribution.
 
-Other *Subsonic API* implementations should work as well as long as they
-follow API [documentation][subapi].
-
-## License
-
-This software is licensed under the terms of the GNU General Public License
-version 3 (GPLv3).
-
-Full text of the license is available in the [LICENSE](LICENSE) file and
-[online][gpl3].
-
-[wikiaa]: https://gitlab.com/ultrasonic/ultrasonic/-/wikis/Using-Ultrasonic-with-Android-Auto
-[issues]: https://gitlab.com/ultrasonic/ultrasonic/-/issues
-[newissue]: https://gitlab.com/ultrasonic/ultrasonic/-/issues/new
-[subsonic]: http://www.subsonic.org/
-[subapi]: http://www.subsonic.org/pages/api.jsp
-[airsonic]: https://github.com/airsonic-advanced/airsonic-advanced
-[supysonic]: https://github.com/spl0k/supysonic
-[ampache]: https://ampache.org/
-[gpl3]: https://opensource.org/licenses/gpl-3.0.html
+Taki is based on [Ultrasonic](https://gitlab.com/ultrasonic/ultrasonic).
+Ultrasonic and its contributors are credited as the original project; they do
+not maintain or endorse Taki.

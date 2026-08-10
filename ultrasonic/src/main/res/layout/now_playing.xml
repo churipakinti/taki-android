@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:a="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     a:id="@+id/now_playing"
@@ -7,8 +7,13 @@
     a:layout_height="wrap_content"
     a:layout_margin="8dp"
     a:background="@drawable/bg_now_playing"
-    a:gravity="center_vertical"
+    a:clipToOutline="true"
     tools:ignore="Overdraw">
+
+    <LinearLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:gravity="center_vertical">
 
     <com.google.android.material.imageview.ShapeableImageView
         a:id="@+id/now_playing_image"
@@ -98,4 +103,20 @@
         app:iconGravity="textEnd"
         app:iconSize="24dp" />
 
-</LinearLayout>
+    </LinearLayout>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        a:id="@+id/now_playing_progress"
+        a:layout_width="match_parent"
+        a:layout_height="2dp"
+        a:clickable="false"
+        a:focusable="false"
+        a:importantForAccessibility="no"
+        a:max="1000"
+        a:visibility="gone"
+        app:indicatorColor="@color/taki_progress"
+        app:trackColor="@color/taki_divider"
+        app:trackCornerRadius="0dp"
+        app:trackThickness="2dp" />
+
+</FrameLayout>

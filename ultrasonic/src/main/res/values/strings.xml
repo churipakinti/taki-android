@@ -231,6 +231,10 @@
     <string name="search.songs">Songs</string>
     <string name="search.title">Search</string>
     <string name="search.prompt">Search artists, albums, and songs</string>
+    <string name="search.recent">Recent searches</string>
+    <string name="search.clear_all">Clear all</string>
+    <string name="search.remove_recent">Remove from recent searches</string>
+    <string name="search.history_cleared">Search history cleared</string>
     <string name="select_album.empty">No media found</string>
     <string name="select_album.n_selected">%d tracks selected</string>
     <string name="select_album.no_network">Warning: No usable network available.\n If you are using mobile data, you may need to allow downloads on metered connections in the settings.</string>

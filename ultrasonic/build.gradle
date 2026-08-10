@@ -92,6 +92,16 @@ android {
 
 }
 
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set(
+                    "Taki-${output.versionName.get()}-${variant.buildType}.apk"
+            )
+        }
+    }
+}
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }

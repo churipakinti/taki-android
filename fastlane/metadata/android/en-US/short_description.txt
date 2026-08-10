@@ -1,1 +1,1 @@
-Free and open-source music streaming client for Subsonic API compatible servers
+Your music, without distractions

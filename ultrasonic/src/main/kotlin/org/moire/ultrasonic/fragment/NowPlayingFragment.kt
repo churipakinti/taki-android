@@ -15,12 +15,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import io.reactivex.rxjava3.disposables.Disposable
 import java.lang.Exception
 import kotlin.math.abs
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeFragment
 import org.moire.ultrasonic.NavigationGraphDirections
@@ -48,6 +55,8 @@ class NowPlayingFragment : ScopeFragment() {
     private var nowPlayingAlbumArtImage: ImageView? = null
     private var nowPlayingTrack: TextView? = null
     private var nowPlayingArtist: TextView? = null
+    private var progressIndicator: LinearProgressIndicator? = null
+    private var progressJob: Job? = null
 
     private var rxBusSubscription: Disposable? = null
     private val mediaPlayerManager: MediaPlayerManager by inject()
@@ -72,6 +81,7 @@ class NowPlayingFragment : ScopeFragment() {
         nowPlayingTrack = view.findViewById(R.id.now_playing_title)
         nowPlayingTrack?.isSelected = true
         nowPlayingArtist = view.findViewById(R.id.now_playing_artist)
+        progressIndicator = view.findViewById(R.id.now_playing_progress)
         rxBusSubscription = RxBus.playerStateObservable.subscribe { update() }
     }
 
@@ -80,9 +90,11 @@ class NowPlayingFragment : ScopeFragment() {
         update()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        rxBusSubscription!!.dispose()
+    override fun onDestroyView() {
+        progressJob?.cancel()
+        rxBusSubscription?.dispose()
+        progressIndicator = null
+        super.onDestroyView()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -93,6 +105,7 @@ class NowPlayingFragment : ScopeFragment() {
             } else {
                 playButton!!.setIconResource(R.drawable.media_start_shadow)
             }
+            restartProgressUpdates()
 
             val file = mediaPlayerManager.currentMediaItem?.toTrack()
 
@@ -138,6 +151,27 @@ class NowPlayingFragment : ScopeFragment() {
         }
     }
 
+    private fun restartProgressUpdates() {
+        progressJob?.cancel()
+        updateProgress()
+        if (!mediaPlayerManager.isPlaying) return
+        progressJob = viewLifecycleOwner.lifecycleScope.launch {
+            while (isActive && mediaPlayerManager.isPlaying) {
+                delay(PROGRESS_UPDATE_INTERVAL_MS)
+                updateProgress()
+            }
+        }
+    }
+
+    private fun updateProgress() {
+        val duration = mediaPlayerManager.playerDuration
+        val indicator = progressIndicator ?: return
+        indicator.isVisible = duration > 0
+        if (duration <= 0) return
+        val position = mediaPlayerManager.playerPosition.coerceIn(0, duration)
+        indicator.setProgressCompat((position.toLong() * PROGRESS_MAX / duration).toInt(), true)
+    }
+
     private fun handleOnTouch(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -174,5 +208,7 @@ class NowPlayingFragment : ScopeFragment() {
 
     companion object {
         private const val MIN_DISTANCE = 30
+        private const val PROGRESS_MAX = 1000
+        private const val PROGRESS_UPDATE_INTERVAL_MS = 1000L
     }
 }

@@ -1,11 +1,11 @@
 # replayGain
 
-Ultrasonic supports replayGain for volume normalization across songs and albums. A deep dive on
+Taki supports replayGain for volume normalization across songs and albums. A deep dive on
 replayGain is available at the [Hydrogenaudio Wiki](https://wiki.hydrogenaudio.org/index.php?title=ReplayGain_1.0_specification).
 
 ## Usage
 
-replayGain can be enabled in the Ultrasonic settings. The following modes are supported:
+replayGain can be enabled in the Taki settings. The following modes are supported:
  * **Disabled**
    * replayGain is turned off.
  * **Prefer Track**
@@ -29,14 +29,14 @@ number of tools are listed at the
 
 ## Implementation Details
 
-Ultrasonic is able to pull replayGain metadata from tags embedded in id3 tags and vorbis comments of
+Taki is able to pull replayGain metadata from tags embedded in id3 tags and vorbis comments of
 media. Currently it supports the following tags (case insensitive):
  * REPLAYGAIN_TRACK_GAIN
  * REPLAYGAIN_ALBUM_GAIN
  * R128_TRACK_GAIN
  * R128_ALBUM_GAIN
 
-If these tags are not present for a given song Ultrasonic will playback the song at full volume.
+If these tags are not present for a given song Taki will play the song at full volume.
 This can result in significant volume differences when mixing tagged and untagged songs, it's
 recommended to tag all songs with replayGain metadata or disable replayGain.
 

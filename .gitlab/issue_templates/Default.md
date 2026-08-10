@@ -24,9 +24,9 @@ More information about `adb`, the Android Debug Bridge: https://developer.androi
 
 ## System information
 
-### Ultrasonic client
+### Taki client
 
- * **Ultrasonic version**: *version of the app*
+ * **Taki version**: *version of the app*
  * **Android version**: *Version of Android OS on the device*
  * **Device info**: *Device manufacturer, model*
 

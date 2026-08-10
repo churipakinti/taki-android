@@ -20,6 +20,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
@@ -54,6 +56,7 @@ import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.util.Constants
 import org.moire.ultrasonic.util.InfoDialog
 import org.moire.ultrasonic.util.LocaleHelper
+import org.moire.ultrasonic.util.RecentSearches
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.ShortcutUtil
 import org.moire.ultrasonic.util.Storage
@@ -85,6 +88,7 @@ class NavigationActivity : ScopeActivity() {
     private val activeServerProvider: ActiveServerProvider by inject()
 
     private var currentFragmentId: Int = 0
+    private var imeVisible = false
     override fun onCreate(savedInstanceState: Bundle?) {
         Timber.d("onCreate called")
 
@@ -108,6 +112,14 @@ class NavigationActivity : ScopeActivity() {
         contentBackButton = findViewById(R.id.content_back_button)
         contentNavigationHeader = findViewById(R.id.content_navigation_header)
         toolbar = findViewById(R.id.toolbar)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navigation_root)) { _, insets ->
+            val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            if (imeVisible != isImeVisible) {
+                imeVisible = isImeVisible
+                updateChromeVisibility()
+            }
+            insets
+        }
         setSupportActionBar(toolbar)
 
         host = supportFragmentManager
@@ -189,23 +201,8 @@ class NavigationActivity : ScopeActivity() {
                 destination.id == R.id.equalizerFragment
             contentNavigationHeader?.visibility =
                 if (showsContentBackButton) View.VISIBLE else View.GONE
-            bottomNavigation?.visibility = if (destination.id in setOf(
-                    R.id.playerFragment,
-                    R.id.settingsFragment,
-                    R.id.aboutFragment,
-                    R.id.serverSelectorFragment,
-                    R.id.editServerFragment,
-                    R.id.equalizerFragment,
-                    R.id.lyricsFragment
-                )
-            ) View.GONE else View.VISIBLE
             invalidateOptionsMenu()
-            // Handle the hiding of the NowPlaying fragment when the Player is active
-            if (currentFragmentId == R.id.playerFragment) {
-                hideNowPlaying()
-            } else {
-                if (!nowPlayingHidden) showNowPlaying()
-            }
+            updateChromeVisibility()
         }
 
         // Determine if this is a first run
@@ -352,6 +349,7 @@ class NavigationActivity : ScopeActivity() {
     }
 
     private fun handleSearchIntent(query: String?, autoPlay: Boolean) {
+        query?.let { RecentSearches(this).save(it) }
         val suggestions = SearchRecentSuggestions(
             this,
             SearchSuggestionProvider.AUTHORITY,
@@ -446,8 +444,10 @@ class NavigationActivity : ScopeActivity() {
         // The logic for nowPlayingHidden is that the user can dismiss NowPlaying with a gesture,
         // and when the MediaPlayerService requests that it should be shown, it returns
         nowPlayingHidden = false
-        // Do not show for Player fragment
-        if (currentFragmentId == R.id.playerFragment) {
+        // Do not show for Player or while Search is using the IME.
+        if (currentFragmentId == R.id.playerFragment ||
+            (currentFragmentId == R.id.searchFragment && imeVisible)
+        ) {
             hideNowPlaying()
             return
         }
@@ -467,6 +467,26 @@ class NavigationActivity : ScopeActivity() {
 
     private fun hideNowPlaying() {
         nowPlayingView?.visibility = View.GONE
+    }
+
+    private fun updateChromeVisibility() {
+        val hideForDestination = currentFragmentId in setOf(
+            R.id.playerFragment,
+            R.id.settingsFragment,
+            R.id.aboutFragment,
+            R.id.serverSelectorFragment,
+            R.id.editServerFragment,
+            R.id.equalizerFragment,
+            R.id.lyricsFragment
+        )
+        val hideForSearchIme = currentFragmentId == R.id.searchFragment && imeVisible
+        bottomNavigation?.visibility =
+            if (hideForDestination || hideForSearchIme) View.GONE else View.VISIBLE
+        if (currentFragmentId == R.id.playerFragment || hideForSearchIme) {
+            hideNowPlaying()
+        } else if (!nowPlayingHidden) {
+            showNowPlaying()
+        }
     }
 
     private fun updateBottomNavigationAvailability() {

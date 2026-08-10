@@ -1,18 +1,18 @@
-Ultrasonic is a Subsonic (and compatible servers) client to Android. You can use Ultrasonic to connect with your server and listen music.
+Your music, without distractions.
 
-Main features:
-* Small size & fast
-* Material You theme with dark and light variants
-* Multiple server support
-* Download tracks for offline playback
-* Bookmarks
-* Playlists on server
-* Shuffled playback
-* Jukebox mode
-* And much more!!
+Taki is a focused player for personal and shared music collections. Listen online or download your music for offline playback, without letting the technology get in the way.
 
-Note: Ultrasonic uses semantic release versions. Releases with a zero in the last digit introduce new features or significant changes, all other releases focus on fixing bugs.
+Taki works with Navidrome and other servers compatible with the Subsonic and OpenSubsonic APIs.
 
-The source code is available with GPL license in GitLab: https://gitlab.com/ultrasonic/ultrasonic
-If you have any issue, please post in: https://gitlab.com/ultrasonic/ultrasonic/issues
-Play store icon designed by: http://www.flaticon.com/authors/sebastien-gabriel
+Features:
+* Stream your personal music collection
+* Download music for offline playback
+* Connect to multiple compatible servers
+* Browse playlists, albums, artists, songs, genres, and liked songs
+* Search across your library
+* Dark, distraction-free interface
+* Android Auto and media-session integration
+
+Taki is free and open-source software based on Ultrasonic and distributed under the GNU GPLv3 license. Ultrasonic and its contributors are credited as the original project.
+
+Source code and issues: https://github.com/churipakinti/taki-android
