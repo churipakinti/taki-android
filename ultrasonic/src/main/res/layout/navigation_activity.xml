@@ -6,7 +6,6 @@
     a:layout_width="match_parent"
     a:layout_height="match_parent"
     a:background="?attr/colorSurface"
-    a:fitsSystemWindows="true"
     a:orientation="vertical"
     tools:context="org.moire.ultrasonic.activity.NavigationActivity">
 

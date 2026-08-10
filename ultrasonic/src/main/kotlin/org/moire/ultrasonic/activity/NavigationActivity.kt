@@ -22,6 +22,7 @@ import android.view.View
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
@@ -112,7 +113,8 @@ class NavigationActivity : ScopeActivity() {
         contentBackButton = findViewById(R.id.content_back_button)
         contentNavigationHeader = findViewById(R.id.content_navigation_header)
         toolbar = findViewById(R.id.toolbar)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navigation_root)) { _, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navigation_root)) { view, insets ->
+            view.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
             val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             if (imeVisible != isImeVisible) {
                 imeVisible = isImeVisible
