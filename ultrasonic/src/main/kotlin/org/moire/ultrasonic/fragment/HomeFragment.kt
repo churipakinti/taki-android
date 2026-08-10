@@ -181,9 +181,9 @@ class HomeFragment : Fragment(), RefreshableFragment {
             songs = tracks,
             autoPlay = false,
             shuffle = false,
-            insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = 0
         )
-        mediaPlayerManager.play(0)
     }
 
     private fun load() {

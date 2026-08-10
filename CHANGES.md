@@ -1,5 +1,68 @@
 # Changes
 
+## ANR real al reproducir un álbum grande (Bach 333, 5.517 canciones)
+
+### Síntomas
+
+- Usuario reportó: abrir el álbum "Bach 333: The New Complete Edition" (222
+  discos, 5.517 canciones), tocar una canción para reproducir, la app se
+  demora, empieza a reproducir y al rato aparece "Taki isn't responding" —
+  bloqueando la reproducción.
+
+### Causa
+
+La protección contra ANR aplicada anteriormente (ver la sección "Corrección
+de bloqueo en el mini reproductor" más abajo y
+`docs/POSIBLES_ERRORES_Y_VERIFICACION.md`) sólo cubría la restauración de la
+sesión guardada al abrir la app. El camino real que dispara este bug —tocar
+una canción o el botón Play de un álbum enorme para empezar a reproducir
+ahora— nunca pasó por esa protección: `TrackCollectionFragment.playFromHere()`
+(y los equivalentes en `ArtistDetailFragment`, `BookmarksFragment`,
+`HomeFragment`, `SearchFragment`, y el botón "Play all") llaman a
+`MediaPlayerManager.addToPlaylist()`, que convertía **todas** las pistas a
+`MediaItem` y hacía **un solo** `controller.addMediaItems()` de forma
+síncrona en el hilo principal — con 5.517 pistas, exactamente el mismo
+patrón de ANR ya documentado, en un camino de código distinto.
+
+### Fix
+
+`addToPlaylist()` ahora corre en una corrutina de `mainScope` protegida por
+un `Mutex` (reemplaza el `@Synchronized` anterior, que no es seguro combinado
+con corrutinas):
+
+- La conversión `Track → MediaItem` se hace en `Dispatchers.Default` (fuera
+  del hilo principal), ya que es trabajo de CPU puro sin llamadas a Media3.
+- `controller.addMediaItems()` se llama en bloques de 200 elementos
+  (`ADD_MEDIA_ITEMS_CHUNK_SIZE`), con un `yield()` entre cada bloque — esto
+  mantiene la llamada en el hilo de aplicación que Media3 exige, pero le
+  devuelve el control al despachador de entrada entre bloques para que la
+  app no deje de responder aunque el total de trabajo tome varios segundos.
+- Se agregó un parámetro opcional `startIndex`/`startPositionMs` a
+  `addToPlaylist()` para que "encolar y reproducir en una posición
+  específica" quede atómico dentro de la misma corrutina, en vez de que cada
+  pantalla llame `play(index)` por separado inmediatamente después (lo cual
+  ya no podía asumirse síncrono). Se actualizaron los 5 puntos de llamada que
+  dependían de esa secuencia: `TrackCollectionFragment.playFromHere()`,
+  `ArtistDetailFragment.playTrack()`, `BookmarksFragment.playNow()` (con
+  posición, para resumir en el punto guardado), `HomeFragment.playMix()`, y
+  `SearchFragment.onSongSelected()`.
+
+### Verificación
+
+Compilado, tests unitarios verdes, e instalado en el Pixel 7 físico contra el
+álbum real de 5.517 canciones: se tocó una pista a la mitad del disco 1,
+logcat confirmó `Adding 5517 media items` (la cola completa, sin recortar) y
+cero `FATAL EXCEPTION`/ANR/acceso a `MediaController` desde hilo incorrecto;
+la pista tocada quedó marcada como activa y reproduciendo. Se registraron dos
+saltos de ~1 segundo de frames durante el encolado (jank perceptible pero muy
+por debajo del umbral de 5s de ANR) — no bloquea el uso, queda como posible
+ajuste futuro de tamaño de bloque si se quiere más fluidez.
+
+Archivo principal:
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/MediaPlayerManager.kt`.
+También `TrackCollectionFragment.kt`, `ArtistDetailFragment.kt`,
+`BookmarksFragment.kt`, `HomeFragment.kt`, `SearchFragment.kt`.
+
 ## Identificación del cliente ante el servidor: Ultrasonic → Taki
 
 - El parámetro `c=` que la app manda en cada request a la API de

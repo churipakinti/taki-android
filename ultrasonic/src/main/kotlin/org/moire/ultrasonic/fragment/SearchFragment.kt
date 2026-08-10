@@ -397,13 +397,14 @@ class SearchFragment :
         if (!append) {
             mediaPlayerManager.clear()
         }
+        val targetIndex = mediaPlayerManager.mediaItemCount
         mediaPlayerManager.addToPlaylist(
             listOf(song),
             autoPlay = false,
             shuffle = false,
-            insertionMode = MediaPlayerManager.InsertionMode.APPEND
+            insertionMode = MediaPlayerManager.InsertionMode.APPEND,
+            startIndex = targetIndex
         )
-        mediaPlayerManager.play(mediaPlayerManager.mediaItemCount - 1)
         toast(resources.getQuantityString(R.plurals.n_songs_added_to_end, 1, 1))
     }
 

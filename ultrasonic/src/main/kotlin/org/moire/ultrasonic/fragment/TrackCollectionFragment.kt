@@ -773,9 +773,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             songs = allTracks,
             autoPlay = false,
             shuffle = false,
-            insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = startIndex
         )
-        mediaPlayerManager.play(startIndex)
         return true
     }
 

@@ -252,9 +252,9 @@ class ArtistDetailFragment :
             songs = tracks,
             autoPlay = false,
             shuffle = false,
-            insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = startIndex
         )
-        mediaPlayerManager.play(startIndex)
     }
 
     private fun openAlbum(album: Album) {

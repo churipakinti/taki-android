@@ -72,12 +72,10 @@ class BookmarksFragment : TrackCollectionFragment() {
                 songs = songs,
                 autoPlay = false,
                 shuffle = false,
-                insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+                insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+                startIndex = 0,
+                startPositionMs = songs[0].bookmarkPosition
             )
-
-            mediaPlayerManager.seekTo(0, songs[0].bookmarkPosition)
-            mediaPlayerManager.prepare()
-            mediaPlayerManager.play()
         }
     }
 }

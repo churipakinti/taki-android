@@ -29,7 +29,10 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.koin.core.component.KoinComponent
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.app.UApp
@@ -54,6 +57,13 @@ private const val CONTROLLER_SWITCH_DELAY = 500L
 private const val VOLUME_DELTA = 0.05f
 private const val PLAYBACK_CHECKPOINT_INTERVAL = 5_000L
 
+// A single addMediaItems() call with a huge list (e.g. a several-hundred-disc box
+// set) can block the main thread long enough to ANR, since Media3 requires
+// MediaController calls on the app's main thread. Adding in chunks and yielding
+// between them lets input dispatch keep up. See
+// docs/POSIBLES_ERRORES_Y_VERIFICACION.md item 1 for the original ANR this mirrors.
+private const val ADD_MEDIA_ITEMS_CHUNK_SIZE = 200
+
 /**
  * The Media Player Manager can forward commands to the Media3 controller as
  * well as switch between different player interfaces (local, remote, cast etc).
@@ -76,6 +86,7 @@ class MediaPlayerManager(
     private val rxBusSubscription: CompositeDisposable = CompositeDisposable()
 
     private var mainScope = CoroutineScope(Dispatchers.Main)
+    private val addToPlaylistMutex = Mutex()
 
     private var sessionToken = SessionToken(
         UApp.applicationContext(),
@@ -453,12 +464,35 @@ class MediaPlayerManager(
         controller?.stop()
     }
 
-    @Synchronized
     fun addToPlaylist(
         songs: List<Track>,
         autoPlay: Boolean,
         shuffle: Boolean,
-        insertionMode: InsertionMode
+        insertionMode: InsertionMode,
+        startIndex: Int? = null,
+        startPositionMs: Int = 0
+    ) {
+        mainScope.launch {
+            addToPlaylistMutex.withLock {
+                addToPlaylistLocked(
+                    songs = songs,
+                    autoPlay = autoPlay,
+                    shuffle = shuffle,
+                    insertionMode = insertionMode,
+                    startIndex = startIndex,
+                    startPositionMs = startPositionMs
+                )
+            }
+        }
+    }
+
+    private suspend fun addToPlaylistLocked(
+        songs: List<Track>,
+        autoPlay: Boolean,
+        shuffle: Boolean,
+        insertionMode: InsertionMode,
+        startIndex: Int?,
+        startPositionMs: Int
     ) {
         var insertAt = 0
 
@@ -473,19 +507,42 @@ class MediaPlayerManager(
             }
         }
 
-        val mediaItems: List<MediaItem> = songs.map {
-            val result = it.toMediaItem()
-            result
+        // Building MediaItems is pure CPU work with no Media3 call involved, so it's
+        // safe to do off the main thread even for a list of thousands of tracks.
+        val mediaItems: List<MediaItem> = withContext(Dispatchers.Default) {
+            songs.map { it.toMediaItem() }
         }
 
         Timber.w("Adding ${mediaItems.size} media items")
-        controller?.addMediaItems(insertAt, mediaItems)
+
+        // See ADD_MEDIA_ITEMS_CHUNK_SIZE: add in chunks and yield between them instead
+        // of a single addMediaItems() call, so a huge queue can't block input dispatch
+        // long enough to ANR.
+        var addedAt = insertAt
+        for (chunk in mediaItems.chunked(ADD_MEDIA_ITEMS_CHUNK_SIZE)) {
+            controller?.addMediaItems(addedAt, chunk)
+            addedAt += chunk.size
+            yield()
+        }
 
         // There is a bug in media3 ( https://github.com/androidx/media/issues/480 ),
         // so we must first add the tracks, and then enable shuffle
         if (shuffle) isShufflePlayEnabled = true
 
         prepare()
+
+        if (startIndex != null) {
+            // Caller wants playback to start at a specific item (optionally at a specific
+            // position within it, e.g. resuming a bookmark) instead of the autoPlay/shuffle
+            // behavior below.
+            if (startPositionMs > 0) {
+                controller?.seekTo(startIndex, startPositionMs.toLong())
+                controller?.play()
+            } else {
+                play(startIndex)
+            }
+            return
+        }
 
         // Playback doesn't start correctly when the player is in STATE_ENDED.
         // So we need to call seek before (this is what play(0,0)) does.
