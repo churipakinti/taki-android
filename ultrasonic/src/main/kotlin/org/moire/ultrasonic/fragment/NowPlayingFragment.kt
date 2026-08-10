@@ -7,16 +7,17 @@
 
 package org.moire.ultrasonic.fragment
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.button.MaterialButton
@@ -24,10 +25,6 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import io.reactivex.rxjava3.disposables.Disposable
 import java.lang.Exception
 import kotlin.math.abs
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeFragment
 import org.moire.ultrasonic.NavigationGraphDirections
@@ -56,7 +53,7 @@ class NowPlayingFragment : ScopeFragment() {
     private var nowPlayingTrack: TextView? = null
     private var nowPlayingArtist: TextView? = null
     private var progressIndicator: LinearProgressIndicator? = null
-    private var progressJob: Job? = null
+    private var progressAnimator: ObjectAnimator? = null
 
     private var rxBusSubscription: Disposable? = null
     private val mediaPlayerManager: MediaPlayerManager by inject()
@@ -91,7 +88,7 @@ class NowPlayingFragment : ScopeFragment() {
     }
 
     override fun onDestroyView() {
-        progressJob?.cancel()
+        progressAnimator?.cancel()
         rxBusSubscription?.dispose()
         progressIndicator = null
         super.onDestroyView()
@@ -152,24 +149,20 @@ class NowPlayingFragment : ScopeFragment() {
     }
 
     private fun restartProgressUpdates() {
-        progressJob?.cancel()
-        updateProgress()
-        if (!mediaPlayerManager.isPlaying) return
-        progressJob = viewLifecycleOwner.lifecycleScope.launch {
-            while (isActive && mediaPlayerManager.isPlaying) {
-                delay(PROGRESS_UPDATE_INTERVAL_MS)
-                updateProgress()
-            }
-        }
-    }
-
-    private fun updateProgress() {
+        progressAnimator?.cancel()
         val duration = mediaPlayerManager.playerDuration
         val indicator = progressIndicator ?: return
         indicator.isVisible = duration > 0
         if (duration <= 0) return
         val position = mediaPlayerManager.playerPosition.coerceIn(0, duration)
-        indicator.setProgressCompat((position.toLong() * PROGRESS_MAX / duration).toInt(), true)
+        val progress = (position.toLong() * PROGRESS_MAX / duration).toInt()
+        indicator.setProgressCompat(progress, false)
+        if (!mediaPlayerManager.isPlaying || position >= duration) return
+        progressAnimator = ObjectAnimator.ofInt(indicator, "progress", progress, PROGRESS_MAX).apply {
+            this.duration = (duration - position).toLong()
+            interpolator = LinearInterpolator()
+            start()
+        }
     }
 
     private fun handleOnTouch(event: MotionEvent): Boolean {
@@ -209,6 +202,5 @@ class NowPlayingFragment : ScopeFragment() {
     companion object {
         private const val MIN_DISTANCE = 30
         private const val PROGRESS_MAX = 1000
-        private const val PROGRESS_UPDATE_INTERVAL_MS = 1000L
     }
 }

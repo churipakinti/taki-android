@@ -1,5 +1,183 @@
 # Changes
 
+## Corrección de bloqueo en el mini reproductor
+
+- La barra de progreso consultaba cada segundo `playerDuration` y
+  `playerPosition` desde el hilo principal, añadiendo tráfico sincronizado y
+  trabajo repetitivo durante toda la reproducción.
+- Se eliminó el sondeo: al cambiar el estado se toma una sola posición válida y
+  un `ObjectAnimator` lineal mueve la barra por el tiempo restante. Pausa,
+  cambio de pista y destrucción de la vista cancelan y recalculan la animación.
+  Media3 permanece en su hilo de aplicación obligatorio y no existe trabajo
+  periódico ni acceso desde un hilo incorrecto.
+- El checkpoint de restauración de sesión también reconstruía la cola completa
+  en el hilo principal cada cinco segundos. Ahora reutiliza la última instantánea
+  serializada y el checkpoint periódico solo captura índice, posición, shuffle y
+  repeat; la cola completa se vuelve a convertir únicamente cuando cambia.
+
+## Corrección de solapamiento con la barra de estado
+
+- El listener central añadido para observar la apertura del teclado reemplazaba
+  accidentalmente el manejo automático de `fitsSystemWindows`, dejando títulos
+  como Search y Library debajo de la hora y los iconos del sistema.
+- `NavigationActivity` aplica ahora explícitamente el inset superior de la barra
+  de estado a su raíz y conserva en el mismo listener la detección del IME. El
+  ajuste es central y no modifica tamaños ni estructura de las pantallas.
+
+## Pase final de estabilidad y consistencia
+
+- Se recorrieron Home, Library, Liked Songs, Search, Downloads, Now Playing,
+  Lyrics, cola, Settings y About en el emulador conservando los datos existentes.
+- Se verificaron el regreso desde Liked Songs a Library, el cierre del teclado
+  antes de abandonar Search, la ocultación de la navegación de Taki con el IME,
+  la apertura de Lyrics y cola, y la ausencia de navegación inferior en Player.
+- Now Playing sobrevivió a la recreación portrait/landscape/portrait con título,
+  progreso, transporte y controles secundarios presentes en ambas orientaciones.
+- About muestra `Taki (0.1.0-beta)` y reserva Ultrasonic únicamente para la
+  atribución GPLv3. La búsqueda estática no encontró nuevas superficies visibles
+  con la identidad anterior; permanecen identificadores y destinos internos por
+  compatibilidad.
+- `testDebugUnitTest` y `assembleDebug` finalizaron correctamente. Un ANR aislado
+  durante una ráfaga de `uiautomator`/capturas coincidió con saturación de
+  `system_server` y no se reprodujo en una ejecución limpia; la segunda ronda
+  quedó sin ANR, excepción fatal ni cierre del proceso.
+
+## Identidad del repositorio Taki
+
+- El README y la guía de contribución presentan Taki como el proyecto actual,
+  enlazan su repositorio e incidencias y describen sus principios de producto.
+- Se añadió `NOTICE.md` para documentar la licencia, el carácter de obra
+  modificada, la atribución a Ultrasonic y la razón por la que algunos
+  identificadores internos conservan el nombre heredado.
+- `LICENSE` se conserva como el texto oficial e inalterado de GNU GPLv3; la
+  identidad y atribución específicas del proyecto viven en el aviso separado.
+
+## Mini reproductor y búsquedas recientes
+
+- El mini reproductor muestra una línea de progreso no interactiva de 2dp sobre su borde superior.
+  Solo se actualiza mientras la reproducción está activa, se detiene al pausar y se oculta cuando
+  la duración no es válida.
+- Search conserva localmente hasta diez búsquedas confirmadas. Normaliza espacios, evita duplicados
+  sin distinguir mayúsculas y permite reutilizar, eliminar individualmente o limpiar todo el historial.
+- El historial se guarda al confirmar desde el teclado o al abrir un resultado; escribir para obtener
+  resultados en vivo no crea entradas por sí solo.
+- Mientras el teclado está abierto en Search se ocultan el mini reproductor y la navegación inferior
+  de Taki, sin alterar la barra de navegación del sistema. El primer gesto o botón Atrás cierra el
+  teclado y el siguiente mantiene la navegación habitual.
+- Al abrir un resultado se cierra el teclado y se conserva el estado de búsqueda al volver.
+
+## Nombre de los artefactos APK
+
+- Gradle deja de publicar el nombre técnico heredado `ultrasonic-debug.apk`. Cada variante usa
+  ahora la marca, versión y tipo de compilación: por ejemplo `Taki-0.1.0-beta-debug.apk` y
+  `Taki-0.1.0-beta-release.apk`.
+- El sufijo de variante permanece explícito para evitar compartir accidentalmente una build de
+  desarrollo como si fuera una versión firmada de distribución.
+
+## Pista activa visible en toda la biblioteca y Search sin icono heredado
+
+- El mismo estado visual usado en la cola —ecualizador pequeño y título con el acento de Taki—
+  se aplica ahora a las filas compartidas de canciones. Por ello la pista activa queda marcada al
+  reproducir desde un álbum, playlist, lista de canciones o resultado de búsqueda, sin agregar un
+  fondo saturado ni modificar las acciones de la fila.
+- Fuera de la cola la coincidencia se determina por la canción, aunque su posición visual no sea
+  la misma que en la cola. Dentro de la cola se conserva además el índice para distinguir una
+  canción repetida varias veces.
+- Search reemplaza el símbolo radial heredado de Ultrasonic por una lupa neutra en su estado
+  inicial. El indicador de progreso real sigue reservado para una búsqueda en curso.
+
+## Estado de letras y títulos largos en reproducción
+
+- El estado de letras sincronizadas se presenta ahora como un control compuesto: la etiqueta fija
+  `Sync` permanece visible debajo y únicamente cambia el icono entre visto y equis. El color sigue
+  diferenciando el estado sin depender solo de él para explicar qué representa el símbolo.
+- Los títulos largos usan marquee continuo en Lyrics, Now Playing y el mini reproductor, siempre
+  dentro del espacio reservado antes de los controles derechos.
+- En la cola solo se desplaza la pista que está sonando; las demás filas permanecen quietas para
+  evitar una lista llena de animaciones simultáneas. Al reciclar una fila, su estado animado se
+  restablece según la pista activa.
+
+## Limpieza de producto: ajustes y funciones heredadas
+
+- Las tasas de bits dejan de presentarse como once números técnicos y pasan a cinco niveles:
+  Baja (96), Normal (160), Alta (256), Máxima (320) y Original (sin límite). Las preferencias
+  antiguas se migran automáticamente al nivel más cercano.
+- Network usa nombres orientados a la tarea: calidad por datos móviles, por Wi-Fi y de descarga.
+  ReplayGain y la reproducción por hardware se agrupan como reproducción avanzada; Equalizer y
+  el comportamiento al iniciar reproducción permanecen como opciones principales.
+- Shares, Bookmarks y Podcasts dejan de publicarse en la raíz de Android Auto. La prueba de
+  conexión continúa detectando capacidades internamente, pero su resultado visible se limita a
+  Jukebox, la única función adicional que Taki todavía presenta como producto.
+- Se conservan modelos, base de datos, endpoints y destinos heredados para compatibilidad; esta
+  limpieza elimina accesos visibles, no datos ni soporte interno.
+
+## Cola de reproducción modernizada
+
+- La cola de Now Playing deja de reutilizar la fila técnica heredada y adopta una composición
+  musical compacta: encabezado con cantidad, portada de 52dp, título/artista y asa de arrastre a
+  la derecha.
+- La pista actual se identifica mediante un ecualizador y título en el acento de Taki, sin elevar
+  ni rellenar toda la fila; las demás pistas mantienen colores neutros.
+- Se conservaron sin cambios tocar para reproducir, arrastrar para reordenar y deslizar para
+  eliminar.
+
+## Restauración fiable de la sesión de reproducción
+
+- Se completó la infraestructura heredada que ya serializaba cola, pista actual, posición,
+  shuffle y repeat: mientras hay reproducción se guarda ahora un checkpoint cada cinco segundos,
+  evitando volver a una posición antigua si Android termina el proceso abruptamente.
+- Los cambios de shuffle y repeat publican inmediatamente un nuevo estado para persistirse sin
+  depender de que después cambie la pista o se pause.
+- La restauración normal al abrir Taki reconstruye la cola y prepara la pista en pausa; solo una
+  orden explícita de reproducción recibida externamente puede solicitar autoplay.
+- El callback de inicialización se ejecuta también cuando todavía no existe una sesión guardada,
+  por lo que el primer uso y los controles multimedia no esperan una restauración inexistente.
+
+## Encabezados internos de Settings
+
+- Todas las categorías de Settings conservan ahora el encabezado tipográfico de Taki y el botón
+  de regreso compacto, en lugar de reactivar el toolbar elevado heredado.
+- Equalizer adopta el mismo tratamiento al abrirse desde Now Playing.
+- Se retiró de la interfaz la preferencia heredada `Clear Bookmark`; no se borran posiciones ni
+  datos existentes y no cambia el comportamiento de reproducción.
+
+## Composición visual de Now Playing
+
+- Se reorganizó únicamente la composición del reproductor: el panel de información y controles
+  ahora es una superficie flotante con esquinas de 28dp, margen exterior visible y padding interno
+  de 24dp horizontal y 28dp vertical.
+- Título, artista, progreso y tiempos comparten ejes; el favorito conserva un objetivo táctil fijo
+  de 48dp para que títulos largos se truncen sin desplazarlo.
+- Se normalizaron ritmo vertical y tamaños de controles: transporte de 64dp, icono principal de
+  32dp, anterior/siguiente de 30dp, modos de 24dp y acciones secundarias con objetivos de 48dp.
+- Shuffle y repeat mantienen exactamente las mismas acciones, pero ahora distinguen el estado
+  inactivo con el gris secundario y el activo con el acento de Taki.
+- No se modificaron navegación, reproducción ni otras pantallas. Verificado en un Pixel 7 físico
+  con navegación de tres botones, altura reducida a 1080x1920 y fuente al 130%, además de recursos
+  debug, compilación Kotlin, pruebas unitarias, ensamblado e instalación del APK.
+
+Archivos principales:
+- `ultrasonic/src/main/res/values/player_dimensions.xml`
+- `ultrasonic/src/main/res/drawable/bg_player_panel.xml`
+- `ultrasonic/src/main/res/layout/current_playing.xml`
+- `ultrasonic/src/main/res/layout/player_media_info.xml`
+- `ultrasonic/src/main/res/layout/player_slider.xml`
+- `ultrasonic/src/main/res/layout/media_buttons.xml`
+- `ultrasonic/src/main/res/layout/player_secondary_controls.xml`
+- `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/PlayerFragment.kt`
+
+## Pase visual de Search
+
+- Search ahora tiene un encabezado propio consistente con Library y Downloads, y el campo usa una
+  superficie neutra compacta con borde discreto en lugar de una cápsula elevada genérica.
+- Antes de escribir se muestra `Search artists, albums, and songs`; al limpiar la consulta se
+  restablecen el estado inicial y la lista, mientras que una búsqueda vacía conserva el mensaje
+  específico de “sin resultados”. Ambos estados tienen recursos equivalentes en español.
+- Los encabezados Artists/Albums/Songs adoptan el espaciado y la jerarquía neutra de Taki, y
+  `Show more` utiliza un objetivo táctil Material de 48dp alineado con el contenido.
+- No se modificaron endpoints, debounce, límites, autoplay ni navegación. Verificado mediante
+  recursos debug, compilación Kotlin, pruebas unitarias y `git diff --check`.
+
 ## Pantalla interna de artista
 
 - Se agregó `ArtistDetailFragment`, una pantalla dedicada inspirada en Spotify que reemplaza
@@ -1321,3 +1499,260 @@ Archivos: `core/subsonic-api/.../models/StructuredLyrics.kt`,
 `lyrics_line_item.xml`, `LyricsLineAdapter.kt`, `LyricsFragment.kt`,
 `player_secondary_controls.xml`, `PlayerFragment.kt`, `strings.xml`,
 `SubsonicApiGetLyricsBySongIdTest.kt`, `APILyricsConverterTest.kt`.
+
+## Player: pulido final + auditoría de consistencia visual
+
+Se completó el segundo paso del orden visual acordado (pulido final del Player) y, en la misma
+pasada, el tercer paso (auditoría explícita de consistencia entre las pantallas ya migradas).
+
+- **Composición más compacta** (`current_playing.xml`, `player_media_info.xml`,
+  `player_slider.xml`, `media_buttons.xml`, `player_secondary_controls.xml`): la portada ganó
+  espacio útil (margen 36→28dp) y el panel inferior perdió aire acumulado entre secciones. Título,
+  artista, barra, tiempos y las dos filas de controles usan ahora un ritmo consistente; el título
+  pasó a `TitleLarge`, los tiempos a `BodySmall` con `colorOnSurfaceVariant`, play/pause bajó de
+  48/74dp a 44/64dp y las utilidades quedaron en touch targets de 36dp con separación menor.
+- **Toolbar limpia** (`PlayerFragment.kt`, `nowplaying.xml`): el título dejó de mostrar el nombre
+  técnico del build (`ultrasonic-test`) y ahora dice `Now Playing`. Se quitó el botón de cola
+  duplicado de la toolbar porque la cola ya tiene acceso explícito permanente en la fila
+  secundaria; "Guardar playlist" pasó al overflow por la misma razón (el `+` inferior ya es el
+  acceso visible). Se eliminó también la rama muerta del handler del menú retirado.
+- **Auditoría transversal**: se compararon Home, Artist Detail, Album Detail, Player, Playlists y
+  Downloads tanto por layouts como en el Pixel 7. Se conservaron diferencias semánticas válidas
+  (check de descarga pasivo en canciones vs. botón de descargar/eliminar en Playlists; no se añadió
+  otro estado a las filas Popular). La discrepancia objetiva encontrada fue un radio de tarjeta de
+  5dp en cuatro layouts creados en rondas distintas; se unificó al baseline de 4dp en
+  `grid_item_playlist.xml`, `list_item_playlist.xml`, `list_item_downloaded_album.xml` y
+  `server_row.xml`.
+- **Pruebas reales pendientes desde rondas anteriores, ahora hechas**: en el Pixel 7 se recorrieron
+  todos los grupos de Settings y el back de la navegación de dos niveles; se alternó y restauró un
+  switch; Equalizer abrió y volvió; Downloads renderizó álbumes descargados reales y abrió un
+  detalle local; la cola abrió desde el botón inferior y el menú largo mostró `Favorite` y `Rate`
+  sin la estrella en la fila. No se confirmó una eliminación ni se cambió un rating porque eso
+  habría alterado datos reales del usuario. Sin crashes ni `FATAL EXCEPTION` en logcat.
+
+Archivos: `current_playing.xml`, `player_media_info.xml`, `player_slider.xml`, `media_buttons.xml`,
+`player_secondary_controls.xml`, `nowplaying.xml`, `PlayerFragment.kt`,
+`grid_item_playlist.xml`, `list_item_playlist.xml`, `list_item_downloaded_album.xml`,
+`server_row.xml`.
+
+## Superficie estrictamente musical: Bookmarks fuera + videos filtrados de Search
+
+Se aplicó a Bookmarks el mismo criterio que ya se había usado para Podcasts, Video, Chat y
+Shares: **fuera de la superficie del producto, sin borrar la infraestructura interna**. Esto evita
+una refactorización riesgosa de modelos/API/descargas compartidas y mantiene más sencilla una
+futura integración de cambios upstream.
+
+- `navigation_drawer.xml`: se retiró Bookmarks del drawer.
+- `nowplaying.xml` + `PlayerFragment.kt`: se retiraron `Set Bookmark`/`Delete Bookmark` del
+  overflow del Player y toda su rama de UI/ejecución. El endpoint y `BookmarksFragment` se
+  conservan internamente, pero ya no existe una ruta visible hacia ellos.
+- `NavigationActivity.kt` + `navigation_graph.xml`: se eliminó la acción global y el manejo de
+  navegación de Bookmarks, junto con referencias dinámicas antiguas a menús de Chat/Shares/
+  Podcasts/Video que ya no existen en el drawer. Esos destinos internos permanecen compilables,
+  pero dejan de tratarse como destinos top-level de la aplicación.
+- `SearchFragment.kt`: la API puede devolver `Track.isVideo` mezclado con canciones aunque la
+  pantalla Video esté oculta. Ahora esos resultados se filtran antes de construir la lista y antes
+  del autoplay, evitando que Search reintroduzca un acceso accidental al reproductor de video.
+- La lista de capacidades de `Test Connection` se mantiene: informa técnicamente qué soporta el
+  servidor, pero no ofrece navegación ni activa esas funciones en la experiencia del oyente.
+
+Compilación y pruebas unitarias verificadas; drawer, Player y Search revisados en el Pixel 7.
+
+Archivos: `navigation_drawer.xml`, `nowplaying.xml`, `navigation_graph.xml`,
+`NavigationActivity.kt`, `PlayerFragment.kt`, `SearchFragment.kt`.
+
+## Navegación principal inferior + hub “Tu biblioteca”
+
+Se reemplazó el drawer como navegación diaria por cuatro destinos persistentes y predecibles:
+**Home, Library, Search y Downloads**. El mini-player permanece inmediatamente encima de la
+barra y sigue siendo la entrada al Player completo; en Player y pantallas auxiliares la barra se
+oculta para no competir con la navegación contextual. Downloads también se oculta cuando no hay
+un servidor activo disponible.
+
+La selección y administración de servidores no quedó perdida con el drawer: el icono de
+biblioteca de la toolbar abre el nuevo hub **Your library**, muestra el servidor activo y ofrece
+**Switch library**, **Add library**, **Settings** y **About**. Cambiar y agregar reutilizan las
+pantallas existentes, incluyendo el argumento `index = -1` requerido para crear un servidor.
+Search ahora es un destino principal y su campo expandido se muestra únicamente dentro de esa
+pestaña. También se retiró de `NavigationActivity` todo el estado, callbacks y configuración
+muertos que pertenecían al drawer.
+
+Verificación: compilación Kotlin, pruebas de `core:subsonic-api`, pruebas unitarias de
+`ultrasonic` y `assembleDebug` completaron correctamente. El lint global continúa fallando por
+la deuda histórica del repositorio (1.683 errores fuera del alcance de esta migración), no por
+errores de compilación de la navegación nueva.
+
+Archivos: `navigation_activity.xml`, `bottom_navigation.xml`, `library_hub_action.xml`,
+`library_hub_popup.xml`, `NavigationActivity.kt`, `strings.xml`.
+
+## Home y Library sin header global pesado
+
+La migración de navegación se ajustó a la dirección visual de Taki: Home ya no reserva una
+toolbar completa para repetir el nombre de la pestaña. El saludo abre directamente el contenido
+y comparte su fila con un botón de tres puntos; ese overflow conserva el acceso a biblioteca
+actual, cambiar/agregar biblioteca, Settings y About. Los accesos rápidos quedan inmediatamente
+debajo, como en el mockup de Home.
+
+Library también dejó de depender de la toolbar global: ahora tiene un encabezado integrado con
+el título **Library** y una acción textual **Your library**, más reconocible que el anterior icono
+aislado. Search y las pantallas contextuales siguen mostrando toolbar porque allí contiene el
+campo o la navegación de regreso. El popup acepta ahora cualquier vista como ancla para compartir
+la misma lógica entre Home, Library y los destinos que aún usan toolbar.
+
+Verificado en Pixel 7: Home sin toolbar, overflow funcional, Library sin toolbar con acceso
+explícito y restauración correcta de toolbar + campo expandido al entrar en Search. Pruebas
+unitarias y `assembleDebug` completaron correctamente.
+
+Archivos: `home_fragment.xml`, `HomeFragment.kt`, `primary.xml`, `MainFragment.kt`,
+`NavigationActivity.kt`.
+
+## About actualizado a la identidad Taki
+
+La pantalla About dejó de presentarse como Ultrasonic: el encabezado usa **Taki** y la versión
+actual, incorpora el lema **Your music, without distractions.** y reemplaza la descripción
+original por una explicación breve del producto y su compatibilidad Subsonic/OpenSubsonic.
+Ultrasonic permanece únicamente como atribución explícita al proyecto base y a sus contribuidores,
+junto con la licencia GPLv3. Como todavía no existen URLs propias de Taki configuradas en el
+repositorio, los dos enlaces existentes se etiquetan claramente como sitio y tracker del proyecto
+original para no hacerlos pasar por canales oficiales de Taki.
+
+Verificado visualmente en Pixel 7 y con `compileDebugKotlin` + `assembleDebug` correctos.
+
+Archivos: `help.xml`, `AboutFragment.kt`, `strings.xml`.
+
+## Inicio de versionado propio de Taki
+
+Taki inicia su numeración pública beta en **0.1.0-beta** mediante `versionName`. Se conserva
+`versionCode 131` para mantener la monotonía requerida por Android y permitir que instalaciones
+existentes del fork puedan actualizarse sin tratar el paquete como una versión anterior.
+
+Archivo: `ultrasonic/build.gradle`.
+
+La redacción de About se refinó para explicar reproducción online/offline, compatibilidad con
+Navidrome y servidores Subsonic/OpenSubsonic, y la atribución GPLv3 a Ultrasonic. El botón se
+renombró internamente a **Visit website**, pero permanece oculto mientras Taki no tenga una página
+pública propia; así una versión distribuida no envía a usuarios a un repositorio privado o a una
+página que represente otro proyecto.
+
+## Search, Downloads y Settings sin toolbar global
+
+Se completó el mismo tratamiento de encabezado integrado aplicado previamente a Home/Library:
+
+- **Search** dejó de usar un `SearchView` inflado en el menú de la Activity. Ahora posee un campo
+  redondeado dentro de su propio contenido, conserva búsqueda en vivo con debounce, submit,
+  historial de sugerencias y entrada por intents/voz.
+- **Downloads** usa un layout propio con título integrado y deja de repetirlo dentro de una barra
+  global.
+- **Settings** envuelve la lista principal en un encabezado de contenido. Los grupos internos sí
+  restauran la toolbar con flecha Atrás y el nombre del grupo, porque allí cumple una función
+  contextual real.
+
+También se retiraron el proveedor de menú de Search y la acción de biblioteca en toolbar que ya no
+tenían destinos visibles. Verificado en Pixel 7: los tres niveles principales carecen de toolbar,
+una consulta real devolvió artistas/álbumes, y un grupo de Settings restauró correctamente toolbar
+y navegación. `compileDebugKotlin` y `assembleDebug` completaron correctamente.
+
+Archivos: `NavigationActivity.kt`, `SearchFragment.kt`, `DownloadsFragment.kt`,
+`SettingsFragment.kt`, `search.xml`, `downloads.xml`, `settings_fragment.xml`.
+
+## Player inmersivo sin toolbar global
+
+El Player completo dejó de mostrar la franja compartida con “Now Playing”. La navegación Atrás y
+el overflow ahora viven dentro del contenido, como controles discretos sobre la composición; el
+overflow reutiliza todas las acciones existentes (artista/álbum, guardar/limpiar cola, letras,
+ecualizador, jukebox y pantalla encendida). La variante horizontal recibió los mismos controles.
+
+Durante la prueba apareció un toast técnico `Fragment HomeFragment…`: la carga de Home utilizaba
+`viewModelScope` y podía intentar actualizar su vista después de abrir el Player. Se cambió a
+`viewLifecycleOwner.lifecycleScope`, cancelando correctamente el trabajo cuando la vista deja de
+existir. Verificado en Pixel 7 sin título global, sin barra inferior y con overflow funcional;
+`assembleDebug` correcto.
+
+Archivos: `NavigationActivity.kt`, `PlayerFragment.kt`, `HomeFragment.kt`,
+`current_playing.xml`, `layout-land/current_playing.xml`, `ic_arrow_back.xml`, `strings.xml`.
+
+## Lyrics sin toolbar global
+
+La pantalla de letras continúa el patrón inmersivo del Player: eliminó la franja compartida e
+integró Atrás en la cabecera que ya contiene canción, artista e indicador de sincronización. La
+carga de letras, el resaltado karaoke y el desplazamiento automático no se modificaron.
+
+Archivos: `NavigationActivity.kt`, `LyricsFragment.kt`, `lyrics.xml`.
+
+Al probar la navegación posterior se corrigió además un crash en `TrackCollectionFragment`: su
+proveedor de menú todavía intentaba ocultar `action_search`, aunque esa acción global ya no existe.
+La preparación ahora sólo configura su propia acción Play all y tolera que aún no esté inflada.
+
+También se corrigió la apertura del Player en horizontal: `layout-land/current_playing.xml` no
+incluía `player_secondary_controls`, aunque `PlayerFragment` requiere Queue, Lyrics y Save
+Playlist en ambas variantes. El bloque secundario ahora está presente también en landscape.
+
+## Identidad visual Taki aplicada al producto
+
+Se sustituyó el tema dinámico de Android por una paleta Taki fija basada en el manual de marca:
+Lima `#D7FF3F`, progreso `#A9C92F`, fondo `#090A08`, variación `#0D0F0B`, superficie
+`#171A14`, marfil `#F5F7EF`, gris `#A8AEA0` y pista `#30352A`. Los tokens cubren Material,
+barras del sistema, preferencias, paneles, controles y widget; la navegación inferior usa lima
+sólo para el destino activo y gris para el resto.
+
+El launcher adaptive icon ahora usa el símbolo t/nota oficial en lima sobre negro, con variante
+monocromática. El nombre visible se fijó como Taki en aplicación, servicios, widget, Search,
+navegación y Settings sin renombrar el paquete/clases internos, preservando compatibilidad.
+
+El Player horizontal fue reconstruido como una composición limpia de dos columnas: portada a la
+izquierda e información/progreso/transporte/acciones a la derecha. Se eliminaron el fondo de portada
+ampliado y las cinco estrellas heredadas, manteniendo Atrás, overflow, favorito, cola y letras.
+
+## Acento Taki suavizado y navegación de Playlists corregida
+
+La paleta compartida sustituyó la lima fluorescente por un acento más calmado: principal
+`#B7D63C`, presionado/activo secundario `#91AD30`, progreso `#7C9229` (aprox. 68% de
+intensidad), contenedor seleccionado `#293217` y contenido sobre acento `#11130D`. Los fondos y
+neutros permanecen iguales. Navegación seleccionada y Play conservan el acento completo; Atrás,
+overflow, favorito y Previous/Next usan el activo secundario. El progreso usa su token discreto y
+ambos tiempos conservan el mismo gris secundario. Chips/botones tonales toman el contenedor oscuro,
+no un relleno verde. El launcher referencia el token central y no quedan valores antiguos directos.
+
+Playlists dejó de restaurar la toolbar global. Además, la barra inferior ahora maneja la reselección
+de cualquiera de sus pestañas: si un destino secundario se abrió mientras Home, Library, Search o
+Downloads seguía marcado, volver a pulsar esa pestaña retorna correctamente a su raíz.
+
+## Library como índice de colección
+
+Home redujo sus accesos rápidos a Playlists, Albums, Artists y Songs; Genres dejó de ocupar el quinto
+chip. Library dejó de replicar los listados mediante tabs y ahora funciona como un índice estable:
+
+- **Your music:** Liked Songs y Playlists.
+- **Collection:** Albums, Artists, Songs y Genres.
+
+Liked Songs reutiliza el filtro `getStarred` existente y los demás elementos abren sus destinos ya
+probados. “Your library” permanece separado para administrar servidores y ajustes. Se retiraron el
+ViewPager, tabs, filtro y adaptador internos que quedaron obsoletos con este cambio.
+
+## Primer pase de la guía visual y de lenguaje Taki
+
+Se adoptó `docs/TAKI_GUIA_VISUAL_Y_LENGUAJE.md` como fuente de verdad para el producto y se
+aplicó su primer bloque de mayor impacto. La paleta central ahora define exactamente los roles
+`background`, `surfaceLow`, `surface`, `surfaceHigh`, `selectedNeutral`, `onSurface`,
+`onSurfaceVariant`, `outline`, `divider`, `error` y `onErrorContainer`; el tema Material 3 los
+consume sin depender de colores dinámicos ni valores verdes por defecto.
+
+La navegación inferior dejó de usar verde: destino activo blanco sobre cápsula neutral e inactivos
+grises. Library cambió encabezados verdes/mayúsculos por sentence case neutral y sustituyó las
+píldoras oliva por filas transparentes. El selector muestra el nombre configurado de la colección
+(o “Downloaded music” en modo local), con iconografía y descripción de colección en lugar de
+servidor. Los accesos rápidos de Home usan superficies neutrales.
+
+Now Playing reserva el verde para estados reales: Atrás, overflow y controles anterior/siguiente
+son neutrales; Play/Pause es la única acción principal de alto contraste, blanca con icono oscuro.
+El mini reproductor usa la superficie opaca del sistema y los filtros cumplen un objetivo táctil
+mínimo de 48dp. About adopta “Visit website” y “Report a problem”.
+
+## Servidor demo retirado del producto
+
+Taki dejó de empaquetar y ofrecer automáticamente la colección demo heredada. Se eliminaron la
+URL, usuario, contraseña, configuración `DEMO_SERVER_CONFIG`, método `addDemoServer()` y textos
+traducidos asociados. El primer arranque ahora explica brevemente que debe conectarse una colección
+y ofrece `Add collection` / `Agregar colección`, que abre directamente el formulario nuevo; `Not
+now` mantiene la app en modo de música descargada. No se borran configuraciones existentes de la
+base de datos del usuario.

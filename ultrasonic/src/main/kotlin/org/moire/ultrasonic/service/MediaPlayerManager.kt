@@ -94,7 +94,7 @@ class MediaPlayerManager(
      */
     private val playbackCheckpoint = object : Runnable {
         override fun run() {
-            if (isPlaying) serializeCurrentSession()
+            if (isPlaying) serializeCurrentPositionCheckpoint()
             mainHandler.postDelayed(this, PLAYBACK_CHECKPOINT_INTERVAL)
         }
     }
@@ -660,6 +660,17 @@ class MediaPlayerManager(
             currentPlayingPosition = playerPosition,
             isShufflePlayEnabled,
             repeatMode
+        )
+    }
+
+    @Synchronized
+    private fun serializeCurrentPositionCheckpoint() {
+        if (currentMediaItemIndex == -1) return
+        playbackStateSerializer.serializeCheckpointAsync(
+            currentPlayingIndex = currentMediaItemIndex,
+            currentPlayingPosition = playerPosition,
+            shufflePlay = isShufflePlayEnabled,
+            repeatMode = repeatMode
         )
     }
 

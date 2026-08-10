@@ -33,6 +33,7 @@ class PlaybackStateSerializer : KoinComponent {
 
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    @Volatile private var lastSerializedTracks: List<Track> = emptyList()
 
     fun serializeAsync(
         songs: Iterable<Track>,
@@ -58,6 +59,23 @@ class PlaybackStateSerializer : KoinComponent {
         }
     }
 
+    fun serializeCheckpointAsync(
+        currentPlayingIndex: Int,
+        currentPlayingPosition: Int,
+        shufflePlay: Boolean,
+        repeatMode: Int
+    ) {
+        val tracks = lastSerializedTracks
+        if (tracks.isEmpty()) return
+        serializeAsync(
+            tracks,
+            currentPlayingIndex,
+            currentPlayingPosition,
+            shufflePlay,
+            repeatMode
+        )
+    }
+
     val isReady: Boolean get() = isSetup.get()
 
     @Synchronized
@@ -68,9 +86,12 @@ class PlaybackStateSerializer : KoinComponent {
         shufflePlay: Boolean,
         repeatMode: Int
     ) {
+        val normalizedQueue = normalizeQueue(tracks.toList(), currentPlayingIndex)
+        val trackSnapshot = normalizedQueue.tracks
+        lastSerializedTracks = trackSnapshot
         val state = PlaybackState(
-            tracks.toList(),
-            currentPlayingIndex,
+            trackSnapshot,
+            normalizedQueue.currentIndex,
             currentPlayingPosition,
             shufflePlay,
             repeatMode
@@ -110,18 +131,44 @@ class PlaybackStateSerializer : KoinComponent {
             Constants.FILENAME_PLAYLIST_SER
         ) ?: return null
 
+        val normalizedQueue = normalizeQueue(state.songs, state.currentPlayingIndex)
+        val restoredState = state.copy(
+            songs = normalizedQueue.tracks,
+            currentPlayingIndex = normalizedQueue.currentIndex
+        )
+        lastSerializedTracks = restoredState.songs
         Timber.i(
             "Deserialized currentPlayingIndex: %d, currentPlayingPosition: %d, shuffle: %b, repeat: %d",
-            state.currentPlayingIndex,
-            state.currentPlayingPosition,
-            state.shufflePlay,
-            state.repeatMode
+            restoredState.currentPlayingIndex,
+            restoredState.currentPlayingPosition,
+            restoredState.shufflePlay,
+            restoredState.repeatMode
         )
 
-        return state
+        return restoredState
     }
 
+    private fun normalizeQueue(tracks: List<Track>, currentIndex: Int): NormalizedQueue {
+        if (tracks.size <= MAX_PERSISTED_QUEUE_SIZE) return NormalizedQueue(tracks, currentIndex)
+
+        val safeIndex = currentIndex.coerceIn(0, tracks.lastIndex)
+        val start = (safeIndex - MAX_PERSISTED_QUEUE_SIZE / 2)
+            .coerceIn(0, tracks.size - MAX_PERSISTED_QUEUE_SIZE)
+        Timber.w(
+            "Limiting persisted playback queue from %d to %d tracks",
+            tracks.size,
+            MAX_PERSISTED_QUEUE_SIZE
+        )
+        return NormalizedQueue(
+            tracks = tracks.subList(start, start + MAX_PERSISTED_QUEUE_SIZE).toList(),
+            currentIndex = safeIndex - start
+        )
+    }
+
+    private data class NormalizedQueue(val tracks: List<Track>, val currentIndex: Int)
+
     companion object {
+        private const val MAX_PERSISTED_QUEUE_SIZE = 100
         private val isSetup = AtomicBoolean(false)
         private val isSerializing = AtomicBoolean(false)
         private val isDeserializing = AtomicBoolean(false)
