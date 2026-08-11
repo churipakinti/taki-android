@@ -1,5 +1,32 @@
 # Changes
 
+## Optimización interna Fase 3: caché HTTP condicional (ETag/Last-Modified) — investigado, no viable con el servidor real disponible
+
+Tarea de Fase 3, formulada explícitamente en el plan como condicional: "aplicar caché HTTP
+condicional solo si las respuestas exponen ETag, Last-Modified o cabeceras compatibles; no
+asumirlo." Se investigó contra el único servidor real disponible esta sesión (Navidrome, vía
+Tailscale) antes de escribir ninguna línea de código, inspeccionando las cabeceras de respuesta
+reales que ya registra `TimberOkHttpLogger` (instrumentación de Fase 0) para varias llamadas
+distintas (`getAlbumList2.view`, `getAlbum.view`, entre otras).
+
+**Resultado: ninguna respuesta expone `ETag`, `Last-Modified` ni `Cache-Control`.** Las únicas
+cabeceras presentes son las estándar de seguridad/CORS de Navidrome
+(`Permissions-Policy`, `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Vary`,
+`Set-Cookie` de sesión, `Date`). Esto confirma directamente lo que Fase 0 ya había registrado
+como hallazgo de arquitectura ("no se observó una negociación centralizada de capacidades... ni
+cabeceras HTTP condicionales") con evidencia real de tráfico, no solo inspección de código.
+
+**Decisión: no se implementa caché HTTP condicional.** Escribir código para `If-None-Match`/
+`If-Modified-Since` contra un servidor que nunca envía `ETag`/`Last-Modified` sería exactamente
+la "optimización prematura... sin relación con un flujo medido" que el plan pide evitar — el
+mecanismo simplemente no tendría ningún efecto contra el servidor real disponible, y no hay forma
+de confirmar si otros servidores Subsonic/OpenSubsonic sí las exponen sin poder probarlo. La
+sincronización incremental ya lograda para `getIndexes` vía el parámetro `ifModifiedSince` propio
+de la API de Subsonic (no HTTP genérico) cubre el mismo objetivo de fondo —evitar retransferir
+datos sin cambios— por la vía que el propio protocolo Subsonic sí soporta.
+
+Sin cambios de código en esta entrada — solo investigación y una decisión documentada.
+
 ## Optimización interna Fase 3: concurrencia estructurada — confirmado, sin cambios de código
 
 Tarea de Fase 3: "usar concurrencia estructurada y limitada para datos independientes; no lanzar
