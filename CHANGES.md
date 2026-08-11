@@ -1,5 +1,151 @@
 # Changes
 
+## Optimización interna: Fase 0 — instrumentación de línea base
+
+Primer paso del plan de optimización previo a la beta (`TAKI_CODE_OPTIMIZATION_PLAN.md`). Antes
+de tocar ningún camino crítico, se verificaron contra el código actual los seis hallazgos de
+arquitectura que el propio plan listaba como "deben confirmarse nuevamente" — los seis se
+confirmaron exactos (`SubsonicAPIDefinition` con 49/56 funciones sin `suspend`, `RESTMusicService`
+con 56 usos de `.execute()`, ninguna negociación centralizada de capacidades OpenSubsonic —solo
+`runCatching { }.getOrNull()` sueltos en `LyricsFragment`/`ArtistDetailModel`—, `CachedMusicService`
+mezclando Room/LRU/TTL, el TODO real de `MusicServiceFactory` sobre el costo de
+`unloadKoinModules`/`loadKoinModules`, y `getIndexes(..., ifModifiedSince = null)` sin usar la
+sincronización incremental que la propia API ya soporta).
+
+**`PerfMetrics`/`PerfMetricsInterceptor`** (nuevos, `util/`): instrumentación de línea base —
+marcas y tramos con nombre logueados vía Timber (`mark`/`start`/`end`/`trace`), y un interceptor
+de OkHttp que loguea método, *path* (nunca la URL completa, que lleva `u`/`s`/`t` en la query),
+duración y tamaño de cada llamada al API de Subsonic. No se agregó ningún flag propio de
+"¿está habilitado?": Timber solo planta un árbol (`DebugTree`) en builds debug
+(`UApp.onCreate`), así que cualquier `Timber.d(...)` — incluido todo lo que loguea `PerfMetrics` —
+ya es un no-op silencioso en `release` sin necesidad de duplicar esa condición. El interceptor de
+red se conecta a través del parámetro `baseOkClient` que `SubsonicAPIClient` ya exponía para esto
+(sin tocar el módulo `core/subsonic-api`), registrado en Koin con un calificador `named(...)` para
+no colisionar con el `OkHttpClient` sin nombre que ya provee `baseNetworkModule`.
+
+Puntos instrumentados: arranque (`NavigationActivity.onCreate`), Home (`HomeViewModel.
+loadHomeScreen()` — cubre "con/sin caché" de forma implícita, ya que pasa por
+`CachedMusicService`), apertura de listas/álbum/artista/género/playlist (un solo punto en
+`MultiListFragment.onViewCreated()`, compartido por todas esas pantallas, marcando la primera
+emisión del `LiveData` — no cada refresh), toque→reproducción (`TrackCollectionFragment.
+playFromHere()` hasta `MediaPlayerManager.onIsPlayingChanged(true)`), búsqueda
+(`SearchFragment.search()`), y cambio de biblioteca/offline (`MusicServiceFactory.
+resetMusicService()`). El modo offline explícito no necesitó instrumentación propia: al no hacer
+ninguna llamada de red, los mismos marcadores de Home/listas ya muestran su latencia casi nula.
+
+**Verificación**: `ktlintCheck` en verde, `testDebugUnitTest` en verde (incluye
+`PerfMetricsTest.kt` nuevo, con Robolectric por la dependencia de `SystemClock`),
+`lintRelease` estable en 22 errores (sin cambios), detekt estable en 42 hallazgos — el único
+resultado que menciona `PerfMetrics` es el hallazgo ya existente de complejidad de
+`NavigationActivity.onCreate`, que ahora cita una línea más en su fragmento de código, no un
+hallazgo nuevo. `assembleDebug`, `assembleRelease` y `bundleRelease` compilan sin cambios de
+comportamiento en release. **Pendiente**: correr en dispositivo real y recolectar los primeros
+p50/p95 de los escenarios mínimos que pide el plan (LAN, remoto, conexión lenta, servidor
+apagado, offline explícito, biblioteca chica/grande, canción descargada/solo remota).
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/PerfMetrics.kt` (nuevo),
+`PerfMetricsInterceptor.kt` (nuevo), `di/MusicServiceModule.kt`,
+`activity/NavigationActivity.kt`, `model/HomeViewModel.kt`, `fragment/MultiListFragment.kt`,
+`fragment/TrackCollectionFragment.kt`, `service/MediaPlayerManager.kt`,
+`fragment/SearchFragment.kt`, `service/MusicServiceFactory.kt`,
+`src/test/kotlin/org/moire/ultrasonic/util/PerfMetricsTest.kt` (nuevo).
+
+## Optimización interna: Fase 0, continuación — primera medición real en emulador y en el Pixel 7
+
+Primera corrida real de la instrumentación de Fase 0, con hallazgos concretos y una corrección
+ya aplicada. Todo verificado con evidencia de logcat, no por inspección de código.
+
+**Hallazgo 1 (aplicado): las carátulas/avatares compartían el pool de conexiones con streaming y
+las llamadas de API.** En el emulador, la carga inicial de Home mostró ~5 llamadas
+`getAlbumList2.view` en paralelo más hasta una docena de `getCoverArt.view` compitiendo todas por
+el límite por defecto de OkHttp de 5 conexiones concurrentes por host — exactamente lo que la
+Fase 1 del plan advertía ("Limitar... precargas de carátulas... si compiten con el audio"), solo
+que ya estaba pasando incluso antes de tocar audio. **Fix**: `CoverArtFetcher`, `AvatarFetcher` y
+`ImageLoaderProvider` ahora inyectan un `SubsonicAPIClient` con calificador Koin
+`"ImageSubsonicAPIClient"`, construido con su propio `Dispatcher`/`ConnectionPool` (`di/
+MusicServiceModule.kt`) — mismo patrón de aislamiento que ya se usaba para el interceptor de
+métricas, sin tocar `core/subsonic-api`. Las pruebas `CoverArtFetcherTest`/`AvatarFetcherTest` se
+actualizaron para registrar el mock bajo el mismo calificador.
+
+**Hallazgo 2 (medido, no confirma la Hipótesis 1 como causa dominante): aislar las carátulas no
+redujo el tiempo total de `home_load`.** Contra lo esperado, `loadHomeScreen()` (que ni siquiera
+espera a las carátulas, solo a los datos) seguía tardando ~5,4-5,8s en el emulador antes y después
+del aislamiento. Esto llevó a agregar `PerfMetricsEventListener.kt` (nuevo) — un `EventListener`
+de OkHttp que separa DNS/conexión TCP/TLS del resto de cada llamada — para descartar la red como
+causa.
+
+**Hallazgo 3: el servidor de prueba se alcanza por Tailscale (100.64.0.0/10), pero eso no es el
+problema.** El `tcp_connect` real sobre Tailscale tomó 6-232ms según la corrida — razonable, no es
+el cuello de botella. El verdadero hueco (varios segundos sin ninguna actividad de red) estaba
+del lado de la app, no de la red.
+
+**Hallazgo 4: resolución fría de Koin (494ms en emulador) y creación de `OkHttpClient` de
+`PlaybackService` (443ms, coincide con una violación real de StrictMode `newSSLContext` ya
+documentada como hallazgo pendiente).** Ambos confirmados agregando marcas puntuales
+(`PerfMetrics.start`/`end`) en `MusicServiceFactory.getMusicService()` (solo la primera resolución)
+y `PlaybackService.initializeSessionAndPlayer()`.
+
+**Hallazgo 5 (el más importante): gran parte del tiempo "perdido" en el emulador era contención de
+CPU del host, no lentitud real de la app.** Repitiendo exactamente la misma prueba en un Pixel 7
+físico conectado por USB (que no comparte CPU con la máquina donde corrían los builds de Gradle en
+paralelo), los mismos tres números bajaron drásticamente: `home_load` 5,4-5,8s → **3,36s**;
+resolución de Koin 494ms → **128ms**; init de `PlaybackService` 443ms → **117ms**. Conclusión
+metodológica para el resto del plan: **el emulador sirve para diagnosticar causas (qué código
+está involucrado), pero los números absolutos y el criterio de aceptación deben venir siempre del
+dispositivo físico**, tal como ya establecía `docs/POSIBLES_ERRORES_Y_VERIFICACION.md` para otros
+cambios de reproducción.
+
+**Hallazgo 6 (no es un bug nuevo): `LeakedClosableViolation` de `AbstractCursor`/
+`CursorWrapperInner` en el Pixel 7.** Mismo `CloseGuardException` ya investigado y cerrado como
+"bug histórico #7" en una sesión anterior de este mismo archivo. El stack trace confirma de nuevo
+que viene de `AsyncQueryHandler`/`ContentResolver.query` internos de Android (probablemente
+disparado por `SearchRecentSuggestions`), no de código de Taki. No se reabre sin una pista nueva.
+
+**Hallazgo 7 (medido, queda documentado para la Fase 1 formal, no se tocó código de reproducción
+todavía): la restauración de sesión resuelve la URL de streaming de varias canciones de la cola de
+forma secuencial, no en paralelo.** Cada resolución individual (`ResolvingDataSource.Resolver` en
+`PlaybackService.kt`, instrumentada con `PerfMetrics.start("stream_url_resolve:N")`) es rápida
+(15-46ms), pero quedan huecos de 300-600ms sin actividad entre una y la siguiente — Media3 las
+prepara una por una como parte de su propio pipeline interno al llamar `prepare()` inmediatamente
+después de restaurar la cola en `MediaPlayerManager.restore()`, aunque `autoPlay` sea `false` y el
+usuario no haya tocado play. Estas resoluciones comparten el pool principal (no el aislado de
+imágenes), así que compiten con las llamadas de Home por las mismas conexiones. Candidato concreto
+para la Fase 1: evaluar si `restore()` necesita preparar más de la canción actual antes de que el
+usuario pida reproducir. No implementado en esta sesión, a pedido explícito de no mezclar
+diagnóstico con cambios de comportamiento de reproducción.
+
+Archivos nuevos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/di/` (sin archivo nuevo, solo
+`MusicServiceModule.kt` editado), `util/PerfMetricsEventListener.kt`. Editados:
+`di/MusicServiceModule.kt`, `imageloader/CoverArtFetcher.kt`, `imageloader/AvatarFetcher.kt`,
+`subsonic/ImageLoaderProvider.kt`, `service/PlaybackService.kt`, `service/MusicServiceFactory.kt`,
+`service/MediaPlayerManager.kt`, `test/kotlin/.../imageloader/CoverArtFetcherTest.kt`,
+`AvatarFetcherTest.kt`.
+
+## Optimización interna: Fase 0, cierre — resto de la matriz de escenarios medida en el Pixel 7
+
+Continuación real (no emulador) de la línea base, interactuando con la app de verdad en el
+Pixel 7 conectado: abrir un álbum, reproducir una canción, buscar, y cambiar de biblioteca
+(remota → Offline). Todos los números vienen de `logcat`, no de estimación.
+
+- **Toque → reproducción real: 538ms** (`play_tap` hasta `playback_started`, álbum "Homework").
+  Dentro del objetivo inicial del plan ("Inicio de audio por LAN < 1 s").
+- **Búsqueda remota: 325ms** (`search3.view` completo, sobre Tailscale). Cerca del objetivo de
+  "resultados locales < 300ms" a pesar de ser una búsqueda de red, no de índice local.
+- **Cambio de biblioteca remota → Offline: 1ms.** El `unloadKoinModules`/`loadKoinModules` de
+  `MusicServiceFactory.resetMusicService()` es instantáneo una vez que las clases ya están
+  cargadas en el proceso (el costo real está en la primera resolución fría, ya medido antes en
+  494ms/128ms según emulador/dispositivo, no en cada cambio posterior).
+  **Home en modo Offline: 132ms, cero llamadas de red** — confirma exactamente el criterio de
+  aceptación del plan ("Entrada al modo offline explícito: sin espera de red") ya se cumple hoy,
+  sin necesidad de ningún cambio.
+
+**Lo que sigue sin medir de la matriz completa del plan**: LAN real (solo se probó por
+Tailscale), conexión lenta/con latencia simulada, servidor apagado, comparación deliberada de
+biblioteca chica vs. grande, canción descargada vs. solo remota, aciertos/fallos de caché,
+solicitudes idénticas simultáneas y solicitudes canceladas -- estas últimas tres ni siquiera
+están instrumentadas todavía. Sin cambios de código en esta sesión de medición, solo evidencia
+nueva agregada a este archivo.
+
 ## Preparación de beta: 1.516 traducciones huérfanas bloqueaban assembleRelease/bundleRelease
 
 `lintVitalRelease` (el subconjunto de checks fatales que corre automáticamente al armar la

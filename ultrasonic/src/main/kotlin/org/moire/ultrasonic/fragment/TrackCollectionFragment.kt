@@ -67,6 +67,7 @@ import org.moire.ultrasonic.util.ContextMenuUtil
 import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.EntryByDiscAndTrackComparator
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.PlaylistUtil
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util.navigateToCurrent
@@ -776,6 +777,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     }
 
     private fun playFromHere(track: Track): Boolean {
+        PerfMetrics.mark("play_tap")
         val allTracks = getAllTracks()
         val startIndex = allTracks.indexOfFirst { it === track }
         if (startIndex < 0) return false

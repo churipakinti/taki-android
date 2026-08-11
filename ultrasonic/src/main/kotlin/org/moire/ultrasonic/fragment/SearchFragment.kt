@@ -55,6 +55,7 @@ import org.moire.ultrasonic.provider.SearchSuggestionProvider
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenu
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenuTracks
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.RecentSearches
 import org.moire.ultrasonic.util.RefreshableFragment
 import org.moire.ultrasonic.util.Util
@@ -258,9 +259,11 @@ class SearchFragment :
         searchJob = listModel.viewModelScope.launch(
             toastingExceptionHandler()
         ) {
+            val perfToken = PerfMetrics.start("search")
             swipeRefresh?.isRefreshing = true
             val result = listModel.search(query)
             swipeRefresh?.isRefreshing = false
+            PerfMetrics.end("search", perfToken)
             if (result != null && autoplay) {
                 autoplay()
             }

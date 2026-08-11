@@ -41,6 +41,7 @@ import org.moire.ultrasonic.data.RatingUpdate
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.util.DownloadUtil
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.navigateToCurrent
@@ -145,6 +146,7 @@ class MediaPlayerManager(
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (isPlaying) PerfMetrics.mark("playback_started")
             playerStateChangedHandler()
             publishPlaybackState()
         }
@@ -373,6 +375,7 @@ class MediaPlayerManager(
 
     @Synchronized
     fun restore(state: PlaybackState, autoPlay: Boolean) {
+        PerfMetrics.mark("session_restore_start:songs=" + state.songs.size)
         repeatMode = state.repeatMode
         isShufflePlayEnabled = state.shufflePlay
 

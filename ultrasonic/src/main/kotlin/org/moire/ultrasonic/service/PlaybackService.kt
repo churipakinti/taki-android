@@ -53,6 +53,7 @@ import org.moire.ultrasonic.imageloader.ArtworkBitmapLoader
 import org.moire.ultrasonic.provider.UltrasonicAppWidgetProvider
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.util.Constants
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.stopForegroundRemoveNotification
@@ -126,11 +127,16 @@ class PlaybackService :
         instance = null
     }
 
+    private var resolveCallCount = 0
+
     private val resolver: ResolvingDataSource.Resolver = ResolvingDataSource.Resolver {
+        val callIndex = ++resolveCallCount
+        val perfToken = PerfMetrics.start("stream_url_resolve:$callIndex")
         val components = it.uri.toString().split('|')
         val id = components[0]
         val bitrate = components[1].toInt()
         val uri = getMusicService().getStreamUrl(id, bitrate, null)!!
+        PerfMetrics.end("stream_url_resolve:$callIndex", perfToken)
 
         val headers = HashMap<String, String>()
         val httpUrl = uri.toHttpUrl()
@@ -152,6 +158,7 @@ class PlaybackService :
 
     private fun initializeSessionAndPlayer() {
         if (isStarted) return
+        val perfToken = PerfMetrics.start("playback_service_init")
 
         val desiredBackend = if (activeServerProvider.getActiveServer().jukeboxByDefault) {
             Timber.i("Jukebox enabled by default")
@@ -221,6 +228,7 @@ class PlaybackService :
 
         player.addListener(listener)
         isStarted = true
+        PerfMetrics.end("playback_service_init", perfToken)
     }
 
     private fun updateBackend(newBackend: MediaPlayerManager.PlayerBackend) {

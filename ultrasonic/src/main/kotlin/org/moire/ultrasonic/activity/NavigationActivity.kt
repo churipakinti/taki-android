@@ -57,6 +57,7 @@ import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.util.Constants
 import org.moire.ultrasonic.util.InfoDialog
 import org.moire.ultrasonic.util.LocaleHelper
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.RecentSearches
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.ShortcutUtil
@@ -93,6 +94,7 @@ class NavigationActivity : ScopeActivity() {
     private var imeVisible = false
     private var navigationBarBottomInset = 0
     override fun onCreate(savedInstanceState: Bundle?) {
+        PerfMetrics.mark("nav_activity_create_start")
         Timber.d("onCreate called")
 
         // First check if Koin has been started

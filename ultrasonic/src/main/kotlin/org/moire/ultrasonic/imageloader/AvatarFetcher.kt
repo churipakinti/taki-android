@@ -19,6 +19,7 @@ import okio.buffer
 import okio.source
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIClient
 
 data class AvatarRequest(val username: String)
@@ -30,7 +31,8 @@ class AvatarKeyer : Keyer<AvatarRequest> {
 class AvatarFetcher(private val avatarRequest: AvatarRequest, private val options: Options) :
     Fetcher,
     KoinComponent {
-    private val client: SubsonicAPIClient by inject()
+    // Same isolated connection pool as CoverArtFetcher. See MusicServiceModule.kt.
+    private val client: SubsonicAPIClient by inject(named("ImageSubsonicAPIClient"))
 
     override suspend fun fetch(): FetchResult {
         // Inverted call order, because Mockito has problems with chained calls.

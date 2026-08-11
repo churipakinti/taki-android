@@ -22,6 +22,7 @@ import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MusicService
 import org.moire.ultrasonic.service.MusicServiceFactory
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 
 /**
@@ -38,6 +39,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val mixTracks: MutableLiveData<List<Track>> = MutableLiveData()
 
     suspend fun loadHomeScreen() = coroutineScope {
+        val perfToken = PerfMetrics.start("home_load")
         val shortcuts = async { fetch(AlbumListType.RECENT, SHORTCUTS_SIZE) }
         val favorites = async { fetch(AlbumListType.STARRED) }
         val newest = async { fetch(AlbumListType.NEWEST) }
@@ -58,6 +60,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val mixResult = mix.await()
         mixGenreName.value = mixResult.genreName
         mixTracks.value = mixResult.tracks
+
+        PerfMetrics.end("home_load", perfToken)
     }
 
     private suspend fun fetch(type: AlbumListType, size: Int = SIZE): List<Album> =

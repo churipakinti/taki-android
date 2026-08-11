@@ -24,6 +24,7 @@ import okio.buffer
 import okio.source
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIClient
 import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.FileUtil.SUFFIX_LARGE
@@ -40,7 +41,9 @@ class CoverArtKeyer : Keyer<CoverArtRequest> {
 class CoverArtFetcher(private val coverArtRequest: CoverArtRequest, private val options: Options) :
     Fetcher,
     KoinComponent {
-    private val client: SubsonicAPIClient by inject()
+    // Uses its own isolated connection pool so a burst of cover art requests can't starve a
+    // concurrent audio stream/API call, and vice versa. See MusicServiceModule.kt.
+    private val client: SubsonicAPIClient by inject(named("ImageSubsonicAPIClient"))
 
     override suspend fun fetch(): FetchResult {
         // Check the cache before sending out a network request

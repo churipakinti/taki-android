@@ -31,6 +31,7 @@ import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.model.GenericListModel
 import org.moire.ultrasonic.model.ServerSettingsModel
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.RefreshableFragment
 import org.moire.ultrasonic.util.Util
 
@@ -68,6 +69,9 @@ abstract class MultiListFragment<T : Identifiable> :
      * Implement this as a getter
      */
     private lateinit var liveDataItems: LiveData<List<T>>
+
+    private var perfLoadToken: Long = 0L
+    private var perfFirstEmissionSeen: Boolean = false
 
     /**
      * The central function to pass a query to the model and return a LiveData object
@@ -126,6 +130,8 @@ abstract class MultiListFragment<T : Identifiable> :
         }
 
         // Populate the LiveData. This starts an API request in most cases
+        perfLoadToken = PerfMetrics.start("list_screen:" + this::class.java.simpleName)
+        perfFirstEmissionSeen = false
         liveDataItems = getLiveData(refreshOnCreation)
 
         // Link view to display text if the list is empty
@@ -133,7 +139,13 @@ abstract class MultiListFragment<T : Identifiable> :
         emptyTextView = view.findViewById(emptyTextId)
 
         // Register an observer to update our UI when the data changes
-        liveDataItems.observe(viewLifecycleOwner, defaultObserver)
+        liveDataItems.observe(viewLifecycleOwner) {
+            if (!perfFirstEmissionSeen) {
+                perfFirstEmissionSeen = true
+                PerfMetrics.end("list_screen:" + this::class.java.simpleName, perfLoadToken)
+            }
+            defaultObserver(it)
+        }
 
         // Create a View Manager
         viewManager = LinearLayoutManager(this.context)

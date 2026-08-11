@@ -51,7 +51,12 @@ class ImageLoaderProvider :
         // We need to generate a new ImageLoader if the server has changed...
         val currentID = get<String>(named("ServerID"))
         if (imageLoader == null || currentID != serverID) {
-            imageLoader = ImageLoader(UApp.applicationContext(), get(), config)
+            // Isolated connection pool -- see MusicServiceModule.kt's "ImageSubsonicAPIClient".
+            imageLoader = ImageLoader(
+                UApp.applicationContext(),
+                get(named("ImageSubsonicAPIClient")),
+                config
+            )
             serverID = currentID
 
             launch {
