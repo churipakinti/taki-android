@@ -73,6 +73,11 @@ class PlaybackService :
 
     private lateinit var librarySessionCallback: MediaLibrarySessionCallback
 
+    // Tracks which allowSelfSignedCertificate value the current local player's OkHttpClient was
+    // built with, so updateBackend() can tell whether a server switch actually requires
+    // rebuilding it (see Fase 8 of TAKI_CODE_OPTIMIZATION_PLAN.md).
+    private var localPlayerAllowsSelfSignedCert = false
+
     private var rxBusSubscription = CompositeDisposable()
 
     private var isStarted = false
@@ -239,6 +244,22 @@ class PlaybackService :
     }
 
     private fun updateBackend(newBackend: MediaPlayerManager.PlayerBackend) {
+        // The active-server-changed subscriber (see initializeSessionAndPlayer) calls this with
+        // the backend that's already active, on every server switch including going in/out of
+        // Offline -- but nothing about a LOCAL backend actually depends on which server is
+        // active beyond this flag: stream URLs are resolved fresh per request (see `resolver`),
+        // not baked into the player. Skip tearing down a perfectly good ExoPlayer/OkHttpClient
+        // (which recreates the OkHttp SSLContext, a main-thread-blocking call StrictMode flags)
+        // when there is nothing to actually change. See TAKI_CODE_OPTIMIZATION_PLAN.md Fase 8.
+        val allowSelfSignedCert = activeServerProvider.getActiveServer().allowSelfSignedCertificate
+        if (newBackend == actualBackend &&
+            newBackend == MediaPlayerManager.PlayerBackend.LOCAL &&
+            localPlayerAllowsSelfSignedCert == allowSelfSignedCert
+        ) {
+            Timber.i("Active server changed, but local playback backend is unaffected")
+            return
+        }
+
         Timber.i("Switching player backends")
         // Remove old listeners
         player.removeListener(listener)
@@ -265,8 +286,10 @@ class PlaybackService :
 
     private fun getLocalPlayer(): Player {
         // Create a new plain OkHttpClient
+        val allowSelfSignedCert = activeServerProvider.getActiveServer().allowSelfSignedCertificate
+        localPlayerAllowsSelfSignedCert = allowSelfSignedCert
         val builder = OkHttpClient.Builder()
-        if (activeServerProvider.getActiveServer().allowSelfSignedCertificate) {
+        if (allowSelfSignedCert) {
             builder.allowSelfSignedCertificates()
         }
         val client = builder.build()

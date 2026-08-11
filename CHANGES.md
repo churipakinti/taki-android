@@ -1,5 +1,48 @@
 # Changes
 
+## Optimización interna Fase 8: evita reconstruir el backend de audio en cada cambio de servidor
+
+Fase 8 es condicional en el propio plan: "cambio de biblioteca, solo si la medición confirma
+impacto relevante." Primera tarea: medir el coste actual de `MusicServiceFactory` y del cambio de
+biblioteca en general, antes de decidir si hay algo que optimizar.
+
+**Medición en el Pixel 7 real (servidor Navidrome vía Tailscale):**
+
+- `MusicServiceFactory.resetMusicService()` (el swap de módulos Koin): **1ms**. El comentario TODO
+  en el propio archivo, que decía "se instancian muchas clases, tarda bastante", está
+  desactualizado -- Koin con `single { }` es *lazy*, este swap solo reemplaza definiciones, no
+  instancia nada.
+- Recarga de Home al cambiar de servidor: invalida correctamente por `serverId` (confirmado con
+  logs) -- 102ms yendo a Offline (lectura local, sin red), 566-1723ms volviendo a un servidor
+  online (todo tiempo de red real). Cero mezcla de datos entre servidores.
+- **`PlaybackService.updateBackend()`**: en cada cambio de servidor -- incluso yendo a Offline --
+  destruía y recreaba el `ExoPlayer` completo y construía un `OkHttpClient` nuevo desde cero, lo
+  que dispara `newSSLContext` (inicialización de TLS). StrictMode marca esa llamada
+  explícitamente como "slow call" bloqueando el hilo principal. De toda la configuración de ese
+  `OkHttpClient`, lo único que realmente depende del servidor activo es
+  `allowSelfSignedCertificate`: las URLs de streaming ya se resuelven frescas en cada request via
+  el `resolver` (`PlaybackService.resolver`), no quedan "pegadas" al cliente HTTP.
+
+**Cambio:** `updateBackend()` ahora compara el backend nuevo contra el actual y el valor de
+`allowSelfSignedCertificate` usado para construir el `OkHttpClient` actual
+(`localPlayerAllowsSelfSignedCert`, seteado en `getLocalPlayer()`). Si el backend sigue siendo
+`LOCAL` y ese booleano no cambió, no hace nada -- el `ExoPlayer` y su `OkHttpClient` siguen vivos
+tal cual. El camino de cambiar a/desde Jukebox (`PlaybackService.setBackend`, donde el backend
+nuevo sí difiere del actual) no se toca, sigue reconstruyendo siempre como antes.
+
+**Verificación en el Pixel 7 con música sonando:** se inició reproducción de un álbum, y con el
+audio activo se cambió de servidor dos veces (online → Offline → online). En ambas direcciones el
+log muestra `"Active server changed, but local playback backend is unaffected"` en vez de
+`"Switching player backends"` -- cero instancias de `ExoPlayerImpl: Release`/`Init`, cero
+violación de StrictMode por `newSSLContext`. Sin crashes. El comportamiento existente de vaciar de
+la cola las canciones no descargadas al ir offline (`removeIncompleteTracksFromPlaylist`, ya
+presente antes de este cambio) se mantiene intacto, ya que corre en un listener separado que este
+cambio no toca.
+
+**Tests:** `ultrasonic:testDebugUnitTest` y `ktlintCheck` verdes. No se agregó test unitario nuevo
+-- la condición es una comparación de dos campos ya cubiertos por la verificación en vivo descrita
+arriba; `PlaybackService` no tiene tests unitarios existentes por depender de Android/Media3.
+
 ## Optimización interna Fase 4: negociación de extensiones OpenSubsonic antes de usarlas
 
 Objetivo de Fase 4: "evitar solicitudes destinadas a fallar y utilizar OpenSubsonic solo cuando
