@@ -8,6 +8,7 @@
 package org.moire.ultrasonic.model
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import java.time.LocalDate
@@ -38,7 +39,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val mixGenreName: MutableLiveData<String?> = MutableLiveData()
     val mixTracks: MutableLiveData<List<Track>> = MutableLiveData()
 
-    suspend fun loadHomeScreen() = coroutineScope {
+    private val shelvesFreshness =
+        HomeShelvesFreshness(Settings.DIRECTORY_CACHE_TIME * MILLIS_PER_SECOND)
+
+    suspend fun loadHomeScreen(forceRefresh: Boolean = false) = coroutineScope {
+        val currentServerId = ActiveServerProvider.getActiveServerId()
+        val now = SystemClock.elapsedRealtime()
+
+        if (!forceRefresh && shelvesFreshness.isFresh(now, currentServerId)) {
+            return@coroutineScope
+        }
+
         val perfToken = PerfMetrics.start("home_load")
         val shortcuts = async { fetch(AlbumListType.RECENT, SHORTCUTS_SIZE) }
         val favorites = async { fetch(AlbumListType.STARRED) }
@@ -60,6 +71,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val mixResult = mix.await()
         mixGenreName.value = mixResult.genreName
         mixTracks.value = mixResult.tracks
+
+        shelvesFreshness.markLoaded(SystemClock.elapsedRealtime(), currentServerId)
 
         PerfMetrics.end("home_load", perfToken)
     }
@@ -149,5 +162,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         private const val MIX_FETCH_SIZE = 50
         private const val MIX_RESTORE_FETCH_SIZE = 200
         private const val MIX_SIZE = 25
+        private const val MILLIS_PER_SECOND = 1000L
     }
 }

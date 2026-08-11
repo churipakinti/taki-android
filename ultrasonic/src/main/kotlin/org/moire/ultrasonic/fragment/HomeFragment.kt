@@ -111,7 +111,7 @@ class HomeFragment :
         }
 
         swipeRefresh = view.findViewById(R.id.swipe_refresh_view)
-        swipeRefresh?.setOnRefreshListener { load() }
+        swipeRefresh?.setOnRefreshListener { load(forceRefresh = true) }
 
         load()
     }
@@ -188,10 +188,10 @@ class HomeFragment :
         )
     }
 
-    private fun load() {
+    private fun load(forceRefresh: Boolean = false) {
         viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             swipeRefresh?.isRefreshing = true
-            homeViewModel.loadHomeScreen()
+            homeViewModel.loadHomeScreen(forceRefresh)
             swipeRefresh?.isRefreshing = false
             updateEmptyState()
         }

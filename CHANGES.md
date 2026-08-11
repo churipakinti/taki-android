@@ -1,5 +1,51 @@
 # Changes
 
+## Optimización interna Fase 2: Home deja de esperar 6 llamadas de red en cada apertura
+
+Hallazgo directamente ligado al objetivo central de Fase 2 ("mostrar contenido inmediatamente"):
+`HomeViewModel.loadHomeScreen()` arma las 5 estanterías de Home con `getAlbumList2()`/
+`getAlbumList()`, que según el inventario documentado antes **no tienen ninguna caché** en
+`CachedMusicService` — pasan directo a la red siempre. Como el `SwipeRefreshLayout` de Home llama
+`load()` incondicionalmente en cada `onViewCreated()` (que ocurre cada vez que se recrea la vista,
+no solo cuando se recrea el `ViewModel` — p.ej. al cambiar de pestaña de la barra inferior y
+volver), Home esperaba 6 llamadas de red en paralelo cada vez que se reabría, coincidiendo
+exactamente con los 3,36s medidos en Fase 0 (Hallazgo 5) para `home_load` en el Pixel 7 real, que
+hasta ahora solo estaba documentado como "medido", no como "sin caché".
+
+**Decisión de producto confirmada con el usuario antes de implementar**: la estantería "Discover"
+(`AlbumListType.RANDOM`) se cachea igual que las otras cuatro, sin excepción — mismo TTL de 300s
+para las 5, consistente con el resto de la app.
+
+**Fix**: `HomeShelvesFreshness.kt` (nuevo, `model/`) — clase pura que rastrea cuándo se cargaron
+las estanterías por última vez y para qué servidor. `loadHomeScreen(forceRefresh: Boolean =
+false)` la consulta al entrar: si las estanterías se cargaron hace menos de
+`Settings.DIRECTORY_CACHE_TIME` (300s) **para el mismo servidor activo**, no hace ninguna llamada
+de red y deja las `LiveData` tal como están (ya visibles). El id de servidor se compara
+explícitamente para que cambiar de servidor u entrar a modo offline nunca reutilice estanterías
+de otro servidor, ni siquiera dentro de la ventana de TTL. `HomeFragment`'s pull-to-refresh ahora
+pasa `forceRefresh = true` explícitamente, preservando la semántica de "traeme datos frescos ya"
+del gesto.
+
+**Pruebas**: `HomeShelvesFreshnessTest.kt` (nuevo) cubre la lógica pura de forma aislada, mismo
+motivo que `DuplicateRequestGuard` — `HomeViewModel` es un `AndroidViewModel` que depende de
+`MusicServiceFactory`/Koin y no tiene arnés de pruebas hoy. Casos cubiertos: nunca cargado no es
+fresh; fresh justo después de cargar, antes de que expire el TTL; no fresh una vez expirado;
+cambiar de servidor nunca es fresh aunque esté dentro del TTL; volver a marcar como cargado
+actualiza tanto el timestamp como el id de servidor.
+
+**Verificación**: `ktlintCheck` (`-Pqc`), `testDebugUnitTest` (84 pruebas en total, 79
+preexistentes + los 5 casos nuevos de `HomeShelvesFreshnessTest`) y `assembleDebug` en verde.
+**Probado en el Pixel 7 real** con los tres escenarios:
+(1) arranque en frío — las 5 llamadas `getAlbumList2.view` se disparan normalmente, `home_load` =
+2.388ms; (2) cambiar a la pestaña Search y volver a Home — **cero** llamadas de red, las 5
+estanterías (incluida "Recently Played"/shortcuts, que usa el mismo mecanismo) se muestran de
+inmediato desde el `ViewModel`; (3) pull-to-refresh — las 5 llamadas se disparan de nuevo sin
+esperar a que expire el TTL, confirmando que el gesto sigue forzando datos frescos.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/model/HomeShelvesFreshness.kt`
+(nuevo), `model/HomeViewModel.kt`, `fragment/HomeFragment.kt`,
+`ultrasonic/src/test/kotlin/org/moire/ultrasonic/model/HomeShelvesFreshnessTest.kt` (nuevo).
+
 ## Optimización interna Fase 2: Álbum Detail y Artistas dejan de forzar red en cada apertura
 
 Causa raíz real detrás de un comportamiento observado durante toda la Fase 1 (el álbum de prueba
@@ -15,7 +61,7 @@ importar qué tan reciente fuera la copia local.
 
 **No es una decisión de diseño — es una regresión de 2021 nunca corregida del todo.** Se
 investigó el historial completo: el código original (`SelectAlbumActivity.java`, y el refactor a
-NavigationUI de febrero 2021) siempre default*eaba* `refresh=false`; `true` solo se pasaba
+NavigationUI de febrero 2021) siempre defaulteaba `refresh=false`; `true` solo se pasaba
 explícitamente en acciones de "recargar" iniciadas por el usuario. El 16 de octubre de 2021,
 commit `5f716f50` ("Use MultiTypeAdapter as a backend for RecyclerView stuff") reescribió
 `TrackCollectionFragment.kt` por completo como parte de un cambio de adapter, y en esa
