@@ -128,12 +128,19 @@ class PlaybackService :
     }
 
     private var resolveCallCount = 0
+    private val resolvedTrackIds = HashSet<String>()
 
     private val resolver: ResolvingDataSource.Resolver = ResolvingDataSource.Resolver {
         val callIndex = ++resolveCallCount
-        val perfToken = PerfMetrics.start("stream_url_resolve:$callIndex")
         val components = it.uri.toString().split('|')
         val id = components[0]
+        val isNewTrack = resolvedTrackIds.add(id)
+        PerfMetrics.mark(
+            "stream_url_resolve:$callIndex:" +
+                (if (isNewTrack) "new_track" else "repeat_track") +
+                ":pos=${it.position}:len=${it.length}"
+        )
+        val perfToken = PerfMetrics.start("stream_url_resolve:$callIndex")
         val bitrate = components[1].toInt()
         val uri = getMusicService().getStreamUrl(id, bitrate, null)!!
         PerfMetrics.end("stream_url_resolve:$callIndex", perfToken)

@@ -101,18 +101,25 @@ cambios de reproducción.
 que viene de `AsyncQueryHandler`/`ContentResolver.query` internos de Android (probablemente
 disparado por `SearchRecentSuggestions`), no de código de Taki. No se reabre sin una pista nueva.
 
-**Hallazgo 7 (medido, queda documentado para la Fase 1 formal, no se tocó código de reproducción
-todavía): la restauración de sesión resuelve la URL de streaming de varias canciones de la cola de
-forma secuencial, no en paralelo.** Cada resolución individual (`ResolvingDataSource.Resolver` en
-`PlaybackService.kt`, instrumentada con `PerfMetrics.start("stream_url_resolve:N")`) es rápida
-(15-46ms), pero quedan huecos de 300-600ms sin actividad entre una y la siguiente — Media3 las
-prepara una por una como parte de su propio pipeline interno al llamar `prepare()` inmediatamente
-después de restaurar la cola en `MediaPlayerManager.restore()`, aunque `autoPlay` sea `false` y el
-usuario no haya tocado play. Estas resoluciones comparten el pool principal (no el aislado de
-imágenes), así que compiten con las llamadas de Home por las mismas conexiones. Candidato concreto
-para la Fase 1: evaluar si `restore()` necesita preparar más de la canción actual antes de que el
-usuario pida reproducir. No implementado en esta sesión, a pedido explícito de no mezclar
-diagnóstico con cambios de comportamiento de reproducción.
+**Hallazgo 7, descartado tras verificarlo mejor — no era lo que parecía.** La hipótesis inicial
+("la restauración de sesión resuelve la URL de streaming de varias canciones de la cola por
+adelantado, de forma secuencial") quedó **refutada** al agregar un detalle más fino al mismo
+`PerfMetrics.mark()` en `ResolvingDataSource.Resolver` (`PlaybackService.kt`): si cada resolución
+es para una pista nueva o para la misma de antes, más el offset de bytes (`pos`) que Media3 pide.
+Con eso, una restauración real de una cola de 16 canciones mostró:
+
+```
+stream_url_resolve:1:new_track:pos=0        -- la pista actual, desde el inicio
+stream_url_resolve:2:repeat_track:pos=206516 -- la MISMA pista, reabierta en otro byte
+```
+
+No son varias canciones distintas preparándose de antemano: es **la misma pista actual reabierta
+dos veces** — una para empezar a reproducir, otra porque `ResolvingDataSource` necesita reabrir el
+origen de datos en un offset de bytes distinto para reanudar en la posición guardada de la sesión.
+Es el comportamiento normal y esperado de Media3 al restaurar una posición, no una precarga
+prematura de la cola. **No hay candidato de Fase 1 real acá** — se documenta la corrección en vez
+de dejar la pista falsa, que es justo para lo que sirve "trazar el flujo completo" como primera
+tarea de la Fase 1 antes de tocar código de reproducción.
 
 Archivos nuevos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/di/` (sin archivo nuevo, solo
 `MusicServiceModule.kt` editado), `util/PerfMetricsEventListener.kt`. Editados:
