@@ -43,6 +43,17 @@ captures/
 
 # Keystore files
 *.jks
+*.keystore
+keystore.properties
+
+# App bundles
+*.aab
+
+# Lint report generated for release prep
+lint-release.txt
 
 # MacOS files
 .DS_Store
+
+# Local debugging evidence (UI dumps/screenshots from agent testing sessions)
+artifacts/

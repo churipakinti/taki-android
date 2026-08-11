@@ -16,6 +16,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -47,6 +48,11 @@ open class GenericListModel(application: Application) :
 
     val musicFolders: MutableLiveData<List<MusicFolder>> = MutableLiveData(listOf())
 
+    // Guards against a load started against a previous server (or a previous rapid refresh tap)
+    // landing after a newer one and overwriting its results - same shape as the already-fixed
+    // stale-response bugs in filter/sort/pagination. See docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md.
+    private var loadJob: Job? = null
+
     open fun showSelectFolderHeader(): Boolean = false
 
     /**
@@ -65,10 +71,14 @@ open class GenericListModel(application: Application) :
      * Trigger a load() and notify the UI that we are loading
      */
     fun backgroundLoadFromServer(refresh: Boolean, swipe: SwipeRefreshLayout) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             swipe.isRefreshing = true
-            loadFromServer(refresh, swipe)
-            swipe.isRefreshing = false
+            try {
+                loadFromServer(refresh, swipe)
+            } finally {
+                swipe.isRefreshing = false
+            }
         }
     }
 

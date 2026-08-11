@@ -23,7 +23,8 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 class GenreAdapter(
     private val onItemClick: (Genre) -> Unit,
     private val onCoverNeeded: (Genre) -> Unit
-) : RecyclerView.Adapter<GenreAdapter.ViewHolder>(), KoinComponent {
+) : RecyclerView.Adapter<GenreAdapter.ViewHolder>(),
+    KoinComponent {
 
     private var genres: List<Genre> = emptyList()
     private val coverTracks = mutableMapOf<String, Track?>()

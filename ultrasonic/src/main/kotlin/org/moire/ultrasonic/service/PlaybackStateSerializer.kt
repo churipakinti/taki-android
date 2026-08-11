@@ -33,6 +33,7 @@ class PlaybackStateSerializer : KoinComponent {
 
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     @Volatile private var lastSerializedTracks: List<Track> = emptyList()
 
     fun serializeAsync(

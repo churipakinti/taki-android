@@ -682,11 +682,11 @@ class JukeboxMediaPlayer :
     override fun getTrackSelectionParameters(): TrackSelectionParameters =
         TrackSelectionParameters.DEFAULT
 
-    override fun getMaxSeekToPreviousPosition(): Long = Settings.seekInterval.toLong()
+    override fun getMaxSeekToPreviousPosition(): Long = Settings.SEEK_INTERVAL.toLong()
 
-    override fun getSeekBackIncrement(): Long = Settings.seekInterval.toLong()
+    override fun getSeekBackIncrement(): Long = Settings.SEEK_INTERVAL.toLong()
 
-    override fun getSeekForwardIncrement(): Long = Settings.seekInterval.toLong()
+    override fun getSeekForwardIncrement(): Long = Settings.SEEK_INTERVAL.toLong()
 
     override fun isLoading(): Boolean = false
 

@@ -29,7 +29,7 @@ import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.util.RefreshableFragment
-import org.moire.ultrasonic.util.Settings.maxSongs
+import org.moire.ultrasonic.util.Settings.MAX_SONGS
 import org.moire.ultrasonic.util.Util.applyTheme
 import org.moire.ultrasonic.util.toastingExceptionHandler
 import org.moire.ultrasonic.view.GenreAdapter
@@ -69,7 +69,7 @@ class SelectGenreFragment :
             onItemClick = { genre ->
                 val action = NavigationGraphDirections.toTrackCollection(
                     genreName = genre.name,
-                    size = maxSongs,
+                    size = MAX_SONGS,
                     offset = 0
                 )
                 findNavController().navigate(action)

@@ -31,7 +31,8 @@ class LibraryTrackBinder(
     private val onContextMenuClick: (MenuItem, Track) -> Boolean,
     private val showHeart: Boolean = false,
     private val onHeartClick: (Track) -> Unit = {}
-) : ItemViewBinder<Identifiable, LibraryTrackBinder.ViewHolder>(), KoinComponent {
+) : ItemViewBinder<Identifiable, LibraryTrackBinder.ViewHolder>(),
+    KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 

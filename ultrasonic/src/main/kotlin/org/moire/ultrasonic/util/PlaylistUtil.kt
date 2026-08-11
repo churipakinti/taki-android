@@ -25,9 +25,10 @@ object PlaylistUtil {
      * existing playlist's song list is overwritten when a `playlistId` is supplied, so adding
      * means fetching the playlist's current songs and resubmitting them plus the new ones.
      */
-    suspend fun addToPlaylist(playlist: Playlist, tracks: List<Track>) = withContext(Dispatchers.IO) {
-        val service = MusicServiceFactory.getMusicService()
-        val existing = service.getPlaylist(playlist.id, playlist.name).getTracks()
-        service.createPlaylist(playlist.id, playlist.name, existing + tracks)
-    }
+    suspend fun addToPlaylist(playlist: Playlist, tracks: List<Track>) =
+        withContext(Dispatchers.IO) {
+            val service = MusicServiceFactory.getMusicService()
+            val existing = service.getPlaylist(playlist.id, playlist.name).getTracks()
+            service.createPlaylist(playlist.id, playlist.name, existing + tracks)
+        }
 }

@@ -25,17 +25,15 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
  * Renders an Album as a compact row (small cover + two lines of text),
  * used in the 2-column "shortcuts" grid at the top of the Home screen.
  */
-class HomeShortcutDelegate(
-    private val onItemClick: (Album) -> Unit
-) : ItemViewDelegate<Album, HomeShortcutDelegate.ViewHolder>(),
+class HomeShortcutDelegate(private val onItemClick: (Album) -> Unit) :
+    ItemViewDelegate<Album, HomeShortcutDelegate.ViewHolder>(),
     KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 
-    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder =
-        ViewHolder(
-            LayoutInflater.from(context).inflate(R.layout.home_shortcut_item, parent, false)
-        )
+    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder = ViewHolder(
+        LayoutInflater.from(context).inflate(R.layout.home_shortcut_item, parent, false)
+    )
 
     override fun onBindViewHolder(holder: ViewHolder, item: Album) {
         holder.title.text = item.title

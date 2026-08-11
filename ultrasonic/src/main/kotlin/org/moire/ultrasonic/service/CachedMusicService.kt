@@ -146,7 +146,7 @@ class CachedMusicService(private val musicService: MusicService) :
         if (dir == null) {
             dir = musicService.getMusicDirectory(id, name, refresh)
             cache = TimeLimitedCache(
-                Settings.directoryCacheTime.toLong(),
+                Settings.DIRECTORY_CACHE_TIME.toLong(),
                 TimeUnit.SECONDS
             )
             cache.set(dir)
@@ -194,7 +194,7 @@ class CachedMusicService(private val musicService: MusicService) :
         if (dir == null) {
             dir = musicService.getAlbumAsDir(id, name, refresh)
             cache = TimeLimitedCache(
-                Settings.directoryCacheTime.toLong(),
+                Settings.DIRECTORY_CACHE_TIME.toLong(),
                 TimeUnit.SECONDS
             )
             cache.set(dir)
@@ -272,8 +272,7 @@ class CachedMusicService(private val musicService: MusicService) :
         musicService.getLyrics(artist, title)
 
     @Throws(Exception::class)
-    override fun getLyricsBySongId(id: String): Lyrics? =
-        musicService.getLyricsBySongId(id)
+    override fun getLyricsBySongId(id: String): Lyrics? = musicService.getLyricsBySongId(id)
 
     @Throws(Exception::class)
     override fun scrobble(id: String, submission: Boolean) {
@@ -444,7 +443,7 @@ class CachedMusicService(private val musicService: MusicService) :
         if (dir == null) {
             dir = musicService.getVideos(refresh)
             cache = TimeLimitedCache(
-                Settings.directoryCacheTime.toLong(),
+                Settings.DIRECTORY_CACHE_TIME.toLong(),
                 TimeUnit.SECONDS
             )
             cache.set(dir)
@@ -461,7 +460,7 @@ class CachedMusicService(private val musicService: MusicService) :
         if (userInfo == null) {
             userInfo = musicService.getUser(username)
             cache = TimeLimitedCache(
-                Settings.directoryCacheTime.toLong(),
+                Settings.DIRECTORY_CACHE_TIME.toLong(),
                 TimeUnit.SECONDS
             )
             cache.set(userInfo)

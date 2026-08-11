@@ -141,7 +141,7 @@ class MediaPlayerLifecycleSupport(
                     }
                 } else if (state == 1) {
                     if (!mediaPlayerManager.isJukeboxEnabled &&
-                        Settings.resumePlayOnHeadphonePlug && !mediaPlayerManager.isPlaying
+                        Settings.RESUME_PLAY_ON_HEADPHONE_PLUG && !mediaPlayerManager.isPlaying
                     ) {
                         mediaPlayerManager.prepare()
                         mediaPlayerManager.play()

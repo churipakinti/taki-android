@@ -28,7 +28,9 @@ import org.moire.ultrasonic.view.ViewCapabilities
  * Entry point for the complete collection. Home helps the listener continue listening; Library
  * instead acts as a stable index into personal collections and the server catalogue.
  */
-class MainFragment : ScopeFragment(), KoinScopeComponent {
+class MainFragment :
+    ScopeFragment(),
+    KoinScopeComponent {
     private val activeServerProvider: ActiveServerProvider by inject()
 
     override fun onCreateView(

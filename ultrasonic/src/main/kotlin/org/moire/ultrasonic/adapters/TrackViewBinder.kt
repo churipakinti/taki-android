@@ -70,13 +70,16 @@ class TrackViewBinder(
         holder.itemView.setOnLongClickListener {
             when {
                 checkable && !selecting -> onEnterSelectionMode?.invoke(track)
+
                 selecting && !track.isVideo -> holder.isChecked = !holder.check.isChecked
+
                 onContextMenuClick != null -> {
                     val popup = createContextMenu(holder.itemView, track)
                     popup.setOnMenuItemClickListener { menuItem ->
                         onContextMenuClick.invoke(menuItem, track)
                     }
                 }
+
                 !track.isDirectory -> holder.maximizeOrMinimize()
             }
 
@@ -96,7 +99,9 @@ class TrackViewBinder(
             if (onContextMenuClick == null) return@setOnClickListener
             // createContextMenu() already calls .show() internally (see Utils.createPopupMenu)
             val popup = createContextMenu(view, track)
-            popup.setOnMenuItemClickListener { menuItem -> onContextMenuClick.invoke(menuItem, track) }
+            popup.setOnMenuItemClickListener { menuItem ->
+                onContextMenuClick.invoke(menuItem, track)
+            }
         }
 
         holder.drag.setOnTouchListener { _, event ->

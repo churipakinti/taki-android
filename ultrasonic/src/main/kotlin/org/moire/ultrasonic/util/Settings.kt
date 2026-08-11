@@ -61,9 +61,9 @@ object Settings {
     val pinWithHighestQuality: Boolean
         get() = (maxBitRatePinning == 0)
 
-    const val preloadCount = 3
+    const val PRELOAD_COUNT = 3
 
-    const val parallelDownloads = 3
+    const val PARALLEL_DOWNLOADS = 3
 
     @JvmStatic
     val cacheSizeMB: Int
@@ -99,41 +99,41 @@ object Settings {
     // Out-of-the-box vision: the only thing worth configuring is the server. These five used to
     // be switches under Settings > Appearance; fixed to their prior real-world default so
     // behavior doesn't change, just the ability to toggle them (see HANDOFF.md).
-    const val shouldDisplayBitrateWithArtist = false
+    const val SHOULD_DISPLAY_BITRATE_WITH_ARTIST = false
 
-    const val shouldUseFolderForArtistName = false
+    const val SHOULD_USE_FOLDER_FOR_ARTIST_NAME = false
 
-    const val shouldShowTrackNumber = false
+    const val SHOULD_SHOW_TRACK_NUMBER = false
 
     // Search result caps -- also double as generic page-size defaults well beyond Search itself
     // (Browse/library grids, "Play Random Songs," playlist creation, any track-collection screen
     // invoked without an explicit size). Fixed at their prior defaults so none of those callers'
     // behavior changes.
-    const val defaultAlbums = 5
+    const val DEFAULT_ALBUMS = 5
 
-    const val maxAlbums = 20
+    const val MAX_ALBUMS = 20
 
-    const val defaultSongs = 10
+    const val DEFAULT_SONGS = 10
 
-    const val maxSongs = 25
+    const val MAX_SONGS = 25
 
-    const val maxArtists = 10
+    const val MAX_ARTISTS = 10
 
-    const val defaultArtists = 3
+    const val DEFAULT_ARTISTS = 3
 
-    const val seekInterval = 5000
+    const val SEEK_INTERVAL = 5000
 
     val seekIntervalMillis: Long
-        get() = (seekInterval / 1000).toLong()
+        get() = (SEEK_INTERVAL / 1000).toLong()
 
-    const val resumePlayOnHeadphonePlug = true
+    const val RESUME_PLAY_ON_HEADPHONE_PLUG = true
 
     // Bluetooth resume/pause used to be separately configurable (all devices / A2DP-only /
     // disabled); fixed to A2DP-only for both -- resuming/pausing only for actual audio devices
     // (headphones, speakers, car audio), not any paired Bluetooth device, is standard behavior
     // and needs no user decision. See BluetoothIntentReceiver.kt.
 
-    const val showNowPlaying = true
+    const val SHOW_NOW_PLAYING = true
 
     @JvmStatic
     var shouldTransitionOnPlayback by BooleanSetting(
@@ -144,7 +144,7 @@ object Settings {
     // No per-server capability flag exists for scrobble support (unlike chat/bookmarks/shares),
     // so there's nothing to auto-detect -- always attempt it; a server with no scrobble target
     // configured (e.g. no Last.fm link) just no-ops.
-    const val scrobbleEnabled = true
+    const val SCROBBLE_ENABLED = true
 
     // Normally you don't need to use these Settings directly,
     // use ActiveServerProvider.isID3Enabled() instead
@@ -157,20 +157,20 @@ object Settings {
 
     var activeServer by IntSetting(getKey(R.string.setting_key_server_instance), -1)
 
-    const val serverScaling = true
+    const val SERVER_SCALING = true
 
     var firstRunExecuted by BooleanSetting(getKey(R.string.setting_key_first_run_executed), false)
 
-    const val shouldShowArtistPicture = true
+    const val SHOULD_SHOW_ARTIST_PICTURE = true
 
     // Chat is unreachable from the UI (hidden drawer item, see HANDOFF.md); kept only so
     // ChatFragment.kt -- deliberately not deleted, same "hide don't delete" pattern as the rest
     // of that feature -- still compiles unchanged if ever reactivated.
-    const val chatRefreshInterval = 5000
+    const val CHAT_REFRESH_INTERVAL = 5000
 
-    const val directoryCacheTime = 300
+    const val DIRECTORY_CACHE_TIME = 300
 
-    const val shouldSortByDisc = true
+    const val SHOULD_SORT_BY_DISC = true
 
     var shouldClearBookmark
         by BooleanSetting(getKey(R.string.setting_key_clear_bookmark), false)

@@ -62,7 +62,9 @@ private const val PLAYBACK_CHECKPOINT_INTERVAL = 5_000L
 // MediaController calls on the app's main thread. Adding in chunks and yielding
 // between them lets input dispatch keep up. See
 // docs/POSIBLES_ERRORES_Y_VERIFICACION.md item 1 for the original ANR this mirrors.
-private const val ADD_MEDIA_ITEMS_CHUNK_SIZE = 200
+// Internal (not private) because MediaLibrarySessionCallback.shuffleCurrentPlaylist() needs
+// the same protection for its own addMediaItems() call - see docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md.
+internal const val ADD_MEDIA_ITEMS_CHUNK_SIZE = 200
 
 /**
  * The Media Player Manager can forward commands to the Media3 controller as
@@ -371,22 +373,37 @@ class MediaPlayerManager(
 
     @Synchronized
     fun restore(state: PlaybackState, autoPlay: Boolean) {
-        addToPlaylist(
-            state.songs,
-            autoPlay = false,
-            shuffle = false,
-            insertionMode = InsertionMode.APPEND
-        )
-
         repeatMode = state.repeatMode
         isShufflePlayEnabled = state.shufflePlay
 
-        if (state.currentPlayingIndex != -1) {
-            seekTo(state.currentPlayingIndex, state.currentPlayingPosition)
-            prepare()
+        // addToPlaylist() only launches the add - it doesn't wait for it to finish, since
+        // addToPlaylistLocked() adds items in chunks with yield() between them to avoid an ANR
+        // on huge queues (see ADD_MEDIA_ITEMS_CHUNK_SIZE). Calling seekTo() right after it used
+        // to race that coroutine: the controller's timeline was still empty when seekTo() ran,
+        // so its empty-timeline guard silently dropped the seek, and playback then defaulted to
+        // index 0 once the items actually landed. Restoring a session with more than a handful
+        // of songs reliably reproduced this (a 50-song queue always restored to track 0 instead
+        // of the persisted index/position). Awaiting addToPlaylistLocked() in the same coroutine
+        // before seeking fixes the race.
+        mainScope.launch {
+            addToPlaylistMutex.withLock {
+                addToPlaylistLocked(
+                    songs = state.songs,
+                    autoPlay = false,
+                    shuffle = false,
+                    insertionMode = InsertionMode.APPEND,
+                    startIndex = null,
+                    startPositionMs = 0
+                )
+            }
 
-            if (autoPlay) {
-                play()
+            if (state.currentPlayingIndex != -1) {
+                seekTo(state.currentPlayingIndex, state.currentPlayingPosition)
+                prepare()
+
+                if (autoPlay) {
+                    play()
+                }
             }
 
             autoPlayStart = false

@@ -279,15 +279,14 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         }
     }
 
-    suspend fun getArtists(refresh: Boolean): List<ArtistOrIndex> =
-        withContext(Dispatchers.IO) {
-            val service = MusicServiceFactory.getMusicService()
-            if (ActiveServerProvider.shouldUseId3Tags()) {
-                service.getArtists(refresh)
-            } else {
-                service.getIndexes(activeServer.musicFolderId, refresh)
-            }
+    suspend fun getArtists(refresh: Boolean): List<ArtistOrIndex> = withContext(Dispatchers.IO) {
+        val service = MusicServiceFactory.getMusicService()
+        if (ActiveServerProvider.shouldUseId3Tags()) {
+            service.getArtists(refresh)
+        } else {
+            service.getIndexes(activeServer.musicFolderId, refresh)
         }
+    }
 
     suspend fun getGenres(refresh: Boolean): List<Genre> = withContext(Dispatchers.IO) {
         MusicServiceFactory.getMusicService().getGenres(refresh)

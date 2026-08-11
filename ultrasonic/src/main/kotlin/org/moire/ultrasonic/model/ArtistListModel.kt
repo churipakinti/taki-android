@@ -75,11 +75,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
      * Applies the same collection order used by the album screen to the artist list.
      * Album-backed orders show the artists represented by that album collection.
      */
-    fun setSortOrder(
-        order: SortOrder,
-        swipe: SwipeRefreshLayout? = null,
-        genre: String? = null
-    ) {
+    fun setSortOrder(order: SortOrder, swipe: SwipeRefreshLayout? = null, genre: String? = null) {
         sortOrder = order
         selectedGenre = genre
 
@@ -122,8 +118,11 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
 
         SortOrder.BY_GENRE -> {
             val genre = selectedGenre
-            if (genre == null) items.sortedWith(comparator)
-            else artistsFromAlbums(items, getAlbums(musicService, AlbumListType.BY_GENRE, genre))
+            if (genre == null) {
+                items.sortedWith(comparator)
+            } else {
+                artistsFromAlbums(items, getAlbums(musicService, AlbumListType.BY_GENRE, genre))
+            }
         }
 
         SortOrder.NEWEST,
@@ -147,7 +146,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         return if (genre != null || ActiveServerProvider.shouldUseId3Tags()) {
             musicService.getAlbumList2(
                 albumListType,
-                Settings.maxAlbums,
+                Settings.MAX_ALBUMS,
                 0,
                 genre,
                 musicFolderId
@@ -155,7 +154,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         } else {
             musicService.getAlbumList(
                 albumListType,
-                Settings.maxAlbums,
+                Settings.MAX_ALBUMS,
                 0,
                 musicFolderId
             )
@@ -200,8 +199,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         }.distinctBy { it.id }
     }
 
-    private fun normalizeName(name: String?): String =
-        name.orEmpty().trim().lowercase(Locale.ROOT)
+    private fun normalizeName(name: String?): String = name.orEmpty().trim().lowercase(Locale.ROOT)
 
     private fun SortOrder.toAlbumListType(): AlbumListType = when (this) {
         SortOrder.NEWEST -> AlbumListType.NEWEST

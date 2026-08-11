@@ -21,9 +21,9 @@ class SearchListModel(application: Application) : GenericListModel(application) 
     var searchResult: MutableLiveData<SearchResult?> = MutableLiveData()
 
     suspend fun search(query: String): SearchResult? {
-        val maxArtists = Settings.maxArtists
-        val maxAlbums = Settings.maxAlbums
-        val maxSongs = Settings.maxSongs
+        val maxArtists = Settings.MAX_ARTISTS
+        val maxAlbums = Settings.MAX_ALBUMS
+        val maxSongs = Settings.MAX_SONGS
 
         return withContext(Dispatchers.IO) {
             val criteria = SearchCriteria(query, maxArtists, maxAlbums, maxSongs)
@@ -37,9 +37,9 @@ class SearchListModel(application: Application) : GenericListModel(application) 
 
     fun trimResultLength(
         result: SearchResult,
-        maxArtists: Int = Settings.defaultArtists,
-        maxAlbums: Int = Settings.defaultAlbums,
-        maxSongs: Int = Settings.defaultSongs
+        maxArtists: Int = Settings.DEFAULT_ARTISTS,
+        maxAlbums: Int = Settings.DEFAULT_ALBUMS,
+        maxSongs: Int = Settings.DEFAULT_SONGS
     ): SearchResult = SearchResult(
         artists = result.artists.take(maxArtists),
         albums = result.albums.take(maxAlbums),

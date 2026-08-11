@@ -158,11 +158,12 @@ class NowPlayingFragment : ScopeFragment() {
         val progress = (position.toLong() * PROGRESS_MAX / duration).toInt()
         indicator.setProgressCompat(progress, false)
         if (!mediaPlayerManager.isPlaying || position >= duration) return
-        progressAnimator = ObjectAnimator.ofInt(indicator, "progress", progress, PROGRESS_MAX).apply {
-            this.duration = (duration - position).toLong()
-            interpolator = LinearInterpolator()
-            start()
-        }
+        progressAnimator =
+            ObjectAnimator.ofInt(indicator, "progress", progress, PROGRESS_MAX).apply {
+                this.duration = (duration - position).toLong()
+                interpolator = LinearInterpolator()
+                start()
+            }
     }
 
     private fun handleOnTouch(event: MotionEvent): Boolean {

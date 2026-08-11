@@ -40,6 +40,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.R
@@ -314,10 +315,16 @@ class MediaLibrarySessionCallback :
                 }
             )
             .setIconResId(
+                // Was rating_star_hollow/rating_star_full - a leftover from before the app
+                // dropped 5-star rating for a single heart (see HANDOFF.md). The button's
+                // display name ("Love"/"Dislike") already implied a heart, but the actual icon
+                // shown by the system media notification, the Quick Settings media card, and
+                // Android Auto was a star - found on-device (2026-08-10) by comparing against
+                // Spotify/Symfonium, which both show a heart in the same slot.
                 if (willHeart) {
-                    R.drawable.rating_star_hollow
+                    R.drawable.rating_heart_hollow
                 } else {
-                    R.drawable.rating_star_full
+                    R.drawable.rating_heart_full
                 }
             )
             .setSessionCommand(sessionCommand)
@@ -1641,6 +1648,15 @@ class MediaLibrarySessionCallback :
         player.removeMediaItems(player.currentMediaItemIndex + 1, player.mediaItemCount)
         player.removeMediaItems(0, player.currentMediaItemIndex)
 
-        player.addMediaItems(mediaItemsToShuffle.shuffled())
+        // A single unchunked addMediaItems() here would reintroduce, via the Shuffle button
+        // on a very large queue, the exact main-thread ANR that MediaPlayerManager.
+        // addToPlaylistLocked() already fixed for the "add tracks" path - see
+        // docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md. Mirror the same chunked+yielded pattern.
+        mainScope.launch {
+            for (chunk in mediaItemsToShuffle.shuffled().chunked(ADD_MEDIA_ITEMS_CHUNK_SIZE)) {
+                player.addMediaItems(chunk)
+                yield()
+            }
+        }
     }
 }

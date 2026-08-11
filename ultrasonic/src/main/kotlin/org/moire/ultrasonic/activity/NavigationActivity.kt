@@ -75,6 +75,7 @@ class NavigationActivity : ScopeActivity() {
     private var nowPlayingView: FragmentContainerView? = null
     private var nowPlayingHidden = false
     private var bottomNavigation: BottomNavigationView? = null
+    private var navHostContainer: View? = null
     private var contentBackButton: View? = null
     private var contentNavigationHeader: View? = null
     private var toolbar: Toolbar? = null
@@ -90,6 +91,7 @@ class NavigationActivity : ScopeActivity() {
 
     private var currentFragmentId: Int = 0
     private var imeVisible = false
+    private var navigationBarBottomInset = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         Timber.d("onCreate called")
 
@@ -110,11 +112,18 @@ class NavigationActivity : ScopeActivity() {
         setContentView(R.layout.navigation_activity)
         nowPlayingView = findViewById(R.id.now_playing_fragment)
         bottomNavigation = findViewById(R.id.bottom_navigation)
+        navHostContainer = findViewById(R.id.nav_host_container)
         contentBackButton = findViewById(R.id.content_back_button)
         contentNavigationHeader = findViewById(R.id.content_navigation_header)
         toolbar = findViewById(R.id.toolbar)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navigation_root)) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navigation_root)) {
+                view,
+                insets
+            ->
             view.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
+            navigationBarBottomInset =
+                insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            applyBottomInset()
             val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             if (imeVisible != isImeVisible) {
                 imeVisible = isImeVisible
@@ -164,10 +173,35 @@ class NavigationActivity : ScopeActivity() {
 
             currentFragmentId = destination.id
             val isLibraryTrackCollection = destination.id == R.id.trackCollectionFragment &&
-                (arguments?.getBoolean("libraryRoot") == true ||
-                    arguments?.getBoolean("getStarred") == true)
+                (
+                    arguments?.getBoolean("libraryRoot") == true ||
+                        arguments?.getBoolean("getStarred") == true
+                    )
             val isAlbumDetail = destination.id == R.id.trackCollectionFragment &&
                 arguments?.getBoolean("isAlbum") == true
+
+            // The nav graph is flat, so AndroidX's setupWithNavController() only checks
+            // destination.id against the 4 top-level menu items themselves - it can't know that
+            // e.g. trackCollectionFragment(libraryRoot=true) is "Songs", reached only from
+            // Library. For any destination it doesn't recognize it leaves the bottom nav's
+            // selection exactly as it was, so browsing into Library's own sub-screens left
+            // "Home" highlighted (whatever tab was last matched before, not where the content
+            // actually lives) - found via on-device testing (2026-08-10), see CHANGES.md.
+            // Only destinations with a single, unambiguous entry point are corrected here;
+            // trackCollectionFragment/artistDetailFragment used for album/artist/genre/playlist
+            // browsing are reachable from both Home and Library depending on how the user got
+            // there, so they're deliberately left alone rather than guessed at.
+            val libraryOnlyDestination = isLibraryTrackCollection || destination.id in setOf(
+                R.id.playlistsFragment,
+                R.id.albumListFragment,
+                R.id.artistListFragment,
+                R.id.selectGenreFragment
+            )
+            if (libraryOnlyDestination) {
+                bottomNavigation?.menu?.findItem(R.id.mainFragment)?.isChecked = true
+            } else if (destination.id == R.id.downloadedAlbumFragment) {
+                bottomNavigation?.menu?.findItem(R.id.downloadsFragment)?.isChecked = true
+            }
             val usesContentHeader = destination.id in setOf(
                 R.id.homeFragment,
                 R.id.mainFragment,
@@ -242,7 +276,6 @@ class NavigationActivity : ScopeActivity() {
         if (!UApp.instance!!.isFirstRun) {
             ShortcutUtil.registerShortcuts(this)
         }
-
     }
 
     fun showLibraryHub(anchorView: View? = null) {
@@ -260,12 +293,16 @@ class NavigationActivity : ScopeActivity() {
             val navController = findNavController(R.id.nav_host_fragment)
             when (item.itemId) {
                 R.id.library_hub_switch -> navController.navigate(R.id.serverSelectorFragment)
+
                 R.id.library_hub_add -> navController.navigate(
                     R.id.editServerFragment,
                     Bundle().apply { putInt("index", -1) }
                 )
+
                 R.id.library_hub_settings -> navController.navigate(R.id.settingsFragment)
+
                 R.id.library_hub_about -> navController.navigate(R.id.aboutFragment)
+
                 else -> return@setOnMenuItemClickListener false
             }
             true
@@ -366,7 +403,7 @@ class NavigationActivity : ScopeActivity() {
     private fun playRandomSongs() {
         val currentFragment = host?.childFragmentManager?.fragments?.last() ?: return
         val service = MusicServiceFactory.getMusicService()
-        val musicDirectory = service.getRandomSongs(Settings.maxSongs)
+        val musicDirectory = service.getRandomSongs(Settings.MAX_SONGS)
 
         mediaPlayerManager.addToPlaylist(
             songs = musicDirectory.getTracks(),
@@ -394,18 +431,6 @@ class NavigationActivity : ScopeActivity() {
         } else {
             super.attachBaseContext(newBase)
         }
-    }
-
-    private fun exit() {
-        Timber.d("User choose to exit the app")
-
-        // Broadcast that the service is being stopped
-        RxBus.stopServiceCommandPublisher.onNext(Unit)
-
-        // Broadcast that the app is being shutdown
-        RxBus.shutdownCommandPublisher.onNext(Unit)
-
-        finishAndRemoveTask()
     }
 
     private fun showWelcomeDialog() {
@@ -438,7 +463,7 @@ class NavigationActivity : ScopeActivity() {
     }
 
     private fun showNowPlaying() {
-        if (!Settings.showNowPlaying) {
+        if (!Settings.SHOW_NOW_PLAYING) {
             hideNowPlaying()
             return
         }
@@ -460,6 +485,7 @@ class NavigationActivity : ScopeActivity() {
                 val item: MediaItem? = mediaPlayerManager.currentMediaItem
                 if (item != null) {
                     nowPlayingView?.visibility = View.VISIBLE
+                    applyBottomInset()
                 }
             } else {
                 hideNowPlaying()
@@ -469,6 +495,33 @@ class NavigationActivity : ScopeActivity() {
 
     private fun hideNowPlaying() {
         nowPlayingView?.visibility = View.GONE
+        applyBottomInset()
+    }
+
+    // bottomNavigation and nowPlayingView (the mini player) are the two views that can sit
+    // directly on the display's bottom edge, depending on which one is visible on the current
+    // destination. Edge-to-edge (enforced from Android 15/targetSdk 35 on) draws app content
+    // behind the system navigation bar, so whichever of the two is currently the bottom-most
+    // visible view must absorb that inset as its own padding, or its content/controls end up
+    // rendered underneath the system's back/home/recents buttons - this was reported on Lyrics
+    // (bottomNavigation hidden, mini player visible).
+    // On destinations that hide both (Settings/About/Equalizer/ServerSelector/EditServer, when
+    // nothing is playing so the mini player also isn't shown), neither absorbs the inset, and the
+    // fragment's own bottom-anchored content is what's left exposed - found on EditServerFragment,
+    // whose Test connection/Save buttons rendered underneath the system nav bar. In that case the
+    // nav host container itself needs the padding instead.
+    private fun applyBottomInset() {
+        val bottomNavVisible = bottomNavigation?.visibility == View.VISIBLE
+        val nowPlayingVisible = nowPlayingView?.visibility == View.VISIBLE
+        bottomNavigation?.updatePadding(
+            bottom = if (bottomNavVisible) navigationBarBottomInset else 0
+        )
+        nowPlayingView?.updatePadding(
+            bottom = if (!bottomNavVisible && nowPlayingVisible) navigationBarBottomInset else 0
+        )
+        navHostContainer?.updatePadding(
+            bottom = if (!bottomNavVisible && !nowPlayingVisible) navigationBarBottomInset else 0
+        )
     }
 
     private fun updateChromeVisibility() {
@@ -489,6 +542,7 @@ class NavigationActivity : ScopeActivity() {
         } else if (!nowPlayingHidden) {
             showNowPlaying()
         }
+        applyBottomInset()
     }
 
     private fun updateBottomNavigationAvailability() {

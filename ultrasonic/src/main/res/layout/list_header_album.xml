@@ -1,88 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:a="http://schemas.android.com/apk/res/android"
-    a:layout_width="fill_parent"
-    a:layout_height="wrap_content">
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:gravity="center_vertical"
+    a:orientation="horizontal"
+    a:paddingHorizontal="16dp"
+    a:paddingVertical="16dp">
 
-    <ImageView
-        a:id="@+id/select_album_art"
-        a:layout_width="160dip"
-        a:layout_height="160dip"
-        a:layout_alignParentStart="true"
-        a:layout_alignParentTop="true"
-        a:layout_marginEnd="10dip"
-        a:contentDescription="@null"
-        a:scaleType="fitCenter"
-        a:src="@drawable/unknown_album" />
+    <com.google.android.material.card.MaterialCardView
+        a:layout_width="96dp"
+        a:layout_height="96dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="3dp"
+        app:strokeWidth="0dp">
 
-    <TextView
-        a:id="@+id/select_album_title"
-        a:layout_width="wrap_content"
+        <ImageView
+            a:id="@+id/select_album_art"
+            a:layout_width="match_parent"
+            a:layout_height="match_parent"
+            a:contentDescription="@null"
+            a:scaleType="centerCrop"
+            a:src="@drawable/unknown_album" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        a:layout_width="0dp"
         a:layout_height="wrap_content"
-        a:layout_toEndOf="@+id/select_album_art"
-        a:ellipsize="end"
-        a:paddingTop="10dip"
-        a:paddingEnd="4dip"
-        a:singleLine="true"
-        a:textAppearance="?android:attr/textAppearanceMedium" />
+        a:layout_marginStart="16dp"
+        a:layout_weight="1"
+        a:orientation="vertical">
 
-    <TextView
-        a:id="@+id/select_album_artist"
-        style="@style/Ultrasonic.SecondaryText"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:layout_below="@+id/select_album_title"
-        a:layout_toEndOf="@+id/select_album_art"
-        a:ellipsize="end"
-        a:paddingEnd="4dip"
-        a:singleLine="true"
-        a:textAppearance="?android:attr/textAppearanceSmall" />
+        <TextView
+            a:id="@+id/select_album_title"
+            style="@style/Ultrasonic.PrimaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:ellipsize="end"
+            a:maxLines="2"
+            a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            tools:text="Playlist name" />
 
-    <TextView
-        a:id="@+id/select_album_genre"
-        style="@style/Ultrasonic.SecondaryText"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:layout_below="@+id/select_album_artist"
-        a:layout_toEndOf="@+id/select_album_art"
-        a:ellipsize="end"
-        a:paddingEnd="4dip"
-        a:singleLine="true"
-        a:textAppearance="?android:attr/textAppearanceSmall" />
+        <TextView
+            a:id="@+id/select_album_artist"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_marginTop="4dp"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Artist name" />
 
-    <TextView
-        a:id="@+id/select_album_year"
-        style="@style/Ultrasonic.SecondaryText"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:layout_below="@+id/select_album_genre"
-        a:layout_toEndOf="@+id/select_album_art"
-        a:ellipsize="end"
-        a:paddingEnd="4dip"
-        a:singleLine="true"
-        a:textAppearance="?android:attr/textAppearanceSmall" />
+        <TextView
+            a:id="@+id/select_album_meta"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_marginTop="2dp"
+            a:ellipsize="end"
+            a:singleLine="true"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Rock · 1990 · 10 songs · 42:10" />
 
-    <TextView
-        a:id="@+id/select_album_song_count"
-        style="@style/Ultrasonic.SecondaryText"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:layout_below="@+id/select_album_year"
-        a:layout_toEndOf="@+id/select_album_art"
-        a:ellipsize="none"
-        a:paddingEnd="4dip"
-        a:singleLine="true"
-        a:textAppearance="?android:attr/textAppearanceSmall" />
+    </LinearLayout>
 
-    <TextView
-        a:id="@+id/select_album_duration"
-        style="@style/Ultrasonic.SecondaryText"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content"
-        a:layout_below="@+id/select_album_song_count"
-        a:layout_toEndOf="@+id/select_album_art"
-        a:ellipsize="none"
-        a:paddingEnd="4dip"
-        a:singleLine="true"
-        a:textAppearance="?android:attr/textAppearanceSmall" />
-
-</RelativeLayout>
+</LinearLayout>

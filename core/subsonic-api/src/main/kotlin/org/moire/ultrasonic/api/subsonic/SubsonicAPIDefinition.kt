@@ -17,8 +17,8 @@ import org.moire.ultrasonic.api.subsonic.response.GetAlbumInfo2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumList2Response
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumListResponse
 import org.moire.ultrasonic.api.subsonic.response.GetAlbumResponse
-import org.moire.ultrasonic.api.subsonic.response.GetArtistResponse
 import org.moire.ultrasonic.api.subsonic.response.GetArtistInfo2Response
+import org.moire.ultrasonic.api.subsonic.response.GetArtistResponse
 import org.moire.ultrasonic.api.subsonic.response.GetArtistsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetIndexesResponse
 import org.moire.ultrasonic.api.subsonic.response.GetLyricsBySongIdResponse
@@ -204,9 +204,7 @@ interface SubsonicAPIDefinition {
      * support it simply fail the call, which callers should catch and fall back to [getLyrics].
      */
     @GET("getLyricsBySongId.view")
-    fun getLyricsBySongId(
-        @Query("id") id: String
-    ): Call<GetLyricsBySongIdResponse>
+    fun getLyricsBySongId(@Query("id") id: String): Call<GetLyricsBySongIdResponse>
 
     @GET("scrobble.view")
     fun scrobble(

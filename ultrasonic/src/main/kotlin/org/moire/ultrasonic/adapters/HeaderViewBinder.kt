@@ -38,10 +38,7 @@ class HeaderViewBinder(context: Context) :
         val coverArtView: ImageView = itemView.findViewById(R.id.select_album_art)
         val titleView: TextView = itemView.findViewById(R.id.select_album_title)
         val artistView: TextView = itemView.findViewById(R.id.select_album_artist)
-        val durationView: TextView = itemView.findViewById(R.id.select_album_duration)
-        val songCountView: TextView = itemView.findViewById(R.id.select_album_song_count)
-        val yearView: TextView = itemView.findViewById(R.id.select_album_year)
-        val genreView: TextView = itemView.findViewById(R.id.select_album_genre)
+        val metaView: TextView = itemView.findViewById(R.id.select_album_meta)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, item: AlbumHeader) {
@@ -85,24 +82,20 @@ class HeaderViewBinder(context: Context) :
             context.resources.getString(R.string.common_multiple_genres)
         }
 
-        holder.genreView.text = genre
-
         val year: String = if (item.years.size == 1) {
             item.years.iterator().next().toString()
         } else {
             resources.getString(R.string.common_multiple_years)
         }
 
-        holder.yearView.text = year
-
         val songs = resources.getQuantityString(
             R.plurals.n_songs,
             item.childCount,
             item.childCount
         )
-        holder.songCountView.text = songs
 
         val duration = Util.formatTotalDuration(item.totalDuration)
-        holder.durationView.text = duration
+
+        holder.metaView.text = listOf(genre, year, songs, duration).joinToString(" · ")
     }
 }

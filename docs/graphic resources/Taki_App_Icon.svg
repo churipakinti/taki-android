@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Taki App Icon</title>
+  <rect width="1024" height="1024" fill="#090A08"/>
+  <g id="taki-t-note" fill="#B7D63C">
+    <ellipse cx="458" cy="756" rx="98" ry="80"/>
+    <rect x="458" y="220" width="88" height="538"/>
+    <rect x="370" y="332" width="350" height="78"/>
+  </g>
+</svg>

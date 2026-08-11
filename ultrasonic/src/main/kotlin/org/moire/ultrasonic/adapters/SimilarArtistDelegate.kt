@@ -23,17 +23,15 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.FileUtil
 
 /** Renders a compact artist portrait in the similar-artists carousel. */
-class SimilarArtistDelegate(
-    private val onItemClick: (Artist) -> Unit
-) : ItemViewDelegate<Artist, SimilarArtistDelegate.ViewHolder>(),
+class SimilarArtistDelegate(private val onItemClick: (Artist) -> Unit) :
+    ItemViewDelegate<Artist, SimilarArtistDelegate.ViewHolder>(),
     KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 
-    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder =
-        ViewHolder(
-            LayoutInflater.from(context).inflate(R.layout.artist_similar_item, parent, false)
-        )
+    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder = ViewHolder(
+        LayoutInflater.from(context).inflate(R.layout.artist_similar_item, parent, false)
+    )
 
     override fun onBindViewHolder(holder: ViewHolder, item: Artist) {
         holder.name.text = item.name

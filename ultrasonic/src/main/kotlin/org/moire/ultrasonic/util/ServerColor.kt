@@ -24,7 +24,12 @@ object ServerColor {
     fun getBackgroundColor(context: Context, serverColor: Int?): Int = if (serverColor != null) {
         MaterialColors.harmonizeWithPrimary(context, serverColor)
     } else {
-        MaterialColors.getColor(context, android.R.attr.colorPrimary, "")
+        // Must be the app's Material3 colorPrimary (the Taki accent), not android.R.attr's
+        // platform attribute - the two can resolve to different colors and mixing them up is
+        // an easy mistake (every other MaterialColors.getColor() call in this codebase already
+        // uses androidx.appcompat.R.attr.colorPrimary, see ServerRowAdapter/TrackViewHolder/
+        // PlayerFragment/LyricsFragment for the same pattern).
+        MaterialColors.getColor(context, androidx.appcompat.R.attr.colorPrimary, "")
     }
 
     @ColorInt

@@ -5,8 +5,8 @@ package org.moire.ultrasonic.domain
 import org.amshove.kluent.`should be equal to`
 import org.junit.Test
 import org.moire.ultrasonic.api.subsonic.models.Lyrics
-import org.moire.ultrasonic.api.subsonic.models.LyricsList
 import org.moire.ultrasonic.api.subsonic.models.LyricsLine as APILyricsLine
+import org.moire.ultrasonic.api.subsonic.models.LyricsList
 import org.moire.ultrasonic.api.subsonic.models.StructuredLyrics
 
 /**

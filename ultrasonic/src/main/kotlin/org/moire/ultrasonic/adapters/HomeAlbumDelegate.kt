@@ -25,17 +25,15 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
  * Renders an Album as a fixed-width card, used in the horizontal
  * "carousel" RecyclerViews of the Home screen.
  */
-class HomeAlbumDelegate(
-    private val onItemClick: (Album) -> Unit
-) : ItemViewDelegate<Album, HomeAlbumDelegate.ViewHolder>(),
+class HomeAlbumDelegate(private val onItemClick: (Album) -> Unit) :
+    ItemViewDelegate<Album, HomeAlbumDelegate.ViewHolder>(),
     KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 
-    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder =
-        ViewHolder(
-            LayoutInflater.from(context).inflate(R.layout.home_carousel_item, parent, false)
-        )
+    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder = ViewHolder(
+        LayoutInflater.from(context).inflate(R.layout.home_carousel_item, parent, false)
+    )
 
     override fun onBindViewHolder(holder: ViewHolder, item: Album) {
         holder.title.text = item.title

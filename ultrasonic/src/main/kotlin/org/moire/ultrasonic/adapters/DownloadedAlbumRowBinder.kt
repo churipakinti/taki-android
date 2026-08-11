@@ -35,10 +35,9 @@ class DownloadedAlbumRowBinder(
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 
-    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder =
-        ViewHolder(
-            LayoutInflater.from(context).inflate(R.layout.list_item_downloaded_album, parent, false)
-        )
+    override fun onCreateViewHolder(context: Context, parent: ViewGroup): ViewHolder = ViewHolder(
+        LayoutInflater.from(context).inflate(R.layout.list_item_downloaded_album, parent, false)
+    )
 
     override fun onBindViewHolder(holder: ViewHolder, item: Album) {
         holder.title.text = item.title

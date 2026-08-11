@@ -51,7 +51,6 @@ class ServerSelectorFragment : Fragment() {
         serverRowAdapter = ServerRowAdapter(
             view.context,
             serverSettingsModel,
-            activeServerProvider,
             onItemClick = { server ->
                 activeServerProvider.setActiveServerById(server.id)
                 findNavController().popBackStack(R.id.homeFragment, false)

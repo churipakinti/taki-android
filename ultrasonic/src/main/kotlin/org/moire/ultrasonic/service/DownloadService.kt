@@ -28,6 +28,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -142,7 +144,7 @@ class DownloadService :
         var listChanged = false
 
         // Fill up active List with waiting tasks
-        while (activeDownloads.size < Settings.parallelDownloads && downloadQueue.peek() != null) {
+        while (activeDownloads.size < Settings.PARALLEL_DOWNLOADS && downloadQueue.peek() != null) {
             // Use poll() instead of remove() which throws an Exception if there is no element.
             val track: DownloadableTrack = downloadQueue.poll() ?: continue
 
@@ -254,6 +256,14 @@ class DownloadService :
 
         private var backgroundPriorityCounter = 100
 
+        // download() is only @Synchronized around firing off the launch{} below, not around the
+        // actual check-then-add sequence in downloadAsync() - two overlapping calls (double-tap
+        // download, or triggered from two screens) could both pass the "not already queued/
+        // active" check before either inserted, queuing the same track twice and racing two
+        // DownloadTasks writing the same file. This mutex serializes that whole sequence instead.
+        // See docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md.
+        private val downloadQueueMutex = Mutex()
+
         @Synchronized
         fun download(
             tracks: List<Track>,
@@ -273,36 +283,39 @@ class DownloadService :
             updateSaveFlag: Boolean = false
         ) {
             withContext(Dispatchers.IO) {
-                // Remove tracks which are already downloaded and update the save flag
-                // if needed
-                var filteredTracks = if (updateSaveFlag) {
-                    setSaveFlagForTracks(save, tracks)
-                } else {
-                    removeDownloadedTracksFromList(tracks)
-                }
-
-                // Remove tracks which are currently downloading
-                filteredTracks = filteredTracks.filter {
-                    !downloadQueue.any { i -> i.id == it.id } && !activeDownloads.containsKey(it.id)
-                }
-
-                // The remaining tracks should be added to the download queue
-                // By using the counter we ensure that the songs are added in the correct order
-                var priority = 0
-                val tracksToDownload =
-                    filteredTracks.map {
-                        DownloadableTrack(
-                            it,
-                            save,
-                            0,
-                            if (isHighPriority) priority++ else backgroundPriorityCounter++
-                        )
+                downloadQueueMutex.withLock {
+                    // Remove tracks which are already downloaded and update the save flag
+                    // if needed
+                    var filteredTracks = if (updateSaveFlag) {
+                        setSaveFlagForTracks(save, tracks)
+                    } else {
+                        removeDownloadedTracksFromList(tracks)
                     }
 
-                if (tracksToDownload.isNotEmpty()) {
-                    downloadQueue.addAll(tracksToDownload)
-                    tracksToDownload.forEach { postState(it.track, DownloadState.QUEUED) }
-                    processNextTracksOnService()
+                    // Remove tracks which are currently downloading
+                    filteredTracks = filteredTracks.filter {
+                        !downloadQueue.any { i -> i.id == it.id } &&
+                            !activeDownloads.containsKey(it.id)
+                    }
+
+                    // The remaining tracks should be added to the download queue
+                    // By using the counter we ensure that the songs are added in the correct order
+                    var priority = 0
+                    val tracksToDownload =
+                        filteredTracks.map {
+                            DownloadableTrack(
+                                it,
+                                save,
+                                0,
+                                if (isHighPriority) priority++ else backgroundPriorityCounter++
+                            )
+                        }
+
+                    if (tracksToDownload.isNotEmpty()) {
+                        downloadQueue.addAll(tracksToDownload)
+                        tracksToDownload.forEach { postState(it.track, DownloadState.QUEUED) }
+                        processNextTracksOnService()
+                    }
                 }
             }
         }

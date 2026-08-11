@@ -65,8 +65,8 @@ class ArtistDetailModel :
                     fetchArtistTracks(service, artistId, artistName)
                 }
             }.ifEmpty {
-            fetchTracksFromFirstAlbums(service, artistAlbums)
-        }
+                fetchTracksFromFirstAlbums(service, artistAlbums)
+            }
 
         albums.value = artistAlbums
         tracks.value = artistTracks

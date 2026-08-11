@@ -168,5 +168,4 @@ class ServerSettingsModel(
         if (rowsInDatabase > indexesInDatabase) return rowsInDatabase
         return indexesInDatabase
     }
-
 }

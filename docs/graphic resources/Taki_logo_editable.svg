@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     width="1200" height="420" viewBox="0 0 1200 420">
+  <title>Taki — logotipo editable</title>
+  <desc>Logotipo vectorial de Taki. Los grupos Fondo, Simbolo_t, Wordmark_aki y Lema pueden editarse por separado en Adobe Illustrator.</desc>
+
+  <g id="Fondo" inkscape:groupmode="layer" inkscape:label="Fondo">
+    <rect id="Fondo_negro" x="0" y="0" width="1200" height="420" rx="24" fill="#090A08"/>
+  </g>
+
+  <g id="Logotipo" inkscape:groupmode="layer" inkscape:label="Logotipo">
+    <g id="Simbolo_t" inkscape:label="Símbolo t-nota" fill="#B7D63C">
+      <!-- Cabeza ovalada de la nota -->
+      <ellipse id="Cabeza_nota" cx="168" cy="292" rx="48" ry="40"/>
+      <!-- Asta vertical -->
+      <rect id="Asta_t" x="151" y="70" width="46" height="224"/>
+      <!-- Travesaño: termina alineado ópticamente con el borde derecho de la a -->
+      <rect id="Travesano_t" x="108" y="129" width="238" height="42"/>
+    </g>
+
+    <g id="Wordmark_aki" inkscape:label="Wordmark aki" fill="#F5F7EF">
+      <text id="Texto_aki"
+            x="215" y="303"
+            font-family="Inter, Arial, sans-serif"
+            font-size="224"
+            font-weight="600"
+            letter-spacing="-8">aki</text>
+    </g>
+  </g>
+
+  <g id="Lema" inkscape:groupmode="layer" inkscape:label="Lema">
+    <text id="Texto_lema"
+          x="120" y="372"
+          fill="#A8AEA0"
+          font-family="Inter, Arial, sans-serif"
+          font-size="34"
+          font-weight="500"
+          letter-spacing="0.2">Tu música, sin distracciones.</text>
+  </g>
+
+  <g id="Guia_color" inkscape:groupmode="layer" inkscape:label="Muestras de color" transform="translate(1012 92)">
+    <rect id="Muestra_lima" x="0" y="0" width="52" height="52" rx="10" fill="#B7D63C"/>
+    <rect id="Muestra_marfil" x="0" y="72" width="52" height="52" rx="10" fill="#F5F7EF"/>
+    <rect id="Muestra_gris" x="0" y="144" width="52" height="52" rx="10" fill="#A8AEA0"/>
+  </g>
+</svg>

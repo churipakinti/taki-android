@@ -163,7 +163,7 @@ class ChatFragment :
     }
 
     private fun timerMethod() {
-        val refreshInterval = Settings.chatRefreshInterval
+        val refreshInterval = Settings.CHAT_REFRESH_INTERVAL
         if (refreshInterval > 0) {
             timer = Timer()
             timer?.schedule(

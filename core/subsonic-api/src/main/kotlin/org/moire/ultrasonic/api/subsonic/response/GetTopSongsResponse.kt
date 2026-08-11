@@ -14,6 +14,4 @@ class GetTopSongsResponse(
     val songsList get() = topSongs.songs
 }
 
-data class TopSongsWrapper(
-    @JsonProperty("song") val songs: List<MusicDirectoryChild> = emptyList()
-)
+data class TopSongsWrapper(@JsonProperty("song") val songs: List<MusicDirectoryChild> = emptyList())

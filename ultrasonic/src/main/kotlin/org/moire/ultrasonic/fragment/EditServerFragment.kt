@@ -225,7 +225,12 @@ class EditServerFragment : Fragment() {
     }
 
     private fun updateColor(color: Int?) {
-        val image = ContextCompat.getDrawable(requireContext(), R.drawable.thumb_drawable)
+        // Was R.drawable.thumb_drawable - a switch/slider thumb shape (44dp corners, sized to
+        // read as a pill) - which made this color swatch visually indistinguishable from the
+        // real SwitchMaterial toggles right below it on this same screen. This is a plain filled
+        // rounded rectangle instead, matching the border shape already drawn on top of it
+        // (R.drawable.rounded_border, set as this view's `src` in server_edit.xml).
+        val image = ContextCompat.getDrawable(requireContext(), R.drawable.rounded_swatch_fill)
         currentColor = color ?: ServerColor.getBackgroundColor(requireContext(), null)
         image?.setTint(currentColor)
         serverColorImageView?.background = image

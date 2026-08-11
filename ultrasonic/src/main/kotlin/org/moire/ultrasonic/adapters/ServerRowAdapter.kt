@@ -29,7 +29,6 @@ import org.moire.ultrasonic.util.Util.themeColor
 internal class ServerRowAdapter(
     private val context: Context,
     private val model: ServerSettingsModel,
-    private val activeServerProvider: ActiveServerProvider,
     private val onItemClick: (ServerSetting) -> Unit,
     private val serverDeletedCallback: (Int) -> Unit,
     private val serverEditRequestedCallback: (Int) -> Unit
@@ -52,10 +51,9 @@ internal class ServerRowAdapter(
 
     override fun getItemCount(): Int = data.size
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
-        ViewHolder(
-            LayoutInflater.from(parent.context).inflate(R.layout.server_row, parent, false)
-        )
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.server_row, parent, false)
+    )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val setting = data[position]

@@ -9,7 +9,7 @@ androidxcore           = "1.19.0"
 androidxTestCore       = "1.7.0"
 ktlint                 = "1.8.0"
 ktlintGradle           = "14.2.0"
-detekt                 = "1.23.8"
+detekt                 = "2.0.0-alpha.6"
 preferences            = "1.2.1"
 media3                 = "1.10.1"
 
@@ -48,7 +48,7 @@ multiType              = "4.3.0"
 gradle                  = { module = "com.android.tools.build:gradle", version.ref = "gradlePlugin" }
 kotlin                  = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 ktlintGradle            = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintGradle" }
-detekt                  = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+detekt                  = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 
 car                     = { module = "androidx.car.app:app", version.ref = "androidxcar" }
 core                    = { module = "androidx.core:core-ktx", version.ref = "androidxcore" }

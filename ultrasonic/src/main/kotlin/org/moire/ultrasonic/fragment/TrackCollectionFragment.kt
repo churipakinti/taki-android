@@ -343,7 +343,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         viewLifecycleOwner.lifecycleScope.launch {
             val info = listModel.getAlbumInfo(albumId)
             albumNotes = info?.notes
-                ?.let { HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim() }
+                ?.let {
+                    HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
+                }
                 ?.takeIf { it.isNotEmpty() }
             refreshHeaderNotes()
         }
@@ -370,8 +372,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private fun loadMoreTracks() {
         if (
             displayRandom() ||
-            ((selectedGenreName != null || navArgs.genreName != null) &&
-                listModel.canLoadMoreGenreSongs) ||
+            (
+                (selectedGenreName != null || navArgs.genreName != null) &&
+                    listModel.canLoadMoreGenreSongs
+                ) ||
             (selectedArtistId != null && listModel.canLoadMoreArtistSongs) ||
             (displayAllSongs() && listModel.canLoadMoreAllSongs)
         ) {
@@ -509,10 +513,17 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
-    private fun handleAddToPlaylistResult(@Suppress("UNUSED_PARAMETER") key: String, bundle: Bundle) {
+    private fun handleAddToPlaylistResult(
+        @Suppress("UNUSED_PARAMETER") key: String,
+        bundle: Bundle
+    ) {
         val tracks = pendingAddToPlaylistTracks
         pendingAddToPlaylistTracks = null
-        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED) || tracks == null) return
+        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED) ||
+            tracks == null
+        ) {
+            return
+        }
 
         val name = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM) ?: return
         val playlist = availablePlaylists.firstOrNull { it.name == name } ?: return
@@ -548,7 +559,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         Timber.i("Received list")
         val entryList: MutableList<MusicDirectory.Child> = it.toMutableList()
 
-        if (listModel.currentListIsSortable && Settings.shouldSortByDisc) {
+        if (listModel.currentListIsSortable && Settings.SHOULD_SORT_BY_DISC) {
             Collections.sort(entryList, EntryByDiscAndTrackComparator())
         }
 
@@ -671,7 +682,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         val getStarredTracks = displayStarred()
         val getVideos = navArgs.getVideos
         val getRandomTracks = displayRandom()
-        val size = if (navArgs.size < 0) Settings.maxSongs else navArgs.size
+        val size = if (navArgs.size < 0) Settings.MAX_SONGS else navArgs.size
         val offset = navArgs.offset
         val refresh2 = navArgs.refresh || refresh
 
@@ -818,7 +829,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         when (newOrder) {
             SortOrder.BY_ARTIST -> showArtistSelection()
+
             SortOrder.BY_GENRE -> showGenreSelection()
+
             else -> {
                 selectedArtistId = null
                 selectedArtistName = null
@@ -919,6 +932,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             ?: return
         when (pendingFilterSelection) {
             SortOrder.BY_ARTIST -> applyArtistFilter(selectedName)
+
             SortOrder.BY_GENRE -> {
                 selectedArtistId = null
                 selectedArtistName = null

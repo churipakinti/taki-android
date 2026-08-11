@@ -53,9 +53,9 @@ import org.moire.ultrasonic.data.ActiveServerProvider.Companion.isOffline
 import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.fragment.CreatePlaylistFragment
-import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
+import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
@@ -357,9 +357,13 @@ class PlaylistsFragment :
                 it == DownloadState.QUEUED || it == DownloadState.DOWNLOADING ||
                     it == DownloadState.RETRYING
             } -> PlaylistDownloadStatus.DOWNLOADING
+
             states.any { it == DownloadState.FAILED } -> PlaylistDownloadStatus.FAILED
+
             downloaded == tracks.size -> PlaylistDownloadStatus.DOWNLOADED
+
             downloaded > 0 -> PlaylistDownloadStatus.PARTIAL
+
             else -> PlaylistDownloadStatus.NOT_DOWNLOADED
         }
     }
@@ -417,17 +421,19 @@ class PlaylistsFragment :
             val playlist = getItem(position)
             if (playlist == null) {
                 val createTag = "${layoutMode.name}:create"
-                return (convertView?.takeIf {
-                    it.getTag(R.id.playlist_view_toggle) == createTag
-                } ?: layoutInflater.inflate(
-                    if (layoutMode == PlaylistLayoutMode.LIST) {
-                        R.layout.list_item_create_playlist
-                    } else {
-                        R.layout.grid_item_create_playlist
-                    },
-                    parent,
-                    false
-                ).also { it.setTag(R.id.playlist_view_toggle, createTag) }).apply {
+                return (
+                    convertView?.takeIf {
+                        it.getTag(R.id.playlist_view_toggle) == createTag
+                    } ?: layoutInflater.inflate(
+                        if (layoutMode == PlaylistLayoutMode.LIST) {
+                            R.layout.list_item_create_playlist
+                        } else {
+                            R.layout.grid_item_create_playlist
+                        },
+                        parent,
+                        false
+                    ).also { it.setTag(R.id.playlist_view_toggle, createTag) }
+                    ).apply {
                     setOnClickListener { showCreatePlaylistDialog() }
                     setOnLongClickListener(null)
                 }
@@ -517,15 +523,14 @@ class PlaylistsFragment :
         }
     }
 
-    private fun getPlaylistFrameColor(row: View): Int =
-        if (layoutMode == PlaylistLayoutMode.LIST) {
-            Color.BLACK
-        } else {
-            MaterialColors.getColor(
-                row,
-                com.google.android.material.R.attr.colorOutlineVariant
-            )
-        }
+    private fun getPlaylistFrameColor(row: View): Int = if (layoutMode == PlaylistLayoutMode.LIST) {
+        Color.BLACK
+    } else {
+        MaterialColors.getColor(
+            row,
+            com.google.android.material.R.attr.colorOutlineVariant
+        )
+    }
 
     private fun updateLayoutMode() {
         val showingGrid = layoutMode == PlaylistLayoutMode.GRID

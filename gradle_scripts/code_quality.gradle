@@ -14,10 +14,10 @@ if (isCodeQualityEnabled) {
 
 // Detekt
 if (isCodeQualityEnabled) {
-    if (!project.rootProject.plugins.hasPlugin("io.gitlab.arturbosch.detekt")) {
+    if (!project.rootProject.plugins.hasPlugin("dev.detekt")) {
         Project rootProject = project.rootProject
         rootProject.apply {
-            apply plugin: "io.gitlab.arturbosch.detekt"
+            apply plugin: "dev.detekt"
 
             detekt {
                 buildUponDefaultConfig = true

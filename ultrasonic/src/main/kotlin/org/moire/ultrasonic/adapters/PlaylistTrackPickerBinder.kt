@@ -24,7 +24,8 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 class PlaylistTrackPickerBinder(
     private val isSelected: (Track) -> Boolean,
     private val onSelectionChanged: (Track) -> Unit
-) : ItemViewBinder<Track, PlaylistTrackPickerBinder.ViewHolder>(), KoinComponent {
+) : ItemViewBinder<Track, PlaylistTrackPickerBinder.ViewHolder>(),
+    KoinComponent {
 
     private val imageLoaderProvider: ImageLoaderProvider by inject()
 

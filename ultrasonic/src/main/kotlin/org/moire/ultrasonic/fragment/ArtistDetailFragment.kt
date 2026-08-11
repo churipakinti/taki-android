@@ -30,6 +30,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
@@ -222,8 +223,11 @@ class ArtistDetailFragment :
         }
     }
 
+    private var loadJob: Job? = null
+
     private fun load(refresh: Boolean) {
-        model.viewModelScope.launch(toastingExceptionHandler()) {
+        loadJob?.cancel()
+        loadJob = model.viewModelScope.launch(toastingExceptionHandler()) {
             swipeRefresh?.isRefreshing = true
             try {
                 model.load(navArgs.artistId, navArgs.artistName, refresh)

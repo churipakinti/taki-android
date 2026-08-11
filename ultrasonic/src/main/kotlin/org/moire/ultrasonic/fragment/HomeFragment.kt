@@ -51,7 +51,9 @@ private const val AFTERNOON_ENDS_AT_HOUR = 18
  * a daily mix of a random genre's tracks) - there is no recommendation
  * engine behind this.
  */
-class HomeFragment : Fragment(), RefreshableFragment {
+class HomeFragment :
+    Fragment(),
+    RefreshableFragment {
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val mediaPlayerManager: MediaPlayerManager by inject()

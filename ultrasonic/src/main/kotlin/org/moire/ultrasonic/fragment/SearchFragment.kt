@@ -17,14 +17,14 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.core.view.isVisible
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -55,8 +55,8 @@ import org.moire.ultrasonic.provider.SearchSuggestionProvider
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenu
 import org.moire.ultrasonic.util.ContextMenuUtil.handleContextMenuTracks
-import org.moire.ultrasonic.util.RefreshableFragment
 import org.moire.ultrasonic.util.RecentSearches
+import org.moire.ultrasonic.util.RefreshableFragment
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
@@ -176,8 +176,12 @@ class SearchFragment :
 
     private fun setupSearchField(view: View) {
         searchView = view.findViewById(R.id.search_field)
-        val searchManager = requireContext().getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(requireActivity().componentName))
+        val searchManager = requireContext().getSystemService(
+            Context.SEARCH_SERVICE
+        ) as SearchManager
+        searchView.setSearchableInfo(
+            searchManager.getSearchableInfo(requireActivity().componentName)
+        )
         searchView.setIconifiedByDefault(false)
         searchView.isIconified = false
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->

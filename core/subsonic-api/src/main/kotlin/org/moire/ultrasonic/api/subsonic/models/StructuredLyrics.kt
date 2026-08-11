@@ -2,9 +2,7 @@ package org.moire.ultrasonic.api.subsonic.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class LyricsList(
-    val structuredLyrics: List<StructuredLyrics> = emptyList()
-)
+data class LyricsList(val structuredLyrics: List<StructuredLyrics> = emptyList())
 
 data class StructuredLyrics(
     val displayArtist: String? = null,
@@ -15,7 +13,4 @@ data class StructuredLyrics(
     val lines: List<LyricsLine> = emptyList()
 )
 
-data class LyricsLine(
-    val start: Long? = null,
-    val value: String = ""
-)
+data class LyricsLine(val start: Long? = null, val value: String = "")

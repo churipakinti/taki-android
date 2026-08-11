@@ -182,7 +182,7 @@ object Util {
 
     @Suppress("SuspiciousEqualsCombination")
     fun equals(object1: Any?, object2: Any?): Boolean =
-        object1 === object2 || !(object1 == null || object2 == null) && object1 == object2
+        object1 === object2 || (!(object1 == null || object2 == null) && object1 == object2)
 
     /**
      * Encodes the given string by using the hexadecimal representation of its UTF-8 bytes.
@@ -625,7 +625,7 @@ object Util {
         val artistName = song.artist
 
         if (artistName != null) {
-            if (Settings.shouldDisplayBitrateWithArtist && (
+            if (Settings.SHOULD_DISPLAY_BITRATE_WITH_ARTIST && (
                     !bitRate.isNullOrBlank() || !fileFormat.isNullOrBlank()
                     )
             ) {
@@ -648,13 +648,13 @@ object Util {
         val trackNumber = song.track ?: 0
 
         val title = StringBuilder(LINE_LENGTH)
-        if (Settings.shouldShowTrackNumber && trackNumber > 0) {
+        if (Settings.SHOULD_SHOW_TRACK_NUMBER && trackNumber > 0) {
             trackText = String.format(Locale.ROOT, "%02d.", trackNumber)
         }
 
         title.append(song.title)
 
-        if (song.isVideo && Settings.shouldDisplayBitrateWithArtist) {
+        if (song.isVideo && Settings.SHOULD_DISPLAY_BITRATE_WITH_ARTIST) {
             title.append(" (").append(
                 String.format(
                     appContext().getString(R.string.song_details_all),

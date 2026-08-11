@@ -69,6 +69,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeFragment
 import org.koin.core.component.KoinScopeComponent
@@ -98,6 +99,7 @@ import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.themeColor
 import org.moire.ultrasonic.util.Util.toast
+import org.moire.ultrasonic.util.launchWithToast
 import org.moire.ultrasonic.util.toTrack
 import org.moire.ultrasonic.view.AutoRepeatButton
 import timber.log.Timber
@@ -141,7 +143,6 @@ class PlayerFragment :
     private lateinit var viewManager: LinearLayoutManager
     private var rxBusSubscription: CompositeDisposable = CompositeDisposable()
     private lateinit var executorService: ScheduledExecutorService
-    private var ioScope = CoroutineScope(Dispatchers.IO)
 
     // Views and UI Elements
     private lateinit var playlistNameView: EditText
@@ -444,8 +445,10 @@ class PlayerFragment :
             }
         }
 
-        // Query the Jukebox state in an IO Context
-        ioScope.launch(CommunicationError.getHandler(context)) {
+        // Query the Jukebox state in an IO Context. Uses mainScope (not a standalone
+        // scope) so the check is cancelled if the view dies before it completes, instead
+        // of leaking work past onDestroyView like the old dedicated ioScope did.
+        mainScope.launch(Dispatchers.IO + CommunicationError.getHandler(context)) {
             try {
                 jukeboxAvailable = getMusicService().isJukeboxAvailable()
             } catch (all: Exception) {
@@ -494,8 +497,11 @@ class PlayerFragment :
     }
 
     private fun playerModeColor(isActive: Boolean): Int = requireContext().themeColor(
-        if (isActive) androidx.appcompat.R.attr.colorPrimary
-        else com.google.android.material.R.attr.colorOnSurfaceVariant
+        if (isActive) {
+            androidx.appcompat.R.attr.colorPrimary
+        } else {
+            com.google.android.material.R.attr.colorOnSurfaceVariant
+        }
     )
 
     private fun toggleShuffle() {
@@ -796,21 +802,25 @@ class PlayerFragment :
             it.toTrack()
         }
 
-        ioScope.launch {
-            val musicService = getMusicService()
-            musicService.createPlaylist(null, playlistName, entries)
-        }.invokeOnCompletion {
-            if (it == null || it is CancellationException) {
-                toast(R.string.download_playlist_done)
-            } else {
-                Timber.e(it, "Exception has occurred in savePlaylistInBackground")
-                val msg = String.format(
+        // launchWithToast is bound to the Fragment's (activity) lifecycle rather than the
+        // view, so it stays safe to complete after onDestroyView instead of toasting on a
+        // detached Fragment like the previous ioScope-backed version could.
+        launchWithToast {
+            try {
+                withContext(Dispatchers.IO) {
+                    getMusicService().createPlaylist(null, playlistName, entries)
+                }
+                resources.getString(R.string.download_playlist_done)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (all: Exception) {
+                Timber.e(all, "Exception has occurred in savePlaylistInBackground")
+                String.format(
                     Locale.ROOT,
                     "%s %s",
                     resources.getString(R.string.download_playlist_error),
-                    CommunicationError.getErrorMessage(it)
+                    CommunicationError.getErrorMessage(all)
                 )
-                toast(msg)
             }
         }
     }
@@ -1246,7 +1256,6 @@ class PlayerFragment :
             heartRatingImageView.setImageDrawable(hollowHeartDrawable)
         }
     }
-
 
     private fun setSongHeartRating() {
         if (currentSong == null) return

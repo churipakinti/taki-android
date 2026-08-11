@@ -3,7 +3,7 @@ package org.moire.ultrasonic.adapters
 import java.util.HashSet
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.MusicDirectory
-import org.moire.ultrasonic.util.Settings.shouldUseFolderForArtistName
+import org.moire.ultrasonic.util.Settings.SHOULD_USE_FOLDER_FOR_ARTIST_NAME
 import org.moire.ultrasonic.util.Util.getGrandparent
 
 class AlbumHeader(var entries: List<MusicDirectory.Child>, var name: String?) : Identifiable {
@@ -53,7 +53,7 @@ class AlbumHeader(var entries: List<MusicDirectory.Child>, var name: String?) : 
                 isAllVideo = false
             }
             if (!entry.isDirectory) {
-                if (shouldUseFolderForArtistName) {
+                if (SHOULD_USE_FOLDER_FOR_ARTIST_NAME) {
                     processGrandParents(entry)
                 }
                 if (entry.artist != null) {

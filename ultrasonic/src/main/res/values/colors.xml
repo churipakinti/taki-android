@@ -15,12 +15,8 @@
     <color name="taki_gray">#A7AAA2</color>
     <color name="taki_outline">#1FFFFFFF</color>
     <color name="taki_divider">#0DFFFFFF</color>
-    <color name="taki_track">#12FFFFFF</color>
     <color name="taki_error">#FFB4AB</color>
     <color name="taki_on_error_container">#FFDAD6</color>
-    <color name="taki_deep_black">@color/taki_surface_low</color>
-    <color name="background_color_black">@color/taki_black</color>
     <color name="selected_menu_dark">@color/taki_ivory</color>
     <color name="selected_menu_light">@color/taki_black</color>
-    <color name="tertiary">@color/taki_accent_secondary</color>
 </resources>

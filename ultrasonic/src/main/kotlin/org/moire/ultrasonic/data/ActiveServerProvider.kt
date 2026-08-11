@@ -257,7 +257,7 @@ class ActiveServerProvider(private val repository: ServerSettingDao) :
             if (isOffline()) {
                 return false
             }
-            return Settings.scrobbleEnabled
+            return Settings.SCROBBLE_ENABLED
         }
 
         /**
@@ -273,7 +273,7 @@ class ActiveServerProvider(private val repository: ServerSettingDao) :
             if (isOffline()) {
                 return false
             }
-            return Settings.serverScaling
+            return Settings.SERVER_SCALING
         }
     }
 }

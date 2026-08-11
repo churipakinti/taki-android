@@ -175,11 +175,13 @@ class CreatePlaylistFragment : Fragment() {
             setLoading(true)
             when (order) {
                 SortOrder.ALL_SONGS -> trackModel.getAllSongs(
-                    Settings.maxSongs,
+                    Settings.MAX_SONGS,
                     offset = 0,
                     append = false
                 )
-                SortOrder.RANDOM -> trackModel.getRandom(Settings.maxSongs, append = false)
+
+                SortOrder.RANDOM -> trackModel.getRandom(Settings.MAX_SONGS, append = false)
+
                 else -> Unit
             }
         }
@@ -238,7 +240,7 @@ class CreatePlaylistFragment : Fragment() {
         loadJob?.cancel()
         loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)
-            trackModel.getSongsForArtist(artist.id, name, Settings.maxSongs, append = false)
+            trackModel.getSongsForArtist(artist.id, name, Settings.MAX_SONGS, append = false)
         }
     }
 
@@ -246,7 +248,7 @@ class CreatePlaylistFragment : Fragment() {
         loadJob?.cancel()
         loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)
-            trackModel.getSongsForGenre(name, Settings.maxSongs, offset = 0, append = false)
+            trackModel.getSongsForGenre(name, Settings.MAX_SONGS, offset = 0, append = false)
         }
     }
 

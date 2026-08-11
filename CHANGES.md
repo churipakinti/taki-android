@@ -1,5 +1,657 @@
 # Changes
 
+## Preparación de beta: 1.516 traducciones huérfanas bloqueaban assembleRelease/bundleRelease
+
+`lintVitalRelease` (el subconjunto de checks fatales que corre automáticamente al armar la
+variante `release`) fallaba con 1.516 errores `ExtraTranslation`, abortando `assembleRelease` y
+`bundleRelease` sin generar ningún artefacto. La causa: las sucesivas limpiezas de Settings y
+otras pantallas (ver puntos 18/20/21 de `HANDOFF.md`) borraron decenas de strings del locale por
+defecto (`values/strings.xml`) sin borrar sus traducciones correspondientes en los 16 idiomas
+restantes — cada `values-XX/strings.xml` quedó con entre 71 y 100 strings huérfanas (traducidas
+pero inexistentes en el idioma por defecto).
+
+**Fix**: se generó el reporte de lint (`ultrasonic/build/reports/lint-results-release.xml`), se
+extrajo el nombre exacto de cada string huérfana por archivo desde el propio reporte, y se
+eliminó únicamente esa línea de cada `values-XX/strings.xml` (1.516 líneas en total, 0 líneas
+agregadas). Se validó que los 16 archivos siguen siendo XML válido después del cambio. No se tocó
+ninguna traducción vigente ni el locale por defecto.
+
+**Verificación**: `lintRelease`, `assembleRelease` y `bundleRelease` se relanzaron después del fix
+para confirmar que ExtraTranslation deja de bloquear la compilación de `release` (ver resultado en
+la conversación de preparación de la beta). El recuento total de lint (`ultrasonic:lintRelease`,
+1.715 errores antes del fix) también debería bajar en la misma medida — pendiente confirmar el
+número final e investigar los ~200 hallazgos restantes (mayormente `UnusedResources`) por separado.
+
+Archivos: `ultrasonic/src/main/res/values-{cs,de,es,fr,gl,hu,it,ja,nb-rNO,nl,pl,pt,pt-rBR,ru,zh-rCN,zh-rTW}/strings.xml`.
+
+## Preparación de beta: formato (ktlint) y recursos sin usar (lint UnusedResources)
+
+Continuación de la limpieza de lint iniciada con las traducciones huérfanas.
+
+**ktlintFormat**: se corrigieron automáticamente 154 violaciones de estilo puro (wrapping de
+argumentos, orden de imports, espacios, indentación) repartidas en 42 archivos, la mayoría ya
+commiteados de sesiones anteriores. `ktlintFormat` solo reescribe lo que puede corregir de forma
+determinista dentro del mismo archivo; **no** toca las 4 violaciones que requieren una decisión
+humana (nombres de propiedad a `SCREAMING_SNAKE_CASE` en `Settings.kt` y una condición mixta
+`&&`/`||` en `Util.kt`), que quedan documentadas como pendientes, no arregladas.
+
+**UnusedResources**: 36 strings + 4 colores + 20 archivos de recurso completo (drawables/menú/
+layout) confirmados sin ninguna referencia en `ultrasonic/src` ni `core/*` (verificado con una
+búsqueda propia en todo el árbol de código, además del propio detector de lint, antes de borrar
+nada). Se dejaron sin tocar 16 casos donde la búsqueda sí encontró una referencia (probablemente
+usados solo desde otros drawables tipo layer-list, ej. `thumb.xml`/`rating_star_full.xml`), para
+revisión manual aparte. La mayoría corresponde a íconos/strings de Bookmarks, Chat, Podcasts, Share
+y del antiguo drawer lateral — funcionalidades ocultas de la UI pero cuyo código Kotlin se conserva
+a propósito (ver `HANDOFF.md`); estos recursos concretos ya no tienen ninguna referencia ni siquiera
+desde ese código conservado, así que su eliminación no debería afectarlo.
+
+**Falso positivo real encontrado y revertido**: `menu/search_view_menu.xml` fue borrado por el
+mismo criterio (lint decía que el *recurso menú* nunca se infla) y rompió la compilación de
+`release`: `ArtistDetailFragment.setupToolbarBehavior()` sigue llamando
+`menu.findItem(R.id.action_search)?.isVisible = false` — una referencia directa al *ID* declarado
+dentro de ese menú, un tipo de recurso distinto que la detección de "menú sin usar" no cubre. Se
+restauró el archivo desde git. La línea en `ArtistDetailFragment.kt` es código muerto inofensivo
+(usa `?.`, no crashea si el ítem no existe, mismo patrón ya identificado como vestigio de la
+migración de toolbar en el bug ya documentado de `TrackCollectionFragment`), pero limpiarla es un
+cambio de lógica de aplicación fuera del alcance de esta limpieza de lint — queda documentado como
+posible follow-up, no se tocó.
+
+**Segunda cascada de traducciones huérfanas**: borrar esas 36 strings del locale por defecto dejó
+huérfanas sus propias traducciones en los 16 idiomas (496 líneas más, incluyendo `common.appname`,
+que ya no se usa desde que el punto 39 de `HANDOFF.md` movió las etiquetas visibles a
+`taki.appname`). Se aplicó el mismo script de limpieza una segunda vez contra el reporte de lint
+actualizado hasta converger. Total acumulado: 2.012 líneas de traducción eliminadas en dos pasadas,
+0 agregadas, todos los archivos siguen siendo XML válido.
+
+**Resultado final verificado**: `ultrasonic:lintRelease` bajó de 1.715 → 41 errores reales
+(desglose: 20 `UnusedResources` restantes de revisión manual, y 21 hallazgos menores de calidad/
+accesibilidad ya clasificados). `assembleRelease` y `bundleRelease` compilan en verde de forma
+estable. `testDebugUnitTest` pasa. ktlint/detekt conservan exactamente los mismos 4 y 36 hallazgos
+pendientes de decisión humana identificados antes de esta limpieza (nomenclatura de propiedades en
+`Settings.kt`, condición mixta en `Util.kt`, y deuda de complejidad/código muerto en detekt) — nada
+nuevo se rompió.
+
+## Preparación de beta: cierre de pendientes de lint/ktlint/detekt, y Android Studio se auto-actualizó a mitad de sesión
+
+**16 recursos adicionales confirmados sin uso real** (mi primera verificación cruzada había sido
+demasiado cautelosa: buscaba también dentro de `core/*/build`, 94 archivos XML generados/cacheados
+que no son código fuente, lo que producía falsos positivos). Corregida la búsqueda contra el árbol
+de fuente real, 14 drawables más un par (`thumb.xml`/`thumb_drawable.xml`, huérfano desde que el
+bug J los reemplazó por `rounded_swatch_fill.xml`) resultaron sin ninguna referencia real, solo
+mencionados en comentarios de código que documentan bugs ya arreglados. Además, 3 strings
+(`button_bar.browse`, `menu.common`, `menu.exit`) sin uso en código pero presentes en los 16
+idiomas se borraron de todos los archivos a la vez para no repetir la cascada de traducciones
+huérfanas.
+
+**Las 20 propiedades `const val` de `Settings.kt` que ktlint pedía en `SCREAMING_SNAKE_CASE`**
+(no 3, como se dijo por error al principio — la salida truncada de `ktlintFormat` solo mostraba una
+muestra) se renombraron con sus ~40 call sites en todo el árbol de código. Dos usos se escaparon
+del primer barrido automático porque `AlbumHeader.kt` y `SelectGenreFragment.kt` importan la
+propiedad directamente (`import ...Settings.NOMBRE`) y la usan sin el prefijo `Settings.` — el
+propio compilador los encontró al recompilar, se corrigieron. `ktlintCheck` queda en verde.
+
+**`Util.kt`**: se agregó un paréntesis aclaratorio (sin cambiar el resultado — `&&` ya tiene más
+precedencia que `||` en Kotlin) al único caso de `mixed-condition-operators` restante, una
+expresión de igualdad null-safe ya marcada `@Suppress("SuspiciousEqualsCombination")` de antes.
+
+**Dos restos de código muerto reales, confirmados y eliminados** (el tercer candidato de detekt,
+`requestKey` en `TrackCollectionFragment.handleFilterSelectionResult()`, es un falso positivo: la
+firma la exige `FragmentManager.setFragmentResultListener`, no se puede quitar sin romper la
+referencia de método):
+- `NavigationActivity.exit()` — sin ningún llamador; el único punto de entrada posible
+  (`menu_exit` del drawer lateral) ya no existe desde que se borró `navigation_drawer.xml`.
+- El parámetro `activeServerProvider` del constructor de `ServerRowAdapter` — se guardaba pero
+  nunca se leía (la clase usa los miembros estáticos `ActiveServerProvider.OFFLINE_DB_ID`/
+  `getActiveServerId()`, no la instancia). Se quitó del constructor y de su único punto de
+  construcción en `ServerSelectorFragment.kt`.
+
+**Hallazgo de infraestructura, no de código**: a mitad de esta sesión, Android Studio se
+auto-actualizó (`AndroidStudio2026.1.1` → `2026.1.3` en `%LOCALAPPDATA%\Google\`), y con eso la JBR
+en `C:\Program Files\Android\Android Studio\jbr` pasó de Java 21 a **Java 25**, rompiendo el
+`jvmToolchain(21)` del proyecto sin ningún cambio de código de por medio. Confirmado con el
+usuario, se migró el proyecto a JDK 25 en vez de esperar una instalación nueva de JDK 21:
+`ultrasonic/build.gradle` (`languageVersion.set(JavaLanguageVersion.of(25))`) y
+`core/domain/build.gradle` (`sourceCompatibility`/`targetCompatibility` a `VERSION_25`).
+`assembleRelease`/`bundleRelease`/tests compilan limpio bajo JDK 25. **Detekt no podía correr bajo
+host JDK 25 con la versión del plugin que usaba este proyecto** (`1.23.8`, `--jvm-target` solo
+acepta hasta 22, y el proceso de detekt fallaba igual aunque `jvmTarget` se dejara en 21 — un techo
+real de esa versión, no configurable).
+
+**Detekt actualizado a `2.0.0-alpha.6`** (única versión probada contra JDK 25, según la propia
+documentación del proyecto). El artefacto y el ID del plugin cambiaron de grupo Maven en la
+versión 2.0 (`io.gitlab.arturbosch.detekt` → `dev.detekt`):
+`gradle/libs.versions.toml` (versión + `module = "dev.detekt:detekt-gradle-plugin"`) y
+`gradle_scripts/code_quality.gradle` (ambos `apply plugin`/`hasPlugin` con el ID nuevo). Es una
+versión **alpha**, elegida deliberadamente por ser la única con soporte de JDK 25 documentado;
+puede tener comportamiento distinto a una versión estable en el futuro.
+
+El esquema de `config/detekt/detekt.yml` cambió con la 2.0 y detekt rechazó el archivo con
+"propiedad mal escrita o no existe" hasta corregir cuatro cosas puntuales:
+- Se quitó el bloque `build: maxIssues/weights` (la clave `build` ya no existe como nivel superior
+  en 2.0; `maxIssues: 0` era igual al comportamiento por defecto — cualquier hallazgo activo hace
+  fallar la tarea — así que quitarlo no cambia nada).
+- `TooManyFunctions.thresholdInFiles/InClasses/InInterfaces/InObjects` → renombradas a
+  `allowedFunctionsPerFile/PerClass/PerInterface/PerObject`, mismos valores (confirmado que
+  `RESTMusicService` con 58 funciones sigue marcado sobre el límite de 25 tras el rename).
+  `ForbiddenImport.imports` → `forbiddenImports`, mismo valor.
+- `style.UnnecessaryAbstractClass` (ya estaba `active: false`) se quitó en vez de adivinar su
+  nombre nuevo — no hay un reemplazo obvio en la lista de propiedades permitidas y, al estar
+  inactiva, no cambia ningún comportamiento quitarla.
+
+**Resultado**: detekt corre limpio bajo JDK 25 (sin el crash del host). El nuevo analizador
+encuentra 41 issues en `ultrasonic` + 1 nuevo en `core/subsonic-api` (0 antes) — la cifra sube
+respecto a los 34 esperados con la versión vieja porque el ruleset por defecto de 2.0 difiere del
+de 1.23.8; es un efecto normal de actualizar una herramienta de análisis estático, no una
+regresión de este proyecto. `ktlintCheck`, `testDebugUnitTest`, `assembleRelease` y `bundleRelease`
+se re-verificaron después del upgrade y siguen en verde; `lintRelease` se mantiene estable en 22
+errores.
+
+**`settings.gradle` ahora declara `org.gradle.toolchains.foojay-resolver-convention`** — agregado
+automáticamente por Android Studio/Gradle durante el episodio del JDK 25 de esta sesión (es
+literalmente la solución que Gradle sugiere en el propio mensaje de error de toolchain). Permite
+que Gradle descargue automáticamente un JDK compatible cuando el configurado en la máquina no
+coincide con el que pide el proyecto, en vez de fallar directamente — reduce el riesgo de que un
+futuro cambio de entorno (otra actualización de Android Studio, por ejemplo) vuelva a bloquear la
+compilación por completo. Se mantiene deliberadamente en el commit por ese motivo, aunque no fue un
+cambio pedido explícitamente.
+
+**Resultado final de esta sesión**: `ultrasonic:lintRelease` 1.715 → **22 errores** reales
+(desglose por tipo en la conversación de preparación de la beta, ya no queda ninguna categoría de
+"borrado masivo", son hallazgos individuales de calidad/accesibilidad). `ktlintCheck` en verde.
+`testDebugUnitTest`, `assembleRelease` y `bundleRelease` compilan y pasan de forma estable bajo
+JDK 25. Detekt sigue con hallazgos reales pendientes de decisión, pero no se puede re-ejecutar en
+este entorno hasta resolver el techo de versión del plugin frente a JDK 25.
+
+Archivos adicionales: `NavigationActivity.kt`, `ServerRowAdapter.kt`, `ServerSelectorFragment.kt`,
+`Util.kt`, `Settings.kt`, `AlbumHeader.kt`, `SelectGenreFragment.kt`, `ultrasonic/build.gradle`,
+`core/domain/build.gradle`, 16 archivos de recurso eliminados,
+`ultrasonic/src/main/res/values*/strings.xml` (3 strings más, en los 17 archivos).
+
+Un primer intento del script de limpieza tenía un bug real: trataba cualquier recurso no-string
+como "un archivo por recurso" y borró por error el archivo compartido `colors.xml` completo (que
+tiene más de veinte colores, solo 4 sin usar) antes de fallar. Se detectó antes de continuar,
+`colors.xml` se restauró desde git sin pérdida, y el fix real solo quita las 4 líneas de color
+correspondientes.
+
+Archivos: 42 archivos Kotlin reformateados (ktlintFormat); `ultrasonic/src/main/res/values/strings.xml`
+y `colors.xml` (líneas eliminadas); 21 archivos de recurso eliminados en
+`ultrasonic/src/main/res/{drawable,menu,layout}/`.
+
+## N. La notificación de reproducción usaba el ícono genérico de audífonos de Media3 en vez de la nota de Taki
+
+Reportado por el usuario comparando contra Spotify y Symfonium, que sí muestran su propio ícono en
+ese lugar (el panel rápido de notificaciones, junto a "This phone"). La primera hipótesis fue que
+ese espacio era un indicador de salida de audio controlado por el sistema (como el fondo de Android
+Auto) — se descartó al confirmar que otras apps sí logran mostrar su propio ícono ahí.
+
+**Causa**: `PlaybackService` nunca configuraba un `MediaNotification.Provider` propio, así que Media3
+usaba su `DefaultMediaNotificationProvider` sin personalizar — que por default apunta a
+`androidx.media3.session:R.drawable.media3_notification_small_icon`, un dibujo genérico de
+audífonos incluido en la propia librería (confirmado inspeccionando el `.aar` de
+`media3-session:1.10.1` y las fuentes de `DefaultMediaNotificationProvider.java`: la constante se
+inicializa exactamente así, línea 295 del código fuente de la librería).
+
+**Fix**: en `PlaybackService.onCreate()` ahora se construye un
+`DefaultMediaNotificationProvider.Builder(this).build()` y se le llama
+`.setSmallIcon(R.drawable.ic_launcher_monochrome)` antes de registrarlo con
+`setMediaNotificationProvider(...)` — reutilizando el ícono monocromático de Taki que ya existía
+para el launcher adaptativo (ver punto 39 de `HANDOFF.md`), en vez de crear un asset nuevo.
+Verificado en dispositivo: el panel rápido de notificaciones ahora muestra la nota de Taki en vez de
+los audífonos genéricos.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/PlaybackService.kt`.
+
+## La notificación de reproducción, el panel rápido y Android Auto mostraban una estrella en vez del corazón
+
+Reportado por el usuario comparando contra Spotify y Symfonium en el mismo panel de Android — ambos
+muestran un corazón ahí, Taki mostraba una estrella. Esto **no** era una limitación de la
+plataforma (se descartó esa hipótesis probando en dispositivo): dos causas reales y separadas, la
+segunda encontrada después de que la primera no alcanzó para arreglar lo que se veía en el panel
+rápido de notificaciones.
+
+### L. `MediaItemConverter.toMediaItem()` pisaba el `HeartRating` con un `StarRating` legado
+
+`buildMediaItem()` ya declaraba correctamente `setUserRating(HeartRating(starred))`, pero
+`toMediaItem()` lo sobreescribía con `StarRating(5, userRating.toFloat())` cuando la pista tenía un
+`userRating` no nulo — el campo legado de 5 estrellas del servidor, que la app ya no expone en
+ninguna pantalla propia (ver punto 4 de `HANDOFF.md`) pero que muchos servidores igual siguen
+devolviendo para pistas calificadas hace tiempo. Esto afectaba el tipo de rating que el sistema
+operativo declara (`dumpsys media_session` mostraba `rating type=5` en vez de `1`/heart).
+
+**Fix**: se dejó de llamar `setUserRating(StarRating(...))` en ese bloque — `metadataBuilder` ya
+hereda el `HeartRating` correcto de `buildMediaItem()` si no se lo pisa. Verificado con
+`dumpsys media_session`: la misma pista que antes declaraba tipo estrella ahora declara
+`rating type=1` (heart).
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/MediaItemConverter.kt`.
+
+### M. El botón "Love"/"Dislike" de la sesión de Media3 usaba literalmente un ícono de estrella
+
+Este era el bug que realmente se veía en el panel rápido de notificaciones y en Android Auto —
+independiente del anterior. En `MediaLibrarySessionCallback.getHeartCommandButton()`, el botón
+personalizado que Media3 expone al sistema (notificación, panel rápido, Android Auto) se llama
+"Love"/"Dislike" pero su ícono estaba fijado a `R.drawable.rating_star_hollow`/`rating_star_full` —
+un resto de antes de que la app pasara del sistema de 5 estrellas al corazón único. El nombre ya
+sugería corazón; el drawable real seguía siendo una estrella, y por eso el fix anterior (L) no
+cambió nada visible en esa tarjeta: son dos superficies distintas alimentadas por dos campos
+distintos.
+
+**Fix**: se cambiaron los dos íconos a `R.drawable.rating_heart_hollow`/`rating_heart_full` —
+drawables de corazón que ya existían en el proyecto con el mismo naming que las estrellas que
+reemplazan. Verificado en dispositivo: el panel rápido de notificaciones ahora muestra un corazón
+blanco, y tocarlo sigue alternando correctamente el estado (confirmado con
+`dumpsys media_session`: el nombre de la acción pasa de "Love" a "Dislike" y viceversa al togglear).
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/MediaLibrarySessionCallback.kt`.
+
+**Pendiente de confirmar**: el fix se verificó en el panel rápido de notificaciones del propio
+teléfono; la pantalla de Android Auto (el "Now Playing" del head unit) no se pudo probar desde este
+entorno de desarrollo por no tener el head unit conectado — debería heredar el mismo arreglo, ya que
+ambas superficies leen la misma sesión de Media3, pero conviene confirmarlo la próxima vez que el
+usuario use Android Auto.
+
+## Add/Edit server: dos bugs visuales reales encontrados por el usuario en pantalla
+
+Reportados directamente por el usuario mirando la pantalla "Add collection" en el Pixel 7 (misma
+sesión que la verificación de Capa 2 de abajo), no parte del barrido de la auditoría.
+
+### J. El selector de color del servidor se veía y se sentía como un switch más, y por default salía rojo
+
+**Síntoma**: en "Advanced settings", la fila "Server color" mostraba una píldora rojo brillante,
+idéntica en tamaño/forma/posición a los tres `SwitchMaterial` reales que están justo debajo
+(autofirmado, password plano, jukebox). Nada indicaba que en realidad es un botón que abre un
+selector de color (`ColorPickerDialog`) — se veía como un cuarto toggle, y en un color que no existe
+en la paleta de Taki.
+
+**Causa (dos bugs separados en la misma función)**:
+- `EditServerFragment.updateColor()` usaba `R.drawable.thumb_drawable` como `background` del
+  `ImageView` — ver `drawable/thumb.xml`: una píldora con 44dp de radio de esquina rellena de
+  `?attr/colorPrimary`, literalmente el thumb de un slider/switch, reusado por error para este
+  swatch de color.
+- `ServerColor.getBackgroundColor()` calculaba el color por default con
+  `MaterialColors.getColor(context, android.R.attr.colorPrimary, "")` — el atributo de la
+  **plataforma** Android, no el `colorPrimary` de Material3 que la app sí tiene fijado al lime de
+  Taki. Todos los demás usos de `MaterialColors.getColor(...)` en el proyecto
+  (`ServerRowAdapter`, `TrackViewHolder`, `PlayerFragment`, `LyricsFragment`) ya usan
+  correctamente `androidx.appcompat.R.attr.colorPrimary` — este era el único desalineado.
+
+**Fix**: nuevo drawable `rounded_swatch_fill.xml` (rectángulo relleno simple, mismo radio de 28dp
+que el borde `rounded_border` ya dibujado encima) reemplaza a `thumb_drawable` como background;
+`ServerColor.kt` ahora usa `androidx.appcompat.R.attr.colorPrimary`. Verificado en dispositivo: el
+swatch por default ahora sale verde lima, no rojo.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/EditServerFragment.kt`,
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/ServerColor.kt`,
+`ultrasonic/src/main/res/drawable/rounded_swatch_fill.xml` (nuevo).
+
+### K. "Test Connection" y "Save" quedaban debajo de la barra de navegación del sistema, imposibles de tocar
+
+**Síntoma**: en el borde inferior de la pantalla Add/Edit server, los botones "Test Connection" y
+"Save" aparecían parcialmente tapados por los botones de navegación del sistema (atrás/inicio/
+recientes) — en la práctica, no se podían tocar.
+
+**Causa**: `NavigationActivity.applyBottomInset()` ya existía justo para esta clase de problema
+(edge-to-edge dibuja detrás de la barra de navegación del sistema desde Android 15/targetSdk 35), y
+ya sabía que aplicaba a "Settings/About/Equalizer/ServerSelector/EditServer" — pero sólo le daba el
+padding del inset a `bottomNavigation` o a `nowPlayingView` (el mini-player), la que estuviera
+visible. En destinos donde **ambos** están ocultos — como EditServerFragment cuando no hay ninguna
+canción sonando, así que ni la barra inferior ni el mini-player aparecen — ninguno de los dos
+absorbía el inset, y el contenido propio del fragment (los botones, en este caso) quedaba expuesto
+debajo de la barra del sistema.
+
+**Fix**: el `FrameLayout` que envuelve a `nav_host_fragment` en `navigation_activity.xml` ahora
+tiene id (`nav_host_container`) y `applyBottomInset()` le aplica el padding inferior cuando ni la
+barra ni el mini-player están visibles. Verificado en dispositivo: los dos botones quedan
+completamente arriba de la barra del sistema, con espacio de sobra.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/activity/NavigationActivity.kt`,
+`ultrasonic/src/main/res/layout/navigation_activity.xml`.
+
+## Verificación en dispositivo (Capa 2, Pixel 7): restauración de cola grande y resaltado de la barra inferior
+
+Primera pasada real de la Capa 2 de `docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md` (uso prolongado en
+el Pixel 7 con logcat completo) desde que el documento se escribió. Encontró dos bugs reales, ambos
+arreglados y verificados en el dispositivo con el fix aplicado.
+
+### H. Restaurar una cola de más de un puñado de canciones volvía siempre a la pista 0
+
+**Síntoma**: reproducir una cola de 50 canciones, avanzar hasta una pista intermedia (ej. índice 20,
+1:38), forzar el cierre del proceso y reabrir la app — la sesión restaurada mostraba la primera
+pista de la cola en 0:00 en vez de la pista/posición real donde había quedado. Contradecía lo que el
+punto 43 de `HANDOFF.md` daba por verificado, pero esa prueba sólo usó una cola de 2 canciones y el
+bug no se manifiesta con colas tan chicas (ver causa).
+
+**Causa**: `MediaPlayerManager.restore()` llamaba a `addToPlaylist(state.songs, ...)` — que sólo
+*lanza* la corrutina que agrega las canciones (`mainScope.launch { addToPlaylistMutex.withLock {
+addToPlaylistLocked(...) } }`, pensada así a propósito para trocear + `yield()` en colas grandes sin
+bloquear el hilo principal, ver la protección anti-ANR más abajo) — y a continuación, en el mismo
+cuerpo síncrono, llamaba a `seekTo(state.currentPlayingIndex, state.currentPlayingPosition)`. Como
+`addToPlaylist()` no espera a que la corrutina termine, `seekTo()` se ejecutaba con el controller
+todavía sin ninguna canción cargada; su propio guard (`if (controller?.currentTimeline?.isEmpty !=
+false || index >= controller!!.currentTimeline.windowCount) return`) descartaba la búsqueda en
+silencio. Cuando la corrutina finalmente agregaba las canciones, Media3 arrancaba desde el índice
+0 por default, y ese estado transitorio (`track=null, index=0`) además se serializaba de inmediato a
+disco vía `RxBus.throttledPlayerStateObservable`, pisando el checkpoint correcto que se acababa de
+leer. Confirmado con logcat: `Deserialized currentPlayingIndex: 20, currentPlayingPosition: 98654`
+seguido, milisegundos después, de `Serialized currentPlayingIndex: 0, currentPlayingPosition: 0`.
+
+**Fix**: `restore()` ahora lanza su propia corrutina que llama a `addToPlaylistLocked()` directamente
+(con el mismo mutex) y sólo hace `seekTo()`/`prepare()`/`play()` *después* de que esa llamada
+termina — sin carrera posible, porque ambos pasos corren en secuencia dentro de la misma corrutina.
+No se tocó `addToPlaylistLocked()` en sí ni sus otros llamadores (Bookmarks, Home, Artist Detail,
+Search, tap-to-play en listas), que ya usan su propio parámetro `startIndex`/`startPositionMs` con
+semántica distinta (reproducir de inmediato, no restaurar en pausa).
+
+**Verificación**: cola de 50 canciones (Library → Songs → reproducir todo), avance hasta índice 10
+(0:39), force-stop, reapertura — restauró exactamente "Airborne Fighter" en 0:36 (el checkpoint
+periódico es cada 5s), en pausa, sin autoplay. Regresión: reproducir un álbum completo desde Library
+sigue arrancando de inmediato en la pista tocada, sin cambios de comportamiento.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/MediaPlayerManager.kt`.
+
+### I. La barra de navegación inferior podía quedar resaltando "Home" al navegar por sub-pantallas de Library
+
+**Síntoma**: entrar a Library → Songs (o Albums/Artists/Genres/Playlists) mostraba el ítem "Home" de
+la barra inferior resaltado en vez de "Library", de forma consistente (no dependía de taps rápidos).
+
+**Causa**: el grafo de navegación (`navigation_graph.xml`) es plano — `trackCollectionFragment`,
+`albumListFragment`, etc. no están anidados bajo `homeFragment` ni `mainFragment`. El
+`setupWithNavController()` de AndroidX sólo actualiza la selección de la barra cuando el destino
+actual coincide con uno de los 4 ítems del menú; para cualquier otro destino (la gran mayoría de las
+~25 pantallas de la app) deja la selección exactamente como estaba, sin resaltar nada ni limpiarla —
+así que lo que se veía resaltado era el último ítem realmente emparejado antes de navegar más
+adentro, no necesariamente desde dónde se entró a la pantalla actual.
+
+**Fix**: en el `addOnDestinationChangedListener` de `NavigationActivity.kt` (donde ya se calculaban
+`isLibraryTrackCollection`/`isAlbumDetail` para el header/back-button) se agregó una corrección
+explícita de `bottomNavigation?.menu?.findItem(...)?.isChecked = true` para los destinos que sólo
+son alcanzables desde un único punto de entrada: Songs/Liked Songs (`trackCollectionFragment` con
+`libraryRoot`/`getStarred`), Playlists, Albums, Artists y Genres → resaltan "Library" (los 5 salen
+únicamente de las filas de `MainFragment`); `downloadedAlbumFragment` → resalta "Downloads" (sólo
+sale de `DownloadsFragment`). **Deliberadamente no se tocó** el resto de los destinos compartidos
+(`trackCollectionFragment` para detalle de álbum/artista/género/playlist, `artistDetailFragment`) —
+son alcanzables tanto desde Home como desde Library según el flujo del usuario, y adivinar cuál
+"pertenece" a cuál sin un mecanismo real de seguimiento de origen sería peor que dejarlos como están.
+
+**Hallazgo relacionado, no arreglado**: alternar muy rápido entre las 4 pestañas mientras se está en
+una pantalla hija profunda (ej. Album Detail) puede dejar la barra resaltando una pestaña distinta
+de la que realmente se muestra — probablemente varias llamadas a `navigate()` encoladas contra
+`NavController`/`FragmentManager` más rápido de lo que cada transacción llega a resolverse. No se
+identificó una causa concreta ni se intentó un fix especulativo (podría romper la navegación normal
+por pestañas); si se retoma, empezar reproduciendo el patrón exacto con logcat de
+`FragmentManager`/`NavController` en modo debug.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/activity/NavigationActivity.kt`.
+
+## Auditoría interna: Shuffle, descarga duplicada y listas que no cancelan su carga anterior
+
+Continuación de `docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md`, trazando los tres "flujos críticos"
+que quedaban pendientes (Descargas, Cambio de servidor/Offline, y crecimiento de la cola en vivo).
+Los tres arrojaron un bug real cada uno.
+
+### D. El botón Shuffle (notificación/Android Auto) podía volver a producir el ANR ya arreglado
+
+`MediaLibrarySessionCallback.shuffleCurrentPlaylist()` no pasaba por
+`MediaPlayerManager.addToPlaylist()` (la función protegida contra ANR, ver la entrada "ANR real al
+reproducir un álbum grande" más abajo) — hacía su propio `player.addMediaItems(...)` sin trocear,
+directo en el callback de `onCustomCommand`, que corre en el hilo de aplicación. Con una cola
+crecida a varios miles de pistas (uso normal a lo largo de una sesión larga con "Agregar a la
+cola"/"Reproducir a continuación" repetidos), tocar Shuffle desde la notificación o Android Auto
+podía volver a bloquear la app el tiempo suficiente para un ANR — exactamente el bug ya
+documentado, sólo que por una puerta distinta que no se tocó en el fix original.
+
+Se aplicó el mismo patrón de troceo + `yield()` que ya usa `addToPlaylistLocked()`. La constante
+`ADD_MEDIA_ITEMS_CHUNK_SIZE` pasó de `private` a `internal` en `MediaPlayerManager.kt` para
+reusarla en vez de duplicar el número mágico.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/MediaLibrarySessionCallback.kt`,
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/MediaPlayerManager.kt`.
+
+### E. Descargar la misma pista dos veces casi al mismo tiempo podía correr dos descargas en paralelo
+
+`DownloadService.download()` es `@Synchronized`, pero el `@Synchronized` sólo protegía el
+`launch{}` que lanza `downloadAsync()` en una corrutina nueva — no el cuerpo real, que se ejecuta
+después, ya fuera del bloque sincronizado. Dos llamadas casi simultáneas (doble tap en descargar, o
+la misma pista disparada desde dos pantallas distintas) podían pasar ambas el chequeo "¿ya está en
+cola/descargando?" antes de que ninguna la hubiera agregado todavía, resultando en dos
+`DownloadTask` escribiendo el mismo archivo en paralelo y una de las dos entradas de
+`activeDownloads` pisando silenciosamente a la otra (su `Job` quedaba huérfano, sin forma de
+cancelarlo).
+
+Se agregó un `Mutex` (`downloadQueueMutex`) que serializa toda la secuencia de
+"filtrar ya descargadas/en curso → calcular prioridad → agregar a la cola" dentro de
+`downloadAsync()`, mismo patrón que `addToPlaylistMutex` en `MediaPlayerManager`.
+
+**Nota relacionada, no corregida (queda para una revisión aparte):** el chequeo de "¿está
+completa la descarga?" en todo el proyecto es sólo por existencia del archivo
+(`Storage.isPathExists`), sin verificar tamaño/checksum, y el paso final de `afterDownload()` que
+renombra `.partial` a `.complete`/`.pinned` es copia+borrado, no un rename atómico — si el proceso
+muere a mitad de ese renombrado (force-stop/OOM), puede quedar un archivo `.complete` truncado que
+todo el resto del código trataría como descargado con éxito. Es una ventana de falla angosta y
+arreglarla bien implica tocar dos backends de almacenamiento distintos (`JavaFile`/`StorageFile`),
+así que se deja documentada como hallazgo real pero de menor prioridad en vez de parchearla rápido.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/DownloadService.kt`.
+
+### G. Artists/Albums/Genres no cancelaban su carga anterior (mismo patrón que el bug de Artist Detail)
+
+`GenericListModel.backgroundLoadFromServer()` — la función base de la que heredan
+`ArtistListModel`, `AlbumListModel` y el resto de las pantallas de listado — lanzaba en
+`viewModelScope` sin guardar el `Job`, igual que el bug ya corregido en `ArtistDetailFragment` (ver
+más abajo en este archivo). Esto es más amplio de lo que parece a simple vista: no sólo un refresh
+rápido repetido podía pisar resultados, sino que **cambiar de servidor o entrar/salir de modo
+Offline mientras una de estas listas estaba cargando** dejaba la carga vieja corriendo sin cancelar
+— si esa respuesta del servidor anterior llegaba después de que ya se hubiera cargado la lista del
+servidor nuevo, la pisaba silenciosamente con datos del servidor equivocado.
+
+Al estar en la clase base, un solo fix cubre las tres pantallas (Artists/Albums/Genres) en vez de
+repetirlo tres veces: se guarda el `Job` y se cancela antes de relanzar, mismo patrón ya usado en
+`ArtistListModel.setSortOrder()` y `ArtistDetailFragment.load()`.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/model/GenericListModel.kt`.
+
+### Lo que se revisó y no mostró problemas
+
+- **Cambio de servidor y modo Offline**: `MediaPlayerManager` y `PlaybackService` ya manejan
+  correctamente la transición (detienen Jukebox/descargas, reconstruyen el backend de ExoPlayer
+  con el cliente HTTP nuevo). `MusicServiceFactory` no cachea un cliente viejo. El único problema
+  real era el de `GenericListModel` de arriba.
+- **Descargas: dispatcher e I/O**: todo el trabajo de archivo corre en `Dispatchers.IO`, sin
+  llamadas a Media3/MediaController en este flujo.
+- **Cancelación de una descarga en curso**: funciona correctamente vía `Job.cancel()` chequeado
+  entre cada bloque copiado; los archivos parciales se conservan a propósito para poder reanudar
+  con range GET, no es un descuido.
+
+### Verificación
+
+Compilación, pruebas unitarias y `assembleDebug` en verde. No verificado en dispositivo real (el
+Shuffle con una cola de miles de pistas y la descarga duplicada por doble tap requieren,
+respectivamente, un álbum enorme real y timing preciso — ambos necesitan el Pixel 7 con datos
+reales para confirmar en la práctica, no sólo por inspección de código).
+
+## Header genérico (Playlists/Genre/Starred/All songs/Artist-songs por carpeta) modernizado
+
+### Síntoma
+
+Usuario reportó que, al entrar a un artista, la pantalla todavía mostraba "headers antiguos".
+
+### Causa
+
+Al tocar un artista que viene del listado por **carpeta/índice** (servidor sin tags ID3, o
+cualquier servidor donde ese artista concreto se resuelve como `Index` en vez de un `Artist` real),
+`ArtistListFragment.onItemClick()` navega a `TrackCollectionFragment` con `isArtist = false` en vez
+de a `ArtistDetailFragment` — esto ya estaba documentado como pendiente en `HANDOFF.md` ("Index/
+folder entries still follow the legacy track-collection route"). Esa ruta usa `HeaderViewBinder` +
+`list_header_album.xml`, el único header de este tipo que nunca se tocó en los pases visuales
+anteriores: seguía siendo un `RelativeLayout` con `?android:attr/textAppearanceMedium/Small` (pre-
+Material3), sin `Ultrasonic.PrimaryText`/`SecondaryText`, con portada cuadrada sin recortar y cinco
+líneas de texto apiladas (artista, género, año, cantidad de canciones, duración) cada una en su
+propia fila. Este mismo header también aparece — con el mismo aspecto anticuado — al abrir una
+playlist, un género, "Starred" o "All songs", no sólo en el caso de artista reportado.
+
+### Fix
+
+Se rediseñó `list_header_album.xml` reusando el patrón ya establecido en el resto de la app para
+"portada + texto" (`list_item_album.xml`, `list_item_playlist.xml`, etc.): portada dentro de una
+`MaterialCardView` de 4dp de radio, título con `Ultrasonic.PrimaryText` +
+`TextAppearance.Material3.TitleMedium`, y una segunda línea de artista con
+`Ultrasonic.SecondaryText`. Las cuatro líneas sueltas de género/año/canciones/duración se
+consolidaron en una sola línea de metadatos ("Rock · 1990 · 10 songs · 42:10"), con el mismo
+formato `joinToString(" · ")` que ya usa `AlbumDetailHeaderBinder` para su subtítulo — mismo
+patrón, no uno nuevo. `HeaderViewBinder.kt` se actualizó para los IDs nuevos.
+
+### Verificación
+
+Compilación, pruebas unitarias y `assembleDebug` en verde. **No verificado visualmente**: el
+emulador de esta sesión no tiene ningún servidor configurado, así que no hay una playlist/género/
+artista real para navegar y ver el header con datos reales. Pendiente confirmar en el Pixel 7 con
+un servidor real, idealmente uno en modo carpeta/índice (no ID3) para cubrir exactamente el caso
+reportado, además de abrir una playlist y un género para confirmar que las tres pantallas se ven
+bien con el nuevo layout.
+
+Archivos: `ultrasonic/src/main/res/layout/list_header_album.xml`,
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/adapters/HeaderViewBinder.kt`.
+
+## Mini reproductor tapado por la barra de navegación de Android en Lyrics (y pantallas equivalentes)
+
+### Síntoma
+
+Usuario reportó: en la pantalla de Letras (Lyrics), los controles de reproducción (el mini
+reproductor flotante con anterior/play/siguiente) quedan parcialmente debajo de los botones de
+navegación del sistema (atrás/inicio/recientes).
+
+### Causa
+
+`navigation_activity.xml` es un `LinearLayout` vertical con `now_playing_fragment` (mini
+reproductor) y `bottom_navigation` como sus dos últimos hijos. El único manejo de insets que
+existía (`NavigationActivity.onCreate()`) sólo aplicaba el inset superior de la barra de estado al
+root — nunca se aplicó el inset inferior de la barra de navegación a nada. Mientras
+`bottom_navigation` está visible esto no se nota (por casualidad, su propio espacio visual absorbe
+el área), pero en destinos que la ocultan (`updateChromeVisibility()`: Player, Settings, About,
+Equalizer, selector de servidor, editar servidor, Lyrics) mientras el mini reproductor sigue
+visible, éste queda pegado al borde físico inferior de la pantalla, debajo de la barra de sistema
+dibujada por encima del contenido (edge-to-edge, forzado desde Android 15/targetSdk 35). Lyrics fue
+la pantalla reportada, pero Settings/About/Equalizer/ServerSelector/EditServer comparten
+exactamente la misma forma del bug.
+
+### Fix
+
+Se extendió el listener de insets ya existente en `NavigationActivity.onCreate()` para capturar
+también el inset inferior de `WindowInsetsCompat.Type.navigationBars()`, y una nueva función
+`applyBottomInset()` decide en cada cambio de visibilidad cuál de las dos vistas (`bottomNavigation`
+o `nowPlayingView`) es la que realmente toca el borde inferior en ese momento, y le aplica el
+padding correspondiente (0 a la que no lo toca). Se llama desde `showNowPlaying()`,
+`hideNowPlaying()` y al final de `updateChromeVisibility()`, que son los tres puntos que cambian la
+visibilidad de esas vistas (incluyendo los disparadores por RxBus de estado de reproducción y el
+gesto de descarte del mini reproductor, no sólo la navegación).
+
+No se tocó el Player ni su padding fijo existente (`player_panel_bottom_padding`, 28dp): en Player
+ambas vistas (`bottomNavigation` y `nowPlayingView`) están ocultas y su propio contenido ya se
+verificó en dispositivo en un pase anterior, así que evitar tocarlo evita un posible regresión
+visual no pedida.
+
+### Verificación
+
+Compilación y pruebas unitarias verdes. Instalado en un emulador con barra de navegación de 3
+botones (el caso más exigente, más grueso que gestos) y confirmado que la app arranca sin errores.
+**No verificado visualmente en Lyrics con reproducción real**: el emulador de esta sesión no tiene
+ningún servidor configurado ni contenido descargado, así que no hay forma de tener una pista
+sonando y abrir Lyrics con el mini reproductor visible. Pendiente confirmar en el Pixel 7 con un
+servidor real: reproducir una canción, abrir Letras, y verificar que el mini reproductor quede
+completamente por encima de los botones de navegación del sistema (probar también con navegación
+por gestos, no sólo 3 botones).
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/activity/NavigationActivity.kt`.
+
+## Auditoría interna: scopes que sobreviven a su vista/fila, y carga sin cancelar en Artist Detail
+
+Continuación de `docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md` (prioridad actual tras dar por
+cerrada la parte visual). Se investigaron los dos sospechosos que el propio documento marcaba
+como punto de partida, más un barrido estático del resto de los patrones de bug ya documentados
+en este proyecto; ambos sospechosos resultaron reales y se corrigieron, y el barrido reveló un
+tercer bug del mismo tipo, no documentado antes, en Artist Detail.
+
+### A. `PlayerFragment.ioScope` nunca se cancelaba
+
+`ioScope` (`CoroutineScope(Dispatchers.IO)`) era independiente del `mainScope` que el archivo ya
+reasigna en cada `onCreateView()` y cancela en `onDestroyView()` (ver el bug histórico de
+`CoroutineScope by CoroutineScope(...)` más abajo en este mismo archivo de cambios). Al no
+cancelarse nunca, podía seguir trabajando después de que la vista fuera destruida.
+
+- El chequeo de disponibilidad de Jukebox (sólo escribe un campo, sin mensaje al usuario) ahora
+  corre en `mainScope.launch(Dispatchers.IO + ...)` en lugar de un scope propio — se cancela solo
+  si la vista muere antes de terminar.
+- `savePlaylistInBackground()` (crea una playlist en el servidor y muestra un toast con el
+  resultado) migró a `Fragment.launchWithToast()` (`util/CoroutinePatterns.kt`), que ya existía en
+  el proyecto para exactamente este caso pero no se usaba acá. Al estar atado a
+  `activity?.lifecycleScope` en vez de al scope de la vista, ya no puede intentar mostrar un toast
+  sobre un Fragment desconectado. La llamada de red se envuelve en `withContext(Dispatchers.IO)`
+  porque `launchWithToast` corre su bloque en Main por defecto. Los tres mensajes (guardando/listo/
+  error) se preservaron textualmente; único cambio de comportamiento real: una cancelación
+  genuina (antes tratada como "éxito" y mostraba "Playlist saved") ahora no muestra ningún toast,
+  que es lo correcto dado que sólo puede ocurrir si la Activity ya se destruyó.
+- Se eliminó el campo `ioScope`.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/PlayerFragment.kt`.
+
+### B. `TrackViewHolder` con `CoroutineScope` de instancia fija en una fila reciclada
+
+`TrackViewHolder` implementaba `CoroutineScope by CoroutineScope(Dispatchers.IO)` para toda su
+vida útil como `ViewHolder`, pero un `ViewHolder` se recicla y se reutiliza para canciones
+distintas al hacer scroll. `dispose()` (llamado desde `TrackViewBinder.onViewRecycled()`) sólo
+liberaba la suscripción RxJava, nunca cancelaba el scope — una corrutina lanzada para la canción A
+podía terminar y tocar la UI de la fila después de que esa misma vista ya mostrara la canción B.
+
+Se reemplazó la delegación de interfaz por un campo `scope` reasignable, cancelado y recreado en
+cada `dispose()` (mismo patrón ya usado para `mainScope` en `PlayerFragment`, adaptado a que acá
+el "fin de vida" es cada reciclaje, no una destrucción única). El guard existente
+`if (it.id != song.id) return@launch` se mantiene como defensa adicional.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/adapters/TrackViewHolder.kt`.
+
+### C. `ArtistDetailFragment.load()` no cancelaba la carga anterior (bug nuevo, mismo patrón que el histórico #4)
+
+`load(refresh)` lanzaba en `model.viewModelScope` sin guardar el `Job`, así que dos refrescos
+rápidos seguidos (pull-to-refresh repetido) podían dejar que una respuesta vieja pisara a una más
+nueva — el mismo patrón ya corregido en su momento para Library, Crear Playlist y paginación por
+género, pero que nunca se aplicó a esta pantalla. Se corrigió con el mismo patrón ya usado en
+`ArtistListModel.setSortOrder()`: guardar el `Job` en `loadJob` y cancelarlo antes de relanzar.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/ArtistDetailFragment.kt`.
+
+### Barrido estático: sin más sospechosos nuevos
+
+Se revisaron además, sin encontrar problemas: los demás `CoroutineScope by CoroutineScope(...)`
+del proyecto (todos singletons de Koin que viven todo el proceso — `EqualizerController`,
+`ActiveServerProvider`, `ImageLoader`, `FileLoggerTree`, `PlaybackService`, `RatingManager`,
+`Scrobbler`, `ImageLoaderProvider`, `CacheCleaner` — patrón aceptado, no un bug de vista/fila);
+el resto de la paginación por offset (ya sigue el patrón seguro de `ArtistListModel`); y el acceso
+a `mediaPlayerManager`/Media3 desde fragments y desde `MediaPlayerLifecycleSupport`'s
+`BroadcastReceiver` (todo corre en el hilo principal).
+
+### Cierre del bug histórico #7 (Cursor sin cerrar, StrictMode)
+
+Se investigó a fondo el `CloseGuardException` de `AbstractCursor.close`/`CursorWrapperInner.close`
+detectado el 09/08/2026 al reabrir la app tras un `force-stop`. Los únicos 4 sitios del código que
+obtienen un `Cursor` manualmente (`StorageFile.kt`, líneas 38/54/196/209 — `length`, `lastModified`,
+`exists()`, `getChildren()`) ya envuelven la consulta en `.use { }`, que garantiza el cierre incluso
+ante una excepción o un `return` temprano. No se encontró ningún `Cursor` sin cerrar en el código de
+la app. La causa más probable es un path interno de Android (SAF/`DocumentProvider`) invocado
+durante la restauración de sesión tras el `force-stop`, fuera del alcance de un fix de código en
+este proyecto. Se documenta acá para no reabrir esta investigación sin una pista nueva.
+
+### Verificación
+
+Compilación (`assembleDebug`) y pruebas unitarias verdes. Instalado y arrancado en el emulador: sin
+`FATAL EXCEPTION`, sin ANR, navegación a Home correcta; el único hit de StrictMode del log es
+preexistente y ajeno a este cambio (`newSSLContext` en `PlaybackService.getLocalPlayer()`, ya
+presente antes de esta auditoría). No había un Pixel 7 físico conectado en esta sesión, así que
+los escenarios que ejercitan el timing real de estos tres fixes —guardar playlist y salir del
+Player de inmediato, abrir/cerrar el overflow del Player varias veces seguidas, scroll rápido en
+una lista larga, doble pull-to-refresh rápido en Artist Detail— quedan pendientes de probar en
+dispositivo real, siguiendo la distinción de `HANDOFF.md` entre verificación de build y
+verificación real en dispositivo.
+
 ## ANR real al reproducir un álbum grande (Bach 333, 5.517 canciones)
 
 ### Síntomas

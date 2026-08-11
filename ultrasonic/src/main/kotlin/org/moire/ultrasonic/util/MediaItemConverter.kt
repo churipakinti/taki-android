@@ -123,7 +123,16 @@ fun Track.toMediaItem(mediaId: String = id): MediaItem {
 
     if (userRating != null) {
         mediaItem.mediaMetadata.extras?.putInt("userRating", userRating!!)
-        metadataBuilder.setUserRating(StarRating(5, userRating!!.toFloat()))
+        // Deliberately NOT calling metadataBuilder.setUserRating(StarRating(...)) here (as this
+        // used to) - it would overwrite the HeartRating that buildMediaItem() already set above
+        // from `starred`, and metadataBuilder inherits that value unchanged if left alone. The
+        // app UI dropped 5-star rating for a single heart a while ago (see HANDOFF.md), but a
+        // track can still carry a legacy non-null userRating from the server's old 5-star field,
+        // and MediaMetadata.userRating's *type* (Heart vs Star) is what the OS derives its
+        // rating control from for the system media notification and Android Auto - a non-null
+        // legacy userRating here was silently swapping their heart icon for a 5-star widget the
+        // app itself no longer has anywhere. userRating is still kept in `extras` above for
+        // whatever legacy internal reads still expect it.
     }
     if (averageRating != null) {
         mediaItem.mediaMetadata.extras?.putFloat("averageRating", averageRating!!)

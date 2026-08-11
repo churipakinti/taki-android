@@ -16,9 +16,8 @@ import com.drakeet.multitype.ItemViewBinder
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Track
 
-class DiscHeaderBinder(
-    private val onDownload: (List<Track>) -> Unit
-) : ItemViewBinder<DiscHeader, DiscHeaderBinder.ViewHolder>() {
+class DiscHeaderBinder(private val onDownload: (List<Track>) -> Unit) :
+    ItemViewBinder<DiscHeader, DiscHeaderBinder.ViewHolder>() {
 
     override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder =
         ViewHolder(inflater.inflate(R.layout.disc_header_item, parent, false))

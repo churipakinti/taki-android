@@ -37,9 +37,9 @@ import org.moire.ultrasonic.view.ViewCapabilities
 /**
  * Displays the list of Artists or Indexes (folders) from the media library
  */
-class ArtistListFragment(
-    private var layoutType: LayoutType = LayoutType.COVER
-) : EntryListFragment<ArtistOrIndex>(), FilterableFragment {
+class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) :
+    EntryListFragment<ArtistOrIndex>(),
+    FilterableFragment {
 
     override val listModel: ArtistListModel by viewModels()
     override val mainLayout = R.layout.list_layout_generic
@@ -57,10 +57,7 @@ class ArtistListFragment(
     private val isStandalone: Boolean
         get() = parentFragment !is MainFragment
 
-    override fun getLiveData(
-        refresh: Boolean,
-        append: Boolean
-    ): LiveData<List<ArtistOrIndex>> {
+    override fun getLiveData(refresh: Boolean, append: Boolean): LiveData<List<ArtistOrIndex>> {
         listModel.setSortOrder(orderType, genre = selectedGenre)
         return listModel.getItems(navArgs.refresh || refresh, swipeRefresh!!)
     }
@@ -136,11 +133,15 @@ class ArtistListFragment(
         layoutType = newType
         viewManager = when (newType) {
             LayoutType.LIST -> LinearLayoutManager(context)
+
             LayoutType.COVER -> GridLayoutManager(context, ARTIST_GRID_COLUMNS).apply {
                 spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                     override fun getSpanSize(position: Int): Int =
-                        if (viewAdapter.items.getOrNull(position) is ArtistOrIndex) 1
-                        else ARTIST_GRID_COLUMNS
+                        if (viewAdapter.items.getOrNull(position) is ArtistOrIndex) {
+                            1
+                        } else {
+                            ARTIST_GRID_COLUMNS
+                        }
                 }
             }
         }
@@ -152,8 +153,11 @@ class ArtistListFragment(
         orderType = newOrder
         if (newOrder == SortOrder.BY_GENRE) {
             val genre = selectedGenre
-            if (genre == null) showGenreSelection()
-            else listModel.setSortOrder(newOrder, swipeRefresh, genre)
+            if (genre == null) {
+                showGenreSelection()
+            } else {
+                listModel.setSortOrder(newOrder, swipeRefresh, genre)
+            }
         } else {
             selectedGenre = null
             listModel.setSortOrder(newOrder, swipeRefresh)

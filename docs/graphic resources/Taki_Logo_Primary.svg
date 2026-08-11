@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="900" height="320" viewBox="0 0 900 320">
+  <title>Taki Primary Logo</title>
+  <desc>Logotipo primario editable. El símbolo y el texto aki están agrupados por separado.</desc>
+  <g id="symbol-t" inkscape:groupmode="layer" inkscape:label="Símbolo t" fill="#B7D63C">
+    <ellipse cx="118" cy="246" rx="48" ry="40"/>
+    <rect x="118" y="48" width="46" height="200"/>
+    <rect x="78" y="106" width="232" height="42"/>
+  </g>
+  <g id="word-aki" inkscape:groupmode="layer" inkscape:label="Texto aki" fill="#F5F7EF">
+    <text x="168" y="258" font-family="Inter, Arial, sans-serif" font-size="205" font-weight="600" letter-spacing="-7">aki</text>
+  </g>
+</svg>

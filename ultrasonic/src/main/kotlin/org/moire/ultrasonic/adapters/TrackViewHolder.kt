@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.adapters
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.LayerDrawable
 import android.os.Build
@@ -11,7 +12,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
-import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isGone
@@ -25,6 +25,7 @@ import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -50,8 +51,13 @@ const val INDICATOR_THICKNESS_DEFINITE = 10
 class TrackViewHolder(val view: View) :
     RecyclerView.ViewHolder(view),
     Checkable,
-    KoinComponent,
-    CoroutineScope by CoroutineScope(Dispatchers.IO) {
+    KoinComponent {
+
+    // Recreated in dispose() (called on every recycle) rather than living for the
+    // ViewHolder's whole lifetime - otherwise a coroutine launched for one bound song could
+    // still be running, and update this recycled row's UI, after the row was reused for a
+    // different song further down the list during fast scrolling.
+    private var scope = CoroutineScope(Dispatchers.IO)
 
     var entry: Track? = null
         private set
@@ -121,7 +127,7 @@ class TrackViewHolder(val view: View) :
 
         // Listen for rating updates
         rxBusSubscription!! += RxBus.ratingPublishedObservable.subscribe {
-            launch(Dispatchers.Main) {
+            scope.launch(Dispatchers.Main) {
                 // Ignore updates which are not for the current song
                 if (it.id != song.id) return@launch
 
@@ -143,7 +149,7 @@ class TrackViewHolder(val view: View) :
         if (trackNumberText != null) {
             track.text = trackNumberText
             if (track.isGone) track.isGone = false
-        } else if (Settings.shouldShowTrackNumber && song.track != null && song.track!! > 0) {
+        } else if (Settings.SHOULD_SHOW_TRACK_NUMBER && song.track != null && song.track!! > 0) {
             track.text = entryDescription.trackNumber
         } else {
             if (!track.isGone) track.isGone = true
@@ -162,7 +168,7 @@ class TrackViewHolder(val view: View) :
 
         // Instead of blocking the UI thread while looking up the current state,
         // launch the request in an IO thread and propagate the result through RX
-        launch {
+        scope.launch {
             val state = DownloadService.getDownloadState(song)
             RxBus.trackDownloadStatePublisher.onNext(
                 RxBus.TrackDownloadState(song.id, state, null)
@@ -180,6 +186,8 @@ class TrackViewHolder(val view: View) :
     // This is called when the Holder is recycled and receives a new Song
     fun dispose() {
         rxBusSubscription?.dispose()
+        scope.cancel()
+        scope = CoroutineScope(Dispatchers.IO)
     }
 
     private val queuePlayingIcon by lazy {

@@ -28,6 +28,7 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.ShuffleOrder
+import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -78,6 +79,14 @@ class PlaybackService :
     override fun onCreate() {
         Timber.i("onCreate called")
         super.onCreate()
+        // Without this, the media notification (and the icon Android shows for it in the
+        // notification shade's Quick Settings media card / output switcher) falls back to
+        // Media3's own default small icon, a generic headphones glyph
+        // (androidx.media3.session:R.drawable.media3_notification_small_icon) - other apps
+        // (Spotify, Symfonium) set their own icon there, Taki wasn't setting one at all.
+        val notificationProvider = DefaultMediaNotificationProvider.Builder(this).build()
+        notificationProvider.setSmallIcon(R.drawable.ic_launcher_monochrome)
+        setMediaNotificationProvider(notificationProvider)
         initializeSessionAndPlayer()
         setListener(MediaSessionServiceListener())
         instance = this
@@ -262,8 +271,8 @@ class PlaybackService :
             .setWakeMode(getWakeModeFlag())
             .setHandleAudioBecomingNoisy(true)
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
-            .setSeekBackIncrementMs(Settings.seekInterval.toLong())
-            .setSeekForwardIncrementMs(Settings.seekInterval.toLong())
+            .setSeekBackIncrementMs(Settings.SEEK_INTERVAL.toLong())
+            .setSeekForwardIncrementMs(Settings.SEEK_INTERVAL.toLong())
             .build()
 
         // Enable audio offload
@@ -350,7 +359,7 @@ class PlaybackService :
             player.currentTimeline,
             player.shuffleModeEnabled,
             player.currentMediaItemIndex,
-            Settings.preloadCount
+            Settings.PRELOAD_COUNT
         ).map {
             // These items should skip the MediaItemConverter cache.
             // The cache contains the controller's items, which may be modified (e.g. their rating)

@@ -126,7 +126,7 @@ open class ArtistRowBinder(
     }
 
     private fun showArtistPicture(): Boolean =
-        ActiveServerProvider.shouldUseId3Tags() && Settings.shouldShowArtistPicture
+        ActiveServerProvider.shouldUseId3Tags() && Settings.SHOULD_SHOW_ARTIST_PICTURE
 
     /**
      * Creates an instance of our ViewHolder class
