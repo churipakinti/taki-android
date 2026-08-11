@@ -62,6 +62,14 @@ class CachedMusicService(private val musicService: MusicService) :
     private var cachedTracks = metaDatabase.trackDao()
     private val cachedMusicFolders = metaDatabase.musicFoldersDao()
 
+    // Single-flight locks (Fase 3): two concurrent callers for the same album (e.g. the main UI
+    // and Android Auto/MediaLibrarySessionCallback browsing the same album at once) share one
+    // network call instead of both firing it. Separate locks per method since getAlbum() and
+    // getAlbumAsDir() read/write different Room tables for the same id and shouldn't serialize
+    // against each other.
+    private val albumFetchLock = KeyedLock()
+    private val albumDirFetchLock = KeyedLock()
+
     private var restUrl: String? = null
     private var cachedMusicFolderId: String? = null
 
@@ -200,46 +208,48 @@ class CachedMusicService(private val musicService: MusicService) :
      * getMusicDirectory(), which can mix in sub-folders and stays on the old TimeLimitedCache).
      */
     @Throws(Exception::class)
-    override fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory {
-        checkSettingsChanged()
+    override fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory =
+        albumDirFetchLock.withLock(id) {
+            checkSettingsChanged()
 
-        if (refresh) {
-            cachedTracks.clearByAlbum(id)
-        }
-
-        var tracks = cachedTracks.byAlbum(id)
-
-        if (tracks.isEmpty()) {
-            val dir = musicService.getAlbumAsDir(id, name, refresh)
-            tracks = dir.getTracks()
-            if (tracks.isNotEmpty()) cachedTracks.upsert(tracks)
-            return dir
-        }
-
-        return MusicDirectory().apply {
-            this.name = name
-            addAll(tracks)
-        }
-    }
-
-    @Throws(Exception::class)
-    override fun getAlbum(id: String, name: String?, refresh: Boolean): Album? {
-        checkSettingsChanged()
-        var cache = if (refresh) null else cachedAlbums.get(id)
-        if (cache == null) {
-            try {
-                cache = musicService.getAlbum(id, name, refresh)
-            } catch (e: Exception) {
-                // Falls back to no album data (same as before); the difference is that the
-                // failure is now on record instead of vanishing silently. See
-                // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
-                Timber.w(e, "getAlbum failed for id=%s, falling back to cached/null", id)
+            if (refresh) {
+                cachedTracks.clearByAlbum(id)
             }
 
-            cache?.let { cachedAlbums.upsert(it) }
+            var tracks = cachedTracks.byAlbum(id)
+
+            if (tracks.isEmpty()) {
+                val dir = musicService.getAlbumAsDir(id, name, refresh)
+                tracks = dir.getTracks()
+                if (tracks.isNotEmpty()) cachedTracks.upsert(tracks)
+                return@withLock dir
+            }
+
+            MusicDirectory().apply {
+                this.name = name
+                addAll(tracks)
+            }
         }
-        return cache
-    }
+
+    @Throws(Exception::class)
+    override fun getAlbum(id: String, name: String?, refresh: Boolean): Album? =
+        albumFetchLock.withLock(id) {
+            checkSettingsChanged()
+            var cache = if (refresh) null else cachedAlbums.get(id)
+            if (cache == null) {
+                try {
+                    cache = musicService.getAlbum(id, name, refresh)
+                } catch (e: Exception) {
+                    // Falls back to no album data (same as before); the difference is that the
+                    // failure is now on record instead of vanishing silently. See
+                    // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+                    Timber.w(e, "getAlbum failed for id=%s, falling back to cached/null", id)
+                }
+
+                cache?.let { cachedAlbums.upsert(it) }
+            }
+            cache
+        }
 
     @Throws(Exception::class)
     override fun search(criteria: SearchCriteria): SearchResult? = musicService.search(criteria)

@@ -1,5 +1,47 @@
 # Changes
 
+## Optimización interna Fase 3: single-flight para getAlbum/getAlbumAsDir
+
+Primera tarea de la lista de Fase 3: "implementar coalescencia o single-flight para solicitudes
+idénticas en curso" — criterio de aceptación: "dos consumidores simultáneos del mismo recurso
+comparten una sola llamada." Escenario real concreto: la app expone un `MediaLibrarySessionCallback`
+para Android Auto/clientes de media browsing, que corre en su propio scope, separado del hilo
+principal — si ese cliente y la UI normal piden el mismo álbum casi al mismo tiempo (antes de que
+cualquiera de los dos termine de poblar la caché), hoy ambos ven "caché vacía" y ambos disparan su
+propia llamada de red, duplicando trabajo y carga sobre el servidor.
+
+**Fix**: `KeyedLock.kt` (nuevo, `service/`) — un lock por clave, pensado para el patrón
+síncrono "revisar caché, si no está pedir y guardar" que ya usa `CachedMusicService` (no son
+funciones `suspend`, así que no aplica un `Deferred` compartido sin migrar a corrutinas primero,
+algo que corresponde a la Fase 7, no a esta). Un segundo llamador con la misma clave se bloquea
+hasta que el primero termina, y al entrar ve la caché ya poblada por el primero — sin disparar su
+propia llamada. Llamadores con claves distintas nunca se bloquean entre sí. `getAlbum(id)` y
+`getAlbumAsDir(id)` (los dos métodos que ya migraron a Room en Fase 2, los de mayor tráfico) ahora
+envuelven su cuerpo completo en `albumFetchLock.withLock(id)` / `albumDirFetchLock.withLock(id)`
+respectivamente — locks separados porque leen/escriben tablas Room distintas para el mismo id de
+álbum y no deberían serializarse entre sí.
+
+**Pruebas**: `KeyedLockTest.kt` (nuevo) usa hilos reales (no simulación) para verificar la
+concurrencia de verdad: dos llamadores con la misma clave se serializan (el segundo se mide
+bloqueado con un `CountDownLatch` antes de liberar al primero); dos llamadores con claves
+distintas nunca se bloquean entre sí (el segundo termina en menos de 1s aunque el primero siga
+retenido); el valor de retorno del bloque se propaga correctamente.
+
+**Verificación**: `ktlintCheck` (`-Pqc`), `testDebugUnitTest` (87 pruebas, 84 preexistentes + los
+3 casos nuevos de `KeyedLockTest`) y `assembleDebug` en verde. Probado en el Pixel 7: Álbum Detail
+sigue abriendo y renderizando con normalidad, sin deadlock ni cuelgue perceptible. **No se logró
+reproducir en vivo el escenario de dos consumidores realmente concurrentes** (requeriría disparar
+Android Auto y la UI pidiendo el mismo álbum en la misma ventana de milisegundos, no reproducible
+de forma confiable con las herramientas disponibles esta sesión) — la confianza en la corrección
+viene de las pruebas unitarias con hilos reales sobre `KeyedLock` en sí, no de una repetición en
+vivo del escenario exacto. `getArtists()`/`getIndexes()` quedan fuera de este cambio (no están
+keyeados por un id individual, sería un lock único por método en vez de por clave — se puede
+sumar en un commit aparte si hace falta).
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/KeyedLock.kt` (nuevo),
+`service/CachedMusicService.kt`,
+`ultrasonic/src/test/kotlin/org/moire/ultrasonic/service/KeyedLockTest.kt` (nuevo).
+
 ## Optimización interna Fase 3: getIndexes envía ifModifiedSince (sincronización incremental)
 
 Dos tareas de Fase 3 relacionadas: "guardar por servidor la marca temporal válida para
