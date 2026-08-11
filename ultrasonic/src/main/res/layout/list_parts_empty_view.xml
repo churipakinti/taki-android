@@ -10,30 +10,32 @@
 
     <ImageView
         a:id="@+id/empty_list_icon"
-        a:layout_width="100dip"
-        a:layout_height="100dip"
-        a:layout_marginStart="50dp"
+        a:layout_width="72dp"
+        a:layout_height="72dp"
+        a:layout_marginBottom="16dp"
+        a:alpha="0.6"
         a:importantForAccessibility="no"
-        a:layout_marginEnd="50dp"
-        a:layout_marginBottom="8dp"
         a:src="@drawable/ic_empty"
+        app:tint="?attr/colorOnSurfaceVariant"
         app:layout_constraintBottom_toTopOf="@+id/empty_list_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
         a:id="@+id/empty_list_text"
-        a:layout_width="match_parent"
+        a:layout_width="wrap_content"
         a:layout_height="wrap_content"
-        a:layout_marginTop="80dp"
-        a:layout_marginBottom="20dp"
-        a:drawablePadding="0dp"
+        a:layout_marginStart="32dp"
+        a:layout_marginEnd="32dp"
         a:gravity="center"
-        a:padding="12dp"
         a:text="@string/search.no_match"
-        a:textAppearance="?android:attr/textAppearanceMedium"
+        a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+        a:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/empty_list_icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,38 @@
 # Changes
 
+## Moderniza el estado vacío compartido (Downloads, Search, Artists, Albums, ...)
+
+Seguimiento directo del fix anterior: una vez visible, el usuario señaló que el ícono/texto de
+"sin descargas" se veía "de la versión anterior" -- desactualizado respecto al resto del rediseño
+de Taki.
+
+**Causa:** `list_parts_empty_view.xml` (el layout compartido por todas las pantallas basadas en
+`MultiListFragment`, incluida Search) nunca se actualizó al pasar a Material3: el ícono genérico
+`ic_empty` se mostraba a 100dp con `?android:attr/textAppearanceMedium` (el atributo viejo de
+Android, no Material3) para el texto, y un posicionamiento por `ConstraintLayout` innecesariamente
+enrevesado (el texto ocupaba toda la altura del contenedor con un margen fijo de 80dp para
+"simular" estar debajo del ícono).
+
+**Cambio:**
+- `list_parts_empty_view.xml`: ícono reducido a 72dp con `alpha=0.6` y tintado con
+  `?attr/colorOnSurfaceVariant` (en vez del `colorControlNormal` plano), texto con
+  `TextAppearance.Material3.BodyLarge`, y un chain vertical de `ConstraintLayout` que centra
+  ícono+texto como un bloque compacto en vez del posicionamiento por margen fijo. Este cambio
+  alcanza a todas las pantallas que usan el layout compartido (Downloads, Search, Artists, Albums,
+  Bookmarks, Playlists, etc.), no solo Downloads.
+- `DownloadsFragment`: ahora fija su propio ícono (`ic_menu_download`, el mismo que ya se usa en
+  el tab del bottom nav) en vez del genérico `ic_empty`, siguiendo el mismo patrón que
+  `SearchFragment` ya usaba con `ic_menu_search`.
+
+**Verificación en el Pixel 7:** Downloads (vacío) muestra ahora el ícono de descarga y "Nothing is
+downloading" con la tipografía Material3. El prompt de Search sin consultas ni historial reciente
+("Search artists, albums, and songs") se ve igual de consistente con el mismo ícono de lupa que ya
+tenía. Artists y Albums con contenido real siguen mostrando sus listas normalmente -- el cambio
+solo toca el estado vacío, no la lista poblada. Sin crashes.
+
+**Tests:** `ultrasonic:testDebugUnitTest` verde. Sin test nuevo -- cambio puramente visual (XML +
+un `setImageResource`), verificado en vivo como el resto de los cambios de layout de la sesión.
+
 ## Corrige la pantalla "Downloads" en blanco cuando no hay descargas (y el mismo bug en Artists/Albums)
 
 Reporte del usuario: la pantalla de Downloads dejó de mostrar el estado "no hay descargas"

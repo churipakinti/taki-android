@@ -10,6 +10,7 @@ package org.moire.ultrasonic.fragment
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
@@ -46,6 +47,8 @@ class DownloadsFragment : MultiListFragment<Album>() {
 
         setTitle(this, R.string.menu_downloads)
         emptyTextView.setText(R.string.download_empty)
+        emptyView.findViewById<ImageView>(R.id.empty_list_icon)
+            .setImageResource(R.drawable.ic_menu_download)
 
         viewAdapter.register(
             DownloadedAlbumRowBinder(
