@@ -44,6 +44,13 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
     override val listModel: ArtistListModel by viewModels()
     override val mainLayout = R.layout.list_layout_generic
 
+    // Same fix as AlbumListFragment (commit 026aa795, "don't refresh the album list on back
+    // navigation"): without this, every open of this screen defaults to refresh=true and
+    // bypasses the Room cache backing getArtists()/getIndexes() unconditionally. This screen's
+    // own nav argument already defaults refresh to false; it's this Kotlin-level default that
+    // was still forcing it on. See TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+    override val refreshOnCreation: Boolean = false
+
     private val navArgs: ArtistListFragmentArgs by navArgs()
     private var filterButtonBar: FilterButtonBar? = null
     private var orderType: SortOrder = SortOrder.NEWEST

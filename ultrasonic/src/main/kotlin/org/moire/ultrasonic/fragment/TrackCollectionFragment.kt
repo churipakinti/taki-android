@@ -122,6 +122,14 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
      */
     override val mainLayout: Int = R.layout.list_layout_track
 
+    // Don't force a network refetch every time this screen opens (e.g. reopening the same
+    // album) -- only the album/folder/videos paths are actually cached (see CachedMusicService),
+    // but a refresh=true default here bypassed that cache unconditionally on every navigation.
+    // This mirrors the fix already applied to AlbumListFragment (commit 026aa795, "don't refresh
+    // the album list on back navigation") that was never extended to this screen. See
+    // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+    override val refreshOnCreation: Boolean = false
+
     private val navArgs: TrackCollectionFragmentArgs by navArgs()
 
     private val isMediaLibrarySongs: Boolean

@@ -126,7 +126,7 @@
             app:argType="boolean" />
         <argument
             android:name="refresh"
-            android:defaultValue="true"
+            android:defaultValue="false"
             app:argType="boolean" />
         <argument
             android:name="name"

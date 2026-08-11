@@ -1,5 +1,57 @@
 # Changes
 
+## Optimización interna Fase 2: Álbum Detail y Artistas dejan de forzar red en cada apertura
+
+Causa raíz real detrás de un comportamiento observado durante toda la Fase 1 (el álbum de prueba
+Bach 333 disparaba `getAlbum.view` cada vez que se reabría, incluso segundos después): el
+argumento de navegación `refresh` de `trackCollectionFragment` (Álbum Detail, carpetas legacy,
+Videos) tenía `android:defaultValue="true"` en `navigation_graph.xml`, y `ArtistListFragment`
+heredaba el default `refreshOnCreation = true` de `MultiListFragment` sin sobreescribirlo. El
+resultado: **cada apertura de estas pantallas —incluida una reapertura del mismo álbum medio
+minuto después— pasaba `refresh=true` a `CachedMusicService`**, que para `getAlbumAsDir`/
+`getMusicDirectory` (`TimeLimitedCache` de 300s) y `getArtists`/`getIndexes` (Room, ver
+inventario de la entrada anterior) significa saltarse la caché por completo y forzar red, sin
+importar qué tan reciente fuera la copia local.
+
+**No es una decisión de diseño — es una regresión de 2021 nunca corregida del todo.** Se
+investigó el historial completo: el código original (`SelectAlbumActivity.java`, y el refactor a
+NavigationUI de febrero 2021) siempre default*eaba* `refresh=false`; `true` solo se pasaba
+explícitamente en acciones de "recargar" iniciadas por el usuario. El 16 de octubre de 2021,
+commit `5f716f50` ("Use MultiTypeAdapter as a backend for RecyclerView stuff") reescribió
+`TrackCollectionFragment.kt` por completo como parte de un cambio de adapter, y en esa
+reescritura el default cambió a `true` sin ninguna mención en el commit ni comentario en el
+código — todo indica que fue un efecto colateral, no intencional. Menos de dos meses después, el
+5 de diciembre de 2021, el commit `026aa795` confirma que esto sí se consideró un bug: su mensaje
+dice textualmente *"don't refresh the album list on back navigation"* — pero el fix
+(`refreshOnCreation = false` en `AlbumListFragment`, más su propio argumento de navegación en
+`false`) se aplicó **solo a la pantalla de grilla de Álbumes**, nunca a Álbum Detail ni a
+Artistas, que siguieron arrastrando el default accidental de octubre 2021 durante los siguientes
+~4 años, a través de la migración a ViewModel y a SafeArgs.
+
+**Fix**: se replica exactamente el patrón ya establecido por `026aa795` en las dos pantallas que
+quedaron sin corregir — `navigation_graph.xml`: `trackCollectionFragment`'s `refresh` default
+`true` → `false`; `TrackCollectionFragment.kt` y `ArtistListFragment.kt`: se agrega
+`override val refreshOnCreation: Boolean = false` (ya presente en `AlbumListFragment`). Se
+confirmó que el `refresh` flag solo tiene efecto real en 3 de los ~10 tipos de contenido que
+multiplexa `TrackCollectionFragment` (álbum, carpeta/índice legacy, videos) — género, artista,
+starred, playlists, podcasts, shares, bookmarks, random y all-songs nunca estuvieron cacheados en
+`CachedMusicService` y por tanto no cambian de comportamiento con este fix.
+
+**Verificación**: `ktlintCheck` (`-Pqc`), `testDebugUnitTest` (79 pruebas) y `assembleDebug` en
+verde. **Probado en el Pixel 7 real**: reabrir el álbum "Songs for the Deaf" una segunda vez ya
+no dispara `getAlbum.view`/`getAlbumAsDir` (solo `getAlbumInfo2.view`, el enrichment de "About",
+que nunca estuvo cacheado y sigue igual) — la lista de canciones se sirvió íntegramente desde la
+`TimeLimitedCache` sin ningún round-trip de red, y renderizó correctamente. Abrir Artistas mostró
+los datos de Room sin ninguna llamada a `getArtists.view`/`getIndexes.view`. Este mismo fix
+probablemente resuelve (o al menos reduce mucho la probabilidad de) el hallazgo colateral de
+renderizado vacío en el álbum Bach 333 delegado a una tarea aparte — al no repetir la llamada de
+red en cada reapertura, desaparece la ventana para que una respuesta de paginación inconsistente
+del servidor (el conteo 5740 vs. 5517 ya documentado) llegue en un momento distinto cada vez.
+
+Archivos: `ultrasonic/src/main/res/navigation/navigation_graph.xml`,
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/TrackCollectionFragment.kt`,
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/fragment/ArtistListFragment.kt`.
+
 ## Optimización interna: cierre de Fase 1 (camino crítico de reproducción)
 
 Repaso final de las tareas de Fase 1 que quedaban abiertas, confirmadas contra el código actual
