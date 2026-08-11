@@ -1,5 +1,56 @@
 # Changes
 
+## Optimización interna Fase 2, apertura: inventario de caché y primera excepción silenciosa corregida
+
+Primeras dos tareas de Fase 2 ("inventariar qué entidades viven en Room, LRU y cachés
+temporales" / "documentar TTL, invalidación y propietario") confirmadas contra el código actual
+de `CachedMusicService.kt` (el único orquestador de caché de datos remotos) y los `Dao` de
+`data/`:
+
+| Dato | Almacén | TTL / invalidación |
+| --- | --- | --- |
+| `Artist` (lista completa) | Room (`ArtistDao`, por servidor vía `MetaDatabase`) | Ninguno — vive hasta `refresh=true` (`clear()` completo) |
+| `Album` por artista / por id | Room (`AlbumDao`) | Ninguno — `clearByArtist()` solo en `refresh=true`; `getAlbum(id)` no tiene invalidación propia en absoluto, ni con `refresh=true` explícito salvo que ya haya sido borrado por otra vía |
+| `Index` (listado de letras/carpetas) | Room (`IndexDao`) | Ninguno, igual que Artist |
+| `MusicFolder` | Room (`MusicFoldersDao`) | Ninguno |
+| `MusicDirectory` (`getMusicDirectory`, carpetas legacy) | `LRUCache<String, TimeLimitedCache<>>` en memoria, capacidad 100 | `Settings.DIRECTORY_CACHE_TIME` (300s, fijo desde el punto 20 de `HANDOFF.md`) |
+| `MusicDirectory` de álbum (`getAlbumAsDir`, listado de canciones) | Igual que arriba, LRU separada (`cachedAlbum`) | 300s, misma constante |
+| `UserInfo` | `LRUCache<String, TimeLimitedCache<>>`, capacidad 100 | 300s |
+| `isLicenseValid` | `TimeLimitedCache<Boolean>` | 120s |
+| `Playlist` (lista) | `TimeLimitedCache` | 3600s |
+| `PodcastsChannel` (lista) | `TimeLimitedCache` | 3600s |
+| `Genre` (lista) | `TimeLimitedCache` | 36000s (10h) |
+| Búsqueda, letras, streams, jukebox, shares, chat, bookmarks | Sin caché — pasan directo a `musicService` en cada llamada | N/A |
+
+**Hallazgo (política contradictoria documentada, no corregida aún)**: `getAlbum(id)` (metadata
+del álbum: título, artista, songCount, etc.) vive en Room **sin ningún TTL**, mientras que
+`getAlbumAsDir(id)` (el listado de canciones de ese mismo álbum) usa una `TimeLimitedCache` de
+300s. Son dos representaciones del mismo álbum con políticas de expiración completamente
+distintas — exactamente el caso que pide documentar el criterio de aceptación de Fase 2 ("el
+mismo dato no mantiene políticas contradictorias... sin justificación documentada"). No se toca
+en este commit: cambiar la invalidación de `getAlbum`/Room es una decisión de mayor alcance
+(afecta a todo Room, no solo a este método) que merece su propia tarea, no mezclada con el
+inventario.
+
+**Fix aplicado (tarea "sustituir capturas silenciosas de Exception por resultados tipados o
+registro controlado")**: `CachedMusicService.getAlbum()` tenía un `catch (ignored: Exception) {}`
+completamente silencioso alrededor de la llamada de red — un fallo real (timeout, JSON inválido,
+lo que sea) desaparecía sin dejar rastro, indistinguible de "el álbum no existe". Ahora se
+registra vía `Timber.w(e, ...)` con el id del álbum antes de caer al mismo comportamiento de
+antes (devolver lo que haya en caché o `null`). No cambia el contrato del método ni requiere
+tocar los llamadores, que ya manejan `null` con fallback silencioso donde corresponde (ver
+`ArtistDetailFragment`/`getAlbumInfo2` en `HANDOFF.md`). El resto de catches silenciosos del
+repositorio (`EqualizerController`, `Util.kt`, `Storage.kt`, etc.) son de otras áreas —
+descarga de archivos, ecualizador, metadata de MediaMetadataRetriever— y quedan fuera de esta
+tarea de Fase 2, que es específicamente sobre la capa de caché de datos remotos.
+
+**Verificación**: `ktlintCheck` (`-Pqc`), `testDebugUnitTest` y `assembleDebug` en verde. Sin
+prueba unitaria nueva — `CachedMusicService` no tiene arnés de pruebas hoy (depende de Koin y
+del `MusicService` real) y el cambio es solo agregar un log a una ruta de fallo ya existente, sin
+alterar ningún resultado observable por un test.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/CachedMusicService.kt`.
+
 ## Optimización interna Fase 1: reutiliza la cola ya cargada en vez de reconstruirla
 
 Segunda tarea de Fase 1: "verificar que seleccionar una canción no reconstruya

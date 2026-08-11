@@ -37,6 +37,7 @@ import org.moire.ultrasonic.util.LRUCache
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.TimeLimitedCache
 import org.moire.ultrasonic.util.Util
+import timber.log.Timber
 
 @Suppress("TooManyFunctions")
 class CachedMusicService(private val musicService: MusicService) :
@@ -210,7 +211,11 @@ class CachedMusicService(private val musicService: MusicService) :
         if (cache == null) {
             try {
                 cache = musicService.getAlbum(id, name, refresh)
-            } catch (ignored: Exception) {
+            } catch (e: Exception) {
+                // Falls back to no album data (same as before); the difference is that the
+                // failure is now on record instead of vanishing silently. See
+                // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+                Timber.w(e, "getAlbum failed for id=%s, falling back to cached/null", id)
             }
 
             cache?.let { cachedAlbums.upsert(it) }
