@@ -1,5 +1,43 @@
 # Changes
 
+## Optimización interna Fase 3: corrige dos bugs de invalidación introducidos por el fix de ifModifiedSince
+
+Tarea de Fase 3: "invalidar correctamente después de cambios que afecten el índice." Al revisar
+esta tarea se encontraron dos bugs reales en el propio fix de `ifModifiedSince` de la entrada
+anterior — ninguno se había manifestado en las pruebas de esa sesión porque el servidor de
+prueba usa ID3 tags (`getIndexes` es exclusivo del modo legacy por carpetas).
+
+**Bug 1 (el más serio): cambiar de carpeta de música a una nunca vista podía mostrar una lista
+de artistas vacía.** `Settings.getIndexesLastModified` se guarda por servidor, no por carpeta
+(correcto, porque `lastModified` refleja cambios de toda la biblioteca). Pero el código anterior
+enviaba ese `ifModifiedSince` en **cualquier** `refresh=true`, incluida la primera vez que se
+pide una carpeta que nunca se cacheó. Si la biblioteca no cambió desde la última consulta (de
+otra carpeta), el servidor respondía "sin cambios" y el código devolvía `null` — pero la caché de
+Room para esa carpeta nueva estaba vacía, así que el usuario veía cero artistas en vez de la
+lista real. **Fix**: la sincronización incremental ahora solo se intenta cuando ya hay una caché
+no vacía para exactamente ese `musicFolderId` (`useIncrementalSync = refresh &&
+indexes.isNotEmpty()`) — una carpeta nunca vista siempre hace un fetch completo, sin excepción.
+
+**Bug 2: al confirmarse un cambio real, se borraba el índice de *todas* las carpetas, no solo la
+que se estaba re-consultando.** `IndexDao.clear()` es un `DELETE FROM indexes` sin condición —
+ya se llamaba así antes del fix de `ifModifiedSince` (no es una regresión de esa entrada, pero
+es exactamente el tipo de invalidación incorrecta que pide esta tarea). Con múltiples carpetas
+de música configuradas, refrescar la carpeta A borraba también los índices ya cacheados de B y
+C sin volver a pedirlos. **Fix**: `IndexDao.clearByFolder(musicFolderId)` (nuevo) borra solo la
+carpeta que efectivamente se volvió a consultar; `clear()` sin condición se reserva para el caso
+`musicFolderId == null` (sin filtro de carpeta, todas a la vez, comportamiento ya correcto para
+ese caso).
+
+**Verificación**: `ktlintCheck` (`-Pqc`), `testDebugUnitTest` (87 pruebas, sin cambios en el
+conteo) y `assembleDebug` en verde. Probado en el Pixel 7: Artistas y pull-to-refresh (camino
+ID3, no afectado por este código) siguen funcionando sin regresión. Misma limitación que la
+entrada anterior: no se pudo ejercitar `getIndexes`/`ifModifiedSince` en vivo contra un servidor
+folder-based real para confirmar los dos escenarios exactos que motivaron estos fixes — quedan
+corregidos por análisis de código, no por repetición en vivo.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/data/BasicDaos.kt`,
+`service/CachedMusicService.kt`.
+
 ## Optimización interna Fase 3: single-flight para getAlbum/getAlbumAsDir
 
 Primera tarea de la lista de Fase 3: "implementar coalescencia o single-flight para solicitudes

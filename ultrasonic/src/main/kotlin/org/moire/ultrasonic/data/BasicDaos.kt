@@ -58,6 +58,13 @@ interface IndexDao : GenericDao<Index> {
      */
     @Query("SELECT * FROM indexes where musicFolderId LIKE :musicFolderId")
     fun get(musicFolderId: String): List<Index>
+
+    /**
+     * Clear only the indexes belonging to a specific folder id, leaving other folders' cached
+     * indexes (which weren't part of this fetch) untouched.
+     */
+    @Query("DELETE FROM indexes WHERE musicFolderId LIKE :musicFolderId")
+    fun clearByFolder(musicFolderId: String)
 }
 
 interface GenericDao<T> {

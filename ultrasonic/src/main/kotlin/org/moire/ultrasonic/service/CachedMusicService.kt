@@ -111,6 +111,14 @@ class CachedMusicService(private val musicService: MusicService) :
      * as-is instead of being cleared, so a pull-to-refresh that finds no changes doesn't
      * needlessly wipe the local index (or the unrelated folder-listing cache) while waiting on
      * a full re-fetch that was never actually necessary.
+     *
+     * Incremental sync (ifModifiedSince) is only requested when there's already a non-empty
+     * cache for this exact musicFolderId to fall back to -- e.g. switching to a music folder
+     * that was never fetched before must always do a full fetch, even though the server's
+     * stored lastModified (saved per-server, not per-folder, since it reflects library-wide
+     * changes) might say "nothing changed" relative to some *other* folder's last check. See
+     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 3 ("invalidar correctamente después de cambios que
+     * afecten el índice").
      */
     @Throws(Exception::class)
     override fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
@@ -123,9 +131,16 @@ class CachedMusicService(private val musicService: MusicService) :
         }
 
         if (refresh || indexes.isEmpty()) {
-            val fetched = musicService.getIndexes(musicFolderId, refresh)
+            val useIncrementalSync = refresh && indexes.isNotEmpty()
+            val fetched = musicService.getIndexes(musicFolderId, useIncrementalSync)
             if (fetched != null) {
-                cachedIndexes.clear()
+                // Only clear the folder that was actually re-fetched -- other folders' cached
+                // indexes weren't part of this call and must survive it untouched.
+                if (musicFolderId == null) {
+                    cachedIndexes.clear()
+                } else {
+                    cachedIndexes.clearByFolder(musicFolderId)
+                }
                 cachedIndexes.upsert(fetched)
                 cachedMusicDirectories.clear()
                 indexes = fetched
