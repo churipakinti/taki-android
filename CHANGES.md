@@ -1,5 +1,42 @@
 # Changes
 
+## Optimización interna: cierre de Fase 3 (menos solicitudes y sincronización incremental)
+
+Última tarea de Fase 3: "priorizar solicitudes: audio > acción explícita del usuario > datos
+visibles > precarga." Confirmado por inspección que ya se cumple, sin necesidad de código nuevo:
+
+- **Audio tiene prioridad estructural, no solo de cola.** `PlaybackService.getLocalPlayer()`
+  crea su propio `OkHttpClient` nuevo (`OkHttpClient.Builder()`), completamente aislado del
+  cliente de API/metadata (inyectado vía Koin) y del cliente de imágenes (`ImageSubsonicAPIClient`
+  de Fase 0). El streaming de audio nunca compite por conexiones TCP con ninguna otra llamada de
+  la app — una garantía estructural más fuerte que una cola de prioridades sobre un pool
+  compartido.
+- **Imágenes/carátulas ya están aisladas del resto** (fix de Fase 0), así que tampoco compiten
+  con las llamadas de metadata ni con el audio.
+- **No existe ninguna "precarga" en el código actual** para deprioritizar frente a "acción
+  explícita"/"datos visibles" — búsqueda completa de `preload`/`prefetch` en todo el código no
+  encontró ningún resultado, consistente con el Hallazgo 7 de Fase 0/1 (no hay precarga
+  especulativa de cola ni de contenido en ningún punto de la app). Sin un cuarto nivel que
+  deprioritizar, la distinción entre "acción explícita" y "datos visibles" dentro del pool de
+  metadata/API (compartido, sin aislar más) no tiene ningún caso real que resolver hoy: abrir
+  Home *es* la acción explícita cuyo resultado son sus datos visibles, no dos flujos en
+  competencia.
+
+Con esto, las 8 tareas de Fase 3 del plan quedan resueltas: 4 con cambio de código real y
+verificado en el Pixel 7 (recargas por rotación, sincronización incremental de `getIndexes` con
+sus dos bugs de invalidación corregidos, single-flight para `getAlbum`/`getAlbumAsDir`), y 4
+confirmadas por inspección/investigación sin requerir cambios (invalidación de índice ya cubierta
+por el fix anterior, caché HTTP condicional investigada y descartada por no ser viable con el
+servidor real disponible, concurrencia estructurada ya acotada en todo el código, priorización de
+solicitudes ya garantizada por el aislamiento de pools de conexión).
+
+**Limitación honesta que atraviesa buena parte de esta fase**: el servidor de prueba usado toda
+la sesión (Navidrome, configurado con etiquetas ID3) no ejercita el camino legacy de navegación
+por carpetas (`getIndexes`), así que los fixes de sincronización incremental e invalidación de
+índice se verificaron por análisis de código y por no-regresión del camino ID3, no por
+repetición en vivo del escenario exacto que motivó cada fix. Documentado en cada entrada
+correspondiente.
+
 ## Optimización interna Fase 3: caché HTTP condicional (ETag/Last-Modified) — investigado, no viable con el servidor real disponible
 
 Tarea de Fase 3, formulada explícitamente en el plan como condicional: "aplicar caché HTTP
