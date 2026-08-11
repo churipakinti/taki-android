@@ -1,5 +1,52 @@
 # Changes
 
+## Optimización interna: cierre de Fase 2 (contenido local primero y caché coherente)
+
+Repaso final de las tareas de Fase 2 que quedaban abiertas, sin necesidad de más código:
+
+- **"No sustituir contenido válido por spinner o pantalla vacía durante una actualización" —
+  confirmado por inspección, ya se cumple en las tres pantallas tocadas esta fase.** Ni
+  `HomeViewModel.loadHomeScreen()` ni `TrackCollectionModel` (Álbum Detail, género, artista,
+  etc.) ni `ArtistListModel` limpian su `LiveData` antes de que llegue la respuesta — el valor
+  anterior sigue expuesto a la UI mientras `swipeRefresh?.isRefreshing = true`, y
+  `MultiListFragment.defaultObserver` suprime explícitamente el estado "vacío"
+  (`!swipeRefresh?.isRefreshing`) mientras tanto. El único indicador de carga visible es el
+  spinner de pull-to-refresh superpuesto, nunca un vaciado de pantalla.
+- **"Incorporar estado de actualización separado del contenido (`fresh`/`stale`/`refreshing`/
+  `failed`)" — evaluado, decidido no implementar en esta fase.** Ninguna pantalla tiene hoy más
+  granularidad que "muestra datos" + spinner de pull-to-refresh binario; no existe una señal
+  visible de "esto que ves tiene 4 minutos" o "la última actualización falló en silencio".
+  Construir ese estado de verdad es una funcionalidad de UI nueva (badges, indicadores por
+  estantería/pantalla, lógica de presentación adicional), no la corrección de una regresión ni
+  algo que una métrica concreta esté pidiendo — cae directamente en la exclusión que el propio
+  plan marca ("rediseño visual no requerido para corregir una regresión") y en el principio
+  rector de la Fase 2 (mostrar y actualizar contenido, que ya se logró con los tres fixes de
+  caché de esta fase). Queda como candidato real para una fase de producto aparte, no de
+  optimización.
+
+Con esto, las 8 tareas de Fase 2 del plan quedan resueltas: 2 de inventario/documentación
+(entidades, TTL/invalidación), 3 con cambio de código real medido en el Pixel 7 (Álbum
+Detail + Artistas dejan de forzar red en cada apertura, Home deja de esperar 6 llamadas en cada
+apertura, `getAlbumAsDir` migra a Room), 1 excepción silenciosa corregida en la capa de caché, 1
+ya satisfecha por la arquitectura existente (no vaciar pantalla durante refresh), y 1
+deliberadamente fuera de alcance con justificación documentada (estado fresh/stale explícito). La
+política contradictoria original entre `getAlbum` y `getAlbumAsDir` quedó cerrada como
+consecuencia directa de la migración a Room, no como tarea separada.
+
+**Nota sobre "aplicar patrón local-first / stale-while-revalidate"**: los tres fixes de esta fase
+implementan la versión que ya usa el resto del código base (servir desde caché si está vigente,
+buscar en red y persistir solo si no lo está) en vez de un stale-while-revalidate completo
+(emitir lo local siempre y disparar una actualización en background incluso cuando el dato
+todavía está "fresco"). Se eligió consistencia con el patrón ya establecido en
+`CachedMusicService` (Genres, Playlists, License, etc.) antes que introducir un mecanismo nuevo
+en una sola pasada — coherente con la restricción del propio plan de no mezclar refactors
+grandes de arquitectura con los fixes puntuales de esta fase.
+
+**Ganancia medible acumulada de esta fase, todo verificado en el Pixel 7 real**: abrir Home,
+Artistas o cualquier álbum ya visitado —incluso después de reiniciar la app por completo— ya no
+espera ninguna llamada de red; antes, cada una de esas aperturas repetía el fetch completo sin
+importar qué tan reciente fuera la visita anterior.
+
 ## Optimización interna Fase 2: `getAlbumAsDir` migra a Room, cierra la política contradictoria
 
 Resuelve la tarea "elegir Room como fuente persistente principal cuando sea viable" y la política
