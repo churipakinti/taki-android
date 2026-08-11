@@ -1,5 +1,54 @@
 # Changes
 
+## Corrige la pantalla "Downloads" en blanco cuando no hay descargas (y el mismo bug en Artists/Albums)
+
+Reporte del usuario: la pantalla de Downloads dejó de mostrar el estado "no hay descargas"
+(ícono + texto) que recordaba de antes; en su lugar quedaba completamente en blanco.
+
+**Diagnóstico:** confirmado en el Pixel 7 -- la carpeta de descargas estaba vacía (0 archivos),
+así que la pantalla debía mostrar el estado vacío, pero `RecyclerView` y el `empty_list_view`
+aparecían los dos sin contenido en el dump de UI. Causa: una condición de carrera en
+`MultiListFragment.defaultObserver`:
+
+```kotlin
+emptyView.isVisible = it.isEmpty() && !(swipeRefresh?.isRefreshing ?: false)
+```
+
+Este chequeo solo se recalcula cuando llega una lista nueva por `LiveData`. `DownloadsFragment`
+(y cualquier pantalla que dependa de esta fórmula heredada) hace:
+```kotlin
+swipeRefresh?.isRefreshing = true
+listModel.getDownloadedAlbums()   // publica la lista vacía de forma asíncrona (postValue)
+swipeRefresh?.isRefreshing = false
+```
+El aviso de "la lista cambió" (encolado en el momento de `postValue`) y el `isRefreshing = false`
+(encolado cuando el `withContext(IO)` termina, justo después) compiten por el hilo principal, y el
+primero casi siempre gana -- se evalúa mientras `isRefreshing` todavía es `true`, así que
+`emptyView` nunca se muestra. Nada vuelve a recalcularlo después.
+
+**Alcance real:** de las ~17 pantallas que tocan `swipeRefresh.isRefreshing`, solo **3 heredan
+esta fórmula sin sobreescribirla** y quedan expuestas: `DownloadsFragment`, `ArtistListFragment` y
+`AlbumListFragment` (esta última a través de `EntryListFragment`, que duplicaba la misma fórmula).
+`TrackCollectionFragment` (y todo lo que hereda de él -- Bookmarks, Downloaded Album, etc.) ya usa
+`emptyView.isVisible = entryList.isEmpty()`, sin ese gate, y nunca tuvo el bug.
+
+**Cambio:** se saca el `&& !(swipeRefresh?.isRefreshing ?: false)` de `MultiListFragment` y
+`EntryListFragment`, alineándolos con el patrón ya probado en `TrackCollectionFragment`, en vez de
+tocar los ~30 call sites de `swipeRefresh.isRefreshing` (incluido `GenericListModel`, que también
+lo setea de forma independiente y hubiera seguido siendo otra fuente de la misma carrera). Se
+confirmó primero que ningún `load()` detrás de estas listas emite un resultado vacío intermedio
+antes del final (cada uno llama `postValue` una sola vez), así que sacar el gate no puede causar
+un parpadeo falso de "sin resultados" durante un refresh.
+
+**Verificación en el Pixel 7:** con la carpeta de descargas vacía, Downloads ahora muestra el
+ícono y el texto "Nothing is downloading" en vez de la pantalla en blanco. Artists y Albums
+(con contenido real) se probaron después del cambio y siguen mostrando sus listas normalmente,
+sin regresiones. Sin crashes.
+
+**Tests:** `ultrasonic:testDebugUnitTest` y `ktlintCheck` verdes. Sin test unitario nuevo -- el
+cambio es la eliminación de una lectura racy en un observer ligado al ciclo de vida de Fragment/
+LiveData, ya cubierto por la verificación en vivo descrita arriba.
+
 ## Optimización interna Fase 9: búsqueda fluida
 
 Auditoría de `SearchFragment`/`SearchListModel` contra las tareas de Fase 9. La mayoría ya estaba

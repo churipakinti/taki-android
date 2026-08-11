@@ -116,7 +116,16 @@ abstract class MultiListFragment<T : Identifiable> :
      * What to do when the list has changed
      */
     internal open val defaultObserver: ((List<T>) -> Unit) = {
-        emptyView.isVisible = it.isEmpty() && !(swipeRefresh?.isRefreshing ?: false)
+        // Deliberately not gated on `!swipeRefresh.isRefreshing`: that flag is flipped by a
+        // separate, unordered async completion (a coroutine finishing) from the one that
+        // delivers this list (a LiveData emission), so reading it here raced against it
+        // actually being up to date -- an empty result that arrived while the flag hadn't
+        // flipped to false yet stayed permanently hidden, since nothing re-checks once it
+        // does. None of the ViewModels backing this screen ever emit an intermediate empty
+        // list while loading (each posts its final result exactly once), so there is nothing
+        // to guard against here. Matches TrackCollectionFragment.defaultObserver, which never
+        // had this gate. See TAKI_CODE_OPTIMIZATION_PLAN.md bug report (2026-08-11).
+        emptyView.isVisible = it.isEmpty()
         viewAdapter.submitList(it)
     }
 
