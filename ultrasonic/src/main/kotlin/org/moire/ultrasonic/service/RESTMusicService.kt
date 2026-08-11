@@ -13,6 +13,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.moire.ultrasonic.api.subsonic.ApiNotSupportedException
 import org.moire.ultrasonic.api.subsonic.SubsonicAPIClient
+import org.moire.ultrasonic.api.subsonic.SubsonicRESTException
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.api.subsonic.models.JukeboxAction
 import org.moire.ultrasonic.api.subsonic.throwOnFailure
@@ -51,6 +52,7 @@ import org.moire.ultrasonic.util.Settings
 import timber.log.Timber
 
 private const val SIMILAR_ARTIST_COUNT = 12
+private const val OPENSUBSONIC_EXTENSION_SONG_LYRICS = "songLyrics"
 
 /**
  * This Music Service implementation connects to a server using the Subsonic REST API
@@ -64,6 +66,10 @@ open class RESTMusicService(
     // Shortcut to the API
     @Suppress("VariableNaming", "PropertyName")
     val API = subsonicAPIClient.api
+
+    // Fase 4: avoids probing OpenSubsonic extensions once per feature use -- see
+    // OpenSubsonicExtensionsCache's doc comment.
+    private val openSubsonicExtensions = OpenSubsonicExtensionsCache()
 
     @Throws(Exception::class)
     override fun ping() {
@@ -349,9 +355,48 @@ open class RESTMusicService(
 
     @Throws(Exception::class)
     override fun getLyricsBySongId(id: String): Lyrics? {
+        val supported = openSubsonicExtensions.supports(
+            OPENSUBSONIC_EXTENSION_SONG_LYRICS,
+            System.currentTimeMillis()
+        ) { fetchOpenSubsonicExtensions() }
+
+        if (!supported) return null
+
         val response = API.getLyricsBySongId(id).execute().throwOnFailure()
 
         return response.body()!!.lyricsList.toDomainEntity()
+    }
+
+    /**
+     * Probes which OpenSubsonic extensions the server supports (see
+     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 4). A plain Subsonic server doesn't have this endpoint
+     * at all, so every failure path here just means "no extensions" to the caller -- the
+     * distinction is only kept for logging, since an unreachable server or bad credentials are a
+     * different problem than "this server doesn't implement OpenSubsonic".
+     */
+    private fun fetchOpenSubsonicExtensions(): Set<String> {
+        return try {
+            val response = API.getOpenSubsonicExtensions().execute()
+            if (!response.isSuccessful) {
+                Timber.i(
+                    "OpenSubsonic extensions request failed (HTTP %d), assuming plain Subsonic",
+                    response.code()
+                )
+                return emptySet()
+            }
+            response.throwOnFailure().body()!!.openSubsonicExtensions
+                .map { it.name }
+                .toSet()
+        } catch (e: SubsonicRESTException) {
+            Timber.i(
+                e,
+                "Server rejected the OpenSubsonic extensions request, assuming plain Subsonic"
+            )
+            emptySet()
+        } catch (e: Exception) {
+            Timber.w(e, "Could not check OpenSubsonic extensions, assuming none for now")
+            emptySet()
+        }
     }
 
     @Throws(Exception::class)

@@ -24,6 +24,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetIndexesResponse
 import org.moire.ultrasonic.api.subsonic.response.GetLyricsBySongIdResponse
 import org.moire.ultrasonic.api.subsonic.response.GetLyricsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetMusicDirectoryResponse
+import org.moire.ultrasonic.api.subsonic.response.GetOpenSubsonicExtensionsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPlaylistResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPlaylistsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPodcastsResponse
@@ -200,11 +201,22 @@ interface SubsonicAPIDefinition {
     /**
      * OpenSubsonic extension. Returns time-synced lyrics when the server/track has them,
      * plain unsynced lines otherwise. Not part of the core Subsonic protocol, so it isn't
-     * gated by [ApiVersionCheckWrapper] like the versioned calls above - servers that don't
-     * support it simply fail the call, which callers should catch and fall back to [getLyrics].
+     * gated by [ApiVersionCheckWrapper] like the versioned calls above. Callers should check
+     * [getOpenSubsonicExtensions] first and fall back to [getLyrics] when the server doesn't
+     * advertise support for it.
      */
     @GET("getLyricsBySongId.view")
     fun getLyricsBySongId(@Query("id") id: String): Call<GetLyricsBySongIdResponse>
+
+    /**
+     * OpenSubsonic extension (https://opensubsonic.netlify.app/docs/extensions/). Lists which
+     * OpenSubsonic-only extensions the server implements, e.g. `songLyrics` for
+     * [getLyricsBySongId]. Plain Subsonic servers don't have this endpoint at all and will fail
+     * the call (HTTP error or a Subsonic protocol error, depending on the server) - callers must
+     * treat any failure here as "no extensions available", not as a fatal error.
+     */
+    @GET("getOpenSubsonicExtensions.view")
+    fun getOpenSubsonicExtensions(): Call<GetOpenSubsonicExtensionsResponse>
 
     @GET("scrobble.view")
     fun scrobble(

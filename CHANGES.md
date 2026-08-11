@@ -1,5 +1,57 @@
 # Changes
 
+## Optimización interna Fase 4: negociación de extensiones OpenSubsonic antes de usarlas
+
+Objetivo de Fase 4: "evitar solicitudes destinadas a fallar y utilizar OpenSubsonic solo cuando
+corresponda." Búsqueda completa de todo el código confirmó que hay exactamente una llamada
+OpenSubsonic-only en toda la app: `getLyricsBySongId` (letras sincronizadas), usada por
+`LyricsFragment` con fallback a `getLyrics` (Subsonic estándar) cuando falla. Antes de este
+cambio, esa llamada se disparaba siempre, sin ninguna comprobación previa — contra un servidor
+Subsonic puro (sin OpenSubsonic) esto significa una solicitud destinada a fallar cada vez que el
+usuario abre las letras de una canción.
+
+**Cambio:**
+
+- Nuevo endpoint `getOpenSubsonicExtensions.view` en `SubsonicAPIDefinition` (más su modelo de
+  respuesta `GetOpenSubsonicExtensionsResponse`/`OpenSubsonicExtension`), siguiendo el mismo
+  patrón que los endpoints existentes.
+- `RESTMusicService.getLyricsBySongId()` ahora consulta primero si el servidor anuncia la
+  extensión `songLyrics` antes de llamar `getLyricsBySongId.view`; si no la anuncia, devuelve
+  `null` de inmediato y `LyricsFragment` cae directo al `getLyrics` legacy, sin tocar la red con
+  una llamada que sabíamos que iba a fallar.
+- Nueva clase `OpenSubsonicExtensionsCache` (pura, testeada con 6 tests unitarios) que memoriza el
+  resultado de la comprobación durante 24h: un servidor Subsonic puro (o inalcanzable, o que
+  responde con credenciales inválidas) solo se vuelve a consultar una vez por ventana, no una vez
+  por cada apertura de letras. Cualquier tipo de fallo (HTTP, error de protocolo Subsonic,
+  respuesta inválida) se trata igual de cara al caché — "no disponible ahora" — pero cada camino
+  se registra por separado vía `Timber` para poder diferenciarlos en logs si hace falta
+  diagnosticar un servidor específico.
+
+**Decisión de alcance:** el perfil de capacidades vive en memoria dentro de la instancia de
+`RESTMusicService` (que ya se recrea automáticamente al cambiar de servidor activo — ver
+`MusicServiceFactory.resetMusicService()` — así que nunca mezcla datos entre servidores) en lugar
+de persistirse en `ServerSetting`/Room. El plan pedía "guardar por serverId" con fecha de
+comprobación y vencimiento; se prefirió esta alternativa más acotada para no tocar el esquema de
+la tabla de servidores configurados (alto riesgo, fuera de lo que esta fase necesita) a cambio de
+un costo aceptable: una comprobación extra por servidor por sesión de la app, no "repetida" en el
+sentido que pide el criterio de aceptación. El modo offline nunca ejecuta esta negociación: la
+lógica vive enteramente dentro de `RESTMusicService`, que `OfflineMusicService` ni siquiera
+referencia.
+
+**Verificación en el Pixel 7 real** (servidor Navidrome vía Tailscale, que sí implementa
+OpenSubsonic): se abrieron las letras de una canción dos veces seguidas. La primera vez el log
+muestra `getOpenSubsonicExtensions.view` (200 OK) seguido de `getLyricsBySongId.view` (200 OK,
+letras mostradas correctamente). La segunda vez, sobre la misma canción, solo aparece
+`getLyricsBySongId.view` — sin repetir la comprobación de extensiones, confirmando que el caché
+funciona.
+
+**Limitación honesta:** no fue posible verificar el otro lado del comportamiento (un servidor
+Subsonic puro, sin OpenSubsonic, dejando de recibir la solicitud repetida) porque el único
+servidor disponible esta sesión es Navidrome, que sí soporta la extensión. El manejo de esa rama
+(cualquier fallo de red/protocolo se trata como "no disponible" y se memoriza) está cubierto por
+tests unitarios (`OpenSubsonicExtensionsCacheTest`) pero no por una repetición en vivo del
+escenario exacto.
+
 ## Optimización interna: cierre de Fase 3 (menos solicitudes y sincronización incremental)
 
 Última tarea de Fase 3: "priorizar solicitudes: audio > acción explícita del usuario > datos
