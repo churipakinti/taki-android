@@ -1,5 +1,47 @@
 # Changes
 
+## Optimización interna: cierre de Fase 1 (camino crítico de reproducción)
+
+Repaso final de las tareas de Fase 1 que quedaban abiertas, confirmadas contra el código actual
+sin necesidad de más cambios:
+
+- **"Asegurar que la navegación no detenga ni reinicie el servicio de reproducción" — confirmado
+  por inspección, ya se cumple.** `NavigationActivity.onDestroy()` solo hace
+  `rxBusSubscription.dispose()`, no toca el servicio, y de todos modos no se llama al navegar
+  entre fragments dentro de la misma Activity (solo en rotación/destrucción real). El único
+  camino que detiene `PlaybackService` es `releasePlayerAndSession()` (llamado desde
+  `onDestroy()`/`onTaskRemoved()` del propio servicio o desde un comando explícito de apagado),
+  que a su vez publica `RxBus.stopServiceCommandPublisher` — una auto-notificación, no algo que
+  la navegación dispare. `RxBus.shutdownCommandPublisher` está declarado y observado pero
+  **no tiene ningún emisor en todo el código actual** (señal muerta) — no es un riesgo de Fase 1,
+  pero queda anotado como código muerto candidato a limpieza aparte.
+- **"Evaluar la preparación anticipada de la siguiente canción" — evaluado, sin cambio de
+  código recomendado por ahora.** El Hallazgo 7 de Fase 0 ya había descartado que hubiera
+  precarga agresiva de varias canciones de la cola; solo se resuelve la URL de la pista actual
+  (más una segunda resolución al reanudar en un offset de bytes, comportamiento normal de
+  Media3). No hay evidencia medida de que la transición entre canciones tenga un hueco
+  perceptible que justifique agregar lógica de pre-fetch propia — y el propio plan pide evitar
+  "descargar agresivamente toda la cola" y "optimización prematura... sin relación con un flujo
+  medido". Se deja como está; revisar si en el futuro aparece una métrica concreta de gap entre
+  pistas.
+- **"Limitar o cancelar precargas de carátulas y metadatos si compiten con el audio" — cubierto
+  por el aislamiento de pool de conexiones de Fase 0** (`ImageSubsonicAPIClient` con su propio
+  `Dispatcher`/`ConnectionPool`, separado de streaming y llamadas de API). Coil ya cancela sus
+  propias cargas por ciclo de vida de vista: no se encontró necesidad adicional de priorización
+  explícita.
+- **"Confirmar restauración de canción, cola, posición y estado tras cerrar y reabrir" — ya
+  verificado en una sesión anterior** (ver `HANDOFF.md` punto 43: fuerza-detención con cola de
+  2 canciones, restauración exacta de índice/posición/shuffle/repeat en el Pixel 7) y reconfirmado
+  de forma incidental en esta sesión: cada reinstalación/relanzamiento del APK durante las pruebas
+  de esta fase restauró correctamente la última pista y posición sin intervención.
+
+Con esto, las 8 tareas de Fase 1 del plan quedan resueltas: 2 con cambio de código real y medido
+en el Pixel 7 (`DuplicateRequestGuard` y reutilización de cola ya cargada — ver entradas
+anteriores de este archivo), 1 ya resuelta desde antes de esta fase (`CachedDataSource` para
+archivos descargados), 1 cubierta por el fix de Fase 0 (aislamiento de pool de imágenes), y 4
+confirmadas por inspección/evidencia existente sin requerir cambios adicionales. Sin código nuevo
+en esta entrada — solo diagnóstico y documentación, no aplica build/test.
+
 ## Optimización interna Fase 2, apertura: inventario de caché y primera excepción silenciosa corregida
 
 Primeras dos tareas de Fase 2 ("inventariar qué entidades viven en Room, LRU y cachés
