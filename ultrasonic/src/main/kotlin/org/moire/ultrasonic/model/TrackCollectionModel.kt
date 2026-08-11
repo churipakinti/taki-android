@@ -132,14 +132,31 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
      * Not every server/album has it, so failures or missing data resolve to null rather than
      * surfacing an error -- the track list itself doesn't depend on this.
      */
-    suspend fun getAlbumInfo(id: String): AlbumInfo? = withContext(Dispatchers.IO) {
-        try {
-            MusicServiceFactory.getMusicService().getAlbumInfo(id)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (error: Exception) {
-            null
+    private var loadedAlbumInfoId: String? = null
+    private var loadedAlbumInfo: AlbumInfo? = null
+
+    /**
+     * getAlbumInfo() has no caching of its own in CachedMusicService (unlike the track listing
+     * itself), and this ViewModel survives Fragment recreation (e.g. rotation) while the
+     * Fragment's own fields don't -- without this, rotating the device re-fetched the "About"
+     * text from the network every time even though the album on screen never changed. See
+     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 3.
+     */
+    suspend fun getAlbumInfo(id: String, forceRefresh: Boolean = false): AlbumInfo? {
+        if (!forceRefresh && loadedAlbumInfoId == id) return loadedAlbumInfo
+
+        val info = withContext(Dispatchers.IO) {
+            try {
+                MusicServiceFactory.getMusicService().getAlbumInfo(id)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                null
+            }
         }
+        loadedAlbumInfoId = id
+        loadedAlbumInfo = info
+        return info
     }
 
     suspend fun getSongsForGenre(genre: String, count: Int, offset: Int, append: Boolean) {

@@ -348,9 +348,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     // list, so they can arrive before or after the header is first rendered. Either way, a new
     // AlbumHeader instance is submitted so DiffUtil (which compares AlbumHeader by reference,
     // since it has no equals()/hashCode() override) actually detects the change and rebinds it.
-    private fun loadAlbumInfo(albumId: String) {
+    private fun loadAlbumInfo(albumId: String, forceRefresh: Boolean) {
         viewLifecycleOwner.lifecycleScope.launch {
-            val info = listModel.getAlbumInfo(albumId)
+            val info = listModel.getAlbumInfo(albumId, forceRefresh)
             albumNotes = info?.notes
                 ?.let {
                     HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
@@ -747,7 +747,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     listModel.getMusicDirectory(refresh2, id, name)
                 }
 
-                if (isAlbum) loadAlbumInfo(id)
+                if (isAlbum) loadAlbumInfo(id, refresh2)
             }
 
             swipeRefresh?.isRefreshing = false

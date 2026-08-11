@@ -1,5 +1,44 @@
 # Changes
 
+## Optimización interna Fase 3: rotar el dispositivo dejaba de repetir llamadas ya cacheadas
+
+Primera tarea de Fase 3: "revisar recargas causadas por navegación, recreación de Activity/
+Fragment y rotación." Se probó rotación real en el Pixel 7 (`settings put system
+user_rotation`, con `accelerometer_rotation` desactivado para controlarla) contra Álbum Detail y
+Artist Detail, las dos pantallas de detalle más visitadas.
+
+**Hallazgo**: ambas pantallas guardaban su estado de "ya cargado" en un campo del **Fragment**
+(`TrackCollectionFragment.albumNotes: String?`) o directamente no lo guardaban en absoluto
+(`ArtistDetailModel.load()` no tenía ningún guard). Como rotar destruye y recrea el Fragment
+pero **no** el `ViewModel` (que Android retiene explícitamente a través de cambios de
+configuración), cada rotación repetía llamadas de red que ni siquiera estaban cacheadas en
+`CachedMusicService`: `getAlbumInfo2.view` (texto "About" de Álbum Detail) y, en Artist Detail,
+las tres llamadas de carga completa —`getTopSongs.view`, `getArtistInfo2.view` y
+`getAlbumsOfArtist`— aunque el artista en pantalla no había cambiado. Confirmado en vivo: dos
+rotaciones seguidas sobre "Songs for the Deaf" dispararon `getAlbumInfo2.view` las dos veces
+antes del fix.
+
+**Fix**: en ambos casos, el estado de "ya cargado para este id" se movió del Fragment al
+`ViewModel` (que sí sobrevive la rotación) — mismo principio que `HomeShelvesFreshness` de
+Fase 2, pero sin TTL: alcanza con "¿es el mismo id que la última vez, y no se pidió un refresh
+explícito?". `TrackCollectionModel.getAlbumInfo(id, forceRefresh)` cachea el resultado en un
+solo slot (id + `AlbumInfo?`); `ArtistDetailModel.load(artistId, artistName, refresh)` corta
+temprano si `artistId` coincide con la última carga completada y no se pidió refresh. En los dos
+casos, pull-to-refresh (`forceRefresh`/`refresh = true`) sigue disparando la llamada normalmente
+— se verificó explícitamente que el flag ya se propaga desde `handleRefresh()`/
+`swipeRefresh.setOnRefreshListener` hasta el nuevo guard, sin romper esa vía.
+
+**Verificación**: `ktlintCheck` (`-Pqc`), `testDebugUnitTest` (84 pruebas, sin cambios en el
+conteo — mismo motivo que los fixes anteriores de este tipo, sin arnés de pruebas para estos
+ViewModels) y `assembleDebug` en verde. **Probado en el Pixel 7 real con rotación física** (no
+simulada): Álbum Detail — dos rotaciones seguidas sobre "Songs for the Deaf", **cero** llamadas
+de red en ambas, "About" sigue visible correctamente. Artist Detail — dos rotaciones sobre
+"Queens of the Stone Age", **cero** llamadas a `getTopSongs`/`getArtistInfo2`/`getAlbumsOfArtist`
+en ninguna de las dos, biografía y canciones populares siguen visibles.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/model/TrackCollectionModel.kt`,
+`fragment/TrackCollectionFragment.kt`, `model/ArtistDetailModel.kt`.
+
 ## Optimización interna: cierre de Fase 2 (contenido local primero y caché coherente)
 
 Repaso final de las tareas de Fase 2 que quedaban abiertas, sin necesidad de más código:

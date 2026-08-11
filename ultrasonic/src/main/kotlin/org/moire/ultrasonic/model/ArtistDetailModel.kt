@@ -36,7 +36,18 @@ class ArtistDetailModel :
     val artistInfo: MutableLiveData<ArtistInfo?> = MutableLiveData(null)
     val loaded: MutableLiveData<Boolean> = MutableLiveData(false)
 
+    private var loadedArtistId: String? = null
+
+    /**
+     * getArtistInfo()/getTopSongs() have no caching of their own in CachedMusicService, and this
+     * ViewModel survives Fragment recreation (e.g. rotation) while the Fragment's own fields
+     * don't -- without this, rotating the device re-fetched all three (including the two
+     * uncached calls) even though the artist on screen never changed. See
+     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 3.
+     */
     suspend fun load(artistId: String, artistName: String, refresh: Boolean) = coroutineScope {
+        if (!refresh && loadedArtistId == artistId && loaded.value == true) return@coroutineScope
+
         loaded.value = false
         val service = MusicServiceFactory.getMusicService()
         val albumsRequest = async(Dispatchers.IO) {
@@ -71,6 +82,7 @@ class ArtistDetailModel :
         albums.value = artistAlbums
         tracks.value = artistTracks
         artistInfo.value = artistInfoRequest.await()
+        loadedArtistId = artistId
         loaded.value = true
     }
 
