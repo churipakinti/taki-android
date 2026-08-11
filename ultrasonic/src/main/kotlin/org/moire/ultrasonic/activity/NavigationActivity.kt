@@ -156,14 +156,34 @@ class NavigationActivity : ScopeActivity() {
 
         setupActionBarWithNavController(navController, appBarConfiguration)
 
+        // setupWithNavController() is kept only for its side effect of auto-syncing the
+        // checked bottom nav item against exact destination-id matches (homeFragment,
+        // mainFragment, searchFragment, downloadsFragment) - its own click listener is
+        // replaced right below.
         bottomNavigation?.setupWithNavController(navController)
-        bottomNavigation?.setOnItemReselectedListener { item ->
-            if (navController.currentDestination?.id != item.itemId) {
-                if (!navController.popBackStack(item.itemId, false)) {
-                    navController.navigate(item.itemId)
-                }
+
+        // A tab tap must always land on that tab's own root, never on whatever sub-screen
+        // (an artist, an album...) happened to be open there last. The nav graph is flat
+        // (one graph, not one subgraph per tab), so the restoreState/saveState behavior
+        // NavigationUI's default click listener uses -- designed for the common per-tab
+        // subgraph setup -- doesn't apply cleanly here: it could intermittently restore a
+        // stale sub-screen instead of the tab root, and leave the wrong item highlighted
+        // afterwards, which made the *next* tap silently do nothing (Home ended up marked
+        // as already-selected while a Library sub-screen was still on screen, turning a
+        // later tap on Home into a no-op reselect). Found via bug report + on-device
+        // testing (2026-08-11), see CHANGES.md. Popping back to the tab's root id (already
+        // proven safe here, it's what the reselect handling below already did) is
+        // deterministic: it always finds homeFragment (the graph's start destination, never
+        // off the back stack) and, for any other tab, either the root already on the back
+        // stack or nothing -- in which case it just navigates to it fresh.
+        val switchToBottomNavTab: (MenuItem) -> Boolean = { item ->
+            if (!navController.popBackStack(item.itemId, false)) {
+                navController.navigate(item.itemId)
             }
+            true
         }
+        bottomNavigation?.setOnItemSelectedListener(switchToBottomNavTab)
+        bottomNavigation?.setOnItemReselectedListener { switchToBottomNavTab(it) }
 
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             val dest: String = try {

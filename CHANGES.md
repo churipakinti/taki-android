@@ -1,5 +1,42 @@
 # Changes
 
+## Corrige el botón Home quedando sin efecto tras navegar por Library
+
+Reporte de bug del usuario: "si entro a alguna parte de la library, tipo artist, y luego entro a
+un artista y presiono home no regresa a home, y pasa con albums y songs también."
+
+**Diagnóstico:** el grafo de navegación de la app es plano (un solo `NavGraph`, no un subgrafo por
+pestaña), pero `bottomNavigation.setupWithNavController()` usa por defecto el comportamiento de
+`restoreState`/`saveState` de Android Navigation, diseñado para el caso común de un subgrafo
+independiente por pestaña. Contra un grafo plano, volver a la pestaña Library después de haber
+entrado a un artista/álbum podía **restaurar esa misma sub-pantalla en vez de mostrar el menú raíz
+de Library** -- confirmado en logs on-device (`Navigated to artistDetailFragment` en vez de
+`mainFragment`) -- y al mismo tiempo dejaba marcado el ítem "Home" del bottom nav como seleccionado
+aunque la pantalla mostrara contenido de Library. Con "Home" ya marcado como seleccionado, un tap
+posterior sobre Home pasaba a manejarse como un *reselect* (no como una nueva selección), y aunque
+el handler de reselect ya existente comparaba contra el destino real del `NavController` para
+decidir si navegar, el estado visual quedaba inconsistente con lo que el usuario veía en pantalla
+-- la causa raíz de "toco Home y no pasa nada".
+
+**Cambio:** en `NavigationActivity.onCreate()`, se reemplaza el listener de clic por defecto de
+`setupWithNavController()` (que sigue usándose solo por su efecto secundario de sincronizar
+automáticamente qué ítem aparece marcado) por un único handler compartido entre selección y
+re-selección: siempre intenta `navController.popBackStack(item.itemId, false)` primero y, si esa
+pestaña nunca se visitó en la sesión, navega de cero con `navController.navigate(item.itemId)`. Sin
+`restoreState`/`saveState`, cada tap en una pestaña del bottom nav aterriza siempre en la raíz de
+esa pestaña, nunca en una sub-pantalla restaurada -- `homeFragment` en particular nunca puede
+"perderse" porque es el destino de partida del grafo y siempre está en el fondo del back stack.
+
+**Verificación en el Pixel 7:** Library → Artists → un artista → Home, y Library → Albums → un
+álbum → Home, repetido en ciclos de 3-5 rebotes Home↔Library consecutivos: en cada uno de ellos el
+log confirma aterrizar en `mainFragment` (el menú raíz), nunca en la sub-pantalla anterior.
+También se probó re-tocar la misma pestaña ya activa dos veces seguidas (Search, Downloads) sin
+errores ni pantallas en blanco.
+
+**Tests:** `ultrasonic:testDebugUnitTest` y `ktlintCheck` verdes. Sin test unitario nuevo --
+`NavigationActivity` no tiene tests existentes (depende de Android/Navigation Fragments); la
+verificación es la reproducción en vivo descrita arriba, sobre el escenario exacto reportado.
+
 ## Optimización interna Fase 8: evita reconstruir el backend de audio en cada cambio de servidor
 
 Fase 8 es condicional en el propio plan: "cambio de biblioteca, solo si la medición confirma
