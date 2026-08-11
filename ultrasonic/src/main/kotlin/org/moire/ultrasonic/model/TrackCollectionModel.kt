@@ -301,7 +301,10 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         if (ActiveServerProvider.shouldUseId3Tags()) {
             service.getArtists(refresh)
         } else {
-            service.getIndexes(activeServer.musicFolderId, refresh)
+            // null (server confirmed nothing changed) never actually reaches here: this always
+            // goes through CachedMusicService, which resolves that internally and only ever
+            // returns its own already-cached list. See MusicService.getIndexes.
+            service.getIndexes(activeServer.musicFolderId, refresh) ?: emptyList()
         }
     }
 

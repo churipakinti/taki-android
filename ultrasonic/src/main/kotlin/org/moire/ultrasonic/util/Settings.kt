@@ -9,6 +9,7 @@ package org.moire.ultrasonic.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import java.util.regex.Pattern
 import kotlin.math.abs
@@ -254,6 +255,22 @@ object Settings {
 
     @JvmStatic
     var homeMixTrackIds by StringSetting("home_mix_track_ids", "")
+
+    // Per-server getIndexes() "lastModified" timestamp (Fase 3: incremental sync). Keyed
+    // dynamically by server id rather than a StringSetting/LongSetting delegate (which need a
+    // fixed key per property) since each configured server has its own independent value.
+    private const val INDEXES_LAST_MODIFIED_KEY_PREFIX = "indexes_last_modified_"
+
+    @JvmStatic
+    fun getIndexesLastModified(serverId: Int): Long? {
+        val key = INDEXES_LAST_MODIFIED_KEY_PREFIX + serverId
+        return if (preferences.contains(key)) preferences.getLong(key, 0L) else null
+    }
+
+    @JvmStatic
+    fun setIndexesLastModified(serverId: Int, value: Long) {
+        preferences.edit { putLong(INDEXES_LAST_MODIFIED_KEY_PREFIX + serverId, value) }
+    }
 
     fun hasKey(key: String): Boolean = preferences.contains(key)
 

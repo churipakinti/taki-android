@@ -51,8 +51,13 @@ interface MusicService {
     @Throws(Exception::class)
     fun getMusicFolders(refresh: Boolean): List<MusicFolder>
 
+    /**
+     * Returns null if [refresh] was requested and the server confirms (via ifModifiedSince)
+     * that the index hasn't changed since the last successful fetch -- callers should keep
+     * using their existing data rather than treat this as "no artists".
+     */
     @Throws(Exception::class)
-    fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index>
+    fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index>?
 
     @Throws(Exception::class)
     fun getArtists(refresh: Boolean): List<Artist>

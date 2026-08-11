@@ -64,7 +64,10 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         val result = if (ActiveServerProvider.shouldUseId3Tags()) {
             musicService.getArtists(refresh)
         } else {
-            musicService.getIndexes(musicFolderId, refresh)
+            // null means the server confirmed nothing changed (see MusicService.getIndexes) --
+            // this always goes through CachedMusicService, which never surfaces that as null
+            // to its own callers, but the interface itself is nullable.
+            musicService.getIndexes(musicFolderId, refresh) ?: allArtists
         }
 
         allArtists = result

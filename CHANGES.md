@@ -1,5 +1,53 @@
 # Changes
 
+## Optimización interna Fase 3: getIndexes envía ifModifiedSince (sincronización incremental)
+
+Dos tareas de Fase 3 relacionadas: "guardar por servidor la marca temporal válida para
+getIndexes" y "enviar ifModifiedSince cuando el servidor y la semántica del endpoint lo
+permitan." Este era un hallazgo ya confirmado desde Fase 0 (`getIndexes(..., ifModifiedSince =
+null)` sin usar la sincronización incremental que la propia API de Subsonic ya soporta) que
+quedaba pendiente de implementar.
+
+**Fix**: `Settings.getIndexesLastModified(serverId)`/`setIndexesLastModified(serverId, value)`
+(nuevo, claves dinámicas de `SharedPreferences` por id de servidor — no un migration de Room,
+ver más abajo) guardan el `lastModified` que el propio servidor devuelve en cada respuesta de
+`getIndexes`. `RESTMusicService.getIndexes()` ahora envía ese valor como `ifModifiedSince` **solo
+cuando `refresh=true`** (un pull-to-refresh explícito; el primer fetch nunca tiene una marca
+previa que enviar). Si el servidor confirma que no cambió nada (responde sin elementos
+`index`/`shortcut`), el método devuelve `null` en vez de una lista vacía —
+`CachedMusicService.getIndexes()` interpreta `null` como "conservar los datos ya cacheados en
+Room tal cual están", en vez de vaciarlos y esperar un re-fetch completo que nunca hacía falta.
+Un servidor que no honra `ifModifiedSince` simplemente sigue devolviendo la lista completa cada
+vez, exactamente igual que antes — no hay regresión posible para ese caso, el parámetro
+simplemente no tiene efecto.
+
+`MusicService.getIndexes()` cambia su tipo de retorno a `List<Index>?` para poder expresar
+"nada cambió" sin ambigüedad con "el servidor no tiene artistas". `OfflineMusicService` no
+necesitó ningún cambio (Kotlin permite que un override no-nulo implemente una interfaz que
+declara tipo nullable). Los tres call sites externos (`ArtistListModel`, `TrackCollectionModel`)
+se actualizaron para el tipo nullable — en la práctica nunca reciben `null`, porque siempre pasan
+por `CachedMusicService`, que ya resuelve el `null` internamente antes de devolver.
+
+**Por qué no se creó una columna en Room**: guardar esto en `ServerSetting` (la entidad Room de
+la lista de servidores) hubiera requerido una migración de schema (`AppDatabase` ya va por la
+versión 6, con migraciones cuidadosamente pareadas en ambas direcciones) por un solo `Long`
+opcional — desproporcionado. Un `SharedPreferences` con clave dinámica por id de servidor logra
+lo mismo (persiste entre reinicios, ya aislado por servidor) sin tocar el schema persistido.
+
+**Limitación real de esta verificación**: `getIndexes`/`ifModifiedSince` solo se usa en el modo
+de navegación legacy por carpetas (`!shouldUseId3Tags()`) — el servidor de prueba usado en toda
+esta sesión (Navidrome) está configurado con etiquetas ID3, así que la app nunca ejercita este
+camino con él y **no fue posible confirmar en vivo que el servidor realmente honra
+`ifModifiedSince` ni que la detección de "sin cambios" funciona con datos reales**. Sí se
+confirmó en el Pixel 7 que el cambio no rompe nada en el camino ID3 (Artistas, pull-to-refresh,
+sin excepciones ni crashes) y que compila/pasa `ktlintCheck`/`testDebugUnitTest` (84 pruebas) /
+`assembleDebug` en verde. Si se retoma este camino, probarlo contra un servidor configurado sin
+ID3 tags (o folder-based) queda pendiente.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/Settings.kt`,
+`service/MusicService.kt`, `service/RESTMusicService.kt`, `service/CachedMusicService.kt`,
+`model/ArtistListModel.kt`, `model/TrackCollectionModel.kt`.
+
 ## Optimización interna Fase 3: rotar el dispositivo dejaba de repetir llamadas ya cacheadas
 
 Primera tarea de Fase 3: "revisar recargas causadas por navegación, recreación de Activity/

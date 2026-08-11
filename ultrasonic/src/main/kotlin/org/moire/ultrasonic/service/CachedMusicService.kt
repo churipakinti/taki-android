@@ -97,26 +97,31 @@ class CachedMusicService(private val musicService: MusicService) :
         return result
     }
 
+    /*
+     * On refresh, getIndexes() may return null to mean "server confirms nothing changed since
+     * last time" (see RESTMusicService) -- in that case the existing cached indexes are kept
+     * as-is instead of being cleared, so a pull-to-refresh that finds no changes doesn't
+     * needlessly wipe the local index (or the unrelated folder-listing cache) while waiting on
+     * a full re-fetch that was never actually necessary.
+     */
     @Throws(Exception::class)
     override fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
         checkSettingsChanged()
 
-        if (refresh) {
-            cachedIndexes.clear()
-            cachedMusicDirectories.clear()
-        }
-
-        var indexes: List<Index>
-
-        indexes = if (musicFolderId == null) {
+        var indexes: List<Index> = if (musicFolderId == null) {
             cachedIndexes.get()
         } else {
             cachedIndexes.get(musicFolderId)
         }
 
-        if (indexes.isEmpty()) {
-            indexes = musicService.getIndexes(musicFolderId, refresh)
-            cachedIndexes.upsert(indexes)
+        if (refresh || indexes.isEmpty()) {
+            val fetched = musicService.getIndexes(musicFolderId, refresh)
+            if (fetched != null) {
+                cachedIndexes.clear()
+                cachedIndexes.upsert(fetched)
+                cachedMusicDirectories.clear()
+                indexes = fetched
+            }
         }
 
         return indexes

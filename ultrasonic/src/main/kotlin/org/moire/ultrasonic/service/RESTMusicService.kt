@@ -47,6 +47,7 @@ import org.moire.ultrasonic.domain.toMusicDirectoryDomainEntity
 import org.moire.ultrasonic.domain.toTrackEntity
 import org.moire.ultrasonic.domain.toTrackList
 import org.moire.ultrasonic.util.FileUtil
+import org.moire.ultrasonic.util.Settings
 import timber.log.Timber
 
 private const val SIMILAR_ARTIST_COUNT = 12
@@ -85,15 +86,32 @@ open class RESTMusicService(
 
     /**
      *  Retrieves the artists for a given music folder     *
+     *
+     *  On [refresh], sends the server's own last known `lastModified` timestamp as
+     *  `ifModifiedSince` (Fase 3: incremental sync) -- if the server confirms nothing changed,
+     *  it returns no index/shortcut entries, and this returns null so the caller keeps using
+     *  its existing data instead of overwriting it with an apparently-empty result. Servers
+     *  that don't honor `ifModifiedSince` just keep returning the full list every time, same
+     *  as before this change.
      */
     @Throws(Exception::class)
-    override fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
-        val response = API.getIndexes(musicFolderId, null).execute().throwOnFailure()
+    override fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index>? {
+        val serverId = ActiveServerProvider.getActiveServerId()
+        val ifModifiedSince = if (refresh) Settings.getIndexesLastModified(serverId) else null
 
-        return response.body()!!.indexes.toIndexList(
-            ActiveServerProvider.getActiveServerId(),
-            musicFolderId
-        )
+        val response = API.getIndexes(musicFolderId, ifModifiedSince).execute().throwOnFailure()
+        val indexes = response.body()!!.indexes
+
+        if (ifModifiedSince != null &&
+            indexes.indexList.isEmpty() &&
+            indexes.shortcutList.isEmpty()
+        ) {
+            return null
+        }
+
+        Settings.setIndexesLastModified(serverId, indexes.lastModified)
+
+        return indexes.toIndexList(serverId, musicFolderId)
     }
 
     @Throws(Exception::class)
