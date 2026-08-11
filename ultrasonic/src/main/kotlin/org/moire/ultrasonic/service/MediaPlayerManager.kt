@@ -90,6 +90,8 @@ class MediaPlayerManager(
 
     private var mainScope = CoroutineScope(Dispatchers.Main)
     private val addToPlaylistMutex = Mutex()
+    private var addToPlaylistCallCount = 0
+    private val addToPlaylistDuplicateGuard = DuplicateRequestGuard()
 
     private var sessionToken = SessionToken(
         UApp.applicationContext(),
@@ -492,16 +494,41 @@ class MediaPlayerManager(
         startIndex: Int? = null,
         startPositionMs: Int = 0
     ) {
+        // Guards against a rapid repeated tap re-triggering the exact same queue rebuild
+        // before the first tap's request finished (see TAKI_CODE_OPTIMIZATION_PLAN.md Fase 1:
+        // on a large album, this was measured to double the wait before playback starts,
+        // since the second request would just discard and redo the first one's work).
+        val signature =
+            "$insertionMode:$startIndex:$startPositionMs:${songs.size}:" +
+                "${songs.firstOrNull()?.id}:${songs.lastOrNull()?.id}"
+        if (!addToPlaylistDuplicateGuard.begin(signature)) {
+            PerfMetrics.mark("add_to_playlist:duplicate_skipped:$signature")
+            Timber.i("Ignoring duplicate addToPlaylist call already in flight: %s", signature)
+            return
+        }
+
+        val callIndex = ++addToPlaylistCallCount
+        PerfMetrics.mark(
+            "add_to_playlist:$callIndex:call:songs=${songs.size}:mode=$insertionMode"
+        )
         mainScope.launch {
-            addToPlaylistMutex.withLock {
-                addToPlaylistLocked(
-                    songs = songs,
-                    autoPlay = autoPlay,
-                    shuffle = shuffle,
-                    insertionMode = insertionMode,
-                    startIndex = startIndex,
-                    startPositionMs = startPositionMs
-                )
+            try {
+                val waitToken = PerfMetrics.start("add_to_playlist:$callIndex:mutex_wait")
+                addToPlaylistMutex.withLock {
+                    PerfMetrics.end("add_to_playlist:$callIndex:mutex_wait", waitToken)
+                    val execToken = PerfMetrics.start("add_to_playlist:$callIndex:locked")
+                    addToPlaylistLocked(
+                        songs = songs,
+                        autoPlay = autoPlay,
+                        shuffle = shuffle,
+                        insertionMode = insertionMode,
+                        startIndex = startIndex,
+                        startPositionMs = startPositionMs
+                    )
+                    PerfMetrics.end("add_to_playlist:$callIndex:locked", execToken)
+                }
+            } finally {
+                addToPlaylistDuplicateGuard.end(signature)
             }
         }
     }

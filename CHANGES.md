@@ -1,5 +1,62 @@
 # Changes
 
+## Optimización interna Fase 1: evita que un doble-tap duplique la reconstrucción de la cola
+
+Candidato de Fase 1 identificado por inspección de código (`TrackViewBinder.setOnClickListener`
+no tenía ningún debounce; cada tap llegaba directo a `playFromHere()` →
+`MediaPlayerManager.addToPlaylist(insertionMode = CLEAR)`, serializado por un `Mutex` pero sin
+deduplicar) y **medido en el Pixel 7 antes de tocar código**: un doble-tap accidental (87ms de
+diferencia) sobre la primera canción del álbum de prueba más grande (Bach 333, 5.517 canciones)
+hace que la segunda inserción quede encolada detrás del `Mutex` y repita — desde cero — todo el
+trabajo que la primera ya había hecho (incluida una resolución de stream URL ya en curso, que
+queda tirada). Resultado medido vía `PerfMetrics`/logcat:
+
+| Escenario | Tiempo hasta `playback_started` |
+| --- | ---: |
+| Un solo tap | 22,5s |
+| Doble-tap accidental (87ms de diferencia) | 45,6s |
+
+De esos 22,5s de un solo tap, ~6,5s son convertir los 5.517 `Track` a `MediaItem`
+(`songs.map { it.toMediaItem() }`) y ~16s son el bucle chunked de `addMediaItems()` (28 chunks de
+200 con `yield()` entre cada uno — evita el ANR pero no es gratis). Ese costo base de 22,5s en un
+álbum de este tamaño extremo queda documentado como hallazgo colateral, no se ataca en este
+commit.
+
+**Fix**: `DuplicateRequestGuard.kt` (nuevo, `service/`) — una clase pequeña y pura que rastrea la
+"firma" (modo de inserción + índice de inicio + tamaño + primer/último id de canción) de la
+solicitud actualmente en vuelo. `MediaPlayerManager.addToPlaylist()` construye esa firma al
+entrar y, si ya hay una idéntica en curso, descarta la solicitud inmediatamente (antes de lanzar
+la corrutina, sin pasar por el `Mutex`) en vez de encolarla para repetir el trabajo. La firma se
+libera en un bloque `finally` una vez que la solicitud en curso termina (éxito o excepción), así
+que una repetición legítima más tarde (el usuario reinicia la misma canción después de haberla
+escuchado) nunca queda bloqueada — solo se descarta un duplicado genuinamente solapado en el
+tiempo.
+
+**Pruebas**: `DuplicateRequestGuardTest.kt` (nuevo) cubre la lógica pura de forma aislada, ya que
+`MediaPlayerManager` no tiene arnés de pruebas unitarias (depende de `MediaController`/Media3) y
+construir uno solo para este cambio era desproporcionado. Casos cubiertos: primera solicitud pasa;
+una idéntica mientras la primera sigue en vuelo se rechaza; una firma distinta nunca se bloquea
+por una pendiente; la firma vuelve a estar disponible una vez que la solicitud en vuelo termina;
+`end()` con una firma que no está pendiente es un no-op seguro.
+
+**Verificación**: `ktlintCheck` (`-Pqc`) en verde. `testDebugUnitTest` en verde, 79 pruebas en
+total (74 preexistentes + los 5 casos nuevos de `DuplicateRequestGuardTest`), 0 fallos.
+`assembleDebug` compila sin cambios de comportamiento fuera de lo descrito.
+Reinstalado y probado en el Pixel 7 real: navegación, apertura del álbum de 5.517 canciones y
+reproducción de un tap simple funcionan sin regresiones. **Limitación de esta verificación**: no
+se logró repetir de forma confiable, ya con el fix instalado, el mismo doble-tap interleaved
+exacto que produjo la medición "antes" — `adb input tap` dos veces sobre el FAB o sobre una fila
+de canción de esa pantalla concreta no reproduce el mismo timing de forma consistente (a veces el
+segundo tap no llega a registrarse en absoluto). La corrección se apoya en la medición real ya
+tomada del comportamiento previo, en la cobertura unitaria directa de la lógica de decisión del
+guard, y en que la app sigue funcionando normalmente en dispositivo — no en una repetición en vivo
+del escenario exacto post-fix. Si se vuelve a tocar esta ruta, vale la pena reproducirlo con un
+finger real en vez de `adb input tap`.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/DuplicateRequestGuard.kt`
+(nuevo), `service/MediaPlayerManager.kt`,
+`ultrasonic/src/test/kotlin/org/moire/ultrasonic/service/DuplicateRequestGuardTest.kt` (nuevo).
+
 ## Optimización interna: Fase 0 — instrumentación de línea base
 
 Primer paso del plan de optimización previo a la beta (`TAKI_CODE_OPTIMIZATION_PLAN.md`). Antes
