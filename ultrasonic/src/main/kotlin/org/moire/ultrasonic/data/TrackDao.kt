@@ -21,10 +21,16 @@ interface TrackDao : GenericDao<Track> {
     fun get(): List<Track>
 
     /**
-     * Get tracks by album
+     * Get tracks by album, in disc/track order
      */
-    @Query("SELECT * FROM tracks WHERE albumId LIKE :id")
+    @Query("SELECT * FROM tracks WHERE albumId LIKE :id ORDER BY discNumber, track")
     fun byAlbum(id: String): List<Track>
+
+    /**
+     * Clear tracks by album
+     */
+    @Query("DELETE FROM tracks WHERE albumId LIKE :id")
+    fun clearByAlbum(id: String)
 
     /**
      * Get tracks by artist

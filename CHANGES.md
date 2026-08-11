@@ -1,5 +1,47 @@
 # Changes
 
+## Optimización interna Fase 2: `getAlbumAsDir` migra a Room, cierra la política contradictoria
+
+Resuelve la tarea "elegir Room como fuente persistente principal cuando sea viable" y la política
+contradictoria documentada antes: `getAlbum(id)` (metadata del álbum) vivía en Room sin TTL,
+mientras `getAlbumAsDir(id)` (el listado de canciones del mismo álbum) vivía en una
+`LRUCache<TimeLimitedCache<>>` puramente en memoria de 300s — no solo políticas distintas, sino
+que el listado de canciones **no sobrevivía un reinicio de la app** en absoluto, a diferencia de
+Artist/Album/Index, que ya están en Room.
+
+**Investigación de riesgo antes de implementar**: la preocupación inicial era que `MusicDirectory`
+puede contener hijos mixtos (canciones y subcarpetas), y Room solo puede persistir `Track`. Se
+descartó leyendo la implementación real: `RESTMusicService.getAlbumAsDir()` llama siempre
+`API.getAlbum(id)` — el mismo endpoint ID3 `getAlbum.view` que usa `getAlbum()` —, y
+`APIAlbumConverter.toMusicDirectoryDomainEntity()` solo mapea `songList` a `Track`, sin
+excepción. Es decir, `getAlbumAsDir()` está estructuralmente garantizado a devolver solo
+canciones, para cualquier servidor Subsonic/OpenSubsonic — el riesgo de contenido mixto existe
+únicamente en `getMusicDirectory()` (navegación de carpetas legacy, endpoint distinto), que no se
+toca en este cambio. Se confirmó además que cambiar de servidor ya usa una base de datos Room
+completamente separada por servidor (`ActiveServerProvider.initDatabase(activeServer)`), así que
+no hay riesgo de mezclar datos entre servidores.
+
+**Fix**: `TrackDao.byAlbum(id)` ahora ordena por disco/pista (antes sin orden explícito — la UI ya
+reordena con `EntryByDiscAndTrackComparator` cuando corresponde, pero es más correcto no depender
+de eso); se agrega `TrackDao.clearByAlbum(id)`. `CachedMusicService.getAlbumAsDir()` reescrito
+para leer/escribir `cachedTracks` (el `TrackDao` de Room) en vez de la `LRUCache` de
+`TimeLimitedCache` — mismo patrón de invalidación que Artist/Album/Index (sin TTL, se limpia solo
+con `refresh=true` explícito, que el pull-to-refresh de Álbum Detail ya dispara vía
+`handleRefresh()`). Se elimina el campo `cachedAlbum` (LRU) ahora sin uso.
+
+**Verificación**: `ktlintCheck` (`-Pqc`), `testDebugUnitTest` (84 pruebas, sin cambios en el
+conteo — sin arnés de pruebas para `CachedMusicService`, igual que el fix anterior de esta misma
+clase) y `assembleDebug` en verde. **Probado en el Pixel 7 real** con tres escenarios sobre
+"Songs for the Deaf": (1) primera apertura tras instalar el build nuevo — dispara `getAlbum.view`
+normalmente, puebla Room; (2) **reinicio completo de la app** (`am force-stop` + relanzamiento) y
+reapertura del mismo álbum — **cero** llamadas a `getAlbum.view` (solo `getAlbumInfo2.view`, el
+enrichment de "About", que nunca estuvo cacheado), tracklist renderizado correctamente desde
+Room, sobreviviendo el reinicio; (3) pull-to-refresh sobre esa misma pantalla — vuelve a disparar
+`getAlbum.view` sin esperar ningún TTL, confirmando que la vía de datos frescos sigue intacta.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/data/TrackDao.kt`,
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/CachedMusicService.kt`.
+
 ## Optimización interna Fase 2: Home deja de esperar 6 llamadas de red en cada apertura
 
 Hallazgo directamente ligado al objetivo central de Fase 2 ("mostrar contenido inmediatamente"):

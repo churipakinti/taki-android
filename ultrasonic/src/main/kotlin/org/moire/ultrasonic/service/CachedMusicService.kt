@@ -48,7 +48,6 @@ class CachedMusicService(private val musicService: MusicService) :
 
     // Old style TimeLimitedCache
     private val cachedMusicDirectories: LRUCache<String, TimeLimitedCache<MusicDirectory?>>
-    private val cachedAlbum: LRUCache<String, TimeLimitedCache<MusicDirectory?>>
     private val cachedUserInfo: LRUCache<String, TimeLimitedCache<UserInfo?>>
     private val cachedLicenseValid = TimeLimitedCache<Boolean>(120, TimeUnit.SECONDS)
     private val cachedPlaylists = TimeLimitedCache<List<Playlist>?>(3600, TimeUnit.SECONDS)
@@ -60,6 +59,7 @@ class CachedMusicService(private val musicService: MusicService) :
     private var cachedArtists = metaDatabase.artistDao()
     private var cachedAlbums = metaDatabase.albumDao()
     private var cachedIndexes = metaDatabase.indexDao()
+    private var cachedTracks = metaDatabase.trackDao()
     private val cachedMusicFolders = metaDatabase.musicFoldersDao()
 
     private var restUrl: String? = null
@@ -187,21 +187,34 @@ class CachedMusicService(private val musicService: MusicService) :
     override fun getTopSongs(artistName: String, count: Int): List<Track> =
         musicService.getTopSongs(artistName, count)
 
+    /*
+     * Retrieves the track listing of the given album.
+     * Cached in the RoomDB, same as getAlbum() -- getAlbumAsDir() is backed by the same
+     * getAlbum.view endpoint (see RESTMusicService), which per the Subsonic API only ever
+     * returns <song> children, so it's safe to persist as plain Tracks (unlike
+     * getMusicDirectory(), which can mix in sub-folders and stays on the old TimeLimitedCache).
+     */
     @Throws(Exception::class)
     override fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory {
         checkSettingsChanged()
-        var cache = if (refresh) null else cachedAlbum[id]
-        var dir = cache?.get()
-        if (dir == null) {
-            dir = musicService.getAlbumAsDir(id, name, refresh)
-            cache = TimeLimitedCache(
-                Settings.DIRECTORY_CACHE_TIME.toLong(),
-                TimeUnit.SECONDS
-            )
-            cache.set(dir)
-            cachedAlbum.put(id, cache)
+
+        if (refresh) {
+            cachedTracks.clearByAlbum(id)
         }
-        return dir
+
+        var tracks = cachedTracks.byAlbum(id)
+
+        if (tracks.isEmpty()) {
+            val dir = musicService.getAlbumAsDir(id, name, refresh)
+            tracks = dir.getTracks()
+            if (tracks.isNotEmpty()) cachedTracks.upsert(tracks)
+            return dir
+        }
+
+        return MusicDirectory().apply {
+            this.name = name
+            addAll(tracks)
+        }
     }
 
     @Throws(Exception::class)
@@ -358,13 +371,13 @@ class CachedMusicService(private val musicService: MusicService) :
             cachedArtists = metaDatabase.artistDao()
             cachedAlbums = metaDatabase.albumDao()
             cachedIndexes = metaDatabase.indexDao()
+            cachedTracks = metaDatabase.trackDao()
 
             // Clear in memory caches
             cachedMusicDirectories.clear()
             cachedLicenseValid.clear()
             cachedPlaylists.clear()
             cachedGenres.clear()
-            cachedAlbum.clear()
             cachedUserInfo.clear()
 
             // Set the cache keys
@@ -495,7 +508,6 @@ class CachedMusicService(private val musicService: MusicService) :
 
     init {
         cachedMusicDirectories = LRUCache(MUSIC_DIR_CACHE_SIZE)
-        cachedAlbum = LRUCache(MUSIC_DIR_CACHE_SIZE)
         cachedUserInfo = LRUCache(MUSIC_DIR_CACHE_SIZE)
     }
 }
