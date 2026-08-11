@@ -1,5 +1,41 @@
 # Changes
 
+## Optimización interna Fase 1: reutiliza la cola ya cargada en vez de reconstruirla
+
+Segunda tarea de Fase 1: "verificar que seleccionar una canción no reconstruya
+innecesariamente el reproductor o la cola." Antes de este cambio, `MediaPlayerManager.
+addToPlaylist(insertionMode = CLEAR)` (el camino de `playFromHere()`, invocado cada vez que se
+toca cualquier canción en cualquier lista) siempre limpiaba la cola completa y la reconstruía
+desde cero — incluso si el usuario solo estaba tocando **otra canción dentro del mismo álbum
+que ya estaba cargado**. Para un álbum grande esto repite exactamente el costo ya medido en el
+fix anterior de esta fase (~22,5s para 5.517 canciones) cada vez que se cambia de pista dentro
+del mismo álbum, no solo en un doble-tap accidental.
+
+**Fix**: `addToPlaylistLocked()` ahora compara la lista de canciones solicitada contra la cola
+ya cargada en el `controller` (mismo tamaño, mismo orden, mismos ids de pista — comparación
+barata, milisegundos incluso con miles de canciones). Si coinciden y no se pidió `shuffle`
+(un shuffle explícito sí debe reconstruir/reordenar), se salta el `clear()` + conversión a
+`MediaItem` + inserción chunked por completo y solo se hace `seekTo()`/`play()` al índice
+pedido. La lógica de arranque de reproducción (`startIndex`/`autoPlay`/`shuffle` diferido) se
+extrajo a `startPlaybackAt()`, compartida por ambos caminos para no duplicarla.
+
+**Verificación**: `ktlintCheck` (`-Pqc`) y `testDebugUnitTest` (79 pruebas, sin cambios en el
+conteo — este cambio no tiene arnés de pruebas unitarias propio por la misma razón que
+`DuplicateRequestGuard`, se apoya en la instrumentación `PerfMetrics` ya existente) en verde.
+`assembleDebug` compila. **Probado en el Pixel 7 real** con un álbum de 2 canciones: tocar la
+primera hace la reconstrucción normal (`add_to_playlist:1`, 121ms, con `Adding 2 media items`);
+tocar la segunda dentro del mismo álbum ya cargado dispara
+`add_to_playlist:same_queue_seek:songs=2` y termina en 12ms, **sin** volver a loguear
+`Adding X media items` — confirma que el camino rápido se toma y que la pista correcta
+("Gonna Leave You (Spanish version)") efectivamente pasa a reproducirse. No se logró repetir
+esta misma prueba contra el álbum de 5.517 canciones para confirmar el ahorro exacto en ese
+caso extremo: esa pantalla específica (Bach 333) dejó de renderizar las filas de canciones de
+forma reproducible durante esta sesión (el header y "About" cargan bien, pero el `RecyclerView`
+queda vacío pese a que el log confirma `Processed list, size 5740`) — un problema aparte, no
+tocado por este cambio, que vale la pena investigar por separado si vuelve a aparecer.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/service/MediaPlayerManager.kt`.
+
 ## Optimización interna Fase 1: evita que un doble-tap duplique la reconstrucción de la cola
 
 Candidato de Fase 1 identificado por inspección de código (`TrackViewBinder.setOnClickListener`

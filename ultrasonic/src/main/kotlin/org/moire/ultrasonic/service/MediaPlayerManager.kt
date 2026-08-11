@@ -541,6 +541,20 @@ class MediaPlayerManager(
         startIndex: Int?,
         startPositionMs: Int
     ) {
+        // If the caller wants to replace the queue with the exact list that's already loaded
+        // (e.g. tapping a different track within the album/list that's currently playing),
+        // there is nothing to rebuild - just move the play position. Rebuilding would mean
+        // converting every Track to a MediaItem and re-inserting them all in chunks, which on
+        // a large album is not free (measured: ~22s for a 5,517-song album). Shuffle is
+        // excluded because the caller is explicitly asking for a fresh shuffle order. See
+        // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 1.
+        if (insertionMode == InsertionMode.CLEAR && !shuffle && queueAlreadyMatches(songs)) {
+            PerfMetrics.mark("add_to_playlist:same_queue_seek:songs=${songs.size}")
+            Timber.i("addToPlaylist: queue already matches, seeking instead of rebuilding")
+            startPlaybackAt(startIndex, startPositionMs, autoPlay)
+            return
+        }
+
         var insertAt = 0
 
         when (insertionMode) {
@@ -578,6 +592,21 @@ class MediaPlayerManager(
 
         prepare()
 
+        startPlaybackAt(startIndex, startPositionMs, autoPlay)
+    }
+
+    /**
+     * True if the currently loaded queue already contains exactly [songs], in the same order.
+     */
+    private fun queueAlreadyMatches(songs: List<Track>): Boolean {
+        if (mediaItemCount != songs.size) return false
+        for (i in songs.indices) {
+            if (getMediaItemAt(i)?.getTrackId() != songs[i].id) return false
+        }
+        return true
+    }
+
+    private fun startPlaybackAt(startIndex: Int?, startPositionMs: Int, autoPlay: Boolean) {
         if (startIndex != null) {
             // Caller wants playback to start at a specific item (optionally at a specific
             // position within it, e.g. resuming a bookmark) instead of the autoPlay/shuffle
