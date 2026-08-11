@@ -1,5 +1,29 @@
 # Changes
 
+## Optimización interna Fase 3: concurrencia estructurada — confirmado, sin cambios de código
+
+Tarea de Fase 3: "usar concurrencia estructurada y limitada para datos independientes; no lanzar
+peticiones sin límite." Auditoría completa del código, sin necesidad de cambios:
+
+- **Cada uso de `async` en toda la app es un conjunto fijo y chico de tareas nombradas
+  explícitamente, nunca un fan-out sobre una lista dinámica.** Búsqueda exhaustiva (`grep`
+  de `async` en todo `ultrasonic/src/main/kotlin`) encontró exactamente dos sitios: 3
+  llamadas concurrentes en `ArtistDetailModel.load()` (álbumes, info del artista, top
+  canciones) y 6 en `HomeViewModel.loadHomeScreen()` (las 5 estanterías más el Mix). Ningún
+  `.map { async { ... } }` ni equivalente sobre una colección de tamaño variable existe en
+  el código.
+- **El único caso real donde el tamaño de la entrada varía (descargar canciones, potencialmente
+  cientos) ya está acotado.** `DownloadService` encola las descargas y solo mantiene
+  `Settings.PARALLEL_DOWNLOADS` (3) activas a la vez (`while (activeDownloads.size <
+  Settings.PARALLEL_DOWNLOADS && downloadQueue.peek() != null)`), verificado directamente en
+  el código — no es un ajuste decorativo, se aplica de verdad.
+- **No hay concurrencia manual sin estructurar** (hilos/executors sueltos) fuera de los ya
+  documentados usos de un solo hilo para tareas periódicas (Jukebox, actualización de UI del
+  Player, letras sincronizadas) — ninguno lanza trabajo en paralelo sin límite.
+
+No se tocó código: esta tarea ya se cumple en la arquitectura actual. Sin build/test aplicable
+(no hay cambios).
+
 ## Optimización interna Fase 3: corrige dos bugs de invalidación introducidos por el fix de ifModifiedSince
 
 Tarea de Fase 3: "invalidar correctamente después de cambios que afecten el índice." Al revisar
