@@ -62,7 +62,7 @@ import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 
-private const val LIVE_SEARCH_DEBOUNCE_MS = 400L
+private const val LIVE_SEARCH_DEBOUNCE_MS = 300L
 private const val LIVE_SEARCH_MIN_QUERY_LENGTH = 2
 
 /**

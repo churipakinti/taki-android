@@ -1,5 +1,49 @@
 # Changes
 
+## Optimización interna Fase 9: búsqueda fluida
+
+Auditoría de `SearchFragment`/`SearchListModel` contra las tareas de Fase 9. La mayoría ya estaba
+resuelta de antes de esta sesión: búsquedas recientes mostradas antes de escribir, `debounce` con
+cancelación del job anterior, resultados anteriores visibles mientras carga la respuesta siguiente
+(no se borran de entrada), estado (consulta + resultados) conservado al entrar a un álbum/artista
+y volver (vía `ViewModel` + campo de instancia del Fragment, no se pierde porque el Fragment no se
+recrea al navegar, solo su vista), y el bottom nav ya se ocultaba con el teclado visible en Search.
+
+**Gap real encontrado:** "un resultado viejo nunca reemplaza uno de una consulta más reciente"
+dependía únicamente de cancelar la corrutina de la búsqueda anterior. Eso no alcanza:
+`service.search()` es una llamada de Retrofit síncrona y bloqueante dentro de un
+`withContext(Dispatchers.IO)`, no una función suspendida cancelable -- cancelar el `Job` no
+interrumpe una llamada de red ya en curso, solo evita que se reanude en el siguiente punto de
+suspensión. Si el servidor responde una consulta vieja *después* de una más nueva (orden de
+llegada no garantizado), el resultado viejo pisaba el nuevo en la `LiveData`.
+
+**Cambio:** nueva clase pura `LatestQueryTracker` (con 5 tests unitarios, mismo patrón que
+`HomeShelvesFreshness`/`OpenSubsonicExtensionsCache` de fases anteriores) que registra qué consulta
+es la más reciente en el momento exacto en que empieza (antes de la llamada de red, de forma
+síncrona). `SearchListModel.search()` ahora solo publica el resultado si, al volver, sigue siendo
+la consulta vigente -- garantía correcta sin importar en qué orden terminen las respuestas de red,
+independiente de la cancelación de corrutinas (que se mantiene como optimización, no como garantía
+de corrección). Se ajustó además el `debounce` de 400ms a 300ms, dentro del rango 250-350ms que
+pide el plan.
+
+**Verificación en el Pixel 7:** tipeo rápido (6 caracteres a 100ms de intervalo, todos por debajo
+del debounce) generó una sola llamada a `search3.view`; tipeo con una pausa de 600ms entre
+caracteres generó dos llamadas separadas, confirmando que el debounce ni over-suprime ni deja
+pasar una por tecla. Búsqueda de "Rammstein" → tocar un álbum de los resultados → volver: la
+consulta y la lista completa de resultados siguen ahí, sin refetch.
+
+**Decisión de alcance:** no se implementó "consultar primero índices locales cuando puedan
+responder la intención". El caché local (Room) solo cubre artistas/álbumes/tracks ya navegados
+previamente, no un índice completo de la biblioteca -- una búsqueda local sobre ese subconjunto
+parcial mostraría resultados incompletos o inconsistentes con lo que el usuario espera encontrar,
+exactamente el tipo de "confusión" que el plan pide evitar en otras fases. Implementar un índice
+local completo (FTS o similar) es un cambio de alcance mucho mayor que esta fase, y el propio plan
+lo formula como condicional ("cuando puedan responder la intención"), no como requisito estricto.
+Queda documentado como investigado y diferido, igual que la caché HTTP condicional en Fase 3.
+
+**Tests:** `ultrasonic:testDebugUnitTest` (incluye `LatestQueryTrackerTest`, 5 tests) y
+`ktlintCheck` verdes.
+
 ## Corrige el botón Home quedando sin efecto tras navegar por Library
 
 Reporte de bug del usuario: "si entro a alguna parte de la library, tipo artist, y luego entro a
