@@ -519,6 +519,9 @@ class OfflineMusicService :
         cachedAlbums.get(id)
 
     @Throws(OfflineException::class)
+    override suspend fun getSong(id: String): Track? = cachedTracks.get(id)
+
+    @Throws(OfflineException::class)
     override fun getPodcastEpisodes(podcastChannelId: String?): MusicDirectory =
         throw OfflineException("getPodcastEpisodes isn't available in offline mode")
 

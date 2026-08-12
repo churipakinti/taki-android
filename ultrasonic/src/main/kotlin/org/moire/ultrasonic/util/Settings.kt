@@ -52,10 +52,16 @@ object Settings {
         by StringIntSetting(getKey(R.string.setting_key_max_bitrate_wifi), DEFAULT_MAX_BITRATE_WIFI)
 
     private var maxBitRateMobile
-        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_mobile), DEFAULT_MAX_BITRATE_MOBILE)
+        by StringIntSetting(
+            getKey(R.string.setting_key_max_bitrate_mobile),
+            DEFAULT_MAX_BITRATE_MOBILE
+        )
 
     var maxBitRatePinning
-        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_pinning), DEFAULT_MAX_BITRATE_PINNING)
+        by StringIntSetting(
+            getKey(R.string.setting_key_max_bitrate_pinning),
+            DEFAULT_MAX_BITRATE_PINNING
+        )
 
     fun normalizeBitrateQualitySettings() {
         val normalizedWifi = normalizeBitrateQuality(maxBitRateWifi)
@@ -266,6 +272,11 @@ object Settings {
 
     @JvmStatic
     var homeMixTrackIds by StringSetting("home_mix_track_ids", "")
+
+    // One-time explanation shown the first time the Mix diario card appears on Home (see
+    // docs/TAKI_RADIOS_AND_DAILY_MIX.md section 14/15, "decisión pendiente de validar").
+    @JvmStatic
+    var homeMixIntroShown by BooleanSetting("home_mix_intro_shown", false)
 
     // Per-server getIndexes() "lastModified" timestamp (Fase 3: incremental sync). Keyed
     // dynamically by server id rather than a StringSetting/LongSetting delegate (which need a

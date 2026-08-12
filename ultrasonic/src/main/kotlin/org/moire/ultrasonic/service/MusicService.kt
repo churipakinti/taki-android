@@ -83,6 +83,11 @@ interface MusicService {
     @Throws(Exception::class)
     suspend fun getAlbum(id: String, name: String?, refresh: Boolean): Album?
 
+    // Added for Mix diario v1.1 (docs/TAKI_RADIOS_AND_DAILY_MIX.md): exact restoration by id
+    // instead of matching stored ids against a freshly-fetched candidate pool.
+    @Throws(Exception::class)
+    suspend fun getSong(id: String): Track?
+
     @Throws(Exception::class)
     suspend fun search(criteria: SearchCriteria): SearchResult?
 

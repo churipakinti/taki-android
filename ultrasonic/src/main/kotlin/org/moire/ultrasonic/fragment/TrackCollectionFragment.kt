@@ -175,7 +175,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 filterButtonBar?.setOnPrimaryActionClickListener(::onPrimaryAction)
                 filterButtonBar?.configureWithCapabilities(viewCapabilities, sortOrder)
             }
-
         }
 
         childFragmentManager.setFragmentResultListener(

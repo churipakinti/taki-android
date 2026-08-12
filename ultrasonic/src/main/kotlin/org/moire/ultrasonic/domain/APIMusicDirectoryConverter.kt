@@ -73,6 +73,8 @@ private fun populateTrackProps(track: Track, source: MusicDirectoryChild) {
     track.type = source.type
     track.userRating = source.userRating
     track.averageRating = source.averageRating
+    track.playCount = source.playCount.toLong()
+    track.lastPlayed = source.played?.time
 }
 
 fun List<MusicDirectoryChild>.toDomainEntityList(serverId: Int): List<MusicDirectory.Child> {

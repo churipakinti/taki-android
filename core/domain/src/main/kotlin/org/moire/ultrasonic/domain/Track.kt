@@ -46,7 +46,12 @@ data class Track(
     var bookmarkPosition: Int = 0,
     var userRating: Int? = null,
     var averageRating: Float? = null,
-    override var name: String? = null
+    override var name: String? = null,
+    // History signals for Mix diario v1.1 (docs/TAKI_RADIOS_AND_DAILY_MIX.md "señales más
+    // finas de historial"). Null means the server didn't expose the data, not "zero plays" -
+    // callers must not treat null as a confident signal either way.
+    var playCount: Long? = null,
+    var lastPlayed: Date? = null
 ) : MusicDirectory.Child(),
     Serializable {
     fun setDuration(duration: Long) {

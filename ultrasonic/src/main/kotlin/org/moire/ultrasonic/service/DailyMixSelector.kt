@@ -19,6 +19,12 @@ object DailyMixSelector {
     private const val EXPLORATION_BUCKET = "exploration"
     private const val FALLBACK_BUCKET = "fallback"
 
+    // "reducir canciones reproducidas en las últimas 24-48 horas" (docs/TAKI_RADIOS_AND_DAILY_
+    // MIX.md). A soft penalty, not exclusion: recently-played tracks are pushed to the back of
+    // their bucket's shuffle order so other candidates are tried first, but they're still picked
+    // if nothing else is left, same as before this signal existed.
+    private const val RECENTLY_PLAYED_WINDOW_MILLIS = 48L * 60 * 60 * 1000
+
     fun select(
         familiarTracks: List<Track>,
         rediscoveryTracks: List<Track>,
@@ -26,19 +32,32 @@ object DailyMixSelector {
         fallbackTracks: List<Track>,
         targetSize: Int,
         minimumSize: Int,
-        seed: Long = 0L
+        seed: Long = 0L,
+        now: Long = System.currentTimeMillis()
     ): List<Track> {
         val familiarQuota = (targetSize * 0.5f).toInt()
         val rediscoveryQuota = (targetSize * 0.3f).toInt()
         val buckets = listOf(
-            CandidateBucket(FAMILIAR_BUCKET, familiarQuota, familiarTracks.prepared(seed, FAMILIAR_BUCKET)),
-            CandidateBucket(REDISCOVERY_BUCKET, rediscoveryQuota, rediscoveryTracks.prepared(seed, REDISCOVERY_BUCKET)),
+            CandidateBucket(
+                FAMILIAR_BUCKET,
+                familiarQuota,
+                familiarTracks.prepared(seed, FAMILIAR_BUCKET, now)
+            ),
+            CandidateBucket(
+                REDISCOVERY_BUCKET,
+                rediscoveryQuota,
+                rediscoveryTracks.prepared(seed, REDISCOVERY_BUCKET, now)
+            ),
             CandidateBucket(
                 EXPLORATION_BUCKET,
                 targetSize - familiarQuota - rediscoveryQuota,
-                explorationTracks.prepared(seed, EXPLORATION_BUCKET)
+                explorationTracks.prepared(seed, EXPLORATION_BUCKET, now)
             ),
-            CandidateBucket(FALLBACK_BUCKET, 0, fallbackTracks.prepared(seed, FALLBACK_BUCKET))
+            CandidateBucket(
+                FALLBACK_BUCKET,
+                0,
+                fallbackTracks.prepared(seed, FALLBACK_BUCKET, now)
+            )
         )
 
         val selected = mutableListOf<SelectedTrack>()
@@ -106,7 +125,9 @@ object DailyMixSelector {
             var addedThisPass = false
             for (bucket in buckets) {
                 if (selected.size >= targetSize) return
-                if (enforceBucketQuotas && selected.count { it.bucket == bucket.name } >= bucket.quota) {
+                if (enforceBucketQuotas &&
+                    selected.count { it.bucket == bucket.name } >= bucket.quota
+                ) {
                     continue
                 }
 
@@ -124,12 +145,21 @@ object DailyMixSelector {
         } while (addedThisPass && selected.size < targetSize)
     }
 
-    private fun List<Track>.prepared(seed: Long, bucket: String): List<Track> =
+    private fun List<Track>.prepared(seed: Long, bucket: String, now: Long): List<Track> =
         asSequence()
             .filterNot { it.isVideo }
             .distinctBy { it.id }
             .toList()
             .shuffled(Random(seed xor bucket.hashCode().toLong()))
+            .sortedBy { it.recentlyPlayedPenalty(now) }
+
+    // 0 if not known to have played recently (kept in shuffle order), 1 if played within the
+    // last RECENTLY_PLAYED_WINDOW_MILLIS (pushed after everything else) - sortedBy is a stable
+    // sort so ties keep their shuffle order.
+    private fun Track.recentlyPlayedPenalty(now: Long): Int {
+        val lastPlayedMillis = lastPlayed?.time ?: return 0
+        return if (now - lastPlayedMillis <= RECENTLY_PLAYED_WINDOW_MILLIS) 1 else 0
+    }
 
     private fun List<SelectedTrack>.artistCount(candidate: Track): Int {
         val artistKey = candidate.artistKey() ?: return 0
@@ -144,7 +174,8 @@ object DailyMixSelector {
     private fun List<SelectedTrack>.wouldCreateLongArtistBlock(candidate: Track): Boolean {
         val artistKey = candidate.artistKey() ?: return false
         val tail = takeLast(MAX_CONSECUTIVE_PER_ARTIST)
-        return tail.size == MAX_CONSECUTIVE_PER_ARTIST && tail.all { it.track.artistKey() == artistKey }
+        return tail.size == MAX_CONSECUTIVE_PER_ARTIST &&
+            tail.all { it.track.artistKey() == artistKey }
     }
 
     private fun Track.artistKey(): String? =
@@ -153,14 +184,7 @@ object DailyMixSelector {
     private fun Track.albumKey(): String? =
         albumId?.takeIf { it.isNotBlank() } ?: album?.lowercase()?.takeIf { it.isNotBlank() }
 
-    private data class CandidateBucket(
-        val name: String,
-        val quota: Int,
-        val tracks: List<Track>
-    )
+    private data class CandidateBucket(val name: String, val quota: Int, val tracks: List<Track>)
 
-    private data class SelectedTrack(
-        val bucket: String,
-        val track: Track
-    )
+    private data class SelectedTrack(val bucket: String, val track: Track)
 }

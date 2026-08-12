@@ -24,9 +24,11 @@
     <string name="button_bar.chat">Chat</string>
     <string name="button_bar.home">Home</string>
     <string name="home.mix_title">Daily Mix</string>
-    <string name="home.mix_song_count">%1$d songs</string>
+    <string name="home.mix_song_count">%1$d songs for today</string>
     <string name="home.mix_regenerate">Regenerate Daily Mix</string>
     <string name="home.mix_play">Play Daily Mix</string>
+    <string name="home.mix_short">Today\'s Mix is shorter than usual (%1$d songs).</string>
+    <string name="home.mix_intro">Daily Mix: a personal selection from your library that refreshes once a day.</string>
     <string name="home.discover_title">Discover</string>
     <string name="home.greeting_morning">Good morning</string>
     <string name="home.greeting_afternoon">Good afternoon</string>
@@ -44,6 +46,7 @@
     <string name="artist.radio_description">Start artist radio</string>
     <string name="artist.radio_error">Could not start artist radio.</string>
     <string name="artist.radio_empty">Not enough songs to start artist radio.</string>
+    <string name="artist.radio_short">Artist radio is shorter than usual (%1$d songs).</string>
     <string name="artist.radio_playlist_name">Radio de %1$s</string>
     <plurals name="artist_album_count">
         <item quantity="one">%1$d album</item>
@@ -244,6 +247,7 @@
     <string name="song.start_radio">Start radio</string>
     <string name="song.radio_error">Could not start radio.</string>
     <string name="song.radio_empty">Not enough songs to start radio.</string>
+    <string name="song.radio_short">Radio is shorter than usual (%1$d songs).</string>
     <string name="song.radio_playlist_name">Radio based on \"%1$s\"</string>
     <string name="song.add_to_playlist_description">Add to playlist</string>
     <string name="settings.custom_cache_location">Use Custom Cache Location</string>

@@ -42,7 +42,7 @@ import org.moire.ultrasonic.domain.Track
         )
     ],
     exportSchema = true,
-    version = 3
+    version = 4
 )
 @TypeConverters(Converters::class)
 abstract class MetaDatabase : RoomDatabase() {
@@ -87,5 +87,15 @@ val META_MIGRATION_2_3: Migration = object : Migration(2, 3) {
         db.execSQL(
             "CREATE TABLE IF NOT EXISTS `tracks` (`id` TEXT NOT NULL, `serverId` INTEGER NOT NULL DEFAULT -1, `parent` TEXT, `isDirectory` INTEGER NOT NULL, `title` TEXT, `album` TEXT, `albumId` TEXT, `artist` TEXT, `artistId` TEXT, `track` INTEGER, `year` INTEGER, `genre` TEXT, `contentType` TEXT, `suffix` TEXT, `transcodedContentType` TEXT, `transcodedSuffix` TEXT, `coverArt` TEXT, `size` INTEGER, `songCount` INTEGER, `duration` INTEGER, `bitRate` INTEGER, `path` TEXT, `isVideo` INTEGER NOT NULL, `starred` INTEGER NOT NULL, `discNumber` INTEGER, `type` TEXT, `created` INTEGER, `closeness` INTEGER NOT NULL, `bookmarkPosition` INTEGER NOT NULL, `userRating` INTEGER, `averageRating` REAL, `name` TEXT, PRIMARY KEY(`id`, `serverId`))"
         )
+    }
+}
+
+// Adds Mix diario v1.1 history signals (docs/TAKI_RADIOS_AND_DAILY_MIX.md) - both columns are
+// nullable with no default, matching Track.playCount/lastPlayed being null (not zero) whenever
+// the server didn't expose the data, so existing rows read back as null after this migration.
+val META_MIGRATION_3_4: Migration = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `tracks` ADD COLUMN `playCount` INTEGER")
+        db.execSQL("ALTER TABLE `tracks` ADD COLUMN `lastPlayed` INTEGER")
     }
 }

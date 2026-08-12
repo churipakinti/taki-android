@@ -35,9 +35,12 @@ import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.model.HomeViewModel
+import org.moire.ultrasonic.service.DailyMixQueueBuilder
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.RefreshableFragment
+import org.moire.ultrasonic.util.Settings
+import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 
 private const val SHORTCUT_GRID_COLUMNS = 2
@@ -174,6 +177,11 @@ class HomeFragment :
                     it.loadImage(mixCover, firstTrack, false, 0, R.drawable.unknown_album)
                 }
             }
+
+            if (tracks.isNotEmpty() && !Settings.homeMixIntroShown) {
+                Settings.homeMixIntroShown = true
+                toast(getString(R.string.home_mix_intro), shortDuration = false)
+            }
         }
     }
 
@@ -207,6 +215,11 @@ class HomeFragment :
             homeViewModel.regenerateDailyMix()
             swipeRefresh?.isRefreshing = false
             updateEmptyState()
+
+            val size = homeViewModel.mixTracks.value?.size ?: 0
+            if (size in 1 until DailyMixQueueBuilder.TARGET_SIZE) {
+                toast(getString(R.string.home_mix_short, size))
+            }
         }
     }
 

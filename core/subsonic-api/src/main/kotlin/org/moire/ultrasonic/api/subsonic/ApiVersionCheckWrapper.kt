@@ -36,6 +36,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetLyricsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPlaylistsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPodcastsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetRandomSongsResponse
+import org.moire.ultrasonic.api.subsonic.response.GetSongResponse
 import org.moire.ultrasonic.api.subsonic.response.GetSongsByGenreResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredTwoResponse
@@ -109,6 +110,11 @@ internal class ApiVersionCheckWrapper(
     override suspend fun getAlbumInfo2Suspend(id: String): GetAlbumInfo2Response {
         checkVersion(V1_14_0)
         return api.getAlbumInfo2Suspend(id)
+    }
+
+    override suspend fun getSongSuspend(id: String): GetSongResponse {
+        checkVersion(V1_8_0)
+        return api.getSongSuspend(id)
     }
 
     override suspend fun search2Suspend(

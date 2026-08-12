@@ -7,6 +7,7 @@
 
 package org.moire.ultrasonic.service
 
+import java.util.Date
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -121,16 +122,56 @@ class DailyMixSelectorTest {
         assertFalse(first.map { it.id } == second.map { it.id })
     }
 
+    @Test
+    fun `deprioritizes tracks played within the last 48 hours`() {
+        val now = 1_700_000_000_000L
+        val recentlyPlayed = track("familiar-recent", 0).apply {
+            lastPlayed = Date(now - 60_000L)
+        }
+        val untouched = tracks("familiar", 15)
+
+        val mix = DailyMixSelector.select(
+            familiarTracks = untouched + recentlyPlayed,
+            rediscoveryTracks = tracks("rediscovery", 20),
+            explorationTracks = tracks("exploration", 20),
+            fallbackTracks = emptyList(),
+            targetSize = 30,
+            minimumSize = 15,
+            now = now
+        )
+
+        assertFalse(mix.any { it.id == recentlyPlayed.id })
+    }
+
+    @Test
+    fun `still includes a recently played track when nothing else is left`() {
+        val now = 1_700_000_000_000L
+        val recentlyPlayed = track("only-track", 0).apply {
+            lastPlayed = Date(now - 60_000L)
+        }
+
+        val mix = DailyMixSelector.select(
+            familiarTracks = listOf(recentlyPlayed),
+            rediscoveryTracks = emptyList(),
+            explorationTracks = emptyList(),
+            fallbackTracks = emptyList(),
+            targetSize = 30,
+            minimumSize = 1,
+            now = now
+        )
+
+        assertEquals(listOf(recentlyPlayed.id), mix.map { it.id })
+    }
+
     private fun tracks(prefix: String, count: Int): List<Track> =
         (1..count).map { track("$prefix-$it", it) }
 
-    private fun track(id: String, index: Int): Track =
-        Track(
-            id = id,
-            title = id,
-            album = "Album $id",
-            albumId = "album-$id",
-            artist = "Artist $id",
-            artistId = "artist-$id"
-        )
+    private fun track(id: String, index: Int): Track = Track(
+        id = id,
+        title = id,
+        album = "Album $id",
+        albumId = "album-$id",
+        artist = "Artist $id",
+        artistId = "artist-$id"
+    )
 }

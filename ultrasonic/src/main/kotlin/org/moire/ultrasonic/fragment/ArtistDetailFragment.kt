@@ -265,6 +265,9 @@ class ArtistDetailFragment :
                 toast(R.string.artist_radio_empty)
                 return@launch
             }
+            if (queue.size < ArtistRadioQueueBuilder.TARGET_SIZE) {
+                toast(getString(R.string.artist_radio_short, queue.size))
+            }
             mediaPlayerManager.suggestedPlaylistName = getString(
                 R.string.artist_radio_playlist_name,
                 navArgs.artistName

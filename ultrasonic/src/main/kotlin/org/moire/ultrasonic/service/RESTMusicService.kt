@@ -207,6 +207,13 @@ open class RESTMusicService(
         return response.albumInfo.toDomainEntity()
     }
 
+    @Throws(Exception::class)
+    override suspend fun getSong(id: String): Track {
+        val response = API.getSongSuspend(id).throwOnFailure()
+
+        return response.song.toTrackEntity(activeServerId)
+    }
+
     // Search is fully migrated to suspend (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md): unlike
     // most of this class, these no longer go through a blocking .execute() call, so cancelling
     // the caller's coroutine (e.g. the user typed again, or left the Search screen) now actually

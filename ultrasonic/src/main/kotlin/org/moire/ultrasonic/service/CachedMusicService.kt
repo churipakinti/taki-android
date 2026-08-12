@@ -223,6 +223,8 @@ class CachedMusicService(private val musicService: MusicService) :
     override suspend fun getTopSongs(artistName: String, count: Int): List<Track> =
         musicService.getTopSongs(artistName, count)
 
+    override suspend fun getSong(id: String): Track? = musicService.getSong(id)
+
     /*
      * Retrieves the track listing of the given album.
      * Cached in the RoomDB, same as getAlbum() -- getAlbumAsDir() is backed by the same

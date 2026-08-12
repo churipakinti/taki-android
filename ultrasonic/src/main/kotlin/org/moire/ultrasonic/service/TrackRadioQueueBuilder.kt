@@ -17,15 +17,22 @@ private const val RADIO_RANDOM_FILL_SIZE = 50
 private const val RADIO_TOP_SONGS_PER_ARTIST = 12
 private const val RADIO_RELATED_ARTIST_LIMIT = 4
 
-class TrackRadioQueueBuilder(
-    private val musicService: MusicService
-) {
+class TrackRadioQueueBuilder(private val musicService: MusicService) {
+    companion object {
+        // Exposed so callers can tell the user when the generated radio came back shorter than
+        // usual (docs/TAKI_RADIOS_AND_DAILY_MIX.md section 7/9: "comunicar si la cola resultante
+        // es más corta").
+        const val TARGET_SIZE = RADIO_TARGET_SIZE
+    }
+
     suspend fun build(seed: Track): List<Track> {
         val perfToken = PerfMetrics.start("track_radio_generate")
         val candidates = mutableListOf<List<Track>>()
 
         val relatedArtists = seed.artistId
-            ?.let { artistId -> fetch("track_radio_artist_info") { musicService.getArtistInfo(artistId) } }
+            ?.let { artistId ->
+                fetch("track_radio_artist_info") { musicService.getArtistInfo(artistId) }
+            }
             ?.similarArtists
             .orEmpty()
             .take(RADIO_RELATED_ARTIST_LIMIT)

@@ -20,13 +20,15 @@ private const val ARTIST_RADIO_RELATED_TOP_SONGS = 8
 private const val ARTIST_RADIO_RANDOM_FILL_SIZE = 60
 private const val ARTIST_RADIO_ALBUM_FALLBACK_COUNT = 6
 
-class ArtistRadioQueueBuilder(
-    private val musicService: MusicService
-) {
-    suspend fun build(
-        artistId: String,
-        artistName: String?
-    ): List<Track> {
+class ArtistRadioQueueBuilder(private val musicService: MusicService) {
+    companion object {
+        // Exposed so callers can tell the user when the generated radio came back shorter than
+        // usual (docs/TAKI_RADIOS_AND_DAILY_MIX.md section 7/9: "comunicar si la cola resultante
+        // es más corta").
+        const val TARGET_SIZE = ARTIST_RADIO_TARGET_SIZE
+    }
+
+    suspend fun build(artistId: String, artistName: String?): List<Track> {
         val perfToken = PerfMetrics.start("artist_radio_generate")
         val artistLabel = artistName?.takeIf { it.isNotBlank() } ?: artistId
 
@@ -43,9 +45,11 @@ class ArtistRadioQueueBuilder(
         }.orEmpty()
 
         val seedTracks = buildList {
-            addAll(fetch("artist_radio_seed_top") {
-                musicService.getTopSongs(artistLabel, ARTIST_RADIO_TOP_SONGS)
-            }.orEmpty())
+            addAll(
+                fetch("artist_radio_seed_top") {
+                    musicService.getTopSongs(artistLabel, ARTIST_RADIO_TOP_SONGS)
+                }.orEmpty()
+            )
             addAll(fetchTracksFromAlbums(albums))
         }.filter { track ->
             track.artistId == artistId || track.artist.equals(artistName, ignoreCase = true)

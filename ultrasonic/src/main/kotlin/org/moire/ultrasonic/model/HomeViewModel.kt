@@ -107,7 +107,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         // Same reasoning as fetch(): a failure here must not cancel the sibling shelf
         // fetches in loadHomeScreen()'s coroutineScope.
         try {
-            DailyMix(DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build(forceRefresh))
+            DailyMix(
+                DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build(forceRefresh)
+            )
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {

@@ -1,0 +1,31 @@
+{
+  "subsonic-response" : {
+    "status" : "ok",
+    "version" : "1.15.0",
+    "song" : {
+      "id" : "6491",
+      "parent" : "6475",
+      "isDir" : false,
+      "title" : "Rock 'n' Roll Train",
+      "album" : "Black Ice",
+      "artist" : "AC/DC",
+      "track" : 1,
+      "year" : 2008,
+      "genre" : "Hard Rock",
+      "coverArt" : "6475",
+      "size" : 7205451,
+      "contentType" : "audio/mpeg",
+      "suffix" : "mp3",
+      "duration" : 261,
+      "bitRate" : 219,
+      "path" : "AC_DC/Black Ice/01 Rock 'n' Roll Train.mp3",
+      "isVideo" : false,
+      "playCount" : 3,
+      "discNumber" : 1,
+      "created" : "2016-10-23T15:31:20.000Z",
+      "albumId" : "618",
+      "artistId" : "362",
+      "type" : "music"
+    }
+  }
+}

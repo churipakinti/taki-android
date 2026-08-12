@@ -63,7 +63,9 @@ object ContextMenuUtil {
                 if (!isArtist) return false
                 val artistName = (item as? GenericEntry)?.name
                 fragment.lifecycleScope.launch(
-                    fragment.toastingExceptionHandler(fragment.getString(R.string.artist_radio_error))
+                    fragment.toastingExceptionHandler(
+                        fragment.getString(R.string.artist_radio_error)
+                    )
                 ) {
                     val queue = ArtistRadioQueueBuilder(MusicServiceFactory.getMusicService())
                         .build(
@@ -73,6 +75,11 @@ object ContextMenuUtil {
                     if (queue.isEmpty()) {
                         fragment.toast(R.string.artist_radio_empty)
                         return@launch
+                    }
+                    if (queue.size < ArtistRadioQueueBuilder.TARGET_SIZE) {
+                        fragment.toast(
+                            fragment.getString(R.string.artist_radio_short, queue.size)
+                        )
                     }
                     mediaPlayerManager.suggestedPlaylistName = fragment.getString(
                         R.string.artist_radio_playlist_name,
@@ -158,6 +165,11 @@ object ContextMenuUtil {
                     if (queue.size <= 1) {
                         fragment.toast(R.string.song_radio_empty)
                         return@launch
+                    }
+                    if (queue.size < TrackRadioQueueBuilder.TARGET_SIZE) {
+                        fragment.toast(
+                            fragment.getString(R.string.song_radio_short, queue.size)
+                        )
                     }
                     mediaPlayerManager.suggestedPlaylistName = fragment.getString(
                         R.string.song_radio_playlist_name,

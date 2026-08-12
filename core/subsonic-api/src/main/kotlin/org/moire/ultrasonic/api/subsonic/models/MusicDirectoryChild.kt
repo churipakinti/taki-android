@@ -23,6 +23,10 @@ data class MusicDirectoryChild(
     val path: String = "",
     val isVideo: Boolean = false,
     val playCount: Int = 0,
+    // Last-played timestamp (OpenSubsonic/Navidrome expose this on <song>, vanilla Subsonic
+    // servers omit it). Used for Mix diario v1.1 history signals - see
+    // docs/TAKI_RADIOS_AND_DAILY_MIX.md "señales más finas de historial".
+    val played: Calendar? = null,
     val discNumber: Int = -1,
     val created: Calendar? = null,
     val albumId: String = "",

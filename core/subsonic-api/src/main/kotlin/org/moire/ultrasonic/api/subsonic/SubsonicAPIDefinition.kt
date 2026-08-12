@@ -29,6 +29,7 @@ import org.moire.ultrasonic.api.subsonic.response.GetPlaylistResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPlaylistsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetPodcastsResponse
 import org.moire.ultrasonic.api.subsonic.response.GetRandomSongsResponse
+import org.moire.ultrasonic.api.subsonic.response.GetSongResponse
 import org.moire.ultrasonic.api.subsonic.response.GetSongsByGenreResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredResponse
 import org.moire.ultrasonic.api.subsonic.response.GetStarredTwoResponse
@@ -129,6 +130,12 @@ interface SubsonicAPIDefinition {
 
     @GET("getAlbumInfo2.view")
     suspend fun getAlbumInfo2Suspend(@Query("id") id: String): GetAlbumInfo2Response
+
+    // Added for Mix diario v1.1 (docs/TAKI_RADIOS_AND_DAILY_MIX.md): looks up a single track by
+    // id so a saved Mix diario/radio can be restored exactly instead of matching stored ids
+    // against a freshly-fetched, and possibly different, candidate pool.
+    @GET("getSong.view")
+    suspend fun getSongSuspend(@Query("id") id: String): GetSongResponse
 
     // The Search vertical is fully migrated to suspend (Fase 7 of
     // TAKI_CODE_OPTIMIZATION_PLAN.md) - unlike most other endpoints in this file, there is no

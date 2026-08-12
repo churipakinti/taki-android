@@ -1,5 +1,66 @@
 # Changes
 
+## Mix diario v1: cierre y deuda v1.1 de TAKI_RADIOS_AND_DAILY_MIX.md
+
+Cierra la sección 15 ("Handoff") del documento: los cuatro pendientes de validación y la deuda
+de v1.1 quedan resueltos o explícitamente documentados como fuera de alcance de esta pasada.
+
+**Restauración exacta por id:** se añade `getSong.view` de punta a punta (`SubsonicAPIDefinition`
+→ `ApiVersionCheckWrapper` → `MusicService.getSong` → `RESTMusicService`/`OfflineMusicService`
+(lee `cachedTracks` local)/`CachedMusicService`). `DailyMixQueueBuilder.restore()` ya no compara
+los ids guardados contra un pool de candidatos recién descargado (starred/frecuentes/nuevos/
+random); ahora resuelve cada id directamente y en paralelo (`async`/`awaitAll`), extraído como
+`restoreTracksByExactId()` para quedar testeable sin `MusicService` ni `Settings`. Esto era la
+causa real de que un Mix diario válido apareciera incompleto tras reiniciar la app o cuando el
+pool aleatorio del servidor cambiaba entre llamadas.
+
+**Estabilidad por servidor:** la condición de `build()` para intentar restaurar (mismo día, mismo
+`serverId`, sin `forceRefresh`) se extrae a `shouldAttemptDailyMixRestore()`, con tests que cubren
+explícitamente que un cambio de servidor el mismo día nunca reutiliza el mix de la biblioteca
+anterior.
+
+**Señales de historial:** `Track` gana `playCount: Long?` y `lastPlayed: Date?` (null si el
+servidor no expone el dato, no "cero reproducciones"; requiere migración `META_MIGRATION_3_4` de
+`MetaDatabase`, versión 3→4). `DailyMixSelector` usa `lastPlayed` como penalización suave -no
+exclusión- para canciones reproducidas en las últimas 48 horas (se posponen dentro de su bucket,
+pero se siguen usando si no queda nada más), y `playCount == 0` amplía el criterio de "nunca
+escuchada" del bucket de exploración junto al criterio existente por fecha de alta.
+
+**Comunicación de cola corta:** Mix diario, radio de canción y radio de artista exponen ahora
+`TARGET_SIZE` públicamente; cuando el resultado queda por debajo de ese objetivo (pero no vacío)
+se muestra un toast en lenguaje simple («Today's Mix is shorter than usual (%d songs)», etc.) en
+vez de fallar silenciosamente o quedar sin explicación.
+
+**Explicación de primera apertura:** se añade `Settings.homeMixIntroShown` y un toast largo,
+mostrado una sola vez, la primera vez que la tarjeta de Mix diario aparece con canciones.
+
+**Copy del subtítulo:** se actualiza a "%d songs for today", como proponía la sección 5 del
+documento, en vez del conteo simple que traía la v1.
+
+**Verificado como ya resuelto sin código nuevo:** el modo offline explícito de radios/Mix diario y
+la preferencia por copias descargadas ya estaban garantizados por la arquitectura existente.
+`MusicServiceFactory.getMusicService()` resuelve `OfflineMusicService` automáticamente cuando
+`ActiveServerProvider.isOffline()`, y los tres builders piden esa instancia en cada llamada -no
+hay ruta de red posible en modo offline. `CachedDataSource`/`FileUtil.getCompleteFile()` ya
+resuelven cualquier pista contra el archivo local antes de hacer streaming, sin importar qué
+builder armó la cola.
+
+**Tests:** `SubsonicApiGetSongTest` (integración Retrofit/MockWebServer), ampliaciones de
+`DailyMixQueueBuilderTest` (restauración exacta, ids fallidos, gate por fecha/servidor/
+forceRefresh) y `DailyMixSelectorTest` (penalización de reproducidas recientemente, inclusión
+cuando no queda alternativa), y `APIMusicDirectoryConverterTest` para el mapeo de
+`playCount`/`played`.
+
+**Verificación en Pixel 7 físico (`panther`):** con un Mix diario de 30 canciones ya generado, se
+forzó `am force-stop` y se reabrió la app: Home mostró "Daily Mix / 30 songs for today" de
+inmediato y logcat confirmó ~30 llamadas concurrentes a `getSong.view` (restauración exacta, no
+regeneración) sin `FATAL EXCEPTION`. El botón shuffle disparó correctamente el pipeline completo
+de generación (`getStarred2`, `getAlbumList2` frequent/newest, `getRandomSongs`) y volvió a
+mostrar 30 canciones. No se verificó el cambio de servidor en dispositivo físico por no contar con
+un segundo servidor de prueba disponible en esta sesión; ese contrato queda cubierto por los tests
+de `shouldAttemptDailyMixRestore()` y por la separación existente de bases de datos/ajustes por
+`serverId`.
+
 ## Mix diario: Home deja de depender de género aleatorio
 
 Se inicia la implementación del tercer flujo de `TAKI_RADIOS_AND_DAILY_MIX.md`: Home ahora genera

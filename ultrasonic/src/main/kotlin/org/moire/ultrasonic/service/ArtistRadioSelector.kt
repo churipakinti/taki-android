@@ -108,7 +108,9 @@ object ArtistRadioSelector {
             var addedThisPass = false
             for (bucket in buckets) {
                 if (selected.size >= targetSize) return
-                if (enforceBucketQuotas && selected.count { it.bucket == bucket.name } >= bucket.quota) {
+                if (enforceBucketQuotas &&
+                    selected.count { it.bucket == bucket.name } >= bucket.quota
+                ) {
                     continue
                 }
 
@@ -125,11 +127,10 @@ object ArtistRadioSelector {
         } while (addedThisPass && selected.size < targetSize)
     }
 
-    private fun List<Track>.prepared(): List<Track> =
-        asSequence()
-            .filterNot { it.isVideo }
-            .distinctBy { it.id }
-            .toList()
+    private fun List<Track>.prepared(): List<Track> = asSequence()
+        .filterNot { it.isVideo }
+        .distinctBy { it.id }
+        .toList()
 
     private fun Track.belongsTo(artistId: String, artistName: String?): Boolean =
         this.artistId == artistId ||
@@ -143,7 +144,8 @@ object ArtistRadioSelector {
     private fun List<SelectedTrack>.wouldCreateLongArtistBlock(candidate: Track): Boolean {
         val artistKey = candidate.artistKey() ?: return false
         val tail = takeLast(MAX_CONSECUTIVE_PER_ARTIST)
-        return tail.size == MAX_CONSECUTIVE_PER_ARTIST && tail.all { it.track.artistKey() == artistKey }
+        return tail.size == MAX_CONSECUTIVE_PER_ARTIST &&
+            tail.all { it.track.artistKey() == artistKey }
     }
 
     private fun Track.artistKey(): String? =
@@ -152,14 +154,7 @@ object ArtistRadioSelector {
     private fun Track.albumKey(): String? =
         albumId?.takeIf { it.isNotBlank() } ?: album?.lowercase()?.takeIf { it.isNotBlank() }
 
-    private data class CandidateBucket(
-        val name: String,
-        val quota: Int,
-        val tracks: List<Track>
-    )
+    private data class CandidateBucket(val name: String, val quota: Int, val tracks: List<Track>)
 
-    private data class SelectedTrack(
-        val bucket: String,
-        val track: Track
-    )
+    private data class SelectedTrack(val bucket: String, val track: Track)
 }

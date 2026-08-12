@@ -21,6 +21,12 @@ interface TrackDao : GenericDao<Track> {
     fun get(): List<Track>
 
     /**
+     * Get a single track by id
+     */
+    @Query("SELECT * FROM tracks WHERE id = :id LIMIT 1")
+    fun get(id: String): Track?
+
+    /**
      * Get tracks by album, in disc/track order
      */
     @Query("SELECT * FROM tracks WHERE albumId LIKE :id ORDER BY discNumber, track")

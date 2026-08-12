@@ -20,7 +20,12 @@ class ArtistRadioSelectorTest {
             seedArtistId = "seed-artist",
             seedArtistName = "Seed Artist",
             seedArtistTracks = (1..30).map {
-                track("seed-$it", artist = "Seed Artist", artistId = "seed-artist", album = "Seed $it")
+                track(
+                    "seed-$it",
+                    artist = "Seed Artist",
+                    artistId = "seed-artist",
+                    album = "Seed $it"
+                )
             },
             relatedArtistTracks = (1..20).map {
                 track("related-$it", artist = "Related $it", artistId = "related-$it")
@@ -44,7 +49,12 @@ class ArtistRadioSelectorTest {
             seedArtistId = "seed-artist",
             seedArtistName = "Seed Artist",
             seedArtistTracks = (1..18).map {
-                track("seed-$it", artist = "Seed Artist", artistId = "seed-artist", album = "Seed $it")
+                track(
+                    "seed-$it",
+                    artist = "Seed Artist",
+                    artistId = "seed-artist",
+                    album = "Seed $it"
+                )
             },
             relatedArtistTracks = emptyList(),
             fillerTracks = emptyList(),
@@ -59,10 +69,20 @@ class ArtistRadioSelectorTest {
     @Test
     fun `avoids album domination while enough albums are available`() {
         val dominantAlbum = (1..12).map {
-            track("dominant-$it", artist = "Seed Artist", artistId = "seed-artist", album = "One Album")
+            track(
+                "dominant-$it",
+                artist = "Seed Artist",
+                artistId = "seed-artist",
+                album = "One Album"
+            )
         }
         val otherAlbums = (1..10).map {
-            track("album-$it", artist = "Seed Artist", artistId = "seed-artist", album = "Album $it")
+            track(
+                "album-$it",
+                artist = "Seed Artist",
+                artistId = "seed-artist",
+                album = "Album $it"
+            )
         }
 
         val radio = ArtistRadioSelector.select(
@@ -84,10 +104,20 @@ class ArtistRadioSelectorTest {
             seedArtistId = "seed-artist",
             seedArtistName = "Seed Artist",
             seedArtistTracks = (1..10).map {
-                track("seed-$it", artist = "Seed Artist", artistId = "seed-artist", album = "Seed $it")
+                track(
+                    "seed-$it",
+                    artist = "Seed Artist",
+                    artistId = "seed-artist",
+                    album = "Seed $it"
+                )
             },
             relatedArtistTracks = (1..10).map {
-                track("related-$it", artist = "Related", artistId = "related", album = "Related $it")
+                track(
+                    "related-$it",
+                    artist = "Related",
+                    artistId = "related",
+                    album = "Related $it"
+                )
             },
             fillerTracks = emptyList(),
             targetSize = 16,
@@ -98,17 +128,13 @@ class ArtistRadioSelectorTest {
             listOf("seed-artist", "seed-artist", "seed-artist")
     }
 
-    private fun track(
-        id: String,
-        artist: String,
-        artistId: String,
-        album: String = id
-    ): Track = Track(
-        id = id,
-        title = id,
-        artist = artist,
-        artistId = artistId,
-        album = album,
-        albumId = album
-    )
+    private fun track(id: String, artist: String, artistId: String, album: String = id): Track =
+        Track(
+            id = id,
+            title = id,
+            artist = artist,
+            artistId = artistId,
+            album = album,
+            albumId = album
+        )
 }
