@@ -540,6 +540,22 @@ class NavigationActivity : ScopeActivity() {
     // fragment's own bottom-anchored content is what's left exposed - found on EditServerFragment,
     // whose Test connection/Save buttons rendered underneath the system nav bar. In that case the
     // nav host container itself needs the padding instead.
+    /*
+     * How much a fragment's own scrollable content should pad its bottom by so the last item
+     * can clear whichever of bottomNavigation/nowPlayingView is currently docked at the screen
+     * edge -- those are separate views layered on top of the content, not something a
+     * RecyclerView/GridView's own system-inset padding accounts for on its own. Each view's
+     * height already includes the system nav bar inset when it is the bottom-most one (see
+     * applyBottomInset()), so this must not add navigationBarBottomInset a second time.
+     */
+    fun getContentBottomInset(): Int {
+        val bottomNavVisible = bottomNavigation?.visibility == View.VISIBLE
+        val nowPlayingVisible = nowPlayingView?.visibility == View.VISIBLE
+        val nowPlayingHeight = if (nowPlayingVisible) nowPlayingView?.height ?: 0 else 0
+        val bottomNavHeight = if (bottomNavVisible) bottomNavigation?.height ?: 0 else 0
+        return nowPlayingHeight + bottomNavHeight
+    }
+
     private fun applyBottomInset() {
         val bottomNavVisible = bottomNavigation?.visibility == View.VISIBLE
         val nowPlayingVisible = nowPlayingView?.visibility == View.VISIBLE

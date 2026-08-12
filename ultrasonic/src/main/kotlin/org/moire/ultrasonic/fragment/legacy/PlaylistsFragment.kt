@@ -36,7 +36,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.TextInputLayout
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -48,11 +47,13 @@ import org.koin.core.component.KoinScopeComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.isOffline
 import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.fragment.CreatePlaylistFragment
+import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
@@ -65,10 +66,13 @@ import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.InfoDialog
+import org.moire.ultrasonic.util.LayoutType
 import org.moire.ultrasonic.util.RefreshableFragment
 import org.moire.ultrasonic.util.Util.applyTheme
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
+import org.moire.ultrasonic.view.FilterButtonBar
+import org.moire.ultrasonic.view.ViewCapabilities
 
 /**
  * Displays the playlists stored on the server
@@ -83,7 +87,8 @@ class PlaylistsFragment :
     override var swipeRefresh: SwipeRefreshLayout? = null
     private var playlistsView: GridView? = null
     private var emptyTextView: View? = null
-    private var viewTypeToggle: Chip? = null
+    private var filterButtonBar: FilterButtonBar? = null
+    private var countTextView: TextView? = null
     private var playlistAdapter: PlaylistAdapter? = null
     private val playlistTracks = mutableMapOf<String, List<Track>>()
     private val playlistDownloadStates = mutableMapOf<String, PlaylistDownloadStatus>()
@@ -108,13 +113,21 @@ class PlaylistsFragment :
     ): View? = inflater.inflate(R.layout.select_playlist, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        setTitle(this@PlaylistsFragment, R.string.playlist_label)
         swipeRefresh = view.findViewById(R.id.select_playlist_refresh)
         playlistsView = view.findViewById(R.id.select_playlist_list)
-        viewTypeToggle = view.findViewById(R.id.playlist_view_toggle)
+        countTextView = view.findViewById(R.id.select_playlist_count)
+        filterButtonBar = view.findViewById(R.id.select_playlist_filter_bar)
         swipeRefresh?.setOnRefreshListener { load(true) }
         emptyTextView = view.findViewById(R.id.select_playlist_empty)
-        viewTypeToggle?.setOnClickListener {
-            layoutMode = if (layoutMode == PlaylistLayoutMode.LIST) {
+        filterButtonBar?.configureWithCapabilities(
+            ViewCapabilities(supportsGrid = true, supportedSortOrders = emptyList())
+        )
+        filterButtonBar?.setLayoutType(
+            if (layoutMode == PlaylistLayoutMode.GRID) LayoutType.COVER else LayoutType.LIST
+        )
+        filterButtonBar?.setOnLayoutTypeChangedListener { newType ->
+            layoutMode = if (newType == LayoutType.COVER) {
                 PlaylistLayoutMode.GRID
             } else {
                 PlaylistLayoutMode.LIST
@@ -122,6 +135,8 @@ class PlaylistsFragment :
             updateLayoutMode()
         }
         updateLayoutMode()
+        playlistsView?.clipToPadding = false
+        playlistsView?.post { applyContentBottomInset() }
         registerForContextMenu(playlistsView!!)
         observeDownloadStates()
         findNavController().currentBackStackEntry?.savedStateHandle
@@ -134,6 +149,25 @@ class PlaylistsFragment :
                 }
             }
         load(false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // The mini-player can appear/disappear while this screen isn't in front (starting or
+        // stopping playback from another tab), so the bottom inset needs recomputing every time
+        // we come back, not just once at view creation.
+        playlistsView?.post { applyContentBottomInset() }
+    }
+
+    private fun applyContentBottomInset() {
+        val inset = (activity as? NavigationActivity)?.getContentBottomInset() ?: return
+        val extraPaddingPx = (EXTRA_BOTTOM_PADDING_DP * resources.displayMetrics.density).toInt()
+        playlistsView?.setPadding(
+            playlistsView!!.paddingLeft,
+            playlistsView!!.paddingTop,
+            playlistsView!!.paddingRight,
+            inset + extraPaddingPx
+        )
     }
 
     private fun load(refresh: Boolean) {
@@ -157,6 +191,14 @@ class PlaylistsFragment :
                 playlistAdapter = PlaylistAdapter(result)
                 playlistsView?.adapter = playlistAdapter
                 emptyTextView?.visibility = if (result.isEmpty()) View.VISIBLE else View.GONE
+                countTextView?.apply {
+                    isVisible = result.isNotEmpty()
+                    text = resources.getQuantityString(
+                        R.plurals.n_playlists,
+                        result.size,
+                        result.size
+                    )
+                }
                 resolveDownloadStates(result, generation)
             }
             if (!isOffline()) cacheCleaner.cleanPlaylists(result)
@@ -423,7 +465,7 @@ class PlaylistsFragment :
                 val createTag = "${layoutMode.name}:create"
                 return (
                     convertView?.takeIf {
-                        it.getTag(R.id.playlist_view_toggle) == createTag
+                        it.getTag(R.id.playlist_row_type_tag) == createTag
                     } ?: layoutInflater.inflate(
                         if (layoutMode == PlaylistLayoutMode.LIST) {
                             R.layout.list_item_create_playlist
@@ -432,7 +474,7 @@ class PlaylistsFragment :
                         },
                         parent,
                         false
-                    ).also { it.setTag(R.id.playlist_view_toggle, createTag) }
+                    ).also { it.setTag(R.id.playlist_row_type_tag, createTag) }
                     ).apply {
                     setOnClickListener { showCreatePlaylistDialog() }
                     setOnLongClickListener(null)
@@ -441,7 +483,7 @@ class PlaylistsFragment :
 
             val itemTag = "${layoutMode.name}:playlist"
             val row = convertView?.takeIf {
-                it.getTag(R.id.playlist_view_toggle) == itemTag
+                it.getTag(R.id.playlist_row_type_tag) == itemTag
             } ?: layoutInflater.inflate(
                 if (layoutMode == PlaylistLayoutMode.LIST) {
                     R.layout.list_item_playlist
@@ -450,7 +492,7 @@ class PlaylistsFragment :
                 },
                 parent,
                 false
-            ).also { it.setTag(R.id.playlist_view_toggle, itemTag) }
+            ).also { it.setTag(R.id.playlist_row_type_tag, itemTag) }
             row.findViewById<TextView>(R.id.playlist_name).text = playlist.name
             bindTrackCount(row, playlist)
             bindPlaylistCover(row, playlist)
@@ -459,8 +501,8 @@ class PlaylistsFragment :
             row.setOnLongClickListener {
                 playlistsView?.showContextMenuForChild(row) ?: false
             }
-            row.findViewById<MaterialButton>(R.id.playlist_download).apply {
-                setOnClickListener { handleDownloadAction(playlist) }
+            row.findViewById<MaterialButton>(R.id.playlist_menu).apply {
+                setOnClickListener { playlistsView?.showContextMenuForChild(row) }
             }
             return row
         }
@@ -502,6 +544,7 @@ class PlaylistsFragment :
             cover.tag = "${playlist.id}:$index"
             cover.isVisible = index < tracksWithCovers.size
         }
+        applyCollageSpans(coverViews, tracksWithCovers.size)
         row.findViewById<ImageView>(R.id.playlist_default_icon).isVisible =
             tracksWithCovers.isEmpty()
 
@@ -523,6 +566,27 @@ class PlaylistsFragment :
         }
     }
 
+    /*
+     * Graduated collage fallback (docs/TAKI_PLAYLIST_UX_REDESIGN.md 1): a single cover fills
+     * the whole frame instead of being duplicated into 4 quadrants; two covers split the frame
+     * in half; three or four keep the original 2x2 grid. Reuses the same 4 ImageViews across
+     * binds, so every span must be reset on each call rather than only set once in XML.
+     */
+    private fun applyCollageSpans(coverViews: List<ImageView>, coverCount: Int) {
+        val spans = when (coverCount.coerceAtMost(MAX_COLLAGE_COVERS)) {
+            0, 1 -> listOf(FULL_FRAME_SPAN, FULL_FRAME_SPAN, FULL_FRAME_SPAN, FULL_FRAME_SPAN)
+            2 -> listOf(LEFT_HALF_SPAN, RIGHT_HALF_SPAN, LEFT_HALF_SPAN, RIGHT_HALF_SPAN)
+            else -> List(MAX_COLLAGE_COVERS) { QUADRANT_SPANS[it] }
+        }
+        coverViews.forEachIndexed { index, cover ->
+            val params = cover.layoutParams as GridLayout.LayoutParams
+            val (rowSpec, columnSpec) = spans[index]
+            params.rowSpec = rowSpec
+            params.columnSpec = columnSpec
+            cover.layoutParams = params
+        }
+    }
+
     private fun getPlaylistFrameColor(row: View): Int = if (layoutMode == PlaylistLayoutMode.LIST) {
         Color.BLACK
     } else {
@@ -534,18 +598,6 @@ class PlaylistsFragment :
 
     private fun updateLayoutMode() {
         val showingGrid = layoutMode == PlaylistLayoutMode.GRID
-        viewTypeToggle?.apply {
-            setChipIconResource(
-                if (showingGrid) {
-                    R.drawable.ic_baseline_view_list
-                } else {
-                    R.drawable.ic_baseline_view_grid
-                }
-            )
-            contentDescription = getString(
-                if (showingGrid) R.string.list_view else R.string.grid_view
-            )
-        }
         playlistsView?.apply {
             numColumns = if (showingGrid) GRID_COLUMN_COUNT else 1
             horizontalSpacing = if (showingGrid) {
@@ -576,34 +628,28 @@ class PlaylistsFragment :
     private fun bindDownloadStatus(row: View, playlist: Playlist) {
         val status = playlistDownloadStates[playlist.id] ?: PlaylistDownloadStatus.CHECKING
         val statusText = row.findViewById<TextView>(R.id.playlist_download_status)
-        val action = row.findViewById<MaterialButton>(R.id.playlist_download)
+        val menuButton = row.findViewById<MaterialButton>(R.id.playlist_menu)
         val progress = row.findViewById<ProgressBar>(R.id.playlist_download_progress)
 
+        // "Not downloaded" is the normal state for a playlist and shouldn't repeat on every
+        // row; only show a status line when it communicates something real and actionable.
+        statusText.isVisible = status != PlaylistDownloadStatus.NOT_DOWNLOADED &&
+            status != PlaylistDownloadStatus.CHECKING
         statusText.setText(status.textResource)
+
         val busy = status == PlaylistDownloadStatus.CHECKING ||
             status == PlaylistDownloadStatus.DOWNLOADING ||
             status == PlaylistDownloadStatus.REMOVING
         progress.isVisible = busy
-        action.isVisible = !busy && !isOffline() && status != PlaylistDownloadStatus.EMPTY
-        action.setIconResource(
-            if (status == PlaylistDownloadStatus.DOWNLOADED) {
-                R.drawable.ic_menu_remove_all
-            } else {
-                R.drawable.ic_menu_download
-            }
-        )
-        action.contentDescription = getString(
-            if (status == PlaylistDownloadStatus.DOWNLOADED) {
-                R.string.playlist_remove_download_description
-            } else {
-                R.string.playlist_download_description
-            }
-        )
+        // The menu is always reachable (management actions live there now, not a persistent
+        // download icon); only hidden while the progress spinner occupies the same slot.
+        menuButton.isVisible = !busy
     }
 
     override fun onDestroyView() {
         rxBusSubscription.clear()
-        viewTypeToggle = null
+        filterButtonBar = null
+        countTextView = null
         playlistsView = null
         swipeRefresh = null
         super.onDestroyView()
@@ -640,6 +686,21 @@ class PlaylistsFragment :
         private const val LIST_COLLAGE_OUTER_PADDING_DP = 2
         private const val LIST_SPACING_DP = 4
         private const val LIST_HORIZONTAL_PADDING_DP = 6
+        private const val EXTRA_BOTTOM_PADDING_DP = 8
+
+        // GridLayout row/column spans for the collage fallback levels - see applyCollageSpans().
+        private val FULL_FRAME_SPAN =
+            GridLayout.spec(0, 2) to GridLayout.spec(0, 2)
+        private val LEFT_HALF_SPAN =
+            GridLayout.spec(0, 2) to GridLayout.spec(0, 1)
+        private val RIGHT_HALF_SPAN =
+            GridLayout.spec(0, 2) to GridLayout.spec(1, 1)
+        private val QUADRANT_SPANS = listOf(
+            GridLayout.spec(0, 1) to GridLayout.spec(0, 1),
+            GridLayout.spec(0, 1) to GridLayout.spec(1, 1),
+            GridLayout.spec(1, 1) to GridLayout.spec(0, 1),
+            GridLayout.spec(1, 1) to GridLayout.spec(1, 1)
+        )
     }
 
     private fun deletePlaylist(playlist: Playlist) {

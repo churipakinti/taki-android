@@ -74,13 +74,13 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.button.MaterialButton
-                a:id="@+id/playlist_download"
+                a:id="@+id/playlist_menu"
                 style="@style/Widget.Material3.Button.IconButton"
                 a:layout_width="match_parent"
                 a:layout_height="match_parent"
                 a:focusable="false"
-                a:contentDescription="@string/playlist.download_description"
-                app:icon="@drawable/ic_menu_download"
+                a:contentDescription="@string/playlist.menu_description"
+                app:icon="@drawable/ic_more_vert"
                 app:iconSize="20dp"
                 app:iconTint="?attr/colorOnSurfaceVariant" />
 

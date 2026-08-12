@@ -32,21 +32,51 @@
 
     <LinearLayout
         a:layout_width="match_parent"
-        a:layout_height="48dp"
+        a:layout_height="wrap_content"
         a:layout_marginTop="7dp"
         a:gravity="center_vertical"
         a:orientation="horizontal">
 
-        <TextView
-            a:id="@+id/playlist_name"
-            style="@style/Ultrasonic.PrimaryText"
+        <LinearLayout
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_weight="1"
-            a:ellipsize="end"
-            a:maxLines="2"
-            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            tools:text="Random Mix" />
+            a:orientation="vertical">
+
+            <TextView
+                a:id="@+id/playlist_name"
+                style="@style/Ultrasonic.PrimaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:ellipsize="end"
+                a:maxLines="2"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                tools:text="Random Mix" />
+
+            <TextView
+                a:id="@+id/playlist_song_count"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:layout_marginTop="2dp"
+                a:ellipsize="end"
+                a:maxLines="1"
+                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="24 songs" />
+
+            <TextView
+                a:id="@+id/playlist_download_status"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:ellipsize="end"
+                a:maxLines="1"
+                a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Downloaded" />
+
+        </LinearLayout>
 
         <FrameLayout
             a:id="@+id/playlist_action_container"
@@ -55,13 +85,13 @@
             a:layout_marginStart="4dp">
 
             <com.google.android.material.button.MaterialButton
-                a:id="@+id/playlist_download"
+                a:id="@+id/playlist_menu"
                 style="@style/Widget.Material3.Button.IconButton"
                 a:layout_width="match_parent"
                 a:layout_height="match_parent"
                 a:focusable="false"
-                a:contentDescription="@string/playlist.download_description"
-                app:icon="@drawable/ic_menu_download"
+                a:contentDescription="@string/playlist.menu_description"
+                app:icon="@drawable/ic_more_vert"
                 app:iconSize="20dp"
                 app:iconTint="?attr/colorOnSurfaceVariant" />
 
@@ -78,17 +108,5 @@
         </FrameLayout>
 
     </LinearLayout>
-
-    <TextView
-        a:id="@+id/playlist_song_count"
-        a:layout_width="0dp"
-        a:layout_height="0dp"
-        a:visibility="gone" />
-
-    <TextView
-        a:id="@+id/playlist_download_status"
-        a:layout_width="0dp"
-        a:layout_height="0dp"
-        a:visibility="gone" />
 
 </LinearLayout>

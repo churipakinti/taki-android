@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Generic id used as a View.setTag()/getTag() key where no view id is a natural fit. -->
+    <item name="playlist_row_type_tag" type="id" />
+</resources>

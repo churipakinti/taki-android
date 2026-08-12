@@ -6,32 +6,30 @@
     a:layout_height="fill_parent"
     a:orientation="vertical">
 
-    <FrameLayout
+    <LinearLayout
         a:layout_width="match_parent"
-        a:layout_height="48dp">
+        a:layout_height="wrap_content"
+        a:gravity="center_vertical"
+        a:minHeight="48dp"
+        a:orientation="horizontal"
+        a:paddingStart="16dp">
 
-        <com.google.android.material.chip.Chip
-            a:id="@+id/playlist_view_toggle"
-            a:layout_width="40dp"
-            a:layout_height="40dp"
-            a:layout_gravity="center_vertical|end"
-            a:layout_marginEnd="8dp"
-            a:contentDescription="@string/grid_view"
-            a:minWidth="40dp"
-            app:chipBackgroundColor="@android:color/transparent"
-            app:chipIcon="@drawable/ic_baseline_view_grid"
-            app:chipIconSize="22dp"
-            app:chipEndPadding="8dp"
-            app:chipMinHeight="36dp"
-            app:chipStartPadding="8dp"
-            app:chipStrokeWidth="0dp"
-            app:ensureMinTouchTargetSize="false"
-            app:iconEndPadding="0dp"
-            app:iconStartPadding="0dp"
-            app:textEndPadding="0dp"
-            app:textStartPadding="0dp" />
+        <TextView
+            a:id="@+id/select_playlist_count"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_weight="1"
+            style="@style/Ultrasonic.SecondaryText"
+            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="8 playlists" />
 
-    </FrameLayout>
+        <org.moire.ultrasonic.view.FilterButtonBar
+            a:id="@+id/select_playlist_filter_bar"
+            a:layout_width="wrap_content"
+            a:layout_height="48dp" />
+
+    </LinearLayout>
 
     <TextView
         a:id="@+id/select_playlist_empty"

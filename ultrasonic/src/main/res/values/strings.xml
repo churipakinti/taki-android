@@ -201,6 +201,7 @@
     <string name="playlist.created">Playlist created.</string>
     <string name="playlist.create_error">The playlist could not be created.</string>
     <string name="playlist.download_description">Download playlist</string>
+    <string name="playlist.menu_description">More options</string>
     <string name="playlist.remove_download_description">Remove downloaded playlist</string>
     <string name="playlist.status_checking">Checking download…</string>
     <string name="playlist.status_not_downloaded">Not downloaded</string>
@@ -400,6 +401,10 @@
     <plurals name="n_songs">
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
+    </plurals>
+    <plurals name="n_playlists">
+        <item quantity="one">%d playlist</item>
+        <item quantity="other">%d playlists</item>
     </plurals>
     <plurals name="n_songs_pinned">
         <item quantity="one">%d song selected to be pinned</item>
