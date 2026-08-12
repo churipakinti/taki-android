@@ -251,11 +251,16 @@ object Settings {
         0
     )
 
-    // Internal cache for the Home screen's daily genre Mix - not user-facing, so plain keys
-    // (not backed by a setting_keys.xml resource like the settings above).
+    // Internal cache for Home's Mix diario - not user-facing, so plain keys (not backed by a
+    // setting_keys.xml resource like the settings above).
     @JvmStatic
     var homeMixDate by StringSetting("home_mix_date", "")
 
+    @JvmStatic
+    var homeMixServerId by IntSetting("home_mix_server_id", -1)
+
+    // Legacy key from the previous genre-based Home mix. Kept only to avoid treating an old
+    // stored genre name as part of the new daily mix contract.
     @JvmStatic
     var homeMixGenre by StringSetting("home_mix_genre", "")
 

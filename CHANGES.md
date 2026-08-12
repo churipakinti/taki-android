@@ -1,5 +1,27 @@
 # Changes
 
+## Mix diario: Home deja de depender de género aleatorio
+
+Se inicia la implementación del tercer flujo de `TAKI_RADIOS_AND_DAILY_MIX.md`: Home ahora genera
+un `Mix diario` estable por día y servidor en lugar de un mix basado en un género aleatorio.
+
+**Cambio:** Se añade `DailyMixSelector`, una clase pura que selecciona hasta 30 canciones con una
+mezcla objetivo 50/30/20: familiaridad (`getStarred2` y álbumes frecuentes), redescubrimiento
+(`getRandomSongs` como pool general) y exploración interna (álbumes nuevos y canciones recientes
+cuando el servidor expone fecha). Si una categoría no alcanza su cuota, completa desde las demás y
+finalmente desde fallback controlado. El selector deduplica, filtra videos, limita dominio por
+artista/álbum y evita tres canciones consecutivas del mismo artista cuando hay alternativas.
+
+**Persistencia:** Home guarda fecha, `serverId` e IDs seleccionados. Durante el mismo día y servidor
+intenta restaurar esos IDs desde las mismas fuentes antes de regenerar. Al cambiar de servidor no
+reutiliza el mix de la biblioteca anterior.
+
+**Presentación:** La tarjeta de Home se titula simplemente `Mix diario` / `Daily Mix`, muestra el
+conteo de canciones y al tocarla reemplaza la cola con el mix e inicia reproducción.
+
+**Tests:** `DailyMixSelectorTest` cubre composición 50/30/20, fallback por categorías pequeñas,
+deduplicación/filtro de videos y prevención de bloques largos de artista.
+
 ## Calidad predeterminada: móvil alta, Wi‑Fi/descargas original
 
 Se ajustan los valores iniciales de calidad para instalaciones nuevas: datos móviles queda en

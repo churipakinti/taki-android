@@ -48,7 +48,7 @@ private const val AFTERNOON_ENDS_AT_HOUR = 18
  * A Spotify-style "Home" screen showing recently played shortcuts and
  * horizontal shelves of albums. Built entirely from data the server
  * already exposes (recent, starred, newest, random, most played, plus
- * a daily mix of a random genre's tracks) - there is no recommendation
+ * a stable daily mix from library signals) - there is no recommendation
  * engine behind this.
  */
 class HomeFragment :
@@ -159,9 +159,7 @@ class HomeFragment :
 
         mixShelf.setOnClickListener { playMix() }
 
-        homeViewModel.mixGenreName.observe(viewLifecycleOwner) {
-            mixTitle.text = getString(R.string.home_mix_title, it ?: "")
-        }
+        mixTitle.setText(R.string.home_mix_title)
         homeViewModel.mixTracks.observe(viewLifecycleOwner) { tracks ->
             mixShelf.isVisible = tracks.isNotEmpty()
             mixSubtitle.text = getString(R.string.home_mix_song_count, tracks.size)
@@ -181,7 +179,7 @@ class HomeFragment :
 
         mediaPlayerManager.addToPlaylist(
             songs = tracks,
-            autoPlay = false,
+            autoPlay = true,
             shuffle = false,
             insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
             startIndex = 0

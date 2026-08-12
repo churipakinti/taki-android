@@ -23,7 +23,7 @@
     <string name="button_bar.bookmarks">Bookmarks</string>
     <string name="button_bar.chat">Chat</string>
     <string name="button_bar.home">Home</string>
-    <string name="home.mix_title">Mix: %1$s</string>
+    <string name="home.mix_title">Daily Mix</string>
     <string name="home.mix_song_count">%1$d songs</string>
     <string name="home.discover_title">Discover</string>
     <string name="home.greeting_morning">Good morning</string>
