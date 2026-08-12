@@ -275,7 +275,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                         R.layout.list_item_track
                     },
                     showArtist = if (navArgs.isAlbum) ::albumShowArtist else { _ -> true },
-                    showRating = !navArgs.isAlbum,
+                    showRating = !(navArgs.isAlbum || navArgs.playlistId != null),
                     isSelectionModeActive = { selectionModeActive },
                     onEnterSelectionMode = ::enterSelectionMode
                 )
@@ -335,10 +335,12 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         listView!!.addOnScrollListener(scrollListener)
 
-        // Album hero title reveal: the hero is item 0 of the list (not a persistent scroll
-        // view like Artist Detail's), so it gets recycled once scrolled off-screen -- track the
-        // scroll offset against a fixed height instead of measuring the live header view.
-        if (navArgs.isAlbum) {
+        // Hero title reveal (Album and Playlist detail share the same hero layout): the hero
+        // is item 0 of the list (not a persistent scroll view like Artist Detail's), so it gets
+        // recycled once scrolled off-screen -- track the scroll offset against a fixed height
+        // instead of measuring the live header view.
+        if (navArgs.isAlbum || navArgs.playlistId != null) {
+            val revealTitle = navArgs.name ?: navArgs.playlistName
             val revealThresholdPx = (
                 (HERO_HEIGHT_DP - TOOLBAR_REVEAL_OFFSET_DP) * resources.displayMetrics.density
                 ).toInt()
@@ -347,7 +349,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         val collapsed =
                             recyclerView.computeVerticalScrollOffset() >= revealThresholdPx
-                        setTitle(if (collapsed) navArgs.name else "")
+                        setTitle(if (collapsed) revealTitle else "")
                     }
                 }
             )
@@ -710,15 +712,16 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         val isAlbumList = (navArgs.albumListType != null)
 
-        // Album Detail has its own persistent play/shuffle row in the hero, so the overflow
-        // menu's "play all" would be redundant there.
-        playAllButtonVisible = !useLibraryTrackRows && !navArgs.isAlbum &&
+        // Album/Playlist Detail have their own persistent play/shuffle row in the hero, so the
+        // overflow menu's "play all" would be redundant there.
+        playAllButtonVisible = !useLibraryTrackRows &&
+            !(navArgs.isAlbum || navArgs.playlistId != null) &&
             !(isAlbumList || entryList.isEmpty()) && !allVideos
 
         playAllButton?.isVisible = playAllButtonVisible
 
         if (songCount > 0 && listModel.showHeader) {
-            val intentAlbumName = navArgs.name
+            val intentAlbumName = navArgs.name ?: navArgs.playlistName
             val albumHeader = AlbumHeader(it, intentAlbumName)
 
             if (navArgs.isAlbum) {
@@ -831,8 +834,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 setTitle(R.string.home_mix_title)
                 listModel.getDailyMix()
             } else if (playlistId != null) {
-                setTitle(playlistName!!)
-                listModel.getPlaylist(playlistId, playlistName)
+                // Playlist Detail reveals its title in the toolbar only once the hero has been
+                // scrolled past (see the OnScrollListener added in onViewCreated).
+                setTitle("")
+                listModel.getPlaylist(playlistId, playlistName!!)
             } else if (podcastChannelId != null) {
                 setTitle(getString(R.string.podcasts_label))
                 listModel.getPodcastEpisodes(podcastChannelId)
