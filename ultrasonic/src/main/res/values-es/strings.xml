@@ -84,6 +84,8 @@
     <string name="equalizer.preset">Seleccionar preajuste</string>
     <string name="error.label">Error</string>
     <string name="jukebox.is_default">Gramola por defecto</string>
+    <string name="jukebox.summary_is_default">Reproduce la música en los propios altavoces del servidor en lugar de transmitirla a este dispositivo.</string>
+    <string name="jukebox.unsupported">Este servidor no admite el modo gramola.</string>
     <string name="lyrics.nomatch">No se encontraron letras</string>
     <string name="language.default">Predeterminado del sistema</string>
     <string name="language.zh_CN">Chino (China)</string>
@@ -225,6 +227,7 @@
     <string name="settings.server_color">Color del servidor</string>
     <string name="settings.test_connection_title">Comprobar conexión</string>
     <string name="settings.title.allow_self_signed_certificate">Permitir certificado HTTPS autofirmado</string>
+    <string name="settings.summary.allow_self_signed_certificate">Actívalo solo si tu servidor usa un certificado que no está emitido por una autoridad reconocida. Se omite una comprobación de seguridad que normalmente protege tu conexión.</string>
     <string name="settings.title.force_plain_text_password">Forzar la autenticación con contraseña sin cifrar</string>
     <string name="settings.summary.force_plain_text_password">Esto obliga a la aplicación a enviar siempre la contraseña sin cifrar. Útil si el servidor Subsonic no admite la nueva API de autenticación para los usuarios.</string>
     <string name="settings.use_id3">Navegar usando las etiquetas ID3</string>
@@ -289,6 +292,9 @@
     <string name="server_editor.authentication">Autenticación</string>
     <string name="server_editor.advanced">Configuración avanzada</string>
     <string name="server_editor.disabled_feature">Una o más funciones se han desactivado porque el servidor no las admite.\nPuedes ejecutar esta prueba nuevamente en cualquier momento.</string>
+    <string name="server_editor.connection_checking">Comprobando conexión…</string>
+    <string name="server_editor.connection_success">Conexión correcta</string>
+    <string name="server_editor.connection_failed">No se pudo conectar</string>
     <string name="library_hub.switch_collection">Cambiar colección</string>
     <string name="library_hub.current_name">%1$s</string>
     <string name="library_hub.switch">Cambiar colección</string>

@@ -103,17 +103,47 @@
         </com.google.android.material.textfield.TextInputLayout>
 
 
-        <TextView
-            a:id="@+id/edit_advanced_header"
-            style="@style/Ultrasonic.AllCapsLabel.Inset"
-            a:layout_width="wrap_content"
+        <LinearLayout
+            a:id="@+id/edit_advanced_toggle"
+            a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:layout_marginBottom="8dp"
-            a:text="@string/server_editor.advanced"
-            app:layout_constraintBottom_toTopOf="@id/edit_server_color_text"
+            a:background="?attr/selectableItemBackground"
+            a:clickable="true"
+            a:focusable="true"
+            a:gravity="center_vertical"
+            a:orientation="horizontal"
+            a:paddingTop="6dp"
+            a:paddingBottom="6dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/edit_server_password" />
+            app:layout_constraintTop_toBottomOf="@id/edit_server_password">
 
+            <TextView
+                a:id="@+id/edit_advanced_header"
+                style="@style/Ultrasonic.AllCapsLabel.Inset"
+                a:layout_width="0dp"
+                a:layout_height="wrap_content"
+                a:layout_weight="1"
+                a:text="@string/server_editor.advanced" />
+
+            <ImageView
+                a:id="@+id/edit_advanced_chevron"
+                a:layout_width="24dp"
+                a:layout_height="24dp"
+                a:layout_marginEnd="4dp"
+                a:src="@drawable/ic_expand_more"
+                tools:ignore="ContentDescription" />
+
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.Group
+            a:id="@+id/edit_advanced_group"
+            a:layout_width="wrap_content"
+            a:layout_height="wrap_content"
+            a:visibility="gone"
+            app:constraint_referenced_ids="edit_server_color_picker,edit_server_color_text,edit_self_signed_title,edit_self_signed,edit_self_signed_description,edit_plaintext_title,edit_plaintext_description,edit_plaintext,edit_jukebox_title,edit_jukebox,edit_jukebox_description"
+            tools:visibility="visible" />
 
         <ImageView
             a:id="@+id/edit_server_color_picker"
@@ -122,7 +152,7 @@
             a:layout_margin="8dp"
             a:src="@drawable/rounded_border"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/edit_advanced_header"
+            app:layout_constraintTop_toBottomOf="@id/edit_advanced_toggle"
             tools:ignore="ContentDescription" />
 
         <TextView
@@ -146,22 +176,36 @@
             a:layout_marginStart="5dp"
             a:text="@string/settings.title.allow_self_signed_certificate"
             a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            app:layout_constraintBottom_toTopOf="@id/edit_plaintext_title"
+            app:layout_constraintBottom_toTopOf="@id/edit_self_signed_description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/edit_server_color_text" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             a:id="@+id/edit_self_signed"
-            a:layout_width="0dp"
+            a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_marginStart="8dp"
             a:layout_marginEnd="5dp"
-            a:layout_marginBottom="8dp"
             a:checked="false"
-            app:layout_constraintBottom_toTopOf="@id/edit_plaintext_title"
+            app:layout_constraintBottom_toBottomOf="@id/edit_self_signed_title"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/edit_self_signed_title"
-            app:layout_constraintTop_toBottomOf="@+id/edit_server_color_text" />
+            app:layout_constraintStart_toEndOf="@id/edit_self_signed_description"
+            app:layout_constraintTop_toTopOf="@id/edit_self_signed_title" />
+
+        <TextView
+            a:id="@+id/edit_self_signed_description"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="5dp"
+            a:layout_marginBottom="8dp"
+            a:text="@string/settings.summary.allow_self_signed_certificate"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintBottom_toTopOf="@id/edit_plaintext_title"
+            app:layout_constraintEnd_toStartOf="@id/edit_self_signed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/edit_self_signed_title" />
 
         <TextView
             a:id="@+id/edit_plaintext_title"
@@ -173,7 +217,7 @@
             a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintBottom_toTopOf="@id/edit_plaintext_description"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/edit_self_signed" />
+            app:layout_constraintTop_toBottomOf="@id/edit_self_signed_description" />
 
         <TextView
             a:id="@+id/edit_plaintext_description"
@@ -225,6 +269,61 @@
             app:layout_constraintStart_toEndOf="@id/edit_jukebox_title"
             app:layout_constraintTop_toBottomOf="@id/edit_plaintext_description" />
 
+        <TextView
+            a:id="@+id/edit_jukebox_description"
+            style="@style/Ultrasonic.SecondaryText"
+            a:layout_width="0dp"
+            a:layout_height="wrap_content"
+            a:layout_marginStart="5dp"
+            a:layout_marginBottom="8dp"
+            a:text="@string/jukebox.summary_is_default"
+            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            a:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintEnd_toStartOf="@id/edit_jukebox"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/edit_jukebox_title" />
+
+        <LinearLayout
+            a:id="@+id/edit_connection_status"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_marginTop="8dp"
+            a:gravity="center_vertical"
+            a:orientation="horizontal"
+            a:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/edit_jukebox_description"
+            tools:visibility="visible">
+
+            <ProgressBar
+                a:id="@+id/edit_connection_progress"
+                style="?android:attr/progressBarStyleSmall"
+                a:layout_width="16dp"
+                a:layout_height="16dp"
+                a:layout_marginEnd="8dp"
+                a:visibility="gone"
+                tools:visibility="visible" />
+
+            <ImageView
+                a:id="@+id/edit_connection_icon"
+                a:layout_width="16dp"
+                a:layout_height="16dp"
+                a:layout_marginEnd="8dp"
+                a:visibility="gone"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/ic_lyrics_synced"
+                tools:visibility="visible" />
+
+            <TextView
+                a:id="@+id/edit_connection_text"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"
+                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="@string/server_editor.connection_checking" />
+
+        </LinearLayout>
+
         <com.google.android.material.button.MaterialButton
             a:id="@+id/edit_test"
             style="?attr/materialButtonOutlinedStyle"
@@ -237,12 +336,11 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/edit_save"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/edit_jukebox"
+            app:layout_constraintTop_toBottomOf="@id/edit_connection_status"
             app:layout_constraintVertical_bias="1.0" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/edit_save"
-            style="?attr/materialButtonOutlinedStyle"
             a:layout_width="0dp"
             a:layout_height="0dp"
             a:layout_marginStart="2dp"

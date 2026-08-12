@@ -137,6 +137,8 @@
     <string name="equalizer.preset">Select Preset</string>
     <string name="error.label">Error</string>
     <string name="jukebox.is_default">Jukebox By Default</string>
+    <string name="jukebox.summary_is_default">Plays music through the server\'s own speakers instead of streaming it to this device.</string>
+    <string name="jukebox.unsupported">This server doesn\'t support jukebox mode.</string>
     <string name="lyrics.nomatch">No lyrics found</string>
     <string name="lyrics.synced">Synced</string>
     <string name="lyrics.not_synced">Not synced</string>
@@ -330,6 +332,7 @@
     <string name="settings.server_color">Server color</string>
     <string name="settings.test_connection_title">Test Connection</string>
     <string name="settings.title.allow_self_signed_certificate">Allow self-signed HTTPS certificate</string>
+    <string name="settings.summary.allow_self_signed_certificate">Only enable this if your server uses a certificate that isn\'t issued by a recognized authority. It skips a security check that normally protects your connection.</string>
     <string name="settings.title.force_plain_text_password">Force plain password authentication</string>
     <string name="settings.summary.force_plain_text_password">This forces the app to always send the password unencrypted. Useful if the Subsonic server does not support the new authentication API for the users.</string>
     <string name="settings.use_id3">Browse Using ID3 Tags</string>
@@ -396,6 +399,9 @@
     <string name="server_editor.authentication">Authentication</string>
     <string name="server_editor.advanced">Advanced settings</string>
     <string name="server_editor.disabled_feature">One or more features were disabled because the server doesn\'t support them.\nYou can run this test again anytime.</string>
+    <string name="server_editor.connection_checking">Checking connection…</string>
+    <string name="server_editor.connection_success">Connection successful</string>
+    <string name="server_editor.connection_failed">Couldn\'t connect</string>
     <string name="about.webpage">Visit website</string>
     <string name="about.report">Report a problem</string>
     <string name="about.appname" translatable="false">Taki</string>

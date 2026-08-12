@@ -8,15 +8,19 @@
 package org.moire.ultrasonic.fragment
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.Group
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -45,12 +49,14 @@ import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.util.CommunicationError.getErrorMessage
 import org.moire.ultrasonic.util.ErrorDialog
-import org.moire.ultrasonic.util.InfoDialog
 import org.moire.ultrasonic.util.ServerColor
 import org.moire.ultrasonic.util.Util
+import org.moire.ultrasonic.util.Util.themeColor
 import timber.log.Timber
 
 private const val DIALOG_PADDING = 12
+private const val ADVANCED_TOGGLE_DURATION_MS = 180L
+private const val HALF_TURN_DEGREES = 180f
 
 /**
  * Displays a form where server settings can be created / edited
@@ -70,8 +76,17 @@ class EditServerFragment : Fragment() {
     private var selfSignedSwitch: SwitchMaterial? = null
     private var plaintextSwitch: SwitchMaterial? = null
     private var jukeboxSwitch: SwitchMaterial? = null
+    private var jukeboxDescriptionText: TextView? = null
     private var saveButton: Button? = null
     private var testButton: Button? = null
+    private var advancedToggle: View? = null
+    private var advancedChevron: ImageView? = null
+    private var advancedGroup: Group? = null
+    private var advancedExpanded: Boolean = false
+    private var connectionStatusRow: View? = null
+    private var connectionProgress: ProgressBar? = null
+    private var connectionIcon: ImageView? = null
+    private var connectionStatusText: TextView? = null
     private var isInstanceStateSaved: Boolean = false
     private var currentColor: Int = 0
     private var selectedColor: Int? = null
@@ -110,8 +125,18 @@ class EditServerFragment : Fragment() {
         selfSignedSwitch = view.findViewById(R.id.edit_self_signed)
         plaintextSwitch = view.findViewById(R.id.edit_plaintext)
         jukeboxSwitch = view.findViewById(R.id.edit_jukebox)
+        jukeboxDescriptionText = view.findViewById(R.id.edit_jukebox_description)
         saveButton = view.findViewById(R.id.edit_save)
         testButton = view.findViewById(R.id.edit_test)
+        advancedToggle = view.findViewById(R.id.edit_advanced_toggle)
+        advancedChevron = view.findViewById(R.id.edit_advanced_chevron)
+        advancedGroup = view.findViewById(R.id.edit_advanced_group)
+        connectionStatusRow = view.findViewById(R.id.edit_connection_status)
+        connectionProgress = view.findViewById(R.id.edit_connection_progress)
+        connectionIcon = view.findViewById(R.id.edit_connection_icon)
+        connectionStatusText = view.findViewById(R.id.edit_connection_text)
+
+        advancedToggle?.setOnClickListener { toggleAdvancedSection(!advancedExpanded) }
 
         if (navArgs.index != -1) {
             // Editing an existing server
@@ -307,6 +332,7 @@ class EditServerFragment : Fragment() {
             selectedColor = savedInstanceState.getInt(::selectedColor.name)
         }
         isInstanceStateSaved = savedInstanceState.getBoolean(::isInstanceStateSaved.name)
+        syncAdvancedSectionVisibility()
     }
 
     /**
@@ -323,6 +349,25 @@ class EditServerFragment : Fragment() {
         plaintextSwitch!!.isChecked = currentServerSetting!!.forcePlainTextPassword
         jukeboxSwitch!!.isChecked = currentServerSetting!!.jukeboxByDefault
         updateColor(currentServerSetting!!.color)
+        syncAdvancedSectionVisibility()
+    }
+
+    /**
+     * Expands the "Advanced settings" section whenever a setting inside it is already active,
+     * so editing a server never hides an in-effect option from the user.
+     */
+    private fun syncAdvancedSectionVisibility() {
+        val shouldExpand = selfSignedSwitch?.isChecked == true || jukeboxSwitch?.isChecked == true
+        if (shouldExpand) toggleAdvancedSection(true)
+    }
+
+    private fun toggleAdvancedSection(expand: Boolean) {
+        advancedExpanded = expand
+        advancedGroup?.isVisible = expand
+        advancedChevron?.animate()
+            ?.rotation(if (expand) HALF_TURN_DEGREES else 0f)
+            ?.setDuration(ADVANCED_TOGGLE_DURATION_MS)
+            ?.start()
     }
 
     /**
@@ -408,19 +453,14 @@ class EditServerFragment : Fragment() {
     @Suppress("TooGenericExceptionCaught")
     private fun testConnection() {
         val testSetting = ServerSetting()
-        val builder = InfoDialog.Builder(requireContext())
-        builder.setTitle(R.string.supported_server_features)
-        builder.setMessage(getProgress(testSetting))
-        val dialog: AlertDialog = builder.create()
-        dialog.show()
+        showConnectionChecking()
 
-        val testJob = lifecycleScope.launch {
+        lifecycleScope.launch {
             try {
                 val flow = model.queryFeatureSupport(currentServerSetting!!).flowOn(Dispatchers.IO)
 
                 flow.collect {
                     model.storeFeatureSupport(testSetting, it)
-                    dialog.setMessage(getProgress(testSetting))
                     Timber.w("${it.type} support: ${it.supported}")
                 }
 
@@ -430,42 +470,57 @@ class EditServerFragment : Fragment() {
                 currentServerSetting!!.podcastSupport = testSetting.podcastSupport
                 currentServerSetting!!.videoSupport = testSetting.videoSupport
                 currentServerSetting!!.jukeboxSupport = testSetting.jukeboxSupport
+
+                showConnectionSuccess(testSetting.jukeboxSupport)
             } catch (cancellationException: CancellationException) {
                 Timber.i(cancellationException)
             } catch (exception: Exception) {
-                dialog.dismiss()
                 Timber.w(exception)
+                showConnectionFailed()
                 ErrorDialog.Builder(requireContext())
                     .setTitle(R.string.error_label)
                     .setMessage(getErrorMessage(exception))
                     .show()
             }
         }
-
-        dialog.setOnDismissListener { testJob.cancel() }
     }
 
-    private fun getProgress(serverSetting: ServerSetting): String {
-        val isAnyDisabled = serverSetting.jukeboxSupport == false
-
-        var progressString = String.format(
-            """
-                    |%s - ${resources.getString(R.string.jukebox)}
-            """.trimMargin(),
-            boolToMark(serverSetting.jukeboxSupport)
-        )
-        if (isAnyDisabled) {
-            progressString += "\n\n" + resources.getString(R.string.server_editor_disabled_feature)
-        }
-
-        return progressString
+    private fun showConnectionChecking() {
+        connectionStatusRow?.isVisible = true
+        connectionProgress?.isVisible = true
+        connectionIcon?.isVisible = false
+        connectionStatusText?.text = getString(R.string.server_editor_connection_checking)
     }
 
-    private fun boolToMark(value: Boolean?): String {
-        if (value == null) {
-            return "⌛"
+    private fun showConnectionSuccess(jukeboxSupported: Boolean?) {
+        connectionProgress?.isVisible = false
+        connectionIcon?.apply {
+            isVisible = true
+            setImageResource(R.drawable.ic_lyrics_synced)
+            imageTintList = ColorStateList.valueOf(
+                requireContext().themeColor(androidx.appcompat.R.attr.colorPrimary)
+            )
         }
-        return if (value) "✔️" else "❌"
+        connectionStatusText?.text = getString(R.string.server_editor_connection_success)
+
+        if (jukeboxSupported == false) {
+            jukeboxDescriptionText?.text = getString(R.string.jukebox_unsupported)
+            toggleAdvancedSection(true)
+        } else {
+            jukeboxDescriptionText?.text = getString(R.string.jukebox_summary_is_default)
+        }
+    }
+
+    private fun showConnectionFailed() {
+        connectionProgress?.isVisible = false
+        connectionIcon?.apply {
+            isVisible = true
+            setImageResource(R.drawable.ic_lyrics_unsynced)
+            imageTintList = ColorStateList.valueOf(
+                requireContext().themeColor(androidx.appcompat.R.attr.colorError)
+            )
+        }
+        connectionStatusText?.text = getString(R.string.server_editor_connection_failed)
     }
 
     /**
