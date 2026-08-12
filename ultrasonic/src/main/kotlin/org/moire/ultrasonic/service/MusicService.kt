@@ -107,7 +107,18 @@ interface MusicService {
     suspend fun deletePlaylist(id: String)
 
     @Throws(Exception::class)
-    suspend fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean)
+    // pub/songIndexesToRemove default to null so a caller can touch only what it needs to (e.g.
+    // renaming doesn't accidentally change the public flag) - the server leaves omitted fields
+    // unchanged. songIndexesToRemove added for "Quitar de esta playlist"
+    // (docs/TAKI_PLAYLIST_UX_REDESIGN.md); indexes are 0-based positions within the playlist's
+    // current track order, matching updatePlaylist.view.
+    suspend fun updatePlaylist(
+        id: String,
+        name: String?,
+        comment: String?,
+        pub: Boolean? = null,
+        songIndexesToRemove: List<Int>? = null
+    )
 
     @Throws(Exception::class)
     fun getLyrics(artist: String, title: String): Lyrics?

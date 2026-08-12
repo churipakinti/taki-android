@@ -20,6 +20,9 @@ object Utils {
         val addPlaylistMenuItem = popup.menu.findItem(R.id.song_menu_add_playlist)
         addPlaylistMenuItem?.isVisible = !ActiveServerProvider.isOffline()
 
+        val removeFromPlaylistMenuItem = popup.menu.findItem(R.id.song_menu_remove_from_playlist)
+        removeFromPlaylistMenuItem?.isVisible = !ActiveServerProvider.isOffline()
+
         popup.show()
         return popup
     }

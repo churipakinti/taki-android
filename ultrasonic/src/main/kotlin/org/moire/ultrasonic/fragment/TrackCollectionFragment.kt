@@ -14,7 +14,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.core.text.HtmlCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -31,12 +33,14 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputLayout
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.Collections
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
@@ -60,9 +64,11 @@ import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.TrackCollectionModel
 import org.moire.ultrasonic.service.MediaPlayerManager
+import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.VideoPlayer
+import org.moire.ultrasonic.util.ConfirmationDialog
 import org.moire.ultrasonic.util.ContextMenuUtil
 import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
@@ -116,6 +122,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private var selectionModeActive = false
     private var pendingAddToPlaylistTracks: List<Track>? = null
     private var availablePlaylists: List<Playlist> = emptyList()
+    private var pendingPlaylistHeaderMenu = false
 
     /**
      * The id of the main layout
@@ -213,7 +220,20 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     context = requireContext(),
                     onPlay = { playAll() },
                     onShuffle = { playAll(shuffle = true) },
-                    onDownload = { downloadSelectedOrAllTracks(false) }
+                    trailingActionIcon = R.drawable.ic_menu_download,
+                    trailingActionDescription = R.string.album_download_description,
+                    onTrailingAction = { downloadSelectedOrAllTracks(false) }
+                )
+            )
+        } else if (navArgs.playlistId != null) {
+            viewAdapter.register(
+                AlbumDetailHeaderBinder(
+                    context = requireContext(),
+                    onPlay = { playAll() },
+                    onShuffle = { playAll(shuffle = true) },
+                    trailingActionIcon = R.drawable.ic_more_vert,
+                    trailingActionDescription = R.string.playlist_menu_description,
+                    onTrailingAction = ::showPlaylistHeaderMenu
                 )
             )
         } else {
@@ -242,7 +262,12 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     draggable = false,
                     lifecycleOwner = viewLifecycleOwner,
                     createContextMenu = { itemView, _ ->
-                        Utils.createPopupMenu(itemView, R.menu.context_menu_track_collection)
+                        val menuRes = if (navArgs.playlistId != null) {
+                            R.menu.context_menu_track_collection_playlist
+                        } else {
+                            R.menu.context_menu_track_collection
+                        }
+                        Utils.createPopupMenu(itemView, menuRes)
                     },
                     layout = if (navArgs.isAlbum) {
                         R.layout.list_item_track_album
@@ -544,6 +569,103 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
+    /*
+     * Playlist detail hero's trailing ⋮ action (docs/TAKI_PLAYLIST_UX_REDESIGN.md "Menú ⋮ para
+     * descargar, renombrar, eliminar"). Reuses ItemSelectionDialogFragment, the same shared list
+     * dialog already used for artist/genre filter selection above, instead of a PopupMenu that
+     * would need the clicked view as an anchor.
+     */
+    private fun showPlaylistHeaderMenu() {
+        if (navArgs.playlistId == null) return
+        // Download/rename/delete all require updatePlaylist()/deletePlaylist(), which throw
+        // OfflineException outright - nothing in this menu is actually usable offline.
+        if (isOffline()) {
+            toast(R.string.playlist_menu_unavailable_offline)
+            return
+        }
+        pendingPlaylistHeaderMenu = true
+        showSelectionDialog(
+            R.string.playlist_menu_description,
+            arrayOf(
+                getString(R.string.common_download),
+                getString(R.string.playlist_rename_action),
+                getString(R.string.common_delete)
+            )
+        )
+    }
+
+    private fun handlePlaylistHeaderMenuResult(bundle: Bundle) {
+        pendingPlaylistHeaderMenu = false
+        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return
+
+        when (bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)) {
+            getString(R.string.common_download) -> downloadSelectedOrAllTracks(false)
+            getString(R.string.playlist_rename_action) -> showRenamePlaylistDialog()
+            getString(R.string.common_delete) -> confirmDeletePlaylist()
+        }
+    }
+
+    private fun showRenamePlaylistDialog() {
+        val playlistId = navArgs.playlistId ?: return
+        val dialogView = layoutInflater.inflate(R.layout.create_playlist, null)
+        val nameInput = dialogView.findViewById<EditText>(R.id.create_playlist_name)
+        nameInput.setText(navArgs.playlistName)
+        val inputLayout = dialogView as TextInputLayout
+        val dialog = ConfirmationDialog.Builder(requireContext())
+            .setTitle(R.string.playlist_rename_action)
+            .setView(dialogView)
+            .setPositiveButton(R.string.common_ok, null)
+            .setNegativeButton(R.string.common_cancel, null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val name = nameInput.text?.toString()?.trim().orEmpty()
+                if (name.isBlank()) {
+                    inputLayout.error = getString(R.string.playlist_name_required)
+                } else {
+                    dialog.dismiss()
+                    renamePlaylist(playlistId, name)
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun renamePlaylist(id: String, name: String) {
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(getString(R.string.playlist_updated_info_error, name))
+        ) {
+            withContext(Dispatchers.IO) {
+                MusicServiceFactory.getMusicService().updatePlaylist(id, name, null, null)
+            }
+            setTitle(name)
+            toast(getString(R.string.playlist_updated_info, name))
+        }
+    }
+
+    private fun confirmDeletePlaylist() {
+        val playlistId = navArgs.playlistId ?: return
+        val name = navArgs.playlistName.orEmpty()
+        ConfirmationDialog.Builder(requireContext())
+            .setIcon(R.drawable.ic_baseline_warning)
+            .setTitle(R.string.common_confirm)
+            .setMessage(getString(R.string.delete_playlist, name))
+            .setPositiveButton(R.string.common_ok) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch(
+                    toastingExceptionHandler(getString(R.string.menu_deleted_playlist_error, name))
+                ) {
+                    withContext(Dispatchers.IO) {
+                        MusicServiceFactory.getMusicService().deletePlaylist(playlistId)
+                    }
+                    toast(getString(R.string.menu_deleted_playlist, name))
+                    findNavController().navigateUp()
+                }
+            }
+            .setNegativeButton(R.string.common_cancel, null)
+            .show()
+    }
+
     @Synchronized
     fun triggerButtonUpdate(selection: List<Track> = getSelectedTracks()) {
         listModel.calculateButtonState(selection, ::updateButtonState)
@@ -775,6 +897,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             return true
         }
 
+        if (menuItem.itemId == R.id.song_menu_remove_from_playlist && item is Track) {
+            return removeFromPlaylist(item)
+        }
+
         val tracks = getClickedSong(item)
 
         return ContextMenuUtil.handleContextMenuTracks(
@@ -798,6 +924,37 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
             startIndex = startIndex
         )
+        return true
+    }
+
+    /*
+     * "Quitar de esta playlist" (docs/TAKI_PLAYLIST_UX_REDESIGN.md) - distinct from deleting a
+     * download or the song itself. updatePlaylist.view's songIndexesToRemove is 0-based and
+     * positional within the playlist's current order, so the index has to come from the same
+     * getAllTracks() ordering used for playback, not from the track's id (playlists can contain
+     * the same song more than once).
+     */
+    private fun removeFromPlaylist(track: Track): Boolean {
+        val playlistId = navArgs.playlistId ?: return false
+        val index = getAllTracks().indexOfFirst { it === track }
+        if (index < 0) return false
+
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(getString(R.string.playlist_remove_error))
+        ) {
+            withContext(Dispatchers.IO) {
+                MusicServiceFactory.getMusicService()
+                    .updatePlaylist(playlistId, null, null, null, listOf(index))
+            }
+            listModel.currentList.value = listModel.currentList.value.orEmpty()
+                .filterNot { it === track }
+            toast(
+                getString(
+                    R.string.playlist_removed_from_playlist,
+                    track.title ?: track.name.orEmpty()
+                )
+            )
+        }
         return true
     }
 
@@ -935,6 +1092,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private fun handleSelectionDialogResult(requestKey: String, bundle: Bundle) {
         if (pendingAddToPlaylistTracks != null) {
             handleAddToPlaylistResult(requestKey, bundle)
+        } else if (pendingPlaylistHeaderMenu) {
+            handlePlaylistHeaderMenuResult(bundle)
         } else {
             handleFilterSelectionResult(bundle)
         }

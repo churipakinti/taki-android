@@ -325,8 +325,14 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override suspend fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean) {
-        musicService.updatePlaylist(id, name, comment, pub)
+    override suspend fun updatePlaylist(
+        id: String,
+        name: String?,
+        comment: String?,
+        pub: Boolean?,
+        songIndexesToRemove: List<Int>?
+    ) {
+        musicService.updatePlaylist(id, name, comment, pub, songIndexesToRemove)
     }
 
     @Throws(Exception::class)

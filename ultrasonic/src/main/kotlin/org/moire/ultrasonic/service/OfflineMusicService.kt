@@ -315,7 +315,8 @@ class OfflineMusicService :
         id: String,
         name: String?,
         comment: String?,
-        pub: Boolean
+        pub: Boolean?,
+        songIndexesToRemove: List<Int>?
     ): Unit = throw OfflineException("Updating playlist not available in offline mode")
 
     @Throws(Exception::class)

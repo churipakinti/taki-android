@@ -17,6 +17,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.drakeet.multitype.ItemViewBinder
+import com.google.android.material.button.MaterialButton
 import java.lang.ref.WeakReference
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -24,16 +25,21 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 
 /**
- * Binds an [AlbumHeader] into the Spotify-style hero used only by the Album detail screen
- * (`TrackCollectionFragment` with `navArgs.isAlbum == true`). Kept separate from the generic
- * [HeaderViewBinder]/`list_header_album.xml` so playlists/genre/artist-songs, which share the
- * same [AlbumHeader] item type, are unaffected.
+ * Binds an [AlbumHeader] into the Spotify-style hero used by the Album and Playlist detail
+ * screens (`TrackCollectionFragment` with `navArgs.isAlbum == true` or `navArgs.playlistId !=
+ * null`). Kept separate from the generic [HeaderViewBinder]/`list_header_album.xml` so
+ * genre/artist-songs, which share the same [AlbumHeader] item type but don't get a hero, are
+ * unaffected. The trailing action button is parameterized (download for albums, an overflow
+ * menu for playlists) instead of duplicating this whole binder for playlists - see
+ * docs/TAKI_PLAYLIST_UX_REDESIGN.md.
  */
 class AlbumDetailHeaderBinder(
     context: Context,
     private val onPlay: () -> Unit,
     private val onShuffle: () -> Unit,
-    private val onDownload: () -> Unit
+    private val trailingActionIcon: Int,
+    private val trailingActionDescription: Int,
+    private val onTrailingAction: () -> Unit
 ) : ItemViewBinder<AlbumHeader, AlbumDetailHeaderBinder.ViewHolder>(),
     KoinComponent {
 
@@ -49,7 +55,7 @@ class AlbumDetailHeaderBinder(
         val subtitle: TextView = itemView.findViewById(R.id.album_detail_subtitle)
         val play: View = itemView.findViewById(R.id.album_detail_play)
         val shuffle: View = itemView.findViewById(R.id.album_detail_shuffle)
-        val download: View = itemView.findViewById(R.id.album_detail_download)
+        val download: MaterialButton = itemView.findViewById(R.id.album_detail_download)
         val aboutSection: View = itemView.findViewById(R.id.album_detail_about_section)
         val notes: TextView = itemView.findViewById(R.id.album_detail_notes)
         val notesToggle: TextView = itemView.findViewById(R.id.album_detail_notes_toggle)
@@ -58,6 +64,9 @@ class AlbumDetailHeaderBinder(
 
     override fun onBindViewHolder(holder: ViewHolder, item: AlbumHeader) {
         val context = weakContext.get() ?: return
+
+        holder.download.setIconResource(trailingActionIcon)
+        holder.download.contentDescription = context.getString(trailingActionDescription)
 
         // Deterministic cover pick (first entry), unlike HeaderViewBinder's random selection --
         // a large 300dp hero re-rolling on every rebind/scroll-recycle would look glitchy.
@@ -84,7 +93,7 @@ class AlbumDetailHeaderBinder(
 
         holder.play.setOnClickListener { onPlay() }
         holder.shuffle.setOnClickListener { onShuffle() }
-        holder.download.setOnClickListener { onDownload() }
+        holder.download.setOnClickListener { onTrailingAction() }
 
         val notes = item.notes
         holder.aboutSection.isVisible = !notes.isNullOrEmpty()

@@ -336,8 +336,15 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override suspend fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean) {
-        API.updatePlaylistSuspend(id, name, comment, pub, null, null).throwOnFailure()
+    override suspend fun updatePlaylist(
+        id: String,
+        name: String?,
+        comment: String?,
+        pub: Boolean?,
+        songIndexesToRemove: List<Int>?
+    ) {
+        API.updatePlaylistSuspend(id, name, comment, pub, null, songIndexesToRemove)
+            .throwOnFailure()
     }
 
     @Throws(Exception::class)

@@ -202,6 +202,11 @@
     <string name="playlist.create_error">The playlist could not be created.</string>
     <string name="playlist.download_description">Download playlist</string>
     <string name="playlist.menu_description">More options</string>
+    <string name="playlist.rename_action">Rename playlist</string>
+    <string name="playlist.remove_from_playlist">Remove from playlist</string>
+    <string name="playlist.removed_from_playlist">Removed \"%s\" from the playlist</string>
+    <string name="playlist.remove_error">Could not remove the song from the playlist.</string>
+    <string name="playlist.menu_unavailable_offline">Not available offline.</string>
     <string name="playlist.remove_download_description">Remove downloaded playlist</string>
     <string name="playlist.status_checking">Checking download…</string>
     <string name="playlist.status_not_downloaded">Not downloaded</string>
