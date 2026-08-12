@@ -1,5 +1,21 @@
 # Changes
 
+## Genres: detalle de género usa filas modernas de Library
+
+Se corrige la pantalla que se abre desde Library -> Genres -> `<género>`, que todavía caía en el
+layout antiguo de `TrackCollectionFragment` aunque el listado principal de Library ya usaba el
+estilo nuevo.
+
+**Cambio:** `TrackCollectionFragment` ahora separa el criterio visual (`useLibraryTrackRows`) del
+criterio funcional de filtros de Library (`isMediaLibrarySongs`). Con eso, los detalles por género
+usan `LibraryTrackBinder`, ocultan el header viejo y conservan correctamente acciones existentes
+como Add to playlist.
+
+**Validación:** `:ultrasonic:testDebugUnitTest` y `:ultrasonic:assembleDebug` verdes. En Pixel 7
+físico (`panther`) se abrió Library -> Genres -> Acid Rock y la pantalla mostró filas modernas con
+`library_track_container` y menú `library_track_menu`, sin `FATAL EXCEPTION` de Taki en el flujo
+probado.
+
 ## Radio de canción: primer flujo vertical de radios y Mix diario
 
 Se implementa la primera parte de `TAKI_RADIOS_AND_DAILY_MIX.md`: `Start radio` aparece en el

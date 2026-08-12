@@ -135,6 +135,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private val isMediaLibrarySongs: Boolean
         get() = parentFragment is MainFragment || navArgs.libraryRoot || navArgs.getStarred
 
+    private val useLibraryTrackRows: Boolean
+        get() = isMediaLibrarySongs || navArgs.genreName != null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (sortOrder == null && navArgs.libraryRoot) {
@@ -163,7 +166,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         setupButtons(view)
 
-        if (isMediaLibrarySongs) {
+        if (useLibraryTrackRows) {
             albumButtons?.isGone = true
 
             if (navArgs.libraryRoot) {
@@ -173,18 +176,13 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 filterButtonBar?.configureWithCapabilities(viewCapabilities, sortOrder)
             }
 
-            childFragmentManager.setFragmentResultListener(
-                ItemSelectionDialogFragment.REQUEST_KEY,
-                viewLifecycleOwner,
-                ::handleFilterSelectionResult
-            )
-        } else {
-            childFragmentManager.setFragmentResultListener(
-                ItemSelectionDialogFragment.REQUEST_KEY,
-                viewLifecycleOwner,
-                ::handleAddToPlaylistResult
-            )
         }
+
+        childFragmentManager.setFragmentResultListener(
+            ItemSelectionDialogFragment.REQUEST_KEY,
+            viewLifecycleOwner,
+            ::handleSelectionDialogResult
+        )
 
         registerForContextMenu(listView!!)
 
@@ -227,7 +225,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             )
         }
 
-        if (isMediaLibrarySongs) {
+        if (useLibraryTrackRows) {
             viewAdapter.register(
                 LibraryTrackBinder(
                     onItemClick = ::onItemClick,
@@ -593,7 +591,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         // Album Detail has its own persistent play/shuffle row in the hero, so the overflow
         // menu's "play all" would be redundant there.
-        playAllButtonVisible = !isMediaLibrarySongs && !navArgs.isAlbum &&
+        playAllButtonVisible = !useLibraryTrackRows && !navArgs.isAlbum &&
             !(isAlbumList || entryList.isEmpty()) && !allVideos
 
         playAllButton?.isVisible = playAllButtonVisible
@@ -695,7 +693,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         val offset = navArgs.offset
         val refresh2 = navArgs.refresh || refresh
 
-        if (isMediaLibrarySongs) {
+        if (useLibraryTrackRows) {
             listModel.showHeader = false
         }
 
@@ -931,7 +929,15 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
-    private fun handleFilterSelectionResult(requestKey: String, bundle: Bundle) {
+    private fun handleSelectionDialogResult(requestKey: String, bundle: Bundle) {
+        if (pendingAddToPlaylistTracks != null) {
+            handleAddToPlaylistResult(requestKey, bundle)
+        } else {
+            handleFilterSelectionResult(bundle)
+        }
+    }
+
+    private fun handleFilterSelectionResult(bundle: Bundle) {
         if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) {
             pendingFilterSelection = null
             swipeRefresh?.isRefreshing = false
