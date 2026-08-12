@@ -1,6 +1,8 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should throw`
+import org.amshove.kluent.shouldNotBe
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -32,15 +34,21 @@ class ApiVersionCheckWrapperTest {
     }
 
     @Test
-    fun `Should throw ApiNotSupportedException when call param is not supported by current api`() {
-        wrapper.currentApiVersion = V1_2_0
+    fun `Should throw ApiNotSupportedException when call param is not supported by current api`() =
+        runTest {
+            wrapper.currentApiVersion = V1_2_0
 
-        wrapper.getAlbumList(BY_GENRE)
+            wrapper.getAlbumListSuspend(BY_GENRE)
+            verify(apiMock).getAlbumListSuspend(BY_GENRE)
 
-        val throwCall = { wrapper.getAlbumList(BY_GENRE, musicFolderId = "12") }
+            val thrown = try {
+                wrapper.getAlbumListSuspend(BY_GENRE, musicFolderId = "12")
+                null
+            } catch (e: ApiNotSupportedException) {
+                e
+            }
 
-        throwCall `should throw` ApiNotSupportedException::class
-        verify(apiMock).getAlbumList(BY_GENRE)
-        verify(apiMock, never()).getAlbumList(BY_GENRE, musicFolderId = "12")
-    }
+            thrown shouldNotBe null
+            verify(apiMock, never()).getAlbumListSuspend(BY_GENRE, musicFolderId = "12")
+        }
 }

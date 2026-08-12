@@ -323,7 +323,7 @@ class OfflineMusicService :
         throw OfflineException("Scrobbling not available in offline mode")
 
     @Throws(Exception::class)
-    override fun getAlbumList(
+    override suspend fun getAlbumList(
         type: AlbumListType,
         size: Int,
         offset: Int,
@@ -331,7 +331,7 @@ class OfflineMusicService :
     ): List<Album> = throw OfflineException("Album lists not available in offline mode")
 
     @Throws(OfflineException::class)
-    override fun getAlbumList2(
+    override suspend fun getAlbumList2(
         type: AlbumListType,
         size: Int,
         offset: Int,
@@ -382,7 +382,7 @@ class OfflineMusicService :
         throw OfflineException("Starred not available in offline mode")
 
     @Throws(Exception::class)
-    override fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory {
+    override suspend fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory {
         val songs = cachedTracks.byGenre(genre, count, offset)
         val dir = MusicDirectory()
         dir.addAll(songs)
@@ -390,7 +390,7 @@ class OfflineMusicService :
     }
 
     @Throws(Exception::class)
-    override fun getGenres(refresh: Boolean): List<Genre> {
+    override suspend fun getGenres(refresh: Boolean): List<Genre> {
         val genres = cachedAlbums.getGenres()
         return genres.map { Genre(it, it) }
     }

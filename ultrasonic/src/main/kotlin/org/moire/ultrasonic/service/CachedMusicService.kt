@@ -329,7 +329,7 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun getAlbumList(
+    override suspend fun getAlbumList(
         type: AlbumListType,
         size: Int,
         offset: Int,
@@ -337,7 +337,7 @@ class CachedMusicService(private val musicService: MusicService) :
     ): List<Album> = musicService.getAlbumList(type, size, offset, musicFolderId)
 
     @Throws(Exception::class)
-    override fun getAlbumList2(
+    override suspend fun getAlbumList2(
         type: AlbumListType,
         size: Int,
         offset: Int,
@@ -433,7 +433,7 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun getGenres(refresh: Boolean): List<Genre> {
+    override suspend fun getGenres(refresh: Boolean): List<Genre> {
         checkSettingsChanged()
         if (refresh) {
             cachedGenres.clear()
@@ -455,7 +455,7 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory =
+    override suspend fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory =
         musicService.getSongsByGenre(genre, count, offset)
 
     @Throws(Exception::class)

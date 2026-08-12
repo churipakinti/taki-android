@@ -126,7 +126,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun generateMix(service: MusicService): GenreMix {
+    private suspend fun generateMix(service: MusicService): GenreMix {
         val genres = service.getGenres(false)
         val genre = genres.randomOrNull() ?: return GenreMix(null, emptyList())
 
@@ -140,7 +140,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
      * original order. There is no "get tracks by id" endpoint, so a wide re-fetch is the only
      * way to turn stored ids back into playable Track objects.
      */
-    private fun restoreMix(
+    private suspend fun restoreMix(
         service: MusicService,
         genreName: String,
         trackIdsCsv: String

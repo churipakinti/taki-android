@@ -416,13 +416,13 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getAlbumList(
+    override suspend fun getAlbumList(
         type: AlbumListType,
         size: Int,
         offset: Int,
         musicFolderId: String?
     ): List<Album> {
-        val response = API.getAlbumList(
+        val response = API.getAlbumListSuspend(
             type,
             size,
             offset,
@@ -430,20 +430,20 @@ open class RESTMusicService(
             null,
             null,
             musicFolderId
-        ).execute().throwOnFailure()
+        ).throwOnFailure()
 
-        return response.body()!!.albumList.toDomainEntityList(activeServerId)
+        return response.albumList.toDomainEntityList(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getAlbumList2(
+    override suspend fun getAlbumList2(
         type: AlbumListType,
         size: Int,
         offset: Int,
         genre: String?,
         musicFolderId: String?
     ): List<Album> {
-        val response = API.getAlbumList2(
+        val response = API.getAlbumList2Suspend(
             type,
             size,
             offset,
@@ -451,9 +451,9 @@ open class RESTMusicService(
             null,
             genre,
             musicFolderId
-        ).execute().throwOnFailure()
+        ).throwOnFailure()
 
-        return response.body()!!.albumList.toDomainEntityList(activeServerId)
+        return response.albumList.toDomainEntityList(activeServerId)
     }
 
     @Throws(Exception::class)
@@ -626,18 +626,18 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getGenres(refresh: Boolean): List<Genre> {
-        val response = API.getGenres().execute().throwOnFailure()
+    override suspend fun getGenres(refresh: Boolean): List<Genre> {
+        val response = API.getGenresSuspend().throwOnFailure()
 
-        return response.body()!!.genresList.toDomainEntityList()
+        return response.genresList.toDomainEntityList()
     }
 
     @Throws(Exception::class)
-    override fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory {
-        val response = API.getSongsByGenre(genre, count, offset, null).execute().throwOnFailure()
+    override suspend fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory {
+        val response = API.getSongsByGenreSuspend(genre, count, offset, null).throwOnFailure()
 
         val result = MusicDirectory()
-        result.addAll(response.body()!!.songsList.toDomainEntityList(activeServerId))
+        result.addAll(response.songsList.toDomainEntityList(activeServerId))
 
         return result
     }

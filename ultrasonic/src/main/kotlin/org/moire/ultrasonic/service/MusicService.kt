@@ -37,7 +37,7 @@ interface MusicService {
     fun isLicenseValid(): Boolean
 
     @Throws(Exception::class)
-    fun getGenres(refresh: Boolean): List<Genre>
+    suspend fun getGenres(refresh: Boolean): List<Genre>
 
     @Throws(Exception::class)
     fun star(id: String?, albumId: String? = null, artistId: String? = null)
@@ -116,7 +116,7 @@ interface MusicService {
     fun scrobble(id: String, submission: Boolean)
 
     @Throws(Exception::class)
-    fun getAlbumList(
+    suspend fun getAlbumList(
         type: AlbumListType,
         size: Int,
         offset: Int,
@@ -124,7 +124,7 @@ interface MusicService {
     ): List<Album>
 
     @Throws(Exception::class)
-    fun getAlbumList2(
+    suspend fun getAlbumList2(
         type: AlbumListType,
         size: Int,
         offset: Int,
@@ -136,7 +136,7 @@ interface MusicService {
     fun getRandomSongs(size: Int): MusicDirectory
 
     @Throws(Exception::class)
-    fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory
+    suspend fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory
 
     @Throws(Exception::class)
     fun getStarred(): SearchResult

@@ -230,8 +230,11 @@ interface SubsonicAPIDefinition {
         @Query("submission") submission: Boolean? = null
     ): Call<SubsonicResponse>
 
+    // Home, Album/Artist and Library all share these four endpoints (Fase 7 of
+    // TAKI_CODE_OPTIMIZATION_PLAN.md) - every caller migrated to suspend in the same change, so,
+    // like the Search vertical above, there is no Call<T>-returning version left to keep.
     @GET("getAlbumList.view")
-    fun getAlbumList(
+    suspend fun getAlbumListSuspend(
         @Query("type") type: AlbumListType,
         @Query("size") size: Int? = null,
         @Query("offset") offset: Int? = null,
@@ -239,10 +242,10 @@ interface SubsonicAPIDefinition {
         @Query("toYear") toYear: Int? = null,
         @Query("genre") genre: String? = null,
         @Query("musicFolderId") musicFolderId: String? = null
-    ): Call<GetAlbumListResponse>
+    ): GetAlbumListResponse
 
     @GET("getAlbumList2.view")
-    fun getAlbumList2(
+    suspend fun getAlbumList2Suspend(
         @Query("type") type: AlbumListType,
         @Query("size") size: Int? = null,
         @Query("offset") offset: Int? = null,
@@ -250,7 +253,7 @@ interface SubsonicAPIDefinition {
         @Query("toYear") toYear: Int? = null,
         @Query("genre") genre: String? = null,
         @Query("musicFolderId") musicFolderId: String? = null
-    ): Call<GetAlbumList2Response>
+    ): GetAlbumList2Response
 
     @GET("getRandomSongs.view")
     fun getRandomSongs(
@@ -332,15 +335,15 @@ interface SubsonicAPIDefinition {
     ): Call<SubsonicResponse>
 
     @GET("getGenres.view")
-    fun getGenres(): Call<GenresResponse>
+    suspend fun getGenresSuspend(): GenresResponse
 
     @GET("getSongsByGenre.view")
-    fun getSongsByGenre(
+    suspend fun getSongsByGenreSuspend(
         @Query("genre") genre: String,
         @Query("count") count: Int = 10,
         @Query("offset") offset: Int = 0,
         @Query("musicFolderId") musicFolderId: String? = null
-    ): Call<GetSongsByGenreResponse>
+    ): GetSongsByGenreResponse
 
     @GET("getUser.view")
     fun getUser(@Query("username") username: String): Call<GetUserResponse>

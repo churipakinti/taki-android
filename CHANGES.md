@@ -1,5 +1,71 @@
 # Changes
 
+## Optimización interna Fase 7: migra Home, Álbum/Artista y Biblioteca a `suspend`
+
+Segundo y tercer flujo vertical del orden sugerido por Fase 7 (Search ya migrado). A diferencia
+de Search -- que tenía un único consumidor -- `HomeViewModel` resultó compartir cuatro endpoints
+(`getAlbumList`, `getAlbumList2`, `getGenres`, `getSongsByGenre`) con Álbum/Artista y Biblioteca,
+así que no había forma de migrar solo Home sin migrar también a esos otros consumidores: el
+compilador exige que todos los implementadores de `MusicService` y todos los invocadores cambien
+de firma a la vez. Se migran los cuatro endpoints y todo su blast radius en un solo cambio, en
+vez de partir el trabajo en PRs por pantalla como sugiere el plan -- partirlo aquí habría dejado
+una interfaz a medio migrar (algunos overrides `suspend`, otros no) sin ningún punto intermedio
+compilable.
+
+**Cambio, de abajo hacia arriba:**
+- `SubsonicAPIDefinition`: `getAlbumList`/`getAlbumList2`/`getGenres`/`getSongsByGenre`
+  (`Call<T>` + `.execute()`) reemplazados por `getAlbumListSuspend`/`getAlbumList2Suspend`/
+  `getGenresSuspend`/`getSongsByGenreSuspend` (`suspend fun` devolviendo el body directo). Igual
+  que Search, sin duplicar la API vieja: los cuatro se migran y se retiran en el mismo cambio
+  porque no queda ningún consumidor sin migrar.
+- `ApiVersionCheckWrapper`: los overrides correspondientes pasan a las variantes suspend,
+  conservando exactamente la misma verificación de versión mínima (`checkVersion`/
+  `checkParamVersion`) -- `V1_2_0`/musicFolderId en `V1_11_0` para `getAlbumList`, `V1_8_0`/
+  musicFolderId en `V1_12_0` para `getAlbumList2`, `V1_9_0` para `getGenres`, `V1_9_0`/
+  musicFolderId en `V1_12_0` para `getSongsByGenre`.
+- `RESTMusicService`, `OfflineMusicService`, `CachedMusicService` y la interfaz `MusicService`:
+  los cuatro métodos pasan a `suspend fun` en las cuatro implementaciones.
+- `GenericListModel.load()` (la función base que toda pantalla de lista sobreescribe) pasa a
+  `open suspend fun`, y su único override real, `ArtistListModel.load()`, también -- porque
+  transitivamente llama a `getAlbums()`/`getAlbumList2` a través de `filterAndSortItems()`, que
+  también pasan a `suspend fun`. Es el único lugar donde la migración se propagó más allá de los
+  cuatro métodos de `MusicService` en sí.
+- `HomeViewModel.generateMix()`/`restoreMix()` pasan a `suspend fun` (ya se llamaban dentro de un
+  `withContext(Dispatchers.IO)` existente, así que no cambia dónde corre el trabajo, solo que el
+  compilador ahora exige el modificador).
+- `AlbumListModel`, `TrackCollectionModel`, `SelectGenreFragment`, `MediaLibrarySessionCallback`:
+  sin cambios de firma -- ya eran `suspend fun` (o corrían dentro de un bloque suspend como
+  `serviceScope.future { }`/`lifecycleScope.launch { }`) desde antes de esta migración.
+
+**No tocado:** `getRandomSongs`, `getStarred`/`getStarred2` y el resto de endpoints de
+`SubsonicAPIDefinition` sin relación con Home/Álbum/Artista/Biblioteca -- siguen bloqueantes,
+fuera del alcance de este cambio.
+
+**Tests:** los cuatro tests de integración de estos endpoints (`SubsonicApiGetAlbumListRequestTest`,
+`SubsonicApiGetAlbumList2Test`, `SubsonicApiGetGenresTest`, `SubsonicApiGetSongsByGenreTest`) y
+`ApiVersionCheckWrapperTest` reescritos con `runTest`/las variantes suspend, siguiendo el mismo
+patrón que los tests de Search. `ApiVersionCheckWrapperTest` no pudo reusar el `` `should throw` ``
+de Kluent para el caso suspend (lanza `IllegalStateException` por intentar anidar un `runTest`
+dentro de otro) -- se resolvió con un `try/catch` explícito sobre `ApiNotSupportedException` en
+vez de anidar corrutinas de test.
+
+**Comandos ejecutados:** `./gradlew ktlintCheck -Pqc` (verde), `./gradlew test -Pqc` (verde -- 290
+tests en `core:subsonic-api`, 101 en `ultrasonic`, 0 fallos), `./gradlew assembleDebug -Pqc`
+(verde).
+
+**Verificación en el Pixel 7 (Navidrome real):** Home recarga las seis estanterías
+(`getAlbumList2.view` x5 tipos + `getGenres.view`/`getSongsByGenre.view` para el Mix) con 200 OK
+y sin excepciones; Artistas con orden "By Genre" dispara `getGenres.view`, puebla el selector de
+géneros y filtra correctamente vía `getAlbumList2.view?type=byGenre&genre=...`; Álbumes con orden
+"By Name" carga con normalidad; la pantalla de Géneros (`SelectGenreFragment`) lista los géneros y
+carga una tapa por género vía `getSongsByGenre.view`. `adb logcat` sin `FATAL`/`AndroidRuntime`/
+excepciones no capturadas en ningún punto de la sesión de prueba. No se probó específicamente la
+navegación de Android Auto/media-session (`MediaLibrarySessionCallback.getAlbums`) contra un
+head unit real -- ese código no cambió de comportamiento (ya corría dentro de
+`serviceScope.future { }`, un contexto de corrutina), solo se verificó que compila y que el resto
+de la app que comparte los mismos cuatro métodos funciona correctamente en vivo. Documentado como
+limitación menor.
+
 ## Corrección: `OpenSubsonicExtensionsCache` no debe cachear una falla temporal como "sin soporte" por 24h
 
 Reporte externo (`TAKI_TWO_OPTIMIZATION_FIXES.md`) sobre el trabajo de Fase 4. Confirmado contra

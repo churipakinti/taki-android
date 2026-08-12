@@ -51,7 +51,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         return artists
     }
 
-    override fun load(
+    override suspend fun load(
         isOffline: Boolean,
         useId3Tags: Boolean,
         musicService: MusicService,
@@ -107,7 +107,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         MusicServiceFactory.getMusicService().getGenres(refresh)
     }
 
-    private fun filterAndSortItems(
+    private suspend fun filterAndSortItems(
         items: List<ArtistOrIndex>,
         musicService: MusicService
     ): List<ArtistOrIndex> = when (sortOrder) {
@@ -140,7 +140,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         SortOrder.BY_YEAR -> items.sortedWith(comparator)
     }
 
-    private fun getAlbums(
+    private suspend fun getAlbums(
         musicService: MusicService,
         albumListType: AlbumListType,
         genre: String? = null

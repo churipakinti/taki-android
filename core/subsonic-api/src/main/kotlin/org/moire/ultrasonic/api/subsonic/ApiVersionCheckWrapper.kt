@@ -200,7 +200,7 @@ internal class ApiVersionCheckWrapper(
         return api.scrobble(id, time, submission)
     }
 
-    override fun getAlbumList(
+    override suspend fun getAlbumListSuspend(
         type: AlbumListType,
         size: Int?,
         offset: Int?,
@@ -208,13 +208,13 @@ internal class ApiVersionCheckWrapper(
         toYear: Int?,
         genre: String?,
         musicFolderId: String?
-    ): Call<GetAlbumListResponse> {
+    ): GetAlbumListResponse {
         checkVersion(V1_2_0)
         checkParamVersion(musicFolderId, V1_11_0)
-        return api.getAlbumList(type, size, offset, fromYear, toYear, genre, musicFolderId)
+        return api.getAlbumListSuspend(type, size, offset, fromYear, toYear, genre, musicFolderId)
     }
 
-    override fun getAlbumList2(
+    override suspend fun getAlbumList2Suspend(
         type: AlbumListType,
         size: Int?,
         offset: Int?,
@@ -222,10 +222,10 @@ internal class ApiVersionCheckWrapper(
         toYear: Int?,
         genre: String?,
         musicFolderId: String?
-    ): Call<GetAlbumList2Response> {
+    ): GetAlbumList2Response {
         checkVersion(V1_8_0)
         checkParamVersion(musicFolderId, V1_12_0)
-        return api.getAlbumList2(type, size, offset, fromYear, toYear, genre, musicFolderId)
+        return api.getAlbumList2Suspend(type, size, offset, fromYear, toYear, genre, musicFolderId)
     }
 
     override fun getRandomSongs(
@@ -317,20 +317,20 @@ internal class ApiVersionCheckWrapper(
         return api.updateShare(id, description, expires)
     }
 
-    override fun getGenres(): Call<GenresResponse> {
+    override suspend fun getGenresSuspend(): GenresResponse {
         checkVersion(V1_9_0)
-        return api.getGenres()
+        return api.getGenresSuspend()
     }
 
-    override fun getSongsByGenre(
+    override suspend fun getSongsByGenreSuspend(
         genre: String,
         count: Int,
         offset: Int,
         musicFolderId: String?
-    ): Call<GetSongsByGenreResponse> {
+    ): GetSongsByGenreResponse {
         checkVersion(V1_9_0)
         checkParamVersion(musicFolderId, V1_12_0)
-        return api.getSongsByGenre(genre, count, offset, musicFolderId)
+        return api.getSongsByGenreSuspend(genre, count, offset, musicFolderId)
     }
 
     override fun getUser(username: String): Call<GetUserResponse> {

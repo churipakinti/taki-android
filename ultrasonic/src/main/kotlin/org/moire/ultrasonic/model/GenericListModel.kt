@@ -108,7 +108,7 @@ open class GenericListModel(application: Application) :
     /**
      * This is the central function you need to implement if you want to extend this class
      */
-    open fun load(
+    open suspend fun load(
         isOffline: Boolean,
         useId3Tags: Boolean,
         musicService: MusicService,
