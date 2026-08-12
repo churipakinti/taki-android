@@ -16,13 +16,21 @@ artista/álbum y evita tres canciones consecutivas del mismo artista cuando hay 
 intenta restaurar esos IDs desde las mismas fuentes antes de regenerar. Al cambiar de servidor no
 reutiliza el mix de la biblioteca anterior.
 
+**Restauración parcial:** Si un refresh de Home no puede recuperar todos los IDs guardados del
+Mix diario (por ejemplo porque parte de la selección salió del pool aleatorio del servidor y ya no
+está en los candidatos actuales), la app no muestra un mix incompleto. En ese caso regenera una
+lista nueva de 30 canciones y actualiza el contador. Queda documentado como comportamiento
+temporal: más adelante se puede cambiar a restauración exacta por ID si se añade una búsqueda
+directa de canciones guardadas.
+
 **Presentación:** La tarjeta de Home se titula simplemente `Mix diario` / `Daily Mix`, muestra el
 conteo de canciones y ahora abre un detalle con filas modernas al tocar la tarjeta. La misma tarjeta
 mantiene un botón de reproducción directa y suma un botón de shuffle para regenerar manualmente el
 mix del día sin esperar al cambio de fecha.
 
 **Tests:** `DailyMixSelectorTest` cubre composición 50/30/20, fallback por categorías pequeñas,
-deduplicación/filtro de videos y prevención de bloques largos de artista.
+deduplicación/filtro de videos y prevención de bloques largos de artista. `DailyMixQueueBuilderTest`
+cubre que una restauración parcial no se acepte como Mix diario válido.
 
 ## Calidad predeterminada: móvil alta, Wi‑Fi/descargas original
 
