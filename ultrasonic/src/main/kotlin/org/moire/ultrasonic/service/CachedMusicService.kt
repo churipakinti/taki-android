@@ -267,7 +267,8 @@ class CachedMusicService(private val musicService: MusicService) :
         }
 
     @Throws(Exception::class)
-    override fun search(criteria: SearchCriteria): SearchResult? = musicService.search(criteria)
+    override suspend fun search(criteria: SearchCriteria): SearchResult? =
+        musicService.search(criteria)
 
     @Throws(Exception::class)
     override fun getPlaylist(id: String, name: String): MusicDirectory =

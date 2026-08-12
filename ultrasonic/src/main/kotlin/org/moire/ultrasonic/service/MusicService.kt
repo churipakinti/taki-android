@@ -84,7 +84,7 @@ interface MusicService {
     fun getAlbum(id: String, name: String?, refresh: Boolean): Album?
 
     @Throws(Exception::class)
-    fun search(criteria: SearchCriteria): SearchResult?
+    suspend fun search(criteria: SearchCriteria): SearchResult?
 
     @Throws(Exception::class)
     fun getPlaylist(id: String, name: String): MusicDirectory

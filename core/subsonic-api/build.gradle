@@ -21,5 +21,6 @@ dependencies {
     testImplementation libs.kluent
     testImplementation libs.mockWebServer
     testImplementation libs.apacheCodecs
+    testImplementation libs.kotlinxCoroutinesTest
     testRuntimeOnly libs.junitPlatformLauncher
 }

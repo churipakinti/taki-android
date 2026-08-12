@@ -86,7 +86,7 @@ class ArtistDetailModel :
         loaded.value = true
     }
 
-    private fun fetchArtistTracks(
+    private suspend fun fetchArtistTracks(
         service: MusicService,
         artistId: String,
         artistName: String

@@ -1,5 +1,62 @@
 # Changes
 
+## Optimización interna Fase 7: migra el flujo de Search a `suspend`
+
+Primer flujo vertical de la migración gradual a coroutines que pide Fase 7 ("elegir un flujo
+vertical completo por PR... eliminar `execute()` únicamente cuando todos los consumidores hayan
+migrado"). Se eligió Search por ser el primero del orden sugerido por el plan y el que ya se
+tocó en Fase 9.
+
+**Problema real que motiva la fase, no solo estilo de código:** `RESTMusicService.search()`
+llamaba `API.search3(...).execute()` -- una llamada de Retrofit **bloqueante** dentro de un
+`withContext(Dispatchers.IO)`. Cancelar el `Job` que la envuelve (por ejemplo, `SearchListModel`
+cancelando una búsqueda vieja cuando llega una más nueva, o el usuario saliendo de la pantalla)
+no interrumpía la llamada de red en curso -- solo evitaba que su resultado, una vez que
+eventualmente llegara, se aplicara. Es la misma clase de problema que ya motivó el
+`LatestQueryTracker` de Fase 9 (ese fix protege el resultado; este resuelve la causa: la propia
+llamada de red ahora es cancelable de verdad).
+
+**Cambio, de abajo hacia arriba:**
+- `SubsonicAPIDefinition`: `search`/`search2`/`search3` (`Call<T>` + `.execute()`) reemplazados
+  por `searchSuspend`/`search2Suspend`/`search3Suspend` (`suspend fun` devolviendo el body
+  directo). Sin duplicar la API vieja "por las dudas": estos tres métodos no tenían más
+  consumidores que `RESTMusicService`, así que se migran y se retiran en el mismo cambio.
+- `ApiVersionCheckWrapper` (el wrapper real detrás de `SubsonicAPIClient.api` -- todas las
+  llamadas pasan por acá, no directo a Retrofit): los overrides de `search2`/`search3` que
+  verifican la versión mínima del servidor (`V1_4_0`/`V1_8_0`) se migran a las variantes suspend,
+  conservando exactamente la misma lógica de `checkVersion`/`ApiNotSupportedException`.
+- Nueva extensión `T.throwOnFailure()` en `Extensions.kt` (el equivalente suspend de
+  `Response<T>.throwOnFailure()` ya existente): una llamada suspend de Retrofit ya lanza
+  automáticamente ante una respuesta HTTP no exitosa, así que solo hace falta revisar el
+  `status`/`error` a nivel de protocolo Subsonic.
+- `RESTMusicService.search()/search2()/search3()/searchOld()`, `MusicService.search()`,
+  `OfflineMusicService.search()`, `CachedMusicService.search()`: todos pasan a `suspend fun`.
+  `OfflineMusicService` no gana cancelación real (es I/O local síncrono, no una llamada de red),
+  pero necesita el modificador para que la interfaz compile con una sola firma para las dos
+  implementaciones.
+- Los 4 consumidores directos de `MusicService.search()` ya estaban en un contexto de corrutina
+  (`SearchListModel`, `TrackCollectionModel` x2, `MediaLibrarySessionCallback` vía
+  `serviceScope.future`): sin cambios salvo `ArtistDetailModel.fetchArtistTracks` (pasa a
+  `suspend fun`, su único llamador ya estaba en `withContext(Dispatchers.IO)`) y
+  `MediaLibrarySessionCallback.callWithErrorHandling` (pasa a `suspend fun` con parámetro
+  `suspend () -> T`; sus otros ~25 call sites, todos ya dentro de `serviceScope.future { }`,
+  siguen compilando sin cambios -- un lambda no-suspend sigue siendo válido donde se espera uno
+  suspend).
+- Se mantiene `withContext(Dispatchers.IO)` en todos los call sites: la migración a `suspend` no
+  saca por sí sola el trabajo del hilo principal (la propia aclaración del plan), y
+  `OfflineMusicService.search()` sigue haciendo I/O de archivos/Room síncrono que sí necesita ese
+  dispatch explícito.
+
+**Tests:** las 29 pruebas de integración de `search`/`search2`/`search3` (antes basadas en
+`Call<T>.execute()` contra MockWebServer) se migraron a `runTest` + las variantes suspend, con
+dos helpers nuevos (`checkErrorCallParsedSuspend`, `assertRequestParamSuspend` en
+`CommonFunctions.kt`) que espejan a los existentes. Se agregó `kotlinx-coroutines-test` como
+dependencia de test de `core:subsonic-api` (ya usada en `ultrasonic` para el mismo propósito).
+`core:subsonic-api:test` y `ultrasonic:testDebugUnitTest` verdes.
+
+**Verificación en el Pixel 7:** búsqueda en vivo contra Navidrome (`search3.view`, 200 OK, sin
+excepciones), navegación a un artista y sus álbumes encontrados por búsqueda, sin crashes.
+
 ## Moderniza el estado vacío compartido (Downloads, Search, Artists, Albums, ...)
 
 Seguimiento directo del fix anterior: una vez visible, el usuario señaló que el ícono/texto de

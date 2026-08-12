@@ -96,3 +96,39 @@ fun MockWebServerRule.assertRequestParam(
 
     request.requestLine `should contain` expectedParam
 }
+
+/**
+ * The `suspend fun` equivalent of [checkErrorCallParsed], for endpoints migrated off
+ * `Call<T>`/`.execute()` (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md) - a suspend Retrofit call
+ * returns the parsed body directly, not wrapped in a [Response], so there is no HTTP-level
+ * `isSuccessful` check to make here (the Subsonic API returns HTTP 200 with a `status: failed`
+ * body for protocol-level errors like this one).
+ */
+suspend fun <T : SubsonicResponse> checkErrorCallParsedSuspend(
+    mockWebServerRule: MockWebServerRule,
+    apiRequest: suspend () -> T
+): T {
+    mockWebServerRule.enqueueResponse("request_data_not_found_error_response.json")
+
+    val response = apiRequest()
+
+    response.status `should be` SubsonicResponse.Status.ERROR
+    response.error `should be` SubsonicError.RequestedDataWasNotFound
+    return response
+}
+
+/**
+ * The `suspend fun` equivalent of [MockWebServerRule.assertRequestParam].
+ */
+suspend fun MockWebServerRule.assertRequestParamSuspend(
+    responseResourceName: String = "ping_ok.json",
+    expectedParam: String,
+    apiRequest: suspend () -> Any
+) {
+    this.enqueueResponse(responseResourceName)
+    apiRequest()
+
+    val request = this.mockWebServer.takeRequest()
+
+    request.requestLine `should contain` expectedParam
+}

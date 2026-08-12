@@ -103,7 +103,7 @@ internal class ApiVersionCheckWrapper(
         return api.getAlbumInfo2(id)
     }
 
-    override fun search2(
+    override suspend fun search2Suspend(
         query: String,
         artistCount: Int?,
         artistOffset: Int?,
@@ -112,10 +112,10 @@ internal class ApiVersionCheckWrapper(
         songCount: Int?,
         songOffset: Int?,
         musicFolderId: String?
-    ): Call<SearchTwoResponse> {
+    ): SearchTwoResponse {
         checkVersion(V1_4_0)
         checkParamVersion(musicFolderId, V1_12_0)
-        return api.search2(
+        return api.search2Suspend(
             query,
             artistCount,
             artistOffset,
@@ -127,7 +127,7 @@ internal class ApiVersionCheckWrapper(
         )
     }
 
-    override fun search3(
+    override suspend fun search3Suspend(
         query: String,
         artistCount: Int?,
         artistOffset: Int?,
@@ -136,10 +136,10 @@ internal class ApiVersionCheckWrapper(
         songCount: Int?,
         songOffset: Int?,
         musicFolderId: String?
-    ): Call<SearchThreeResponse> {
+    ): SearchThreeResponse {
         checkVersion(V1_8_0)
         checkParamVersion(musicFolderId, V1_12_0)
-        return api.search3(
+        return api.search3Suspend(
             query,
             artistCount,
             artistOffset,

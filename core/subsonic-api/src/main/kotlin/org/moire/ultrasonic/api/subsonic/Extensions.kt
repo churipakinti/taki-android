@@ -66,6 +66,21 @@ fun Response<out SubsonicResponse>.falseOnFailure(): Boolean =
     (this.isSuccessful && this.body()!!.status === SubsonicResponse.Status.OK)
 
 /**
+ * The `suspend fun` equivalent of [Response.throwOnFailure]. A suspend Retrofit call already
+ * throws (e.g. [retrofit2.HttpException]) for a non-2xx HTTP response before returning, so
+ * unlike the [Call]-based version there is no HTTP status code left to check here -- only the
+ * Subsonic-level `status`/`error` fields inside an otherwise-successful response.
+ */
+fun <T : SubsonicResponse> T.throwOnFailure(): T {
+    if (status === SubsonicResponse.Status.OK) return this
+    val currentError = error
+    if (status === SubsonicResponse.Status.ERROR && currentError != null) {
+        throw SubsonicRESTException(currentError)
+    }
+    throw IOException("Failed to perform request")
+}
+
+/**
  * This call wraps Subsonic API calls so their results can be checked for errors, API version, etc
  * It creates Exceptions from a StreamResponse
  */

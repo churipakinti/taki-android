@@ -1539,7 +1539,12 @@ class MediaLibrarySessionCallback :
         return section.toString()
     }
 
-    private fun <T> callWithErrorHandling(function: () -> T): T? {
+    // suspend so callers can pass a suspend lambda (needed for MusicService.search(), the only
+    // suspend call among all the callWithErrorHandling { musicService.xxx(...) } call sites in
+    // this file -- see Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md). Every call site is already
+    // inside a serviceScope.future { ... } coroutine, so this doesn't change how any of them are
+    // invoked; a plain non-suspend lambda still satisfies a `suspend () -> T` parameter type.
+    private suspend fun <T> callWithErrorHandling(function: suspend () -> T): T? {
         // TODO Implement better error handling
         return try {
             function()

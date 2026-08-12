@@ -137,7 +137,7 @@ class OfflineMusicService :
         return result
     }
 
-    override fun search(criteria: SearchCriteria): SearchResult {
+    override suspend fun search(criteria: SearchCriteria): SearchResult {
         criteria.artistId?.let { artistId ->
             val songs = cachedTracks.byArtist(artistId)
                 .sortedBy { it.title.orEmpty().lowercase(Locale.ROOT) }

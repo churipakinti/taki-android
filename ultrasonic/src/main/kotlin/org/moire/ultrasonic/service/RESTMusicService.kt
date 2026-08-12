@@ -194,8 +194,13 @@ open class RESTMusicService(
         return response.body()!!.albumInfo.toDomainEntity()
     }
 
+    // Search is fully migrated to suspend (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md): unlike
+    // most of this class, these no longer go through a blocking .execute() call, so cancelling
+    // the caller's coroutine (e.g. the user typed again, or left the Search screen) now actually
+    // interrupts the in-flight request instead of just discarding its result once it eventually
+    // finishes -- see SearchListModel.search().
     @Throws(Exception::class)
-    override fun search(criteria: SearchCriteria): SearchResult = try {
+    override suspend fun search(criteria: SearchCriteria): SearchResult = try {
         if (shouldUseId3Tags()) {
             search3(criteria)
         } else {
@@ -210,29 +215,27 @@ open class RESTMusicService(
      * Search using the "search" REST method.
      */
     @Throws(Exception::class)
-    private fun searchOld(criteria: SearchCriteria): SearchResult {
-        val response =
-            API.search(
-                null,
-                null,
-                null,
-                criteria.query,
-                criteria.songCount,
-                criteria.songOffset,
-                null
-            )
-                .execute().throwOnFailure()
+    private suspend fun searchOld(criteria: SearchCriteria): SearchResult {
+        val response = API.searchSuspend(
+            null,
+            null,
+            null,
+            criteria.query,
+            criteria.songCount,
+            criteria.songOffset,
+            null
+        ).throwOnFailure()
 
-        return response.body()!!.searchResult.toDomainEntity(activeServerId)
+        return response.searchResult.toDomainEntity(activeServerId)
     }
 
     /**
      * Search using the "search2" REST method, available in 1.4.0 and later.
      */
     @Throws(Exception::class)
-    private fun search2(criteria: SearchCriteria): SearchResult {
+    private suspend fun search2(criteria: SearchCriteria): SearchResult {
         requireNotNull(criteria.query) { "Query param is null" }
-        val response = API.search2(
+        val response = API.search2Suspend(
             criteria.query,
             criteria.artistCount,
             criteria.artistOffset,
@@ -241,15 +244,15 @@ open class RESTMusicService(
             criteria.songCount,
             criteria.songOffset,
             criteria.musicFolderId
-        ).execute().throwOnFailure()
+        ).throwOnFailure()
 
-        return response.body()!!.searchResult.toDomainEntity(activeServerId)
+        return response.searchResult.toDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)
-    private fun search3(criteria: SearchCriteria): SearchResult {
+    private suspend fun search3(criteria: SearchCriteria): SearchResult {
         requireNotNull(criteria.query) { "Query param is null" }
-        val response = API.search3(
+        val response = API.search3Suspend(
             criteria.query,
             criteria.artistCount,
             criteria.artistOffset,
@@ -258,9 +261,9 @@ open class RESTMusicService(
             criteria.songCount,
             criteria.songOffset,
             criteria.musicFolderId
-        ).execute().throwOnFailure()
+        ).throwOnFailure()
 
-        return response.body()!!.searchResult.toDomainEntity(activeServerId)
+        return response.searchResult.toDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)

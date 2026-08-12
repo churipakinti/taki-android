@@ -119,8 +119,13 @@ interface SubsonicAPIDefinition {
     @GET("getAlbumInfo2.view")
     fun getAlbumInfo2(@Query("id") id: String): Call<GetAlbumInfo2Response>
 
+    // The Search vertical is fully migrated to suspend (Fase 7 of
+    // TAKI_CODE_OPTIMIZATION_PLAN.md) - unlike most other endpoints in this file, there is no
+    // Call<T>-returning version to keep alongside these: RESTMusicService.search() (their only
+    // caller) migrated in the same change, so there was nothing left for a blocking version to
+    // serve.
     @GET("search.view")
-    fun search(
+    suspend fun searchSuspend(
         @Query("artist") artist: String? = null,
         @Query("album") album: String? = null,
         @Query("title") title: String? = null,
@@ -128,10 +133,10 @@ interface SubsonicAPIDefinition {
         @Query("count") count: Int? = null,
         @Query("offset") offset: Int? = null,
         @Query("newerThan") newerThan: Long? = null
-    ): Call<SearchResponse>
+    ): SearchResponse
 
     @GET("search2.view")
-    fun search2(
+    suspend fun search2Suspend(
         @Query("query") query: String,
         @Query("artistCount") artistCount: Int? = null,
         @Query("artistOffset") artistOffset: Int? = null,
@@ -140,10 +145,10 @@ interface SubsonicAPIDefinition {
         @Query("songCount") songCount: Int? = null,
         @Query("songOffset") songOffset: Int? = null,
         @Query("musicFolderId") musicFolderId: String? = null
-    ): Call<SearchTwoResponse>
+    ): SearchTwoResponse
 
     @GET("search3.view")
-    fun search3(
+    suspend fun search3Suspend(
         @Query("query") query: String,
         @Query("artistCount") artistCount: Int? = null,
         @Query("artistOffset") artistOffset: Int? = null,
@@ -152,7 +157,7 @@ interface SubsonicAPIDefinition {
         @Query("songCount") songCount: Int? = null,
         @Query("songOffset") songOffset: Int? = null,
         @Query("musicFolderId") musicFolderId: String? = null
-    ): Call<SearchThreeResponse>
+    ): SearchThreeResponse
 
     @GET("getPlaylist.view")
     fun getPlaylist(@Query("id") id: String): Call<GetPlaylistResponse>
