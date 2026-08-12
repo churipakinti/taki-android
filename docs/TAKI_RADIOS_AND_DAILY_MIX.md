@@ -333,6 +333,9 @@ repita investigación ni reabra decisiones ya tomadas durante la sesión.
 - `3618bb3e` — Corrige regeneración de Mix diario.
 - `29d2a0af` — Corrige restauración parcial de Mix diario.
 - `63f79e05` — Documenta restauración parcial de Mix diario.
+- `5c57fe9e` — Cierra Mix diario v1 y resuelve la deuda v1.1 (restauración exacta por
+  `getSong.view`, señales de historial, comunicación de cola corta, explicación de primera
+  apertura, estabilidad por servidor).
 
 ### Implementado
 
@@ -373,45 +376,53 @@ repita investigación ni reabra decisiones ya tomadas durante la sesión.
   - Pull-to-refresh reprodujo el caso de restauración parcial (`expectedSize=30`,
     `restoredSize=19`) y el fix regeneró correctamente a `30 songs`.
 
-### Decisión temporal importante
+### Decisión temporal importante (resuelta en `5c57fe9e`)
 
-Por ahora, un refresh de Home puede generar un Mix diario nuevo si la app no puede restaurar
-exactamente todos los IDs guardados. Esto evita volver a mostrar mixes incompletos de menos de 20
-canciones.
+La restauración ya no depende del pool de candidatos: `DailyMixQueueBuilder.restore()` resuelve
+cada id guardado directamente contra `getSong.view` (concurrente, vía `restoreTracksByExactId()`).
+Si un id puntual ya no existe en el servidor (canción borrada/movida), se descarta solo ese id; si
+faltan demasiados para completar el Mix guardado, `shouldUseRestoredDailyMix()` sigue rechazando la
+restauración parcial y Home regenera un Mix nuevo de 30, igual que antes.
 
-El comportamiento ideal para una versión posterior sería restaurar cada canción guardada por ID real
-en vez de reconstruirla desde los candidatos actuales. Esa mejora requiere investigar/agregar una
-ruta de búsqueda exacta por ID en el servicio de música o una cache local confiable.
+### Cierre de Mix diario v1 — completado en `5c57fe9e`
 
-### Pendiente recomendado para cerrar Mix diario v1
+1. **Reinicio de app:** verificado en Pixel 7 físico. Con un Mix diario de 30 canciones ya
+   generado, `am force-stop` + reapertura mostró `Daily Mix / 30 songs for today` de inmediato;
+   logcat confirmó ~30 llamadas concurrentes a `getSong.view` (restauración exacta) sin
+   `FATAL EXCEPTION`.
+2. **Cambio de servidor:** cubierto a nivel de código por `shouldAttemptDailyMixRestore()` y sus
+   tests (mismo día + distinto `serverId` → no restaura). No se validó en dispositivo físico por
+   no contar con un segundo servidor de prueba en esa sesión; si el siguiente agente tiene acceso
+   a uno, vale la pena confirmarlo en vivo.
+3. **Test de estabilidad por `serverId`:** añadido (`DailyMixQueueBuilderTest` cubre
+   `shouldAttemptDailyMixRestore` para mismo servidor, servidor distinto, día distinto y
+   `forceRefresh`).
+4. **Subtítulo:** actualizado a `"%d songs for today"`, como proponía la sección 5 del documento.
 
-1. Validar reinicio de app:
-   - generar Mix diario;
-   - cerrar/abrir app;
-   - confirmar que conserva el Mix si puede restaurarlo completo o que regenera a 30 si no puede.
-2. Validar cambio de servidor:
-   - confirmar que no reutiliza IDs de la biblioteca anterior.
-3. Añadir, si es viable, una prueba adicional de estabilidad por `serverId` alrededor de
-   `DailyMixQueueBuilder`.
-4. Revisar si el subtítulo debe decir `30 canciones para hoy` en vez de solo `30 canciones` /
-   `30 songs`. El documento propone la frase más descriptiva, pero la implementación actual usa el
-   conteo simple.
+### Deuda v1.1 — estado tras `5c57fe9e`
 
-### Deuda para v1.1 o posterior
-
-- Restauración exacta del Mix diario por ID, sin depender del pool aleatorio actual.
-- Preferir copias descargadas/locales cuando la misma canción exista offline.
-- Comportamiento offline explícito para radios y Mix diario:
-  - no consultar endpoints remotos en modo offline;
-  - usar solo canciones descargadas/metadatos locales;
-  - comunicar si la cola resultante es más corta.
-- Señales más finas de historial:
-  - reducir canciones reproducidas en las últimas 24–48 horas;
-  - usar `playCount`/`lastPlayed` si el servidor los expone de forma confiable;
-  - definir qué significa “nunca escuchada” en servidores sin historial suficiente.
-- Evaluar si hace falta una explicación breve del Mix diario en la primera apertura.
-- Regresión más amplia de cola, reinicio, offline y Android Auto antes de declarar cerrado todo el
-  documento.
+- ✅ Restauración exacta del Mix diario por ID (`getSong.view` de punta a punta).
+- ✅ Preferir copias descargadas/locales: ya estaba garantizado por la arquitectura existente
+  (`CachedDataSource`/`FileUtil.getCompleteFile()` resuelven cualquier pista contra el archivo
+  local antes de hacer streaming, sin importar qué builder armó la cola) — no fue necesario
+  código nuevo, solo se documentó.
+- ✅ Comportamiento offline explícito: también ya garantizado — `MusicServiceFactory` resuelve
+  `OfflineMusicService` automáticamente en modo offline y los tres builders piden esa instancia en
+  cada llamada, así que no hay ruta de red posible offline. Sin código nuevo.
+- ✅ Comunicar cola más corta: Mix diario y ambas radios exponen `TARGET_SIZE` y muestran un toast
+  en lenguaje simple cuando el resultado queda corto (pero no vacío).
+- ✅ Señales más finas de historial: `Track.playCount`/`Track.lastPlayed` (null si el servidor no
+  los expone, nunca se interpreta como "cero"), migración `META_MIGRATION_3_4` de `MetaDatabase`.
+  `DailyMixSelector` penaliza (no excluye) canciones reproducidas en las últimas 48h y amplía el
+  criterio de "nunca escuchada" en el bucket de exploración con `playCount == 0`.
+  "Nunca escuchada" se define como `playCount == null || playCount == 0`; no se intenta distinguir
+  más allá de eso porque el propio DTO de Subsonic ya colapsa "servidor no expone el dato" y
+  "cero reproducciones confirmadas" en el mismo valor por defecto.
+- ✅ Explicación de primera apertura: implementada como toast largo, una sola vez
+  (`Settings.homeMixIntroShown`), sin diálogo bloqueante.
+- ⏳ Regresión más amplia de cola/reinicio/offline/Android Auto: solo se repitió el caso de
+  reinicio con conexión real; falta offline explícito y Android Auto para dar por cerrado todo el
+  documento con la profundidad de regresión que pide esta sección.
 
 ### Precauciones para el siguiente agente
 
