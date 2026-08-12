@@ -21,10 +21,16 @@ import org.moire.ultrasonic.app.UApp
  */
 private val supportedBitrateQualities = intArrayOf(96, 160, 256, 320)
 
+internal const val DEFAULT_MAX_BITRATE_MOBILE = 256
+internal const val DEFAULT_MAX_BITRATE_WIFI = 0
+internal const val DEFAULT_MAX_BITRATE_PINNING = 0
+
 internal fun normalizeBitrateQuality(value: Int): Int {
     if (value == 0) return 0
     return supportedBitrateQualities.minBy { abs(it - value) }
 }
+
+internal fun Int.toSubsonicMaxBitRate(): Int? = if (this <= 0) null else this
 
 object Settings {
 
@@ -43,13 +49,13 @@ object Settings {
         }
 
     private var maxBitRateWifi
-        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_wifi))
+        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_wifi), DEFAULT_MAX_BITRATE_WIFI)
 
     private var maxBitRateMobile
-        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_mobile))
+        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_mobile), DEFAULT_MAX_BITRATE_MOBILE)
 
     var maxBitRatePinning
-        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_pinning))
+        by StringIntSetting(getKey(R.string.setting_key_max_bitrate_pinning), DEFAULT_MAX_BITRATE_PINNING)
 
     fun normalizeBitrateQualitySettings() {
         val normalizedWifi = normalizeBitrateQuality(maxBitRateWifi)

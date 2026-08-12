@@ -370,7 +370,7 @@ class CachedMusicService(private val musicService: MusicService) :
     override fun getDownloadInputStream(
         song: Track,
         offset: Long,
-        maxBitrate: Int,
+        maxBitrate: Int?,
         save: Boolean
     ): Pair<InputStream, Boolean> =
         musicService.getDownloadInputStream(song, offset, maxBitrate, save)

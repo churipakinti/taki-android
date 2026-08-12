@@ -49,6 +49,7 @@ import org.moire.ultrasonic.domain.toTrackEntity
 import org.moire.ultrasonic.domain.toTrackList
 import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.Settings
+import org.moire.ultrasonic.util.toSubsonicMaxBitRate
 import timber.log.Timber
 
 private const val SIMILAR_ARTIST_COUNT = 12
@@ -501,17 +502,18 @@ open class RESTMusicService(
     override fun getDownloadInputStream(
         song: Track,
         offset: Long,
-        maxBitrate: Int,
+        maxBitrate: Int?,
         save: Boolean
     ): Pair<InputStream, Boolean> {
         val songOffset = if (offset < 0) 0 else offset
+        val subsonicMaxBitRate = maxBitrate?.toSubsonicMaxBitRate()
 
         // Use semantically correct call
         val response = if (save) {
-            API.download(song.id, maxBitrate, offset = songOffset)
+            API.download(song.id, subsonicMaxBitRate, offset = songOffset)
                 .execute().toStreamResponse()
         } else {
-            API.stream(song.id, maxBitrate, offset = songOffset)
+            API.stream(song.id, subsonicMaxBitRate, offset = songOffset)
                 .execute().toStreamResponse()
         }
 
@@ -536,7 +538,7 @@ open class RESTMusicService(
         Timber.i("Start")
 
         // Get the request from Retrofit, but don't execute it!
-        val request = API.stream(id).request()
+        val request = API.stream(id, maxBitRate?.toSubsonicMaxBitRate(), format).request()
 
         // Create a new call with the request, and execute ist on our custom client
         val response = streamClient.newCall(request).execute()

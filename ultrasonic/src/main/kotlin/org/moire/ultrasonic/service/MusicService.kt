@@ -152,7 +152,7 @@ interface MusicService {
     fun getDownloadInputStream(
         song: Track,
         offset: Long,
-        maxBitrate: Int,
+        maxBitrate: Int?,
         save: Boolean
     ): Pair<InputStream, Boolean>
 

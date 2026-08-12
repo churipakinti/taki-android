@@ -84,14 +84,14 @@
             a:title="@string/settings.max_bitrate_mobile"
             app:iconSpaceReserved="false"/>
         <ListPreference
-            a:defaultValue="320"
+            a:defaultValue="0"
             a:entries="@array/maxBitrateNames"
             a:entryValues="@array/maxBitrateValues"
             a:key="@string/setting_key.max_bitrate_wifi"
             a:title="@string/settings.max_bitrate_wifi"
             app:iconSpaceReserved="false"/>
         <ListPreference
-            a:defaultValue="320"
+            a:defaultValue="0"
             a:entries="@array/maxBitrateNames"
             a:entryValues="@array/maxBitrateValues"
             a:key="@string/setting_key.max_bitrate_pinning"

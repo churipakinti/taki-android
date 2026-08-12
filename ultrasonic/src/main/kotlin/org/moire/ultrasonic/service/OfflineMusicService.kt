@@ -526,7 +526,7 @@ class OfflineMusicService :
     override fun getDownloadInputStream(
         song: Track,
         offset: Long,
-        maxBitrate: Int,
+        maxBitrate: Int?,
         save: Boolean
     ): Pair<InputStream, Boolean> =
         throw OfflineException("getDownloadInputStream isn't available in offline mode")

@@ -1,5 +1,21 @@
 # Changes
 
+## Calidad predeterminada: móvil alta, Wi‑Fi/descargas original
+
+Se ajustan los valores iniciales de calidad para instalaciones nuevas: datos móviles queda en
+Alta (`256 kbps`), Wi‑Fi en Original (`0`, sin límite) y descargas en Original (`0`, sin límite).
+Las opciones existentes se conservan: baja, normal, alta, máxima y original.
+
+**Cambio:** `Settings` ahora expone defaults explícitos para móvil/Wi‑Fi/descargas y el XML de
+preferencias usa `0` como valor inicial para Wi‑Fi y descargas. Además, `0` ya no se envía al
+servidor como `maxBitRate=0`: se convierte en parámetro omitido (`null`) antes de llamar a
+`stream.view` o `download.view`, que es la forma de solicitar el archivo original sin imponer
+transcodificación por bitrate.
+
+**Tests:** `SettingsQualityTest` cubre los defaults solicitados, conserva las calidades soportadas
+y verifica que `0`/original se traduzca a bitrate omitido mientras `96/160/256/320` se mantienen
+como límites explícitos.
+
 ## Radio de artista: sesión equilibrada desde Artist Detail y menús
 
 Se implementa el segundo flujo de `TAKI_RADIOS_AND_DAILY_MIX.md`: `Start radio` ahora está
