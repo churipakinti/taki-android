@@ -25,6 +25,7 @@ import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
+import org.moire.ultrasonic.service.DailyMixQueueBuilder
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.util.EntryByDiscAndTrackComparator
 import org.moire.ultrasonic.util.Util
@@ -357,6 +358,16 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
             val service = MusicServiceFactory.getMusicService()
             val musicDirectory = Util.getSongsFromBookmarks(service.getBookmarks())
             currentListIsSortable = false
+            updateList(musicDirectory)
+        }
+    }
+
+    suspend fun getDailyMix() {
+        withContext(Dispatchers.IO) {
+            val tracks = DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build()
+            val musicDirectory = MusicDirectory().apply { addAll(tracks) }
+            currentListIsSortable = false
+            showHeader = false
             updateList(musicDirectory)
         }
     }

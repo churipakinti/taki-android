@@ -145,6 +145,7 @@
                     a:layout_width="0dp"
                     a:layout_height="wrap_content"
                     a:layout_weight="1"
+                    a:layout_marginEnd="8dp"
                     a:orientation="vertical">
 
                     <TextView
@@ -169,6 +170,26 @@
                         tools:text="25 songs" />
 
                 </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    a:id="@+id/home_mix_play"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    a:layout_width="44dp"
+                    a:layout_height="44dp"
+                    a:contentDescription="@string/home.mix_play"
+                    app:icon="@drawable/media_start"
+                    app:iconSize="20dp"
+                    app:iconTint="?attr/colorOnSurface" />
+
+                <com.google.android.material.button.MaterialButton
+                    a:id="@+id/home_mix_shuffle"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    a:layout_width="44dp"
+                    a:layout_height="44dp"
+                    a:contentDescription="@string/home.mix_regenerate"
+                    app:icon="@drawable/media_shuffle"
+                    app:iconSize="20dp"
+                    app:iconTint="?attr/colorOnSurface" />
 
             </LinearLayout>
 

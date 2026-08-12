@@ -136,7 +136,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         get() = parentFragment is MainFragment || navArgs.libraryRoot || navArgs.getStarred
 
     private val useLibraryTrackRows: Boolean
-        get() = isMediaLibrarySongs || navArgs.genreName != null
+        get() = isMediaLibrarySongs || navArgs.genreName != null || navArgs.dailyMix
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -689,6 +689,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         val getStarredTracks = displayStarred()
         val getVideos = navArgs.getVideos
         val getRandomTracks = displayRandom()
+        val getDailyMix = navArgs.dailyMix
         val size = if (navArgs.size < 0) Settings.MAX_SONGS else navArgs.size
         val offset = navArgs.offset
         val refresh2 = navArgs.refresh || refresh
@@ -705,7 +706,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         ) {
             swipeRefresh?.isRefreshing = true
 
-            if (playlistId != null) {
+            if (getDailyMix) {
+                setTitle(R.string.home_mix_title)
+                listModel.getDailyMix()
+            } else if (playlistId != null) {
                 setTitle(playlistName!!)
                 listModel.getPlaylist(playlistId, playlistName)
             } else if (podcastChannelId != null) {

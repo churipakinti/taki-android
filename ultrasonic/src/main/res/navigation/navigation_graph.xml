@@ -185,6 +185,10 @@
             android:name="libraryRoot"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="dailyMix"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
     <fragment
         android:id="@+id/albumListFragment"

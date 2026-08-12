@@ -149,15 +149,19 @@ class HomeFragment :
 
     /**
      * The Mix is shown as a single playlist-style row (cover of the first track, title,
-     * song count) instead of a scrollable carousel - tapping it plays the whole mix.
+     * song count) instead of a scrollable carousel.
      */
     private fun setupMixRow(view: View) {
         val mixShelf = view.findViewById<View>(R.id.home_mix_shelf)
         val mixCover = view.findViewById<ImageView>(R.id.home_mix_cover)
         val mixTitle = view.findViewById<TextView>(R.id.home_mix_title)
         val mixSubtitle = view.findViewById<TextView>(R.id.home_mix_subtitle)
+        val mixPlay = view.findViewById<View>(R.id.home_mix_play)
+        val mixShuffle = view.findViewById<View>(R.id.home_mix_shuffle)
 
-        mixShelf.setOnClickListener { playMix() }
+        mixShelf.setOnClickListener { openMixDetail() }
+        mixPlay.setOnClickListener { playMix() }
+        mixShuffle.setOnClickListener { regenerateMix() }
 
         mixTitle.setText(R.string.home_mix_title)
         homeViewModel.mixTracks.observe(viewLifecycleOwner) { tracks ->
@@ -184,6 +188,26 @@ class HomeFragment :
             insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
             startIndex = 0
         )
+    }
+
+    private fun openMixDetail() {
+        if (homeViewModel.mixTracks.value.isNullOrEmpty()) return
+
+        findNavController().navigate(
+            NavigationGraphDirections.toTrackCollection(
+                dailyMix = true,
+                name = getString(R.string.home_mix_title)
+            )
+        )
+    }
+
+    private fun regenerateMix() {
+        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+            swipeRefresh?.isRefreshing = true
+            homeViewModel.regenerateDailyMix()
+            swipeRefresh?.isRefreshing = false
+            updateEmptyState()
+        }
     }
 
     private fun load(forceRefresh: Boolean = false) {

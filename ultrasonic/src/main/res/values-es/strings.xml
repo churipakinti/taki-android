@@ -380,4 +380,6 @@
     <string name="settings.clear_image_cache_cleared">Se ha borrado la caché de imágenes</string>
     <string name="main.albums_byGenre">Por género</string>
     <string name="home.mix_title">Mix diario</string>
+    <string name="home.mix_regenerate">Regenerar Mix diario</string>
+    <string name="home.mix_play">Reproducir Mix diario</string>
 </resources>

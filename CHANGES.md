@@ -17,7 +17,9 @@ intenta restaurar esos IDs desde las mismas fuentes antes de regenerar. Al cambi
 reutiliza el mix de la biblioteca anterior.
 
 **Presentación:** La tarjeta de Home se titula simplemente `Mix diario` / `Daily Mix`, muestra el
-conteo de canciones y al tocarla reemplaza la cola con el mix e inicia reproducción.
+conteo de canciones y ahora abre un detalle con filas modernas al tocar la tarjeta. La misma tarjeta
+mantiene un botón de reproducción directa y suma un botón de shuffle para regenerar manualmente el
+mix del día sin esperar al cambio de fecha.
 
 **Tests:** `DailyMixSelectorTest` cubre composición 50/30/20, fallback por categorías pequeñas,
 deduplicación/filtro de videos y prevención de bloques largos de artista.
