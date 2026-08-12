@@ -9,10 +9,16 @@ package org.moire.ultrasonic.util
 
 import android.view.MenuItem
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MediaPlayerManager
+import org.moire.ultrasonic.service.MusicServiceFactory
+import org.moire.ultrasonic.service.TrackRadioQueueBuilder
+import org.moire.ultrasonic.util.Util.navigateToCurrent
+import org.moire.ultrasonic.util.Util.toast
 
 object ContextMenuUtil {
 
@@ -109,6 +115,31 @@ object ContextMenuUtil {
                     insertionMode = MediaPlayerManager.InsertionMode.APPEND,
                     tracks = tracks
                 )
+            }
+
+            R.id.song_menu_start_radio -> {
+                val seed = tracks.firstOrNull() ?: return false
+                fragment.lifecycleScope.launch(
+                    fragment.toastingExceptionHandler(fragment.getString(R.string.song_radio_error))
+                ) {
+                    val queue = TrackRadioQueueBuilder(MusicServiceFactory.getMusicService())
+                        .build(seed)
+                    if (queue.size <= 1) {
+                        fragment.toast(R.string.song_radio_empty)
+                        return@launch
+                    }
+                    mediaPlayerManager.suggestedPlaylistName = fragment.getString(
+                        R.string.song_radio_playlist_name,
+                        seed.title ?: seed.name ?: seed.id
+                    )
+                    mediaPlayerManager.addToPlaylist(
+                        songs = queue,
+                        autoPlay = true,
+                        shuffle = false,
+                        insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+                    )
+                    fragment.navigateToCurrent()
+                }
             }
 
             R.id.song_menu_pin -> {

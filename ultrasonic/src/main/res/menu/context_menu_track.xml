@@ -11,6 +11,9 @@
         a:id="@+id/song_menu_play_last"
         a:title="@string/common.play_last" />
     <item
+        a:id="@+id/song_menu_start_radio"
+        a:title="@string/song.start_radio" />
+    <item
         a:id="@+id/song_menu_pin"
         a:title="@string/common.pin" />
     <item

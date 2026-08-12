@@ -14,6 +14,9 @@
         a:id="@+id/song_menu_play_from_here"
         a:title="@string/common.play_from_here" />
     <item
+        a:id="@+id/song_menu_start_radio"
+        a:title="@string/song.start_radio" />
+    <item
         a:id="@+id/song_menu_add_playlist"
         a:title="@string/playlist.add_to_title" />
     <item

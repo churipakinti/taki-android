@@ -235,6 +235,10 @@
     <string name="playlist.add_to_title">Add to playlist</string>
     <string name="playlist.added">Added to \"%s\"</string>
     <string name="playlist.add_error">Could not add to playlist.</string>
+    <string name="song.start_radio">Start radio</string>
+    <string name="song.radio_error">Could not start radio.</string>
+    <string name="song.radio_empty">Not enough songs to start radio.</string>
+    <string name="song.radio_playlist_name">Radio based on \"%1$s\"</string>
     <string name="song.add_to_playlist_description">Add to playlist</string>
     <string name="settings.custom_cache_location">Use Custom Cache Location</string>
     <string name="settings.cache_location">Cache Location</string>

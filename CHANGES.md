@@ -1,5 +1,32 @@
 # Changes
 
+## Radio de canción: primer flujo vertical de radios y Mix diario
+
+Se implementa la primera parte de `TAKI_RADIOS_AND_DAILY_MIX.md`: `Start radio` aparece en el
+menú contextual de canciones y genera una cola nueva basada en la canción semilla. La radio no
+intenta prometer recomendaciones tipo Spotify; usa las fuentes reales disponibles hoy en la app:
+top songs del artista, artistas relacionados vía `getArtistInfo2` cuando el servidor los expone,
+canciones del género de la semilla y `getRandomSongs` como relleno controlado.
+
+**Cambio:** `TrackRadioQueueBuilder` construye la lista con fallbacks tolerantes a errores por
+fuente, y `TrackRadioSelector` mantiene la semilla primero, elimina duplicados, filtra videos,
+limita dominio por artista cuando hay variedad y evita bloques largos del mismo artista. La cola
+final entra por `MediaPlayerManager.addToPlaylist(CLEAR)`, conservando las protecciones recientes
+contra reconstrucciones duplicadas y ANR.
+
+**No tocado:** Radio de artista, Mix diario 50/30/20 y la eliminación del Mix por género antiguo
+quedan para commits separados. Tampoco se agrega Radio de género.
+
+**Tests:** `TrackRadioSelectorTest` cubre semilla primero, deduplicación, límite de dominio por
+artista y prevención de tres canciones consecutivas del mismo artista. Validación local verde:
+`:core:subsonic-api:ciTest`, `:ultrasonic:testDebugUnitTest` y `:ultrasonic:assembleDebug`.
+
+**Verificación en Pixel 7 físico (`panther`):** APK debug instalado con `adb install -r`. Desde
+Home -> Songs se abrió el menú de una canción real (`The Tower`, 220 Volt) y `Start radio` generó
+una cola de 30 canciones en 1505 ms (`Track radio generated`, `groups=3`, `finalSize=30`). Android
+confirmó la sesión Media3 de Taki activa en `PLAYING` con queue size 30 y sin error; la reproducción
+se pausó después de la prueba. No apareció `FATAL EXCEPTION` de Taki en el flujo probado.
+
 ## Corrige targets JVM y completa la verificación de Fase 7 en Pixel 7
 
 La validación Android del cierre de Fase 7 reveló que `core/domain` sobrescribía el target común
