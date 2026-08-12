@@ -92,6 +92,35 @@ class DailyMixSelectorTest {
         )
     }
 
+    @Test
+    fun `different seeds regenerate a different order within the same rules`() {
+        val first = DailyMixSelector.select(
+            familiarTracks = tracks("familiar", 40),
+            rediscoveryTracks = tracks("rediscovery", 40),
+            explorationTracks = tracks("exploration", 40),
+            fallbackTracks = tracks("fallback", 40),
+            targetSize = 30,
+            minimumSize = 15,
+            seed = 1L
+        )
+        val second = DailyMixSelector.select(
+            familiarTracks = tracks("familiar", 40),
+            rediscoveryTracks = tracks("rediscovery", 40),
+            explorationTracks = tracks("exploration", 40),
+            fallbackTracks = tracks("fallback", 40),
+            targetSize = 30,
+            minimumSize = 15,
+            seed = 2L
+        )
+
+        assertEquals(30, first.size)
+        assertEquals(30, second.size)
+        assertEquals(15, second.count { it.id.startsWith("familiar") })
+        assertEquals(9, second.count { it.id.startsWith("rediscovery") })
+        assertEquals(6, second.count { it.id.startsWith("exploration") })
+        assertFalse(first.map { it.id } == second.map { it.id })
+    }
+
     private fun tracks(prefix: String, count: Int): List<Track> =
         (1..count).map { track("$prefix-$it", it) }
 

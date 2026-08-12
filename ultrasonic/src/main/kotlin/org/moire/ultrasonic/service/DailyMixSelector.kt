@@ -7,6 +7,7 @@
 
 package org.moire.ultrasonic.service
 
+import kotlin.random.Random
 import org.moire.ultrasonic.domain.Track
 
 object DailyMixSelector {
@@ -24,19 +25,20 @@ object DailyMixSelector {
         explorationTracks: List<Track>,
         fallbackTracks: List<Track>,
         targetSize: Int,
-        minimumSize: Int
+        minimumSize: Int,
+        seed: Long = 0L
     ): List<Track> {
         val familiarQuota = (targetSize * 0.5f).toInt()
         val rediscoveryQuota = (targetSize * 0.3f).toInt()
         val buckets = listOf(
-            CandidateBucket(FAMILIAR_BUCKET, familiarQuota, familiarTracks.prepared()),
-            CandidateBucket(REDISCOVERY_BUCKET, rediscoveryQuota, rediscoveryTracks.prepared()),
+            CandidateBucket(FAMILIAR_BUCKET, familiarQuota, familiarTracks.prepared(seed, FAMILIAR_BUCKET)),
+            CandidateBucket(REDISCOVERY_BUCKET, rediscoveryQuota, rediscoveryTracks.prepared(seed, REDISCOVERY_BUCKET)),
             CandidateBucket(
                 EXPLORATION_BUCKET,
                 targetSize - familiarQuota - rediscoveryQuota,
-                explorationTracks.prepared()
+                explorationTracks.prepared(seed, EXPLORATION_BUCKET)
             ),
-            CandidateBucket(FALLBACK_BUCKET, 0, fallbackTracks.prepared())
+            CandidateBucket(FALLBACK_BUCKET, 0, fallbackTracks.prepared(seed, FALLBACK_BUCKET))
         )
 
         val selected = mutableListOf<SelectedTrack>()
@@ -122,11 +124,12 @@ object DailyMixSelector {
         } while (addedThisPass && selected.size < targetSize)
     }
 
-    private fun List<Track>.prepared(): List<Track> =
+    private fun List<Track>.prepared(seed: Long, bucket: String): List<Track> =
         asSequence()
             .filterNot { it.isVideo }
             .distinctBy { it.id }
             .toList()
+            .shuffled(Random(seed xor bucket.hashCode().toLong()))
 
     private fun List<SelectedTrack>.artistCount(candidate: Track): Int {
         val artistKey = candidate.artistKey() ?: return 0

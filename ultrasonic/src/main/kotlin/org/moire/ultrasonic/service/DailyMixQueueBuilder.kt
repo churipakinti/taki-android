@@ -33,7 +33,7 @@ class DailyMixQueueBuilder(
             if (restored.size >= DAILY_MIX_MIN_SIZE) return restored
         }
 
-        val fresh = generate()
+        val fresh = generate(seed = if (forceRefresh) System.nanoTime() else stableSeed(today, serverId))
         Settings.homeMixDate = today
         Settings.homeMixServerId = serverId
         Settings.homeMixGenre = ""
@@ -50,25 +50,39 @@ class DailyMixQueueBuilder(
         return wantedIds.mapNotNull { available[it] }
     }
 
-    private suspend fun generate(): List<Track> {
+    private suspend fun generate(seed: Long): List<Track> {
         val perfToken = PerfMetrics.start("daily_mix_generate")
         val candidates = fetchCandidates()
-        val tracks = DailyMixSelector.select(
-            familiarTracks = candidates.familiar,
-            rediscoveryTracks = candidates.rediscovery,
-            explorationTracks = candidates.exploration,
-            fallbackTracks = candidates.fallback,
-            targetSize = DAILY_MIX_SIZE,
-            minimumSize = DAILY_MIX_MIN_SIZE
-        )
+        val previousIds = Settings.homeMixTrackIds
+            .split(",")
+            .filter { it.isNotBlank() }
+        var attemptSeed = seed
+        var tracks = emptyList<Track>()
+
+        for (attempt in 0 until DAILY_MIX_REGENERATION_ATTEMPTS) {
+            tracks = DailyMixSelector.select(
+                familiarTracks = candidates.familiar,
+                rediscoveryTracks = candidates.rediscovery,
+                explorationTracks = candidates.exploration,
+                fallbackTracks = candidates.fallback,
+                targetSize = DAILY_MIX_SIZE,
+                minimumSize = DAILY_MIX_MIN_SIZE,
+                seed = attemptSeed
+            )
+            if (tracks.map { it.id } != previousIds || attempt == DAILY_MIX_REGENERATION_ATTEMPTS - 1) {
+                break
+            }
+            attemptSeed += DAILY_MIX_SEED_STEP
+        }
         Timber.i(
             "Daily mix generated: familiarCandidates=%d rediscoveryCandidates=%d " +
-                "explorationCandidates=%d fallbackCandidates=%d finalSize=%d",
+                "explorationCandidates=%d fallbackCandidates=%d finalSize=%d seed=%d",
             candidates.familiar.distinctBy { it.id }.size,
             candidates.rediscovery.distinctBy { it.id }.size,
             candidates.exploration.distinctBy { it.id }.size,
             candidates.fallback.distinctBy { it.id }.size,
-            tracks.size
+            tracks.size,
+            attemptSeed
         )
         PerfMetrics.end("daily_mix_generate", perfToken)
         return tracks
@@ -134,4 +148,10 @@ class DailyMixQueueBuilder(
         val all: List<Track>
             get() = familiar + rediscovery + exploration + fallback
     }
+
+    private fun stableSeed(today: String, serverId: Int): Long =
+        "$today:$serverId".hashCode().toLong()
 }
+
+private const val DAILY_MIX_REGENERATION_ATTEMPTS = 3
+private const val DAILY_MIX_SEED_STEP = -7046029254386353131L
