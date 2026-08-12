@@ -1,5 +1,123 @@
 # Changes
 
+## TAKI_LEGACY_UI_AUDIT.md — Fase 2: formulario de agregar/editar servidor
+
+Modernización del flujo de conexión (`EditServerFragment.kt`, `server_edit.xml`), siguiendo el
+punto A2 del documento. Una auditoría de código previa (agentes de exploración, sin tocar nada)
+confirmó que el punto B3 (selector de servidores) ya estaba resuelto -RecyclerView, tarjetas
+Material3, elevación/borde livianos, FAB estándar- salvo por un choque directo con una decisión
+de usuario ya confirmada en `HANDOFF.md` ("Offline remains the explicit first entry in the
+configured-server selector"), que se deja intacta. El alcance quedó reducido al formulario.
+
+**Sección "Configuración avanzada" colapsable:** el color del servidor, el certificado
+autofirmado, la contraseña en texto plano y la gramola pasan a vivir dentro de un
+`androidx.constraintlayout.widget.Group` (`edit_advanced_group`), oculto por defecto. El
+encabezado existente (`edit_advanced_header`, ya decía "Configuración avanzada") se envuelve en
+una fila clicable (`edit_advanced_toggle`) con un chevron nuevo (`ic_expand_more.xml`, no existía
+ningún ícono de expandir/colapsar en el repo) que rota 180° al abrir/cerrar. Si el usuario edita
+un servidor que ya tiene el certificado autofirmado o la gramola activados, la sección arranca
+expandida (`syncAdvancedSectionVisibility()`, llamada desde `setFields()` y
+`onViewStateRestored()`) para no esconder una configuración ya en efecto.
+
+**Explicaciones en lenguaje simple:** se añaden `settings.summary.allow_self_signed_certificate`
+y `jukebox.summary_is_default` (en/es), con el mismo patrón visual que ya tenía la contraseña en
+texto plano (`Ultrasonic.SecondaryText` debajo del switch). La gramola se mantiene -a diferencia
+de Chat/Podcasts/Shares/Bookmarks, es una función real y activa (`JukeboxMediaPlayer`,
+`PlaybackService`, `MediaPlayerManager`, `PlayerFragment`)- solo se explica mejor, no se esconde.
+
+**Jerarquía Guardar vs. Probar conexión:** ambos botones eran `materialButtonOutlinedStyle` con
+el mismo peso visual. `edit_save` pasa a estilo relleno (acento, es la acción principal de la
+pantalla); `edit_test` se mantiene outlined/secundario.
+
+**Estado de conexión visible en línea:** se reemplaza el `InfoDialog` modal con checklist
+(`getProgress()`/`boolToMark()`, que en la práctica solo mostraba el resultado de "jukebox" con
+emojis ⌛/✔️/❌, ambos eliminados) por una fila en línea (`edit_connection_status`) cerca de los
+botones: un `ProgressBar` chico mientras corre, luego un ícono de check/error (reutiliza
+`ic_lyrics_synced.xml`/`ic_lyrics_unsynced.xml`, ya existentes) + texto ("Comprobando conexión…" /
+"Conexión correcta" / "No se pudo conectar", strings nuevos `server_editor.connection_*`). Si el
+servidor no soporta gramola, el texto de su descripción cambia a `jukebox.unsupported` y la
+sección avanzada se expande automáticamente para que el usuario lo note. El `ErrorDialog`
+existente para excepciones reales (URL inválida, fallo de autenticación, sin red) no cambia -la
+fila en línea añade el estado glanceable, no reemplaza el detalle del error.
+`EditServerModel.kt`/`ServerFeature` no se tocan: la lógica de red sigue probando las 6 features,
+solo cambió cómo se presenta el resultado.
+
+**Validación:** `ktlintCheck test assembleDebug -Pqc` en verde. Verificación en Pixel 7 física
+pendiente -el dispositivo no estaba conectado por ADB al cierre de esta sesión.
+
+## TAKI_LEGACY_UI_AUDIT.md — Fase 6: deuda oculta (Chat, Podcasts, Shares, Bookmarks)
+
+Auditoría de código (tres agentes de exploración en paralelo, solo lectura) sobre el documento
+`docs/TAKI_LEGACY_UI_AUDIT.md`, que clasifica las superficies heredadas de Ultrasonic pendientes
+de modernizar en Taki. Se verificaron sus afirmaciones contra el estado real del código en vez de
+confiar en la prosa del documento -varias resultaron desactualizadas (el selector de servidores y
+la mayoría de los componentes ya usan Material3, contradiciendo la premisa de "widgets viejos").
+
+Para las cuatro funciones ocultas, la auditoría confirmó que ninguna tiene punto de entrada real
+hoy: sin `<action>` en `navigation_graph.xml`, sin entrada de menú, sin call site de navegación en
+todo el árbol Kotlin. El árbol de Android Auto (`MediaLibrarySessionCallback`) implementa
+handlers por id para las cuatro, pero `getRootItems()`/`getLibrary()` nunca los exponen -solo
+alcanzables si un cliente externo arma el `mediaId` a mano. Esto ya estaba documentado como
+intencional en `HANDOFF.md` (sección "La visión" y puntos 5, 14, 28 de "Current state") y en
+`Settings.kt:179-181` para Chat específicamente. El usuario confirmó explícitamente mantener las
+cuatro ocultas (sin reactivar, sin eliminar por ahora), ratificando esa visión ya establecida en
+vez de contradecirla. No fue necesario ningún cambio de código -el requisito de "no aparecen en
+ningún lado" ya estaba cumplido antes de esta auditoría.
+
+`docs/TAKI_LEGACY_UI_AUDIT.md` se actualiza con una sección "Resolución (2026-08-12)" documentando
+la evidencia por función, y marca la Fase 6 y su fila del inventario resumido como cerradas.
+
+## Playlists: cierre del rediseño (TAKI_PLAYLIST_UX_REDESIGN.md)
+
+Implementación completa del documento de rediseño de Playlists, en dos fases verticales
+verificadas en Pixel 7 físico, más dos correcciones encontradas durante esa verificación.
+
+**Fase B — Lista y cuadrícula de Playlists** (`PlaylistsFragment.kt`, `select_playlist.xml`,
+`list_item_playlist.xml`, `grid_item_playlist.xml`): encabezado con título + contador ("N
+playlists") + `FilterButtonBar` compartido (el mismo toggle lista/cuadrícula que ya usan
+Album/Artist), reemplazando el `Chip` suelto en un `FrameLayout` vacío de 48dp. El estado "Not
+downloaded" deja de mostrarse como texto permanente; el ícono de descarga fijo se sustituye por un
+menú `⋮` (`playlist_menu`) que reutiliza `Utils.createPopupMenu`. La cuadrícula gana paridad de
+información con la lista (conteo de canciones, estado de descarga, antes fijados a `0dp`/`GONE`).
+Se añade manejo real de insets inferiores contra el mini-reproductor/nav (`getContentBottomInset()`
+nuevo en `NavigationActivity`, aplicado vía `applyContentBottomInset()`).
+
+**Fase C — Detalle de playlist** (`AlbumDetailHeaderBinder.kt`, `TrackCollectionFragment.kt`,
+`MusicService.kt` + 3 implementaciones): se generaliza el hero de Album Detail en vez de duplicarlo
+-el binder gana parámetros para la acción final (ícono/descripción/callback: descarga para álbum,
+menú `⋮` para playlist)- y se registra también cuando `navArgs.playlistId != null`. El menú `⋮`
+del header ofrece Descargar/Renombrar/Eliminar. Se añade "Quitar de esta playlist" de punta a
+punta: `MusicService.updatePlaylist()` gana `songIndexesToRemove: List<Int>? = null` (el endpoint
+`updatePlaylist.view` ya lo soportaba, solo no estaba expuesto), nuevo menú
+`context_menu_track_collection_playlist.xml` usado solo en contexto de playlist, con el índice
+calculado dentro de `getAllTracks()`.
+
+**Corrección posterior — collage de carátulas reemplazado por una sola representativa:** a pedido
+explícito ("el collage se ve anticuado"), se sustituyó el collage de 4 niveles de fallback por una
+única carátula (`playlist_cover_collage.xml` pasa de un `GridLayout` con 4 `ImageView` y
+row/columnSpan dinámico a un solo `ImageView` + el ícono de respaldo ya existente). Se investigó
+un reporte de "ninguna lista muestra carátula" que resultó ser un artefacto de timing de las
+propias capturas de verificación (las peticiones `getPlaylist.view`/`getCoverArt.view` sí se
+completaban, solo después del screenshot), no un bug real ni del collage viejo ni del nuevo.
+
+**Corrección posterior — detalle de playlist a medio migrar:** varias condiciones del hero
+compartido quedaron acopladas solo a `navArgs.isAlbum` y nunca se extendieron a
+`navArgs.playlistId != null` en la Fase C original: (1) el título del hero se armaba con
+`navArgs.name` (siempre null en este flujo; solo se pasa `navArgs.playlistName`), dejando el hero
+sin título visible; (2) el toolbar mostraba el nombre de la playlist de forma permanente en vez de
+revelarlo al hacer scroll como Album, y mantenía visible el botón "Play all" del menú de opciones,
+duplicando el Play/Shuffle que ya vive en el hero; (3) las filas de canciones seguían mostrando el
+rating con estrellas heredado del `TrackViewBinder` genérico. Se generalizaron las cuatro
+condiciones para tratar playlist igual que álbum, sin tocar genre/search/downloads (que siguen
+usando el `HeaderViewBinder` genérico).
+
+**Verificación:** `ktlintCheck test assembleDebug -Pqc` en verde en cada fase. Verificado en Pixel
+7 físico: lista y cuadrícula con contenido real, playlist vacía y con canciones, menú `⋮` de
+lista y de detalle, remover canción de una playlist real (200 OK, conteo 50→49, UI actualizada),
+intento de remover de una playlist de sistema no editable (`Never Played`) rechazado limpiamente
+por el servidor con el mensaje de error correcto, hero con título visible y revelado por scroll,
+sin botón de play duplicado, filas sin estrellas.
+
 ## Mix diario v1: cierre y deuda v1.1 de TAKI_RADIOS_AND_DAILY_MIX.md
 
 Cierra la sección 15 ("Handoff") del documento: los cuatro pendientes de validación y la deuda
