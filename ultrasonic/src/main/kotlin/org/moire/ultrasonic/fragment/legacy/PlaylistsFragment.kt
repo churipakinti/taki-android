@@ -24,7 +24,6 @@ import android.widget.AdapterView.AdapterContextMenuInfo
 import android.widget.BaseAdapter
 import android.widget.CheckBox
 import android.widget.EditText
-import android.widget.GridLayout
 import android.widget.GridView
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -516,74 +515,40 @@ class PlaylistsFragment :
             resources.getQuantityString(R.plurals.n_songs, count, count)
     }
 
+    /*
+     * A single representative cover (the first track that actually has one) instead of a
+     * collage: the doc's 4-cover grid read as dated and, more importantly, drove per-image
+     * GridLayout row/columnSpan juggling that made covers fail to (re)appear once the real
+     * track list arrived asynchronously. One ImageView + one fallback icon is both simpler and
+     * more reliable.
+     */
     private fun bindPlaylistCover(row: View, playlist: Playlist) {
         val coverContainer = row.findViewById<MaterialCardView>(R.id.playlist_cover_container)
-        val coverGrid = row.findViewById<GridLayout>(R.id.playlist_cover_grid)
-        val coverViews = listOf<ImageView>(
-            row.findViewById(R.id.playlist_cover_1),
-            row.findViewById(R.id.playlist_cover_2),
-            row.findViewById(R.id.playlist_cover_3),
-            row.findViewById(R.id.playlist_cover_4)
-        )
-        val tracksWithCovers = playlistTracks[playlist.id]
+        val coverImage = row.findViewById<ImageView>(R.id.playlist_cover_image)
+        val defaultIcon = row.findViewById<ImageView>(R.id.playlist_default_icon)
+        val representativeTrack = playlistTracks[playlist.id]
             .orEmpty()
-            .filter { !it.coverArt.isNullOrBlank() }
-            .distinctBy { it.coverArt }
-            .take(MAX_COLLAGE_COVERS)
+            .firstOrNull { !it.coverArt.isNullOrBlank() }
+
         coverContainer.setCardBackgroundColor(getPlaylistFrameColor(row))
-        val outerPaddingDp = if (layoutMode == PlaylistLayoutMode.GRID) {
-            GRID_COLLAGE_OUTER_PADDING_DP
-        } else {
-            LIST_COLLAGE_OUTER_PADDING_DP
-        }
-        val outerPaddingPx = (outerPaddingDp * resources.displayMetrics.density).toInt()
-        coverGrid.setPadding(outerPaddingPx, outerPaddingPx, outerPaddingPx, outerPaddingPx)
+        coverImage.setImageDrawable(null)
+        val tag = "${playlist.id}:${representativeTrack?.coverArt}"
+        coverImage.tag = tag
+        coverImage.isVisible = representativeTrack != null
+        defaultIcon.isVisible = representativeTrack == null
 
-        coverViews.forEachIndexed { index, cover ->
-            cover.setImageDrawable(null)
-            cover.tag = "${playlist.id}:$index"
-            cover.isVisible = index < tracksWithCovers.size
-        }
-        applyCollageSpans(coverViews, tracksWithCovers.size)
-        row.findViewById<ImageView>(R.id.playlist_default_icon).isVisible =
-            tracksWithCovers.isEmpty()
-
-        if (tracksWithCovers.isNotEmpty()) {
+        if (representativeTrack != null) {
             imageLoaderProvider.executeOn { imageLoader ->
-                tracksWithCovers.forEachIndexed { index, track ->
-                    val cover = coverViews[index]
-                    if (cover.tag == "${playlist.id}:$index") {
-                        imageLoader.loadImage(
-                            cover,
-                            track,
-                            false,
-                            0,
-                            R.drawable.unknown_album
-                        )
-                    }
+                if (coverImage.tag == tag) {
+                    imageLoader.loadImage(
+                        coverImage,
+                        representativeTrack,
+                        false,
+                        0,
+                        R.drawable.unknown_album
+                    )
                 }
             }
-        }
-    }
-
-    /*
-     * Graduated collage fallback (docs/TAKI_PLAYLIST_UX_REDESIGN.md 1): a single cover fills
-     * the whole frame instead of being duplicated into 4 quadrants; two covers split the frame
-     * in half; three or four keep the original 2x2 grid. Reuses the same 4 ImageViews across
-     * binds, so every span must be reset on each call rather than only set once in XML.
-     */
-    private fun applyCollageSpans(coverViews: List<ImageView>, coverCount: Int) {
-        val spans = when (coverCount.coerceAtMost(MAX_COLLAGE_COVERS)) {
-            0, 1 -> listOf(FULL_FRAME_SPAN, FULL_FRAME_SPAN, FULL_FRAME_SPAN, FULL_FRAME_SPAN)
-            2 -> listOf(LEFT_HALF_SPAN, RIGHT_HALF_SPAN, LEFT_HALF_SPAN, RIGHT_HALF_SPAN)
-            else -> List(MAX_COLLAGE_COVERS) { QUADRANT_SPANS[it] }
-        }
-        coverViews.forEachIndexed { index, cover ->
-            val params = cover.layoutParams as GridLayout.LayoutParams
-            val (rowSpec, columnSpec) = spans[index]
-            params.rowSpec = rowSpec
-            params.columnSpec = columnSpec
-            cover.layoutParams = params
         }
     }
 
@@ -678,29 +643,12 @@ class PlaylistsFragment :
 
     companion object {
         private const val STATE_LAYOUT_MODE = "playlist_layout_mode"
-        private const val MAX_COLLAGE_COVERS = 4
         private const val GRID_COLUMN_COUNT = 2
         private const val GRID_SPACING_DP = 2
         private const val GRID_HORIZONTAL_PADDING_DP = 6
-        private const val GRID_COLLAGE_OUTER_PADDING_DP = 5
-        private const val LIST_COLLAGE_OUTER_PADDING_DP = 2
         private const val LIST_SPACING_DP = 4
         private const val LIST_HORIZONTAL_PADDING_DP = 6
         private const val EXTRA_BOTTOM_PADDING_DP = 8
-
-        // GridLayout row/column spans for the collage fallback levels - see applyCollageSpans().
-        private val FULL_FRAME_SPAN =
-            GridLayout.spec(0, 2) to GridLayout.spec(0, 2)
-        private val LEFT_HALF_SPAN =
-            GridLayout.spec(0, 2) to GridLayout.spec(0, 1)
-        private val RIGHT_HALF_SPAN =
-            GridLayout.spec(0, 2) to GridLayout.spec(1, 1)
-        private val QUADRANT_SPANS = listOf(
-            GridLayout.spec(0, 1) to GridLayout.spec(0, 1),
-            GridLayout.spec(0, 1) to GridLayout.spec(1, 1),
-            GridLayout.spec(1, 1) to GridLayout.spec(0, 1),
-            GridLayout.spec(1, 1) to GridLayout.spec(1, 1)
-        )
     }
 
     private fun deletePlaylist(playlist: Playlist) {

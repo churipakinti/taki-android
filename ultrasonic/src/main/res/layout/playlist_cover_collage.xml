@@ -3,55 +3,12 @@
     a:layout_width="match_parent"
     a:layout_height="match_parent">
 
-    <GridLayout
-        a:id="@+id/playlist_cover_grid"
+    <ImageView
+        a:id="@+id/playlist_cover_image"
         a:layout_width="match_parent"
         a:layout_height="match_parent"
-        a:columnCount="2"
-        a:padding="2dp"
-        a:rowCount="2">
-
-        <ImageView
-            a:id="@+id/playlist_cover_1"
-            a:layout_width="0dp"
-            a:layout_height="0dp"
-            a:layout_columnWeight="1"
-            a:layout_margin="2dp"
-            a:layout_rowWeight="1"
-            a:contentDescription="@null"
-            a:scaleType="centerCrop" />
-
-        <ImageView
-            a:id="@+id/playlist_cover_2"
-            a:layout_width="0dp"
-            a:layout_height="0dp"
-            a:layout_columnWeight="1"
-            a:layout_margin="2dp"
-            a:layout_rowWeight="1"
-            a:contentDescription="@null"
-            a:scaleType="centerCrop" />
-
-        <ImageView
-            a:id="@+id/playlist_cover_3"
-            a:layout_width="0dp"
-            a:layout_height="0dp"
-            a:layout_columnWeight="1"
-            a:layout_margin="2dp"
-            a:layout_rowWeight="1"
-            a:contentDescription="@null"
-            a:scaleType="centerCrop" />
-
-        <ImageView
-            a:id="@+id/playlist_cover_4"
-            a:layout_width="0dp"
-            a:layout_height="0dp"
-            a:layout_columnWeight="1"
-            a:layout_margin="2dp"
-            a:layout_rowWeight="1"
-            a:contentDescription="@null"
-            a:scaleType="centerCrop" />
-
-    </GridLayout>
+        a:contentDescription="@null"
+        a:scaleType="centerCrop" />
 
     <ImageView
         a:id="@+id/playlist_default_icon"
