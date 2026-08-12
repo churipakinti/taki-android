@@ -20,10 +20,10 @@ class SearchListModel(application: Application) : GenericListModel(application) 
 
     var searchResult: MutableLiveData<SearchResult?> = MutableLiveData()
 
-    private val latestQueryTracker = LatestQueryTracker()
+    private val latestRequestTracker = LatestRequestTracker()
 
     suspend fun search(query: String): SearchResult? {
-        latestQueryTracker.begin(query)
+        val requestId = latestRequestTracker.begin()
         val maxArtists = Settings.MAX_ARTISTS
         val maxAlbums = Settings.MAX_ALBUMS
         val maxSongs = Settings.MAX_SONGS
@@ -34,7 +34,7 @@ class SearchListModel(application: Application) : GenericListModel(application) 
             service.search(criteria)
         }
 
-        if (result != null && latestQueryTracker.isCurrent(query)) {
+        if (result != null && latestRequestTracker.isCurrent(requestId)) {
             searchResult.postValue(result)
         }
         return result

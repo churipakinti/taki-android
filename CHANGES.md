@@ -1,5 +1,39 @@
 # Changes
 
+## Corrección: `LatestQueryTracker` debe identificar cada ejecución de búsqueda, no solo su texto
+
+Reporte externo (`TAKI_TWO_OPTIMIZATION_FIXES.md`) sobre el trabajo de Fase 9. Confirmado contra
+el código actual antes de tocar nada.
+
+**Causa confirmada:** `LatestQueryTracker` comparaba únicamente el texto de la consulta
+(`private var latestQuery: String?`). Esto rechaza correctamente una respuesta vieja cuando las
+consultas son distintas ("queen" vs "queens"), pero dos ejecuciones consecutivas con el
+**mismo** texto ("queen" tipeado, borrado y vuelto a tipear; o un debounce compitiendo con un
+submit manual) comparten la misma clave -- si la primera (más lenta) termina después de la
+segunda (más rápida), ambas se consideran "la consulta vigente" y el resultado viejo puede pisar
+al nuevo. Es la misma clase de bug que el propio `LatestQueryTracker` fue creado para resolver en
+Fase 9, sobrevivida en un caso de borde que el diseño original no cubría.
+
+**Diseño implementado:** renombrado a `LatestRequestTracker`, con identidad basada en un
+contador monotónico (`begin(): Long`) en vez del texto de la consulta. `SearchListModel.search()`
+ahora guarda el `requestId` devuelto por `begin()` y lo compara con `isCurrent(requestId)` antes
+de publicar, en vez de comparar el string de la consulta. El texto ya no participa en absoluto de
+la identidad de la solicitud -- dos búsquedas por el mismo texto ahora obtienen ids distintos por
+construcción, sin importar qué tan rápido se repitan. Se mantiene la cancelación de corrutina
+existente y el debounce de 300ms sin cambios.
+
+**Tests:** `LatestRequestTrackerTest` reescrito con los casos que pide el reporte explícitamente:
+una solicitud es vigente justo después de empezar, dos solicitudes obtienen ids distintos aunque
+el texto sea el mismo, una solicitud más rápida que termina primero se acepta, y la más lenta que
+termina después se rechaza.
+
+**Verificación en el Pixel 7:** búsqueda en vivo contra Navidrome (`search3.view`), resultados
+correctos, sin excepciones. No fue posible reproducir en vivo la carrera exacta entre dos
+respuestas de red reales para la misma consulta (requeriría controlar artificialmente la latencia
+del servidor) -- ese escenario queda cubierto por los tests unitarios deterministas descritos
+arriba, que simulan directamente "la segunda respuesta llega primero, la primera llega después"
+sin depender de temporización real de red.
+
 ## Optimización interna Fase 7: migra el flujo de Search a `suspend`
 
 Primer flujo vertical de la migración gradual a coroutines que pide Fase 7 ("elegir un flujo
