@@ -40,10 +40,10 @@ interface MusicService {
     suspend fun getGenres(refresh: Boolean): List<Genre>
 
     @Throws(Exception::class)
-    fun star(id: String?, albumId: String? = null, artistId: String? = null)
+    suspend fun star(id: String?, albumId: String? = null, artistId: String? = null)
 
     @Throws(Exception::class)
-    fun unstar(id: String?, albumId: String? = null, artistId: String? = null)
+    suspend fun unstar(id: String?, albumId: String? = null, artistId: String? = null)
 
     @Throws(Exception::class)
     fun setRating(id: String, rating: Int)
@@ -87,22 +87,22 @@ interface MusicService {
     suspend fun search(criteria: SearchCriteria): SearchResult?
 
     @Throws(Exception::class)
-    fun getPlaylist(id: String, name: String): MusicDirectory
+    suspend fun getPlaylist(id: String, name: String): MusicDirectory
 
     @Throws(Exception::class)
     fun getPodcastsChannels(refresh: Boolean): List<PodcastsChannel>
 
     @Throws(Exception::class)
-    fun getPlaylists(refresh: Boolean): List<Playlist>
+    suspend fun getPlaylists(refresh: Boolean): List<Playlist>
 
     @Throws(Exception::class)
-    fun createPlaylist(id: String?, name: String?, tracks: List<Track>)
+    suspend fun createPlaylist(id: String?, name: String?, tracks: List<Track>)
 
     @Throws(Exception::class)
-    fun deletePlaylist(id: String)
+    suspend fun deletePlaylist(id: String)
 
     @Throws(Exception::class)
-    fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean)
+    suspend fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean)
 
     @Throws(Exception::class)
     fun getLyrics(artist: String, title: String): Lyrics?
@@ -139,10 +139,10 @@ interface MusicService {
     suspend fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory
 
     @Throws(Exception::class)
-    fun getStarred(): SearchResult
+    suspend fun getStarred(): SearchResult
 
     @Throws(Exception::class)
-    fun getStarred2(): SearchResult
+    suspend fun getStarred2(): SearchResult
 
     /**
      * Return response [InputStream] and a [Boolean] that indicates if this response is

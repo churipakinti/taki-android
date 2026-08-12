@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.junit.Test
 import org.moire.ultrasonic.api.subsonic.models.Artist
@@ -10,22 +11,21 @@ import org.moire.ultrasonic.api.subsonic.models.SearchTwoResult
  */
 class SubsonicApiGetStarredTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should handle error response`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getStarred().execute()
+    fun `Should handle error response`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getStarredSuspend()
         }
 
         response.starred `should be equal to` SearchTwoResult()
     }
 
     @Test
-    fun `Should handle ok reponse`() {
+    fun `Should handle ok reponse`() = runTest {
         mockWebServerRule.enqueueResponse("get_starred_ok.json")
 
-        val response = client.api.getStarred().execute()
+        val response = client.api.getStarredSuspend()
 
-        assertResponseSuccessful(response)
-        with(response.body()!!.starred) {
+        with(response.starred) {
             albumList `should be equal to` emptyList()
             artistList.size `should be equal to` 1
             artistList[0] `should be equal to` Artist(
@@ -38,14 +38,14 @@ class SubsonicApiGetStarredTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should pass music folder id in request param`() {
+    fun `Should pass music folder id in request param`() = runTest {
         val musicFolderId = "441"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_starred_ok.json",
             expectedParam = "musicFolderId=$musicFolderId"
         ) {
-            client.api.getStarred(musicFolderId = musicFolderId).execute()
+            client.api.getStarredSuspend(musicFolderId = musicFolderId)
         }
     }
 }

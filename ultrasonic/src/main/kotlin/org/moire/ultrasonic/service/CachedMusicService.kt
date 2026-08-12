@@ -271,7 +271,7 @@ class CachedMusicService(private val musicService: MusicService) :
         musicService.search(criteria)
 
     @Throws(Exception::class)
-    override fun getPlaylist(id: String, name: String): MusicDirectory =
+    override suspend fun getPlaylist(id: String, name: String): MusicDirectory =
         musicService.getPlaylist(id, name)
 
     @Throws(Exception::class)
@@ -290,7 +290,7 @@ class CachedMusicService(private val musicService: MusicService) :
         musicService.getPodcastEpisodes(podcastChannelId)
 
     @Throws(Exception::class)
-    override fun getPlaylists(refresh: Boolean): List<Playlist> {
+    override suspend fun getPlaylists(refresh: Boolean): List<Playlist> {
         checkSettingsChanged()
         var result = if (refresh) null else cachedPlaylists.get()
         if (result == null) {
@@ -301,18 +301,18 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun createPlaylist(id: String?, name: String?, tracks: List<Track>) {
+    override suspend fun createPlaylist(id: String?, name: String?, tracks: List<Track>) {
         cachedPlaylists.clear()
         musicService.createPlaylist(id, name, tracks)
     }
 
     @Throws(Exception::class)
-    override fun deletePlaylist(id: String) {
+    override suspend fun deletePlaylist(id: String) {
         musicService.deletePlaylist(id)
     }
 
     @Throws(Exception::class)
-    override fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean) {
+    override suspend fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean) {
         musicService.updatePlaylist(id, name, comment, pub)
     }
 
@@ -349,10 +349,10 @@ class CachedMusicService(private val musicService: MusicService) :
     override fun getRandomSongs(size: Int): MusicDirectory = musicService.getRandomSongs(size)
 
     @Throws(Exception::class)
-    override fun getStarred(): SearchResult = musicService.getStarred()
+    override suspend fun getStarred(): SearchResult = musicService.getStarred()
 
     @Throws(Exception::class)
-    override fun getStarred2(): SearchResult = musicService.getStarred2()
+    override suspend fun getStarred2(): SearchResult = musicService.getStarred2()
 
     @Throws(Exception::class)
     override fun getDownloadInputStream(
@@ -418,12 +418,12 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun star(id: String?, albumId: String?, artistId: String?) {
+    override suspend fun star(id: String?, albumId: String?, artistId: String?) {
         musicService.star(id, albumId, artistId)
     }
 
     @Throws(Exception::class)
-    override fun unstar(id: String?, albumId: String?, artistId: String?) {
+    override suspend fun unstar(id: String?, albumId: String?, artistId: String?) {
         musicService.unstar(id, albumId, artistId)
     }
 

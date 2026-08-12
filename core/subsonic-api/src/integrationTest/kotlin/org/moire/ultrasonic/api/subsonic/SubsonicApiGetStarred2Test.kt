@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.junit.Test
 import org.moire.ultrasonic.api.subsonic.models.Artist
@@ -11,22 +12,21 @@ import org.moire.ultrasonic.api.subsonic.models.SearchTwoResult
 @Suppress("NamingConventionViolation")
 class SubsonicApiGetStarred2Test : SubsonicAPIClientTest() {
     @Test
-    fun `Should handle error response`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getStarred2().execute()
+    fun `Should handle error response`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getStarred2Suspend()
         }
 
         response.starred2 `should be equal to` SearchTwoResult()
     }
 
     @Test
-    fun `Should handle ok reponse`() {
+    fun `Should handle ok reponse`() = runTest {
         mockWebServerRule.enqueueResponse("get_starred_2_ok.json")
 
-        val response = client.api.getStarred2().execute()
+        val response = client.api.getStarred2Suspend()
 
-        assertResponseSuccessful(response)
-        with(response.body()!!.starred2) {
+        with(response.starred2) {
             albumList `should be equal to` emptyList()
             artistList.size `should be equal to` 1
             artistList[0] `should be equal to` Artist(
@@ -39,14 +39,14 @@ class SubsonicApiGetStarred2Test : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should pass music folder id in request param`() {
+    fun `Should pass music folder id in request param`() = runTest {
         val musicFolderId = "441"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_starred_2_ok.json",
             expectedParam = "musicFolderId=$musicFolderId"
         ) {
-            client.api.getStarred2(musicFolderId = musicFolderId).execute()
+            client.api.getStarred2Suspend(musicFolderId = musicFolderId)
         }
     }
 }

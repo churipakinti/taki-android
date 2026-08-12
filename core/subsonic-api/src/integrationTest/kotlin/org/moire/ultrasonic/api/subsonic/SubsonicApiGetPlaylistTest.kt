@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
 import org.junit.Test
@@ -11,9 +12,9 @@ import org.moire.ultrasonic.api.subsonic.models.Playlist
  */
 class SubsonicApiGetPlaylistTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should parse error response`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getPlaylist("10").execute()
+    fun `Should parse error response`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getPlaylistSuspend("10")
         }
 
         response.playlist `should not be` null
@@ -21,13 +22,12 @@ class SubsonicApiGetPlaylistTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should parse ok response`() {
+    fun `Should parse ok response`() = runTest {
         mockWebServerRule.enqueueResponse("get_playlist_ok.json")
 
-        val response = client.api.getPlaylist("4").execute()
+        val response = client.api.getPlaylistSuspend("4")
 
-        assertResponseSuccessful(response)
-        with(response.body()!!.playlist) {
+        with(response.playlist) {
             id `should be equal to` "0"
             name `should be equal to` "Aug 27, 2017 11:17 AM"
             owner `should be equal to` "admin"
@@ -53,14 +53,14 @@ class SubsonicApiGetPlaylistTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should pass id as request param`() {
+    fun `Should pass id as request param`() = runTest {
         val playlistId = "453"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_playlist_ok.json",
             expectedParam = "id=$playlistId"
         ) {
-            client.api.getPlaylist(playlistId).execute()
+            client.api.getPlaylistSuspend(playlistId)
         }
     }
 }

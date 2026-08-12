@@ -80,19 +80,22 @@ interface SubsonicAPIDefinition {
     @GET("getArtists.view")
     fun getArtists(@Query("musicFolderId") musicFolderId: String?): Call<GetArtistsResponse>
 
+    // Playlists and favorites/starred are fully migrated to suspend (Fase 7 of
+    // TAKI_CODE_OPTIMIZATION_PLAN.md), same as Search/Home/Album/Artist/Library above - no
+    // caller was left on the blocking version, so it isn't kept alongside these.
     @GET("star.view")
-    fun star(
+    suspend fun starSuspend(
         @Query("id") id: String? = null,
         @Query("albumId") albumId: String? = null,
         @Query("artistId") artistId: String? = null
-    ): Call<SubsonicResponse>
+    ): SubsonicResponse
 
     @GET("unstar.view")
-    fun unstar(
+    suspend fun unstarSuspend(
         @Query("id") id: String? = null,
         @Query("albumId") albumId: String? = null,
         @Query("artistId") artistId: String? = null
-    ): Call<SubsonicResponse>
+    ): SubsonicResponse
 
     @GET("setRating.view")
     fun setRating(@Query("id") id: String, @Query("rating") rating: Int): Call<SubsonicResponse>
@@ -160,30 +163,32 @@ interface SubsonicAPIDefinition {
     ): SearchThreeResponse
 
     @GET("getPlaylist.view")
-    fun getPlaylist(@Query("id") id: String): Call<GetPlaylistResponse>
+    suspend fun getPlaylistSuspend(@Query("id") id: String): GetPlaylistResponse
 
     @GET("getPlaylists.view")
-    fun getPlaylists(@Query("username") username: String? = null): Call<GetPlaylistsResponse>
+    suspend fun getPlaylistsSuspend(
+        @Query("username") username: String? = null
+    ): GetPlaylistsResponse
 
     @GET("createPlaylist.view")
-    fun createPlaylist(
+    suspend fun createPlaylistSuspend(
         @Query("playlistId") id: String? = null,
         @Query("name") name: String? = null,
         @Query("songId") songIds: List<String>? = null
-    ): Call<SubsonicResponse>
+    ): SubsonicResponse
 
     @GET("deletePlaylist.view")
-    fun deletePlaylist(@Query("id") id: String): Call<SubsonicResponse>
+    suspend fun deletePlaylistSuspend(@Query("id") id: String): SubsonicResponse
 
     @GET("updatePlaylist.view")
-    fun updatePlaylist(
+    suspend fun updatePlaylistSuspend(
         @Query("playlistId") id: String,
         @Query("name") name: String? = null,
         @Query("comment") comment: String? = null,
         @Query("public") public: Boolean? = null,
         @Query("songIdToAdd") songIdsToAdd: List<String>? = null,
         @Query("songIndexToRemove") songIndexesToRemove: List<Int>? = null
-    ): Call<SubsonicResponse>
+    ): SubsonicResponse
 
     @GET("getPodcasts.view")
     fun getPodcasts(
@@ -265,12 +270,14 @@ interface SubsonicAPIDefinition {
     ): Call<GetRandomSongsResponse>
 
     @GET("getStarred.view")
-    fun getStarred(@Query("musicFolderId") musicFolderId: String? = null): Call<GetStarredResponse>
+    suspend fun getStarredSuspend(
+        @Query("musicFolderId") musicFolderId: String? = null
+    ): GetStarredResponse
 
     @GET("getStarred2.view")
-    fun getStarred2(
+    suspend fun getStarred2Suspend(
         @Query("musicFolderId") musicFolderId: String? = null
-    ): Call<GetStarredTwoResponse>
+    ): GetStarredTwoResponse
 
     @Streaming
     @GET("getCoverArt.view")

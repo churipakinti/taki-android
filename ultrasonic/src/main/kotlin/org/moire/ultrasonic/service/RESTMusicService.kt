@@ -128,13 +128,13 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun star(id: String?, albumId: String?, artistId: String?) {
-        API.star(id, albumId, artistId).execute().throwOnFailure()
+    override suspend fun star(id: String?, albumId: String?, artistId: String?) {
+        API.starSuspend(id, albumId, artistId).throwOnFailure()
     }
 
     @Throws(Exception::class)
-    override fun unstar(id: String?, albumId: String?, artistId: String?) {
-        API.unstar(id, albumId, artistId).execute().throwOnFailure()
+    override suspend fun unstar(id: String?, albumId: String?, artistId: String?) {
+        API.unstarSuspend(id, albumId, artistId).throwOnFailure()
     }
 
     @Throws(Exception::class)
@@ -267,10 +267,10 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getPlaylist(id: String, name: String): MusicDirectory {
-        val response = API.getPlaylist(id).execute().throwOnFailure()
+    override suspend fun getPlaylist(id: String, name: String): MusicDirectory {
+        val response = API.getPlaylistSuspend(id).throwOnFailure()
 
-        val playlist = response.body()!!.playlist.toMusicDirectoryDomainEntity(activeServerId)
+        val playlist = response.playlist.toMusicDirectoryDomainEntity(activeServerId)
         savePlaylist(name, playlist)
 
         return playlist
@@ -287,10 +287,10 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getPlaylists(refresh: Boolean): List<Playlist> {
-        val response = API.getPlaylists(null).execute().throwOnFailure()
+    override suspend fun getPlaylists(refresh: Boolean): List<Playlist> {
+        val response = API.getPlaylistsSuspend(null).throwOnFailure()
 
-        return response.body()!!.playlists.toDomainEntitiesList()
+        return response.playlists.toDomainEntitiesList()
     }
 
     /**
@@ -299,7 +299,7 @@ open class RESTMusicService(
      * String is required when creating
      */
     @Throws(Exception::class)
-    override fun createPlaylist(id: String?, name: String?, tracks: List<Track>) {
+    override suspend fun createPlaylist(id: String?, name: String?, tracks: List<Track>) {
         require(id != null || name != null) { "Either id or name is required." }
         val pSongIds: MutableList<String> = ArrayList(tracks.size)
 
@@ -307,18 +307,17 @@ open class RESTMusicService(
             pSongIds.add(id1)
         }
 
-        API.createPlaylist(id, name, pSongIds.toList()).execute().throwOnFailure()
+        API.createPlaylistSuspend(id, name, pSongIds.toList()).throwOnFailure()
     }
 
     @Throws(Exception::class)
-    override fun deletePlaylist(id: String) {
-        API.deletePlaylist(id).execute().throwOnFailure()
+    override suspend fun deletePlaylist(id: String) {
+        API.deletePlaylistSuspend(id).throwOnFailure()
     }
 
     @Throws(Exception::class)
-    override fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean) {
-        API.updatePlaylist(id, name, comment, pub, null, null)
-            .execute().throwOnFailure()
+    override suspend fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean) {
+        API.updatePlaylistSuspend(id, name, comment, pub, null, null).throwOnFailure()
     }
 
     @Throws(Exception::class)
@@ -473,17 +472,17 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getStarred(): SearchResult {
-        val response = API.getStarred(null).execute().throwOnFailure()
+    override suspend fun getStarred(): SearchResult {
+        val response = API.getStarredSuspend(null).throwOnFailure()
 
-        return response.body()!!.starred.toDomainEntity(activeServerId)
+        return response.starred.toDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getStarred2(): SearchResult {
-        val response = API.getStarred2(null).execute().throwOnFailure()
+    override suspend fun getStarred2(): SearchResult {
+        val response = API.getStarred2Suspend(null).throwOnFailure()
 
-        return response.body()!!.starred2.toDomainEntity(activeServerId)
+        return response.starred2.toDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)

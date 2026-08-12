@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 /**
@@ -7,91 +8,92 @@ import org.junit.Test
  */
 class SubsonicApiUpdatePlaylistTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should handle error response`() {
-        checkErrorCallParsed(mockWebServerRule) {
-            client.api.updatePlaylist("10").execute()
+    fun `Should handle error response`() = runTest {
+        checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.updatePlaylistSuspend("10")
         }
     }
 
     @Test
-    fun `Should handle ok response`() {
+    fun `Should handle ok response`() = runTest {
         mockWebServerRule.enqueueResponse("ping_ok.json")
 
-        val response = client.api.updatePlaylist("15").execute()
-
-        assertResponseSuccessful(response)
+        client.api.updatePlaylistSuspend("15")
     }
 
     @Test
-    fun `Should pass playlist id param in request`() {
+    fun `Should pass playlist id param in request`() = runTest {
         val id = "5453"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "playlistId=$id"
         ) {
-            client.api.updatePlaylist(id = id).execute()
+            client.api.updatePlaylistSuspend(id = id)
         }
     }
 
     @Test
-    fun `Should pass name param in request`() {
+    fun `Should pass name param in request`() = runTest {
         val name = "some-name"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "name=$name"
         ) {
-            client.api.updatePlaylist("22", name = name).execute()
+            client.api.updatePlaylistSuspend("22", name = name)
         }
     }
 
     @Test
-    fun `Should pass comment param in request`() {
+    fun `Should pass comment param in request`() = runTest {
         val comment = "some-unusual-comment"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "comment=$comment"
         ) {
-            client.api.updatePlaylist("42", comment = comment).execute()
+            client.api.updatePlaylistSuspend("42", comment = comment)
         }
     }
 
     @Test
-    fun `Should pass public param in request`() {
+    fun `Should pass public param in request`() = runTest {
         val public = true
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "public=$public"
         ) {
-            client.api.updatePlaylist("53", public = public).execute()
+            client.api.updatePlaylistSuspend("53", public = public)
         }
     }
 
     @Test
-    fun `Should pass song ids to update in request`() {
+    fun `Should pass song ids to update in request`() = runTest {
         val songIds = listOf("45", "81")
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "songIdToAdd=${songIds[0]}&songIdToAdd=${songIds[1]}"
         ) {
-            client.api.updatePlaylist("25", songIdsToAdd = songIds).execute()
+            client.api.updatePlaylistSuspend("25", songIdsToAdd = songIds)
         }
     }
 
     @Test
-    fun `Should pass song indexes to remove in request`() {
+    fun `Should pass song indexes to remove in request`() = runTest {
         val songIndexesToRemove = listOf(129, 1)
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "songIndexToRemove=${songIndexesToRemove[0]}&" +
                 "songIndexToRemove=${songIndexesToRemove[1]}"
         ) {
-            client.api.updatePlaylist("49", songIndexesToRemove = songIndexesToRemove).execute()
+            client.api.updatePlaylistSuspend(
+                "49",
+                songIndexesToRemove = songIndexesToRemove
+            )
         }
     }
 }

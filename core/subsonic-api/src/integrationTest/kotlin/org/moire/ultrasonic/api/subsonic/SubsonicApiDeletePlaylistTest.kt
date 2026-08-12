@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 /**
@@ -7,30 +8,28 @@ import org.junit.Test
  */
 class SubsonicApiDeletePlaylistTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should handle error response`() {
-        checkErrorCallParsed(mockWebServerRule) {
-            client.api.deletePlaylist("10").execute()
+    fun `Should handle error response`() = runTest {
+        checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.deletePlaylistSuspend("10")
         }
     }
 
     @Test
-    fun `Should handle ok response`() {
+    fun `Should handle ok response`() = runTest {
         mockWebServerRule.enqueueResponse("ping_ok.json")
 
-        val response = client.api.deletePlaylist("10").execute()
-
-        assertResponseSuccessful(response)
+        client.api.deletePlaylistSuspend("10")
     }
 
     @Test
-    fun `Should pass id param in request`() {
+    fun `Should pass id param in request`() = runTest {
         val id = "534"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "id=$id"
         ) {
-            client.api.deletePlaylist(id).execute()
+            client.api.deletePlaylistSuspend(id)
         }
     }
 }

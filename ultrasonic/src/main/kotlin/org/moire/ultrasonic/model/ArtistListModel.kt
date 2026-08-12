@@ -164,7 +164,7 @@ class ArtistListModel(application: Application) : GenericListModel(application) 
         }
     }
 
-    private fun getStarredArtists(
+    private suspend fun getStarredArtists(
         items: List<ArtistOrIndex>,
         musicService: MusicService
     ): List<ArtistOrIndex> {

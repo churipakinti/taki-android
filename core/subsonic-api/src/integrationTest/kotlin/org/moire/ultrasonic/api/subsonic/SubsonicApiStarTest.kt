@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be`
 import org.junit.Test
 import org.moire.ultrasonic.api.subsonic.response.SubsonicResponse
@@ -9,55 +10,54 @@ import org.moire.ultrasonic.api.subsonic.response.SubsonicResponse
  */
 class SubsonicApiStarTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should parse star ok response`() {
+    fun `Should parse star ok response`() = runTest {
         mockWebServerRule.enqueueResponse("ping_ok.json")
 
-        val response = client.api.star().execute()
+        val response = client.api.starSuspend()
 
-        assertResponseSuccessful(response)
-        response.body()?.status `should be` SubsonicResponse.Status.OK
+        response.status `should be` SubsonicResponse.Status.OK
     }
 
     @Test
-    fun `Should parse star error response`() {
-        checkErrorCallParsed(mockWebServerRule) {
-            client.api.star().execute()
+    fun `Should parse star error response`() = runTest {
+        checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.starSuspend()
         }
     }
 
     @Test
-    fun `Should pass id param`() {
+    fun `Should pass id param`() = runTest {
         val id = "110"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "id=$id"
         ) {
-            client.api.star(id = id).execute()
+            client.api.starSuspend(id = id)
         }
     }
 
     @Test
-    fun `Should pass artist id param`() {
+    fun `Should pass artist id param`() = runTest {
         val artistId = "123"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "artistId=$artistId"
         ) {
-            client.api.star(artistId = artistId).execute()
+            client.api.starSuspend(artistId = artistId)
         }
     }
 
     @Test
-    fun `Should pass album id param`() {
+    fun `Should pass album id param`() = runTest {
         val albumId = "1001"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "albumId=$albumId"
         ) {
-            client.api.star(albumId = albumId).execute()
+            client.api.starSuspend(albumId = albumId)
         }
     }
 }

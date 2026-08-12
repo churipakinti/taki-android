@@ -181,7 +181,7 @@ class OfflineMusicService :
     }
 
     @Suppress("NestedBlockDepth", "TooGenericExceptionCaught")
-    override fun getPlaylists(refresh: Boolean): List<Playlist> {
+    override suspend fun getPlaylists(refresh: Boolean): List<Playlist> {
         val playlists: MutableList<Playlist> = ArrayList()
         val root = FileUtil.getPlaylistDirectory()
         var lastServer: String? = null
@@ -224,7 +224,7 @@ class OfflineMusicService :
     }
 
     @Throws(Exception::class)
-    override fun getPlaylist(id: String, name: String): MusicDirectory {
+    override suspend fun getPlaylist(id: String, name: String): MusicDirectory {
         var playlistName = name
         var reader: Reader? = null
         var buffer: BufferedReader? = null
@@ -256,7 +256,7 @@ class OfflineMusicService :
 
     @Suppress("TooGenericExceptionCaught")
     @Throws(Exception::class)
-    override fun createPlaylist(id: String?, name: String?, tracks: List<Track>) {
+    override suspend fun createPlaylist(id: String?, name: String?, tracks: List<Track>) {
         val playlistFile =
             FileUtil.getPlaylistFile(activeServerProvider.getActiveServer().name, name)
         val fw = FileWriter(playlistFile)
@@ -303,12 +303,16 @@ class OfflineMusicService :
     }
 
     @Throws(Exception::class)
-    override fun deletePlaylist(id: String): Unit =
+    override suspend fun deletePlaylist(id: String): Unit =
         throw OfflineException("Playlists not available in offline mode")
 
     @Throws(Exception::class)
-    override fun updatePlaylist(id: String, name: String?, comment: String?, pub: Boolean): Unit =
-        throw OfflineException("Updating playlist not available in offline mode")
+    override suspend fun updatePlaylist(
+        id: String,
+        name: String?,
+        comment: String?,
+        pub: Boolean
+    ): Unit = throw OfflineException("Updating playlist not available in offline mode")
 
     @Throws(Exception::class)
     override fun getLyrics(artist: String, title: String): Lyrics =
@@ -378,7 +382,7 @@ class OfflineMusicService :
         throw OfflineException("Jukebox not available in offline mode")
 
     @Throws(Exception::class)
-    override fun getStarred(): SearchResult =
+    override suspend fun getStarred(): SearchResult =
         throw OfflineException("Starred not available in offline mode")
 
     @Throws(Exception::class)
@@ -416,11 +420,11 @@ class OfflineMusicService :
         throw OfflineException("Updating shares not available in offline mode")
 
     @Throws(Exception::class)
-    override fun star(id: String?, albumId: String?, artistId: String?): Unit =
+    override suspend fun star(id: String?, albumId: String?, artistId: String?): Unit =
         throw OfflineException("Star not available in offline mode")
 
     @Throws(Exception::class)
-    override fun unstar(id: String?, albumId: String?, artistId: String?): Unit =
+    override suspend fun unstar(id: String?, albumId: String?, artistId: String?): Unit =
         throw OfflineException("UnStar not available in offline mode")
 
     @Throws(Exception::class)
@@ -456,7 +460,7 @@ class OfflineMusicService :
         throw OfflineException("getVideos isn't available in offline mode")
 
     @Throws(OfflineException::class)
-    override fun getStarred2(): SearchResult =
+    override suspend fun getStarred2(): SearchResult =
         throw OfflineException("getStarred2 isn't available in offline mode")
 
     override fun ping() {

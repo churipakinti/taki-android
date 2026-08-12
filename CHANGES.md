@@ -1,5 +1,62 @@
 # Changes
 
+## Optimización interna Fase 7: migra Playlists y Favoritos a `suspend` (último flujo de la fase)
+
+Último flujo vertical del orden sugerido por Fase 7. Cubre `star`/`unstar`, `getPlaylist`,
+`getPlaylists`, `createPlaylist`, `deletePlaylist`, `updatePlaylist`, `getStarred` y `getStarred2`
+-- las nueve funciones de `MusicService` que quedaban con `.execute()` bloqueante tras las
+migraciones anteriores (Search, luego Home/Álbum/Artista/Biblioteca).
+
+**Cambio, de abajo hacia arriba:**
+- `SubsonicAPIDefinition`: las nueve funciones (`Call<T>` + `.execute()`) reemplazadas por sus
+  variantes `suspend` (`starSuspend`, `unstarSuspend`, `getPlaylistSuspend`, `getPlaylistsSuspend`,
+  `createPlaylistSuspend`, `deletePlaylistSuspend`, `updatePlaylistSuspend`, `getStarredSuspend`,
+  `getStarred2Suspend`), sin dejar la versión bloqueante -- no quedaba ningún consumidor sin
+  migrar, mismo criterio que los flujos anteriores.
+- `ApiVersionCheckWrapper`: los ocho overrides con verificación de versión mínima pasan a las
+  variantes suspend, preservando exactamente el mismo `checkVersion`/`checkParamVersion` de cada
+  uno. `getPlaylist` (singular) no tenía gating propio -- caía directo al delegado `by api` -- y
+  se mantuvo así a propósito, sin inventar una verificación de versión que nunca existió.
+- `MusicService` y sus tres implementaciones (`RESTMusicService`, `OfflineMusicService`,
+  `CachedMusicService`) pasan las nueve funciones a `suspend fun`.
+- Efecto dominó, dos casos no obvios detectados durante el mapeo de blast radius (ningún otro
+  lugar necesitó cambios, confirmado por compilación limpia a la primera):
+  - `ArtistListModel.getStarredArtists()` (privada, usada por el orden "Starred" de Artistas)
+    pasa a `suspend fun` -- llama a `getStarred()`/`getStarred2()` y su único llamador
+    (`filterAndSortItems`) ya era suspend, así que el dominó no sube más allá.
+  - `DownloadUtil.getTracksFromServer()` (privada, resuelve qué canciones descargar) pasa a
+    `suspend fun` -- llama a `getPlaylist()` en la rama que no es carpeta ni share; su único
+    llamador (`getTracksFromServerAsync`) ya la envolvía en `withContext(Dispatchers.IO)`.
+
+**No tocado:** todo lo demás que ya llamaba a estas funciones (`CreatePlaylistFragment`,
+`PlaylistsFragment`, `PlayerFragment`, `TrackCollectionFragment`/`TrackCollectionModel`,
+`RatingManager`, `MediaLibrarySessionCallback`, `PlaylistUtil`) -- ya corrían dentro de
+`lifecycleScope.launch`/`viewModelScope.launch`/`withContext(Dispatchers.IO)` o eran `suspend fun`
+desde antes, así que la llamada interna pasó de bloqueante a suspend sin requerir ningún cambio de
+firma.
+
+**Tests:** los 9 archivos de test de integración que ejercitan estos endpoints
+(`SubsonicApiStarTest`, `SubsonicApiUnstarTest`, `SubsonicApiGetPlaylistTest`,
+`SubsonicApiGetPlaylistsTest`, `SubsonicApiCreatePlaylistTest`, `SubsonicApiDeletePlaylistTest`,
+`SubsonicApiUpdatePlaylistTest`, `SubsonicApiGetStarredTest`, `SubsonicApiGetStarred2Test`)
+reescritos con `runTest`/las variantes suspend, mismo patrón que las migraciones anteriores.
+
+**Comandos ejecutados:** `./gradlew ktlintCheck -Pqc` (verde), `./gradlew test -Pqc` (verde -- 290
+tests en `core:subsonic-api`, 101 en `ultrasonic`, 0 fallos), `./gradlew assembleDebug -Pqc`
+(verde).
+
+**Verificación en el Pixel 7 (Navidrome real):** los ocho endpoints se ejercitaron en vivo, todos
+con `200 OK` y cero excepciones en `logcat` -- `star.view`/`unstar.view` marcando y desmarcando una
+canción de una playlist existente (la UI actualiza el ícono de estrella al instante en ambos
+sentidos); `getPlaylists.view` listando las playlists inteligentes de Navidrome;
+`getPlaylist.view` abriendo el detalle de una de ellas; `createPlaylist.view` creando
+"Taki_Test_Playlist" con 2 canciones desde la pantalla de selección; `updatePlaylist.view`
+marcándola como pública vía "Update Information"; `deletePlaylist.view` borrándola (confirmado
+que desaparece de la lista); `getStarred2.view` cargando "Liked Songs" con las 4 canciones
+marcadas como favoritas (este servidor usa ID3 tags, por lo que ejercitó `getStarred2` y no
+`getStarred` -- ambas comparten el mismo código, y `getStarred` ya está cubierto por los tests de
+integración). Sin limitaciones pendientes para este flujo.
+
 ## Optimización interna Fase 7: migra Home, Álbum/Artista y Biblioteca a `suspend`
 
 Segundo y tercer flujo vertical del orden sugerido por Fase 7 (Search ya migrado). A diferencia

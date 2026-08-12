@@ -73,7 +73,7 @@ object DownloadUtil {
         getTracksFromServer(isArtist, id, isDirectory, name, isShare)
     }
 
-    fun getTracksFromServer(
+    suspend fun getTracksFromServer(
         isArtist: Boolean,
         id: String,
         isDirectory: Boolean,

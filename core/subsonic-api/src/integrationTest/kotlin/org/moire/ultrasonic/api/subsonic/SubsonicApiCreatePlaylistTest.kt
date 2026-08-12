@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 /**
@@ -7,54 +8,52 @@ import org.junit.Test
  */
 class SubsonicApiCreatePlaylistTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should handle error response`() {
-        checkErrorCallParsed(mockWebServerRule) {
-            client.api.createPlaylist().execute()
+    fun `Should handle error response`() = runTest {
+        checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.createPlaylistSuspend()
         }
     }
 
     @Test
-    fun `Should hanlde ok response`() {
+    fun `Should hanlde ok response`() = runTest {
         mockWebServerRule.enqueueResponse("ping_ok.json")
 
-        val response = client.api.createPlaylist().execute()
-
-        assertResponseSuccessful(response)
+        client.api.createPlaylistSuspend()
     }
 
     @Test
-    fun `Should pass id param in request`() {
+    fun `Should pass id param in request`() = runTest {
         val id = "56"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "playlistId=$id"
         ) {
-            client.api.createPlaylist(id = id).execute()
+            client.api.createPlaylistSuspend(id = id)
         }
     }
 
     @Test
-    fun `Should pass name param in request`() {
+    fun `Should pass name param in request`() = runTest {
         val name = "some-name"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "name=$name"
         ) {
-            client.api.createPlaylist(name = name).execute()
+            client.api.createPlaylistSuspend(name = name)
         }
     }
 
     @Test
-    fun `Should pass song id param in request`() {
+    fun `Should pass song id param in request`() = runTest {
         val songId = listOf("4410", "852")
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "ping_ok.json",
             expectedParam = "songId=${songId[0]}&songId=${songId[1]}"
         ) {
-            client.api.createPlaylist(songIds = songId).execute()
+            client.api.createPlaylistSuspend(songIds = songId)
         }
     }
 }

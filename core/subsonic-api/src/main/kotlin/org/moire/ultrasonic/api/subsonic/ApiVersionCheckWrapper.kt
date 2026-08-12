@@ -64,14 +64,22 @@ internal class ApiVersionCheckWrapper(
         return api.getArtists(musicFolderId)
     }
 
-    override fun star(id: String?, albumId: String?, artistId: String?): Call<SubsonicResponse> {
+    override suspend fun starSuspend(
+        id: String?,
+        albumId: String?,
+        artistId: String?
+    ): SubsonicResponse {
         checkVersion(V1_8_0)
-        return api.star(id, albumId, artistId)
+        return api.starSuspend(id, albumId, artistId)
     }
 
-    override fun unstar(id: String?, albumId: String?, artistId: String?): Call<SubsonicResponse> {
+    override suspend fun unstarSuspend(
+        id: String?,
+        albumId: String?,
+        artistId: String?
+    ): SubsonicResponse {
         checkVersion(V1_8_0)
-        return api.unstar(id, albumId, artistId)
+        return api.unstarSuspend(id, albumId, artistId)
     }
 
     override fun getArtist(id: String): Call<GetArtistResponse> {
@@ -151,35 +159,42 @@ internal class ApiVersionCheckWrapper(
         )
     }
 
-    override fun getPlaylists(username: String?): Call<GetPlaylistsResponse> {
+    override suspend fun getPlaylistsSuspend(username: String?): GetPlaylistsResponse {
         checkParamVersion(username, V1_8_0)
-        return api.getPlaylists(username)
+        return api.getPlaylistsSuspend(username)
     }
 
-    override fun createPlaylist(
+    override suspend fun createPlaylistSuspend(
         id: String?,
         name: String?,
         songIds: List<String>?
-    ): Call<SubsonicResponse> {
+    ): SubsonicResponse {
         checkVersion(V1_2_0)
-        return api.createPlaylist(id, name, songIds)
+        return api.createPlaylistSuspend(id, name, songIds)
     }
 
-    override fun deletePlaylist(id: String): Call<SubsonicResponse> {
+    override suspend fun deletePlaylistSuspend(id: String): SubsonicResponse {
         checkVersion(V1_2_0)
-        return api.deletePlaylist(id)
+        return api.deletePlaylistSuspend(id)
     }
 
-    override fun updatePlaylist(
+    override suspend fun updatePlaylistSuspend(
         id: String,
         name: String?,
         comment: String?,
         public: Boolean?,
         songIdsToAdd: List<String>?,
         songIndexesToRemove: List<Int>?
-    ): Call<SubsonicResponse> {
+    ): SubsonicResponse {
         checkVersion(V1_8_0)
-        return api.updatePlaylist(id, name, comment, public, songIdsToAdd, songIndexesToRemove)
+        return api.updatePlaylistSuspend(
+            id,
+            name,
+            comment,
+            public,
+            songIdsToAdd,
+            songIndexesToRemove
+        )
     }
 
     override fun getPodcasts(includeEpisodes: Boolean?, id: String?): Call<GetPodcastsResponse> {
@@ -239,16 +254,16 @@ internal class ApiVersionCheckWrapper(
         return api.getRandomSongs(size, genre, fromYear, toYear, musicFolderId)
     }
 
-    override fun getStarred(musicFolderId: String?): Call<GetStarredResponse> {
+    override suspend fun getStarredSuspend(musicFolderId: String?): GetStarredResponse {
         checkVersion(V1_8_0)
         checkParamVersion(musicFolderId, V1_12_0)
-        return api.getStarred(musicFolderId)
+        return api.getStarredSuspend(musicFolderId)
     }
 
-    override fun getStarred2(musicFolderId: String?): Call<GetStarredTwoResponse> {
+    override suspend fun getStarred2Suspend(musicFolderId: String?): GetStarredTwoResponse {
         checkVersion(V1_8_0)
         checkParamVersion(musicFolderId, V1_12_0)
-        return api.getStarred2(musicFolderId)
+        return api.getStarred2Suspend(musicFolderId)
     }
 
     override fun stream(
