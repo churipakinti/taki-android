@@ -1,17 +1,17 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.junit.Test
 
 class SubsonicApiGetTopSongsTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should parse top songs`() {
+    fun `Should parse top songs`() = runTest {
         mockWebServerRule.enqueueResponse("get_top_songs_ok.json")
 
-        val response = client.api.getTopSongs("AC/DC", count = 10).execute()
+        val response = client.api.getTopSongsSuspend("AC/DC", count = 10)
 
-        assertResponseSuccessful(response)
-        with(response.body()!!.songsList.single()) {
+        with(response.songsList.single()) {
             id `should be equal to` "song-1"
             title `should be equal to` "Back in Black"
             artist `should be equal to` "AC/DC"
@@ -20,9 +20,9 @@ class SubsonicApiGetTopSongsTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should pass top songs parameters`() {
-        mockWebServerRule.assertRequestParam(expectedParam = "artist=AC%2FDC") {
-            client.api.getTopSongs("AC/DC", count = 10).execute()
+    fun `Should pass top songs parameters`() = runTest {
+        mockWebServerRule.assertRequestParamSuspend(expectedParam = "artist=AC%2FDC") {
+            client.api.getTopSongsSuspend("AC/DC", count = 10)
         }
     }
 }

@@ -49,7 +49,7 @@ interface MusicService {
     fun setRating(id: String, rating: Int)
 
     @Throws(Exception::class)
-    fun getMusicFolders(refresh: Boolean): List<MusicFolder>
+    suspend fun getMusicFolders(refresh: Boolean): List<MusicFolder>
 
     /**
      * Returns null if [refresh] was requested and the server confirms (via ifModifiedSince)
@@ -57,31 +57,31 @@ interface MusicService {
      * using their existing data rather than treat this as "no artists".
      */
     @Throws(Exception::class)
-    fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index>?
+    suspend fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index>?
 
     @Throws(Exception::class)
-    fun getArtists(refresh: Boolean): List<Artist>
+    suspend fun getArtists(refresh: Boolean): List<Artist>
 
     @Throws(Exception::class)
-    fun getMusicDirectory(id: String, name: String?, refresh: Boolean): MusicDirectory
+    suspend fun getMusicDirectory(id: String, name: String?, refresh: Boolean): MusicDirectory
 
     @Throws(Exception::class)
-    fun getAlbumsOfArtist(id: String, name: String?, refresh: Boolean): List<Album>
+    suspend fun getAlbumsOfArtist(id: String, name: String?, refresh: Boolean): List<Album>
 
     @Throws(Exception::class)
-    fun getArtistInfo(id: String): ArtistInfo? = null
+    suspend fun getArtistInfo(id: String): ArtistInfo? = null
 
     @Throws(Exception::class)
-    fun getTopSongs(artistName: String, count: Int): List<Track> = emptyList()
+    suspend fun getTopSongs(artistName: String, count: Int): List<Track> = emptyList()
 
     @Throws(Exception::class)
-    fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory
+    suspend fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory
 
     @Throws(Exception::class)
-    fun getAlbumInfo(id: String): AlbumInfo? = null
+    suspend fun getAlbumInfo(id: String): AlbumInfo? = null
 
     @Throws(Exception::class)
-    fun getAlbum(id: String, name: String?, refresh: Boolean): Album?
+    suspend fun getAlbum(id: String, name: String?, refresh: Boolean): Album?
 
     @Throws(Exception::class)
     suspend fun search(criteria: SearchCriteria): SearchResult?
@@ -133,7 +133,7 @@ interface MusicService {
     ): List<Album>
 
     @Throws(Exception::class)
-    fun getRandomSongs(size: Int): MusicDirectory
+    suspend fun getRandomSongs(size: Int): MusicDirectory
 
     @Throws(Exception::class)
     suspend fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory

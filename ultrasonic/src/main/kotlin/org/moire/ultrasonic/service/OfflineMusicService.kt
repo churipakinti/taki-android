@@ -64,7 +64,7 @@ class OfflineMusicService :
     private var cachedAlbums = metaDatabase.albumDao()
     private var cachedTracks = metaDatabase.trackDao()
 
-    override fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
+    override suspend fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
         val indexes: MutableList<Index> = ArrayList()
         val root = FileUtil.musicDirectory
         for (file in FileUtil.listFiles(root)) {
@@ -110,12 +110,16 @@ class OfflineMusicService :
     }
 
     @Throws(OfflineException::class)
-    override fun getArtists(refresh: Boolean): List<Artist> = cachedArtists.get()
+    override suspend fun getArtists(refresh: Boolean): List<Artist> = cachedArtists.get()
 
     /*
      * Especially when dealing with indexes, this method can return Albums, Entries or a mix of both!
      */
-    override fun getMusicDirectory(id: String, name: String?, refresh: Boolean): MusicDirectory {
+    override suspend fun getMusicDirectory(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): MusicDirectory {
         val dir = Storage.getFromPath(id)
         val result = MusicDirectory()
         result.name = dir?.name ?: return result
@@ -285,7 +289,7 @@ class OfflineMusicService :
         }
     }
 
-    override fun getRandomSongs(size: Int): MusicDirectory {
+    override suspend fun getRandomSongs(size: Int): MusicDirectory {
         val root = FileUtil.musicDirectory
         val children: MutableList<AbstractFile> = LinkedList()
         listFilesRecursively(root, children)
@@ -428,7 +432,7 @@ class OfflineMusicService :
         throw OfflineException("UnStar not available in offline mode")
 
     @Throws(Exception::class)
-    override fun getMusicFolders(refresh: Boolean): List<MusicFolder> =
+    override suspend fun getMusicFolders(refresh: Boolean): List<MusicFolder> =
         throw OfflineException("Music folders not available in offline mode")
 
     @Throws(OfflineException::class)
@@ -470,7 +474,11 @@ class OfflineMusicService :
     override fun isLicenseValid(): Boolean = true
 
     @Throws(Exception::class)
-    override fun getAlbumsOfArtist(id: String, name: String?, refresh: Boolean): List<Album> {
+    override suspend fun getAlbumsOfArtist(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): List<Album> {
         val directAlbums = cachedAlbums.byArtist(id)
 
         // The direct albums won't contain any compilations that the artist has participated in
@@ -488,7 +496,11 @@ class OfflineMusicService :
     }
 
     @Throws(OfflineException::class)
-    override fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory {
+    override suspend fun getAlbumAsDir(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): MusicDirectory {
         Timber.i("Starting album query...")
 
         val list = cachedTracks
@@ -503,7 +515,7 @@ class OfflineMusicService :
     }
 
     @Throws(OfflineException::class)
-    override fun getAlbum(id: String, name: String?, refresh: Boolean): Album? =
+    override suspend fun getAlbum(id: String, name: String?, refresh: Boolean): Album? =
         cachedAlbums.get(id)
 
     @Throws(OfflineException::class)

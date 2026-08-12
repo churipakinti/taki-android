@@ -42,6 +42,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeActivity
 import org.moire.ultrasonic.NavigationGraphDirections
@@ -54,6 +55,7 @@ import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.util.CommunicationError
 import org.moire.ultrasonic.util.Constants
 import org.moire.ultrasonic.util.InfoDialog
 import org.moire.ultrasonic.util.LocaleHelper
@@ -424,22 +426,28 @@ class NavigationActivity : ScopeActivity() {
 
     private fun playRandomSongs() {
         val currentFragment = host?.childFragmentManager?.fragments?.last() ?: return
-        val service = MusicServiceFactory.getMusicService()
-        val musicDirectory = service.getRandomSongs(Settings.MAX_SONGS)
 
-        mediaPlayerManager.addToPlaylist(
-            songs = musicDirectory.getTracks(),
-            autoPlay = true,
-            shuffle = false,
-            insertionMode = MediaPlayerManager.InsertionMode.CLEAR
-        )
+        // getRandomSongs() is a suspend network call; onNewIntent() (this function's only
+        // caller, via the "Play Random Songs" launcher shortcut) runs on the main thread, so
+        // this must hop to Dispatchers.IO itself rather than assume an existing background
+        // context.
+        lifecycleScope.launch(CommunicationError.getHandler(this)) {
+            val musicDirectory = withContext(Dispatchers.IO) {
+                MusicServiceFactory.getMusicService().getRandomSongs(Settings.MAX_SONGS)
+            }
 
-        if (Settings.shouldTransitionOnPlayback) {
-            currentFragment.findNavController().popBackStack(R.id.playerFragment, true)
-            currentFragment.findNavController().navigate(R.id.playerFragment)
+            mediaPlayerManager.addToPlaylist(
+                songs = musicDirectory.getTracks(),
+                autoPlay = true,
+                shuffle = false,
+                insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+            )
+
+            if (Settings.shouldTransitionOnPlayback) {
+                currentFragment.findNavController().popBackStack(R.id.playerFragment, true)
+                currentFragment.findNavController().navigate(R.id.playerFragment)
+            }
         }
-
-        return
     }
 
     /**

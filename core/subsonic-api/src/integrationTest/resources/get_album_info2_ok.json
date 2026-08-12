@@ -1,0 +1,14 @@
+{
+  "subsonic-response": {
+    "status": "ok",
+    "version": "1.16.1",
+    "albumInfo": {
+      "notes": "A landmark hard rock album.",
+      "musicBrainzId": "1a2b3c4d-5e6f-7890-abcd-ef1234567890",
+      "lastFmUrl": "https://www.last.fm/music/AC%2FDC/Black+Ice",
+      "smallImageUrl": "https://example.test/blackice-small.jpg",
+      "mediumImageUrl": "https://example.test/blackice-medium.jpg",
+      "largeImageUrl": "https://example.test/blackice-large.jpg"
+    }
+  }
+}

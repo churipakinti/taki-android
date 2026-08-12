@@ -84,10 +84,10 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getMusicFolders(refresh: Boolean): List<MusicFolder> {
-        val response = API.getMusicFolders().execute().throwOnFailure()
+    override suspend fun getMusicFolders(refresh: Boolean): List<MusicFolder> {
+        val response = API.getMusicFoldersSuspend().throwOnFailure()
 
-        return response.body()!!.musicFolders.toDomainEntityList(activeServerId)
+        return response.musicFolders.toDomainEntityList(activeServerId)
     }
 
     /**
@@ -101,12 +101,12 @@ open class RESTMusicService(
      *  as before this change.
      */
     @Throws(Exception::class)
-    override fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index>? {
+    override suspend fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index>? {
         val serverId = ActiveServerProvider.getActiveServerId()
         val ifModifiedSince = if (refresh) Settings.getIndexesLastModified(serverId) else null
 
-        val response = API.getIndexes(musicFolderId, ifModifiedSince).execute().throwOnFailure()
-        val indexes = response.body()!!.indexes
+        val response = API.getIndexesSuspend(musicFolderId, ifModifiedSince).throwOnFailure()
+        val indexes = response.indexes
 
         if (ifModifiedSince != null &&
             indexes.indexList.isEmpty() &&
@@ -121,10 +121,10 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getArtists(refresh: Boolean): List<Artist> {
-        val response = API.getArtists(null).execute().throwOnFailure()
+    override suspend fun getArtists(refresh: Boolean): List<Artist> {
+        val response = API.getArtistsSuspend(null).throwOnFailure()
 
-        return response.body()!!.indexes.toArtistList(activeServerId)
+        return response.indexes.toArtistList(activeServerId)
     }
 
     @Throws(Exception::class)
@@ -143,55 +143,67 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getMusicDirectory(id: String, name: String?, refresh: Boolean): MusicDirectory {
-        val response = API.getMusicDirectory(id).execute().throwOnFailure()
+    override suspend fun getMusicDirectory(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): MusicDirectory {
+        val response = API.getMusicDirectorySuspend(id).throwOnFailure()
 
-        return response.body()!!.musicDirectory.toDomainEntity(activeServerId)
+        return response.musicDirectory.toDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getAlbumsOfArtist(id: String, name: String?, refresh: Boolean): List<Album> {
-        val response = API.getArtist(id).execute().throwOnFailure()
+    override suspend fun getAlbumsOfArtist(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): List<Album> {
+        val response = API.getArtistSuspend(id).throwOnFailure()
 
-        return response.body()!!.artist.toDomainEntityList(activeServerId)
+        return response.artist.toDomainEntityList(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getArtistInfo(id: String): ArtistInfo {
-        val response = API.getArtistInfo2(
+    override suspend fun getArtistInfo(id: String): ArtistInfo {
+        val response = API.getArtistInfo2Suspend(
             id = id,
             count = SIMILAR_ARTIST_COUNT,
             includeNotPresent = false
-        ).execute().throwOnFailure()
+        ).throwOnFailure()
 
-        return response.body()!!.artistInfo.toDomainEntity(activeServerId)
+        return response.artistInfo.toDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getTopSongs(artistName: String, count: Int): List<Track> {
-        val response = API.getTopSongs(artistName, count).execute().throwOnFailure()
-        return response.body()!!.songsList.toTrackList(activeServerId)
+    override suspend fun getTopSongs(artistName: String, count: Int): List<Track> {
+        val response = API.getTopSongsSuspend(artistName, count).throwOnFailure()
+        return response.songsList.toTrackList(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory {
-        val response = API.getAlbum(id).execute().throwOnFailure()
+    override suspend fun getAlbumAsDir(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): MusicDirectory {
+        val response = API.getAlbumSuspend(id).throwOnFailure()
 
-        return response.body()!!.album.toMusicDirectoryDomainEntity(activeServerId)
+        return response.album.toMusicDirectoryDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getAlbum(id: String, name: String?, refresh: Boolean): Album {
-        val response = API.getAlbum(id).execute().throwOnFailure()
+    override suspend fun getAlbum(id: String, name: String?, refresh: Boolean): Album {
+        val response = API.getAlbumSuspend(id).throwOnFailure()
 
-        return response.body()!!.album.toDomainEntity(activeServerId)
+        return response.album.toDomainEntity(activeServerId)
     }
 
     @Throws(Exception::class)
-    override fun getAlbumInfo(id: String): AlbumInfo {
-        val response = API.getAlbumInfo2(id).execute().throwOnFailure()
+    override suspend fun getAlbumInfo(id: String): AlbumInfo {
+        val response = API.getAlbumInfo2Suspend(id).throwOnFailure()
 
-        return response.body()!!.albumInfo.toDomainEntity()
+        return response.albumInfo.toDomainEntity()
     }
 
     // Search is fully migrated to suspend (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md): unlike
@@ -456,17 +468,17 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getRandomSongs(size: Int): MusicDirectory {
-        val response = API.getRandomSongs(
+    override suspend fun getRandomSongs(size: Int): MusicDirectory {
+        val response = API.getRandomSongsSuspend(
             size,
             null,
             null,
             null,
             null
-        ).execute().throwOnFailure()
+        ).throwOnFailure()
 
         val result = MusicDirectory()
-        result.addAll(response.body()!!.songsList.toDomainEntityList(activeServerId))
+        result.addAll(response.songsList.toDomainEntityList(activeServerId))
 
         return result
     }

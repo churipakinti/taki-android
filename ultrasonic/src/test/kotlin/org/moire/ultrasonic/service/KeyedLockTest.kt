@@ -11,6 +11,7 @@ import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Test
 
@@ -20,7 +21,7 @@ class KeyedLockTest {
     fun `withLock returns the block's result`() {
         val lock = KeyedLock()
 
-        val result = lock.withLock("a") { 42 }
+        val result = runBlocking { lock.withLock("a") { 42 } }
 
         result shouldBeEqualTo 42
     }
@@ -33,18 +34,22 @@ class KeyedLockTest {
         val releaseFirst = CountDownLatch(1)
 
         val first = thread {
-            lock.withLock("album-1") {
-                firstEntered.countDown()
-                releaseFirst.await()
-                order.add(1)
+            runBlocking {
+                lock.withLock("album-1") {
+                    firstEntered.countDown()
+                    releaseFirst.await()
+                    order.add(1)
+                }
             }
         }
 
         firstEntered.await(1, TimeUnit.SECONDS)
 
         val second = thread {
-            lock.withLock("album-1") {
-                order.add(2)
+            runBlocking {
+                lock.withLock("album-1") {
+                    order.add(2)
+                }
             }
         }
 
@@ -68,17 +73,21 @@ class KeyedLockTest {
         val secondFinished = CountDownLatch(1)
 
         thread {
-            lock.withLock("album-1") {
-                firstEntered.countDown()
-                releaseFirst.await()
+            runBlocking {
+                lock.withLock("album-1") {
+                    firstEntered.countDown()
+                    releaseFirst.await()
+                }
             }
         }
 
         firstEntered.await(1, TimeUnit.SECONDS)
 
         thread {
-            lock.withLock("album-2") {
-                secondFinished.countDown()
+            runBlocking {
+                lock.withLock("album-2") {
+                    secondFinished.countDown()
+                }
             }
         }
 

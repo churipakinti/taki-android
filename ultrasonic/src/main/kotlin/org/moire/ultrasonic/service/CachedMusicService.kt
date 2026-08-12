@@ -91,7 +91,7 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun getMusicFolders(refresh: Boolean): List<MusicFolder> {
+    override suspend fun getMusicFolders(refresh: Boolean): List<MusicFolder> {
         checkSettingsChanged()
         if (refresh) {
             cachedMusicFolders.clear()
@@ -121,7 +121,7 @@ class CachedMusicService(private val musicService: MusicService) :
      * afecten el índice").
      */
     @Throws(Exception::class)
-    override fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
+    override suspend fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
         checkSettingsChanged()
 
         var indexes: List<Index> = if (musicFolderId == null) {
@@ -151,7 +151,7 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun getArtists(refresh: Boolean): List<Artist> {
+    override suspend fun getArtists(refresh: Boolean): List<Artist> {
         checkSettingsChanged()
 
         if (refresh) {
@@ -168,7 +168,11 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     @Throws(Exception::class)
-    override fun getMusicDirectory(id: String, name: String?, refresh: Boolean): MusicDirectory {
+    override suspend fun getMusicDirectory(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): MusicDirectory {
         checkSettingsChanged()
         var cache = if (refresh) null else cachedMusicDirectories[id]
         var dir = cache?.get()
@@ -189,7 +193,11 @@ class CachedMusicService(private val musicService: MusicService) :
      * Cached in the RoomDB
      */
     @Throws(Exception::class)
-    override fun getAlbumsOfArtist(id: String, name: String?, refresh: Boolean): List<Album> {
+    override suspend fun getAlbumsOfArtist(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): List<Album> {
         checkSettingsChanged()
 
         var result: List<Album>
@@ -208,11 +216,11 @@ class CachedMusicService(private val musicService: MusicService) :
         return result
     }
 
-    override fun getArtistInfo(id: String): ArtistInfo? = musicService.getArtistInfo(id)
+    override suspend fun getArtistInfo(id: String): ArtistInfo? = musicService.getArtistInfo(id)
 
-    override fun getAlbumInfo(id: String): AlbumInfo? = musicService.getAlbumInfo(id)
+    override suspend fun getAlbumInfo(id: String): AlbumInfo? = musicService.getAlbumInfo(id)
 
-    override fun getTopSongs(artistName: String, count: Int): List<Track> =
+    override suspend fun getTopSongs(artistName: String, count: Int): List<Track> =
         musicService.getTopSongs(artistName, count)
 
     /*
@@ -223,31 +231,34 @@ class CachedMusicService(private val musicService: MusicService) :
      * getMusicDirectory(), which can mix in sub-folders and stays on the old TimeLimitedCache).
      */
     @Throws(Exception::class)
-    override fun getAlbumAsDir(id: String, name: String?, refresh: Boolean): MusicDirectory =
-        albumDirFetchLock.withLock(id) {
-            checkSettingsChanged()
+    override suspend fun getAlbumAsDir(
+        id: String,
+        name: String?,
+        refresh: Boolean
+    ): MusicDirectory = albumDirFetchLock.withLock(id) {
+        checkSettingsChanged()
 
-            if (refresh) {
-                cachedTracks.clearByAlbum(id)
-            }
-
-            var tracks = cachedTracks.byAlbum(id)
-
-            if (tracks.isEmpty()) {
-                val dir = musicService.getAlbumAsDir(id, name, refresh)
-                tracks = dir.getTracks()
-                if (tracks.isNotEmpty()) cachedTracks.upsert(tracks)
-                return@withLock dir
-            }
-
-            MusicDirectory().apply {
-                this.name = name
-                addAll(tracks)
-            }
+        if (refresh) {
+            cachedTracks.clearByAlbum(id)
         }
 
+        var tracks = cachedTracks.byAlbum(id)
+
+        if (tracks.isEmpty()) {
+            val dir = musicService.getAlbumAsDir(id, name, refresh)
+            tracks = dir.getTracks()
+            if (tracks.isNotEmpty()) cachedTracks.upsert(tracks)
+            return@withLock dir
+        }
+
+        MusicDirectory().apply {
+            this.name = name
+            addAll(tracks)
+        }
+    }
+
     @Throws(Exception::class)
-    override fun getAlbum(id: String, name: String?, refresh: Boolean): Album? =
+    override suspend fun getAlbum(id: String, name: String?, refresh: Boolean): Album? =
         albumFetchLock.withLock(id) {
             checkSettingsChanged()
             var cache = if (refresh) null else cachedAlbums.get(id)
@@ -346,7 +357,8 @@ class CachedMusicService(private val musicService: MusicService) :
     ): List<Album> = musicService.getAlbumList2(type, size, offset, genre, musicFolderId)
 
     @Throws(Exception::class)
-    override fun getRandomSongs(size: Int): MusicDirectory = musicService.getRandomSongs(size)
+    override suspend fun getRandomSongs(size: Int): MusicDirectory =
+        musicService.getRandomSongs(size)
 
     @Throws(Exception::class)
     override suspend fun getStarred(): SearchResult = musicService.getStarred()

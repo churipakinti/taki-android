@@ -56,7 +56,7 @@ class DownloadTask(
         stateChangedCallback(downloadTrack, state, progress)
     }
 
-    private fun checkIfExists(): Boolean {
+    private suspend fun checkIfExists(): Boolean {
         if (Storage.isPathExists(downloadTrack.pinnedFile)) {
             Timber.i("%s already exists. Skipping.", downloadTrack.pinnedFile)
             setState(DownloadState.PINNED, null)
@@ -147,7 +147,7 @@ class DownloadTask(
         }
     }
 
-    private fun afterDownload() {
+    private suspend fun afterDownload() {
         try {
             downloadTrack.track.cacheMetadataAndArtwork()
         } catch (ignore: Exception) {
@@ -216,7 +216,7 @@ class DownloadTask(
         job?.cancel()
     }
 
-    private fun Track.cacheMetadataAndArtwork() {
+    private suspend fun Track.cacheMetadataAndArtwork() {
         val onlineDB = activeServerProvider.getActiveMetaDatabase()
         val offlineDB = activeServerProvider.offlineMetaDatabase
 
@@ -272,7 +272,7 @@ class DownloadTask(
         }
     }
 
-    private fun cacheArtist(
+    private suspend fun cacheArtist(
         onlineDB: MetaDatabase,
         offlineDB: MetaDatabase,
         artistId: String

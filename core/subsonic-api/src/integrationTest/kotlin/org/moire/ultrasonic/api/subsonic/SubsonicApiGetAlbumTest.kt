@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
 import org.junit.Test
@@ -11,9 +12,9 @@ import org.moire.ultrasonic.api.subsonic.models.MusicDirectoryChild
  */
 class SubsonicApiGetAlbumTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should parse error responce`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getAlbum("56").execute()
+    fun `Should parse error responce`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getAlbumSuspend("56")
         }
 
         response.album `should not be` null
@@ -21,25 +22,24 @@ class SubsonicApiGetAlbumTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should add id to request params`() {
+    fun `Should add id to request params`() = runTest {
         val id = "76"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_album_ok.json",
             expectedParam = "id=$id"
         ) {
-            client.api.getAlbum(id).execute()
+            client.api.getAlbumSuspend(id)
         }
     }
 
     @Test
-    fun `Should parse ok response`() {
+    fun `Should parse ok response`() = runTest {
         mockWebServerRule.enqueueResponse("get_album_ok.json")
 
-        val response = client.api.getAlbum("512").execute()
+        val response = client.api.getAlbumSuspend("512")
 
-        assertResponseSuccessful(response)
-        with(response.body()!!.album) {
+        with(response.album) {
             id `should be equal to` "618"
             name `should be equal to` "Black Ice"
             artist `should be equal to` "AC/DC"

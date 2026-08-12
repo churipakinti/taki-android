@@ -1,6 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
-import org.amshove.kluent.`should be`
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
 import org.junit.Test
@@ -12,9 +12,9 @@ import org.moire.ultrasonic.api.subsonic.models.MusicDirectoryChild
  */
 class SubsonicApiGetMusicDirectoryTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should parse getMusicDirectory error response`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getMusicDirectory("1").execute()
+    fun `Should parse getMusicDirectory error response`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getMusicDirectorySuspend("1")
         }
 
         response.musicDirectory `should not be` null
@@ -22,27 +22,25 @@ class SubsonicApiGetMusicDirectoryTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `GetMusicDirectory should add directory id to query params`() {
+    fun `GetMusicDirectory should add directory id to query params`() = runTest {
         val directoryId = "124"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_music_directory_ok.json",
             expectedParam = "id=$directoryId"
         ) {
-            client.api.getMusicDirectory(directoryId).execute()
+            client.api.getMusicDirectorySuspend(directoryId)
         }
     }
 
     @Test
-    fun `Should parse get music directory ok response`() {
+    fun `Should parse get music directory ok response`() = runTest {
         mockWebServerRule.enqueueResponse("get_music_directory_ok.json")
 
-        val response = client.api.getMusicDirectory("1").execute()
+        val response = client.api.getMusicDirectorySuspend("1")
 
-        assertResponseSuccessful(response)
-
-        response.body()!!.musicDirectory `should not be` null
-        with(response.body()!!.musicDirectory) {
+        response.musicDirectory `should not be` null
+        with(response.musicDirectory) {
             id `should be equal to` "4836"
             parent `should be equal to` "300"
             name `should be equal to` "12 Stones"
@@ -50,7 +48,7 @@ class SubsonicApiGetMusicDirectoryTest : SubsonicAPIClientTest() {
             averageRating `should be equal to` 5.0f
             starred `should be equal to` null
             playCount `should be equal to` 1
-            childList.size `should be` 2
+            childList.size `should be equal to` 2
             childList[0] `should be equal to` MusicDirectoryChild(
                 id = "4844", parent = "4836",
                 isDir = false, title = "Crash", album = "12 Stones", artist = "12 Stones",

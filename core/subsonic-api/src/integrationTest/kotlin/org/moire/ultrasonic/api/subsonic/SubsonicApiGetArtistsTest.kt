@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
 import org.junit.Test
@@ -12,9 +13,9 @@ import org.moire.ultrasonic.api.subsonic.models.Indexes
  */
 class SubsonicApiGetArtistsTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should parse get artists error response`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getArtists(null).execute()
+    fun `Should parse get artists error response`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getArtistsSuspend(null)
         }
 
         response.indexes `should not be` null
@@ -22,13 +23,12 @@ class SubsonicApiGetArtistsTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should parse get artists ok reponse`() {
+    fun `Should parse get artists ok reponse`() = runTest {
         mockWebServerRule.enqueueResponse("get_artists_ok.json")
 
-        val response = client.api.getArtists(null).execute()
+        val response = client.api.getArtistsSuspend(null)
 
-        assertResponseSuccessful(response)
-        with(response.body()!!.indexes) {
+        with(response.indexes) {
             lastModified `should be equal to` 0L
             ignoredArticles `should be equal to` "The El La Los Las Le Les"
             shortcutList `should be equal to` emptyList()
@@ -63,15 +63,15 @@ class SubsonicApiGetArtistsTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should pass param on query for get artists call`() {
+    fun `Should pass param on query for get artists call`() = runTest {
         mockWebServerRule.enqueueResponse("get_artists_ok.json")
         val musicFolderId = "101"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_artists_ok.json",
             expectedParam = "musicFolderId=$musicFolderId"
         ) {
-            client.api.getArtists(musicFolderId).execute()
+            client.api.getArtistsSuspend(musicFolderId)
         }
     }
 }

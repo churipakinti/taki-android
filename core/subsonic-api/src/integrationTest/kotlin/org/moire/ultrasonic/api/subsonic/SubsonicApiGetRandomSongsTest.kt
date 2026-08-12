@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.junit.Test
 import org.moire.ultrasonic.api.subsonic.models.MusicDirectoryChild
@@ -9,22 +10,21 @@ import org.moire.ultrasonic.api.subsonic.models.MusicDirectoryChild
  */
 class SubsonicApiGetRandomSongsTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should handle error response`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getRandomSongs().execute()
+    fun `Should handle error response`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getRandomSongsSuspend()
         }
 
         response.songsList `should be equal to` emptyList()
     }
 
     @Test
-    fun `Should handle ok response`() {
+    fun `Should handle ok response`() = runTest {
         mockWebServerRule.enqueueResponse("get_random_songs_ok.json")
 
-        val response = client.api.getRandomSongs().execute()
+        val response = client.api.getRandomSongsSuspend()
 
-        assertResponseSuccessful(response)
-        with(response.body()!!.songsList) {
+        with(response.songsList) {
             size `should be equal to` 3
             this[1] `should be equal to` MusicDirectoryChild(
                 id = "3061", parent = "3050", isDir = false,
@@ -40,62 +40,62 @@ class SubsonicApiGetRandomSongsTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should pass size in request param`() {
+    fun `Should pass size in request param`() = runTest {
         val size = 384433
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_random_songs_ok.json",
             expectedParam = "size=$size"
         ) {
-            client.api.getRandomSongs(size = size).execute()
+            client.api.getRandomSongsSuspend(size = size)
         }
     }
 
     @Test
-    fun `Should pass genre in request param`() {
+    fun `Should pass genre in request param`() = runTest {
         val genre = "PostRock"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_random_songs_ok.json",
             expectedParam = "genre=$genre"
         ) {
-            client.api.getRandomSongs(genre = genre).execute()
+            client.api.getRandomSongsSuspend(genre = genre)
         }
     }
 
     @Test
-    fun `Should pass from year in request param`() {
+    fun `Should pass from year in request param`() = runTest {
         val fromYear = 1919
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_random_songs_ok.json",
             expectedParam = "fromYear=$fromYear"
         ) {
-            client.api.getRandomSongs(fromYear = fromYear).execute()
+            client.api.getRandomSongsSuspend(fromYear = fromYear)
         }
     }
 
     @Test
-    fun `Should pass to year in request params`() {
+    fun `Should pass to year in request params`() = runTest {
         val toYear = 2012
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_random_songs_ok.json",
             expectedParam = "toYear=$toYear"
         ) {
-            client.api.getRandomSongs(toYear = toYear).execute()
+            client.api.getRandomSongsSuspend(toYear = toYear)
         }
     }
 
     @Test
-    fun `Should pass music folder id in request param`() {
+    fun `Should pass music folder id in request param`() = runTest {
         val musicFolderId = "4919"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_random_songs_ok.json",
             expectedParam = "musicFolderId=$musicFolderId"
         ) {
-            client.api.getRandomSongs(musicFolderId = musicFolderId).execute()
+            client.api.getRandomSongsSuspend(musicFolderId = musicFolderId)
         }
     }
 }

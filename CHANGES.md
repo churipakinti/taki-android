@@ -1,8 +1,40 @@
 # Changes
 
-## Optimización interna Fase 7: migra Playlists y Favoritos a `suspend` (último flujo de la fase)
+## Optimización interna: cierre de Fase 7 (red cancelable en los flujos prioritarios)
 
-Último flujo vertical del orden sugerido por Fase 7. Cubre `star`/`unstar`, `getPlaylist`,
+Revisión final contra el alcance de `TAKI_CODE_OPTIMIZATION_PLAN.md`. Los commits anteriores
+migraron Search, Home, listados de álbum/artista/biblioteca, Playlists y Favoritos, pero aún
+quedaban bloqueantes las lecturas que completan esos mismos flujos al entrar al detalle o navegar
+por carpetas: `getMusicFolders`, `getIndexes`, `getArtists`, `getMusicDirectory`, `getArtist`,
+`getArtistInfo2`, `getTopSongs`, `getAlbum`, `getAlbumInfo2` y `getRandomSongs`.
+
+**Cambio:**
+
+- `SubsonicAPIDefinition` reemplaza las diez variantes `Call<T>` por endpoints `suspend`; no se
+  conserva una API bloqueante duplicada porque todos sus consumidores fueron migrados en el mismo
+  cambio. `ApiVersionCheckWrapper` mantiene las comprobaciones de versión existentes.
+- `MusicService`, `RESTMusicService`, `CachedMusicService` y `OfflineMusicService` propagan
+  `suspend` hasta los consumidores. Los puntos de entrada que no eran suspend (`onNewIntent` y el
+  trabajo de descargas) ahora usan scopes ya ligados al ciclo de vida correspondiente.
+- `KeyedLock` usa `Mutex` de coroutines: preserva el single-flight por clave de Fase 3 sin mantener
+  un monitor JVM adquirido mientras el bloque protegido suspende.
+- Los tests de integración de los endpoints migrados usan `runTest`; se añade cobertura para
+  `getAlbumInfo2` y se conserva la cobertura de parámetros, respuestas válidas y errores.
+
+**Alcance del cierre:** Fase 7 nunca exigió convertir indiscriminadamente toda la API. Permanecen
+sin migrar endpoints secundarios fuera del orden acordado (por ejemplo podcasts, shares, chat,
+bookmarks y streaming binario). Siguen ejecutándose en contextos IO existentes y se dejan para
+flujos verticales futuros; ampliar esta fase a una reescritura total contradiría el plan.
+
+**Validación:** `:core:subsonic-api:ciTest` verde con Gradle 9.7 (suite completa del módulo). La
+compilación Android global queda bloqueada por una incompatibilidad preexistente y ajena a esta
+migración: `core/domain/build.gradle` configura Java 25 mientras Kotlin y el JDK instalado apuntan
+a 23. El proyecto tampoco expone actualmente las tareas `ktlintCheck` ni `detekt`. No se cambió esa
+configuración como parte de Fase 7.
+
+## Optimización interna Fase 7: migra Playlists y Favoritos a `suspend` (último flujo del orden original)
+
+Último flujo vertical del orden originalmente sugerido por Fase 7. Cubre `star`/`unstar`, `getPlaylist`,
 `getPlaylists`, `createPlaylist`, `deletePlaylist`, `updatePlaylist`, `getStarred` y `getStarred2`
 -- las nueve funciones de `MusicService` que quedaban con `.execute()` bloqueante tras las
 migraciones anteriores (Search, luego Home/Álbum/Artista/Biblioteca).

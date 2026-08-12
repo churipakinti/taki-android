@@ -108,7 +108,7 @@ object DownloadUtil {
 
     @Suppress("DestructuringDeclarationWithTooManyEntries")
     @Throws(Exception::class)
-    private fun getSongsRecursively(parent: MusicDirectory, songs: MutableList<Track>) {
+    private suspend fun getSongsRecursively(parent: MusicDirectory, songs: MutableList<Track>) {
         if (songs.size > Constants.MAX_SONGS_RECURSIVE) {
             return
         }
@@ -129,7 +129,7 @@ object DownloadUtil {
     }
 
     @Throws(Exception::class)
-    private fun getSongsForArtist(id: String): MutableList<Track> {
+    private suspend fun getSongsForArtist(id: String): MutableList<Track> {
         val songs: MutableList<Track> = LinkedList()
         val musicService = MusicServiceFactory.getMusicService()
         val artist = musicService.getAlbumsOfArtist(id, "", false)

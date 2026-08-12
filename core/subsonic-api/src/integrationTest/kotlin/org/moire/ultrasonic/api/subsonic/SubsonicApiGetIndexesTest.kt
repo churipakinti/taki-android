@@ -1,5 +1,6 @@
 package org.moire.ultrasonic.api.subsonic
 
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should not be`
 import org.junit.Test
@@ -12,14 +13,13 @@ import org.moire.ultrasonic.api.subsonic.models.Indexes
  */
 class SubsonicApiGetIndexesTest : SubsonicAPIClientTest() {
     @Test
-    fun `Should parse get indexes ok response`() {
+    fun `Should parse get indexes ok response`() = runTest {
         mockWebServerRule.enqueueResponse("get_indexes_ok.json")
 
-        val response = client.api.getIndexes(null, null).execute()
+        val response = client.api.getIndexesSuspend(null, null)
 
-        assertResponseSuccessful(response)
-        response.body()!!.indexes `should not be` null
-        with(response.body()!!.indexes) {
+        response.indexes `should not be` null
+        with(response.indexes) {
             lastModified `should be equal to` 1491069027523
             ignoredArticles `should be equal to` "The El La Los Las Le Les"
             shortcutList `should be equal to` listOf(
@@ -50,33 +50,33 @@ class SubsonicApiGetIndexesTest : SubsonicAPIClientTest() {
     }
 
     @Test
-    fun `Should add music folder id as a query param for getIndexes api call`() {
+    fun `Should add music folder id as a query param for getIndexes api call`() = runTest {
         val musicFolderId = "9"
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_indexes_ok.json",
             expectedParam = "musicFolderId=$musicFolderId"
         ) {
-            client.api.getIndexes(musicFolderId, null).execute()
+            client.api.getIndexesSuspend(musicFolderId, null)
         }
     }
 
     @Test
-    fun `Should add ifModifiedSince as a query param for getIndexes api call`() {
+    fun `Should add ifModifiedSince as a query param for getIndexes api call`() = runTest {
         val ifModifiedSince = System.currentTimeMillis()
 
-        mockWebServerRule.assertRequestParam(
+        mockWebServerRule.assertRequestParamSuspend(
             responseResourceName = "get_indexes_ok.json",
             expectedParam = "ifModifiedSince=$ifModifiedSince"
         ) {
-            client.api.getIndexes(null, ifModifiedSince).execute()
+            client.api.getIndexesSuspend(null, ifModifiedSince)
         }
     }
 
     @Test
-    fun `Should parse get indexes error response`() {
-        val response = checkErrorCallParsed(mockWebServerRule) {
-            client.api.getIndexes(null, null).execute()
+    fun `Should parse get indexes error response`() = runTest {
+        val response = checkErrorCallParsedSuspend(mockWebServerRule) {
+            client.api.getIndexesSuspend(null, null)
         }
 
         response.indexes `should not be` null

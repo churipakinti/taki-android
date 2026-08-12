@@ -59,9 +59,9 @@ internal class ApiVersionCheckWrapper(
     var currentApiVersion: SubsonicAPIVersions,
     var isRealProtocolVersion: Boolean = false
 ) : SubsonicAPIDefinition by api {
-    override fun getArtists(musicFolderId: String?): Call<GetArtistsResponse> {
+    override suspend fun getArtistsSuspend(musicFolderId: String?): GetArtistsResponse {
         checkVersion(V1_8_0)
-        return api.getArtists(musicFolderId)
+        return api.getArtistsSuspend(musicFolderId)
     }
 
     override suspend fun starSuspend(
@@ -82,33 +82,33 @@ internal class ApiVersionCheckWrapper(
         return api.unstarSuspend(id, albumId, artistId)
     }
 
-    override fun getArtist(id: String): Call<GetArtistResponse> {
+    override suspend fun getArtistSuspend(id: String): GetArtistResponse {
         checkVersion(V1_8_0)
-        return api.getArtist(id)
+        return api.getArtistSuspend(id)
     }
 
-    override fun getArtistInfo2(
+    override suspend fun getArtistInfo2Suspend(
         id: String,
         count: Int?,
         includeNotPresent: Boolean?
-    ): Call<GetArtistInfo2Response> {
+    ): GetArtistInfo2Response {
         checkVersion(V1_11_0)
-        return api.getArtistInfo2(id, count, includeNotPresent)
+        return api.getArtistInfo2Suspend(id, count, includeNotPresent)
     }
 
-    override fun getTopSongs(artist: String, count: Int?): Call<GetTopSongsResponse> {
+    override suspend fun getTopSongsSuspend(artist: String, count: Int?): GetTopSongsResponse {
         checkVersion(V1_13_0)
-        return api.getTopSongs(artist, count)
+        return api.getTopSongsSuspend(artist, count)
     }
 
-    override fun getAlbum(id: String): Call<GetAlbumResponse> {
+    override suspend fun getAlbumSuspend(id: String): GetAlbumResponse {
         checkVersion(V1_8_0)
-        return api.getAlbum(id)
+        return api.getAlbumSuspend(id)
     }
 
-    override fun getAlbumInfo2(id: String): Call<GetAlbumInfo2Response> {
+    override suspend fun getAlbumInfo2Suspend(id: String): GetAlbumInfo2Response {
         checkVersion(V1_14_0)
-        return api.getAlbumInfo2(id)
+        return api.getAlbumInfo2Suspend(id)
     }
 
     override suspend fun search2Suspend(
@@ -243,15 +243,15 @@ internal class ApiVersionCheckWrapper(
         return api.getAlbumList2Suspend(type, size, offset, fromYear, toYear, genre, musicFolderId)
     }
 
-    override fun getRandomSongs(
+    override suspend fun getRandomSongsSuspend(
         size: Int?,
         genre: String?,
         fromYear: Int?,
         toYear: Int?,
         musicFolderId: String?
-    ): Call<GetRandomSongsResponse> {
+    ): GetRandomSongsResponse {
         checkVersion(V1_2_0)
-        return api.getRandomSongs(size, genre, fromYear, toYear, musicFolderId)
+        return api.getRandomSongsSuspend(size, genre, fromYear, toYear, musicFolderId)
     }
 
     override suspend fun getStarredSuspend(musicFolderId: String?): GetStarredResponse {
