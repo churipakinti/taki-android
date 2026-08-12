@@ -1,5 +1,33 @@
 # Changes
 
+## Radio de artista: sesión equilibrada desde Artist Detail y menús
+
+Se implementa el segundo flujo de `TAKI_RADIOS_AND_DAILY_MIX.md`: `Start radio` ahora está
+disponible para artistas desde Artist Detail y desde el menú contextual de artistas. La acción no
+reemplaza el botón normal de reproducir artista; crea una cola nueva pensada como radio.
+
+**Cambio:** `ArtistRadioQueueBuilder` recopila canciones del artista semilla, pistas desde sus
+álbumes, artistas similares expuestos por `getArtistInfo2`, top songs de esos relacionados y
+`getRandomSongs` como relleno controlado. `ArtistRadioSelector` aplica cuotas flexibles cercanas
+al 40–50 % del artista semilla, 30–40 % relacionados y 10–20 % relleno, deduplica, filtra videos,
+evita bloques largos de un artista y limita dominio de álbum cuando hay alternativas. El menú
+compartido de álbumes oculta `Start radio` para no introducir Radio de álbum ni Radio de género.
+
+**Fallback:** Si el servidor no expone artistas relacionados, la radio se degrada a una sesión
+centrada en el artista semilla sin inventar relaciones. Si las cuotas estrictas impiden completar
+la cola, el selector relaja cuotas antes de relajar diversidad de álbum.
+
+**Tests:** `ArtistRadioSelectorTest` cubre balance con relacionados, fallback centrado en el
+artista, límite de álbum y prevención de tres canciones consecutivas cuando hay alternativas.
+Validación local verde: `:ultrasonic:testDebugUnitTest` y `:ultrasonic:assembleDebug`.
+
+**Verificación en Pixel 7 físico (`panther`):** APK debug instalado con `adb install -r`. Desde
+Home -> Artists -> Queens of the Stone Age se confirmó el botón `Start artist radio`; al ejecutarlo
+se generó una cola de 30 canciones en 2796 ms (`Artist radio generated`, `relatedArtists=2`,
+`seedCandidates=53`, `relatedCandidates=15`, `fillerCandidates=60`, `finalSize=30`). Android
+confirmó Media3 en `PLAYING`, metadata `No One Knows` y queue size 30. La reproducción se pausó
+después de la prueba. No apareció `FATAL EXCEPTION` de Taki en el flujo probado.
+
 ## Genres: detalle de género usa filas modernas de Library
 
 Se corrige la pantalla que se abre desde Library -> Genres -> `<género>`, que todavía caía en el

@@ -39,6 +39,10 @@
     <string name="artist.artwork_description">Artist artwork</string>
     <string name="artist.download_description">Download this artist</string>
     <string name="artist.play_description">Play this artist</string>
+    <string name="artist.radio_description">Start artist radio</string>
+    <string name="artist.radio_error">Could not start artist radio.</string>
+    <string name="artist.radio_empty">Not enough songs to start artist radio.</string>
+    <string name="artist.radio_playlist_name">Radio de %1$s</string>
     <plurals name="artist_album_count">
         <item quantity="one">%1$d album</item>
         <item quantity="other">%1$d albums</item>

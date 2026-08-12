@@ -42,6 +42,7 @@ open class AlbumRowDelegate(
         holder.coverArt.setOnClickListener { onItemClick(item) }
         holder.details.setOnLongClickListener {
             val popup = Utils.createPopupMenu(holder.itemView)
+            popup.menu.findItem(R.id.menu_start_radio)?.isVisible = false
 
             popup.setOnMenuItemClickListener { menuItem ->
                 onContextMenuClick(menuItem, item)

@@ -12,8 +12,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.domain.GenericEntry
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.Track
+import org.moire.ultrasonic.service.ArtistRadioQueueBuilder
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.TrackRadioQueueBuilder
@@ -56,6 +58,35 @@ object ContextMenuUtil {
                     id = item.id,
                     isArtist = isArtist
                 )
+
+            R.id.menu_start_radio -> {
+                if (!isArtist) return false
+                val artistName = (item as? GenericEntry)?.name
+                fragment.lifecycleScope.launch(
+                    fragment.toastingExceptionHandler(fragment.getString(R.string.artist_radio_error))
+                ) {
+                    val queue = ArtistRadioQueueBuilder(MusicServiceFactory.getMusicService())
+                        .build(
+                            artistId = item.id,
+                            artistName = artistName
+                        )
+                    if (queue.isEmpty()) {
+                        fragment.toast(R.string.artist_radio_empty)
+                        return@launch
+                    }
+                    mediaPlayerManager.suggestedPlaylistName = fragment.getString(
+                        R.string.artist_radio_playlist_name,
+                        artistName ?: item.id
+                    )
+                    mediaPlayerManager.addToPlaylist(
+                        songs = queue,
+                        autoPlay = true,
+                        shuffle = false,
+                        insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+                    )
+                    fragment.navigateToCurrent()
+                }
+            }
 
             R.id.menu_pin ->
                 DownloadUtil.justDownload(

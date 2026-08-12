@@ -45,12 +45,16 @@ import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.model.ArtistDetailModel
+import org.moire.ultrasonic.service.ArtistRadioQueueBuilder
 import org.moire.ultrasonic.service.MediaPlayerManager
+import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.RefreshableFragment
+import org.moire.ultrasonic.util.Util.navigateToCurrent
+import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 
 /** A dedicated, playback-first artist page backed entirely by server data. */
@@ -140,6 +144,7 @@ class ArtistDetailFragment :
 
     private fun setupActions(view: View) {
         view.findViewById<View>(R.id.artist_detail_play).setOnClickListener { playArtist() }
+        view.findViewById<View>(R.id.artist_detail_radio).setOnClickListener { startArtistRadio() }
         view.findViewById<View>(R.id.artist_detail_download).setOnClickListener {
             DownloadUtil.justDownload(
                 action = DownloadAction.DOWNLOAD,
@@ -245,6 +250,33 @@ class ArtistDetailFragment :
             name = navArgs.artistName,
             isArtist = true
         )
+    }
+
+    private fun startArtistRadio() {
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(getString(R.string.artist_radio_error))
+        ) {
+            val queue = ArtistRadioQueueBuilder(MusicServiceFactory.getMusicService())
+                .build(
+                    artistId = navArgs.artistId,
+                    artistName = navArgs.artistName
+                )
+            if (queue.isEmpty()) {
+                toast(R.string.artist_radio_empty)
+                return@launch
+            }
+            mediaPlayerManager.suggestedPlaylistName = getString(
+                R.string.artist_radio_playlist_name,
+                navArgs.artistName
+            )
+            mediaPlayerManager.addToPlaylist(
+                songs = queue,
+                autoPlay = true,
+                shuffle = false,
+                insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+            )
+            navigateToCurrent()
+        }
     }
 
     private fun playTrack(track: Track) {

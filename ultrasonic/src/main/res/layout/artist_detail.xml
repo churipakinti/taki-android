@@ -98,6 +98,17 @@
                     app:iconSize="18dp"
                     app:iconTint="?attr/colorOnSurface" />
 
+                <com.google.android.material.button.MaterialButton
+                    a:id="@+id/artist_detail_radio"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    a:layout_width="38dp"
+                    a:layout_height="38dp"
+                    a:layout_marginEnd="8dp"
+                    a:contentDescription="@string/artist.radio_description"
+                    app:icon="@drawable/media_shuffle"
+                    app:iconSize="18dp"
+                    app:iconTint="?attr/colorOnSurface" />
+
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     a:id="@+id/artist_detail_play"
                     a:layout_width="38dp"
