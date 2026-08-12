@@ -29,8 +29,16 @@ class DailyMixQueueBuilder(
         val serverId = ActiveServerProvider.getActiveServerId()
 
         if (!forceRefresh && Settings.homeMixDate == today && Settings.homeMixServerId == serverId) {
+            val storedTrackIds = Settings.homeMixTrackIds
+                .split(",")
+                .filter { it.isNotBlank() }
             val restored = restore(Settings.homeMixTrackIds)
-            if (restored.size >= DAILY_MIX_MIN_SIZE) return restored
+            if (shouldUseRestoredDailyMix(storedTrackIds, restored)) return restored
+            Timber.i(
+                "Daily mix restore incomplete: expectedSize=%d restoredSize=%d; regenerating",
+                storedTrackIds.size,
+                restored.size
+            )
         }
 
         val fresh = generate(seed = if (forceRefresh) System.nanoTime() else stableSeed(today, serverId))
@@ -155,3 +163,6 @@ class DailyMixQueueBuilder(
 
 private const val DAILY_MIX_REGENERATION_ATTEMPTS = 3
 private const val DAILY_MIX_SEED_STEP = -7046029254386353131L
+
+internal fun shouldUseRestoredDailyMix(storedTrackIds: List<String>, restoredTracks: List<Track>): Boolean =
+    storedTrackIds.isNotEmpty() && restoredTracks.size == storedTrackIds.size
