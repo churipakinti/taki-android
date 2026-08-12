@@ -1,5 +1,25 @@
 # Changes
 
+## Corrige targets JVM y completa la verificación de Fase 7 en Pixel 7
+
+La validación Android del cierre de Fase 7 reveló que `core/domain` sobrescribía el target común
+del proyecto con Java 25, mientras Kotlin tomaba el JDK 23 del host. Se restaura Java 17 en ese
+módulo y el bootstrap Android fija explícitamente `jvmTarget=17`, de modo que las tareas Java y
+Kotlin de todos los módulos Android producen bytecode compatible y Gradle puede validarlo sin
+relajar sus comprobaciones.
+
+**Validación automática:** `:core:subsonic-api:ciTest`, `:ultrasonic:testDebugUnitTest` y
+`:ultrasonic:assembleDebug` verdes en una compilación limpia con Gradle 9.7. El APK resultante se
+instaló con `adb install -r`, conservando los datos de la instalación existente.
+
+**Verificación en Pixel 7 físico (`panther`):** Home cargó el servidor existente; Library abrió
+Albums y Artists; el listado de Artists mostró datos, y el detalle de Queens of the Stone Age
+cargó 13 álbumes, información y canciones populares; el listado de Albums y el detalle de
+“Let’s Rock” cargaron 12 canciones y sus notas. El intent real de “Play Random Songs” ejecutó
+`getRandomSongs.view` con `200 OK` en 25 ms, creó una cola de 25 canciones y Android confirmó la
+sesión Media3 activa en estado `PLAYING`, sin error. No aparecieron excepciones de Taki en esos
+recorridos.
+
 ## Optimización interna: cierre de Fase 7 (red cancelable en los flujos prioritarios)
 
 Revisión final contra el alcance de `TAKI_CODE_OPTIMIZATION_PLAN.md`. Los commits anteriores
@@ -26,11 +46,10 @@ sin migrar endpoints secundarios fuera del orden acordado (por ejemplo podcasts,
 bookmarks y streaming binario). Siguen ejecutándose en contextos IO existentes y se dejan para
 flujos verticales futuros; ampliar esta fase a una reescritura total contradiría el plan.
 
-**Validación:** `:core:subsonic-api:ciTest` verde con Gradle 9.7 (suite completa del módulo). La
-compilación Android global queda bloqueada por una incompatibilidad preexistente y ajena a esta
-migración: `core/domain/build.gradle` configura Java 25 mientras Kotlin y el JDK instalado apuntan
-a 23. El proyecto tampoco expone actualmente las tareas `ktlintCheck` ni `detekt`. No se cambió esa
-configuración como parte de Fase 7.
+**Validación inicial:** `:core:subsonic-api:ciTest` verde con Gradle 9.7 (suite completa del
+módulo). La incompatibilidad Java/Kotlin que bloqueó inicialmente la compilación Android se corrigió
+y validó en el cambio posterior documentado arriba. El proyecto no expone actualmente las tareas
+`ktlintCheck` ni `detekt`.
 
 ## Optimización interna Fase 7: migra Playlists y Favoritos a `suspend` (último flujo del orden original)
 
