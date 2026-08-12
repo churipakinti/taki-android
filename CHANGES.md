@@ -1,5 +1,53 @@
 # Changes
 
+## Corrección: `OpenSubsonicExtensionsCache` no debe cachear una falla temporal como "sin soporte" por 24h
+
+Reporte externo (`TAKI_TWO_OPTIMIZATION_FIXES.md`) sobre el trabajo de Fase 4. Confirmado contra
+el código actual antes de tocar nada.
+
+**Causa confirmada:** `fetchOpenSubsonicExtensions()` en `RESTMusicService` colapsaba TODOS los
+desenlaces -- respuesta exitosa sin la extensión, servidor inalcanzable, timeout, error de
+autenticación, respuesta inválida -- al mismo `emptySet()`, y `OpenSubsonicExtensionsCache` lo
+memorizaba con el mismo TTL de 24h sin importar cuál había sido. Si Navidrome estaba
+reiniciándose justo cuando el usuario abría las letras, esa falla temporal quedaba indistinguible
+de "este servidor no soporta OpenSubsonic" durante el resto del día, incluso después de que la
+conexión se recuperara.
+
+**Diseño implementado:** `OpenSubsonicExtensionsCache` ahora recibe un `ProbeResult` en vez de un
+`Set<String>` crudo -- `ProbeResult.Success(extensions)` (con o sin extensiones, es una
+confirmación real del servidor) o `ProbeResult.Failure` (no se pudo confirmar nada esta vez). Cada
+uno tiene su propio TTL: `successTtlMs` (24h, sin cambios) vs `failureTtlMs` (2 minutos, dentro
+del rango 1-5 min sugerido). Es la "solución mínima aceptable" que el propio reporte proponía:
+solo una respuesta exitosa (con o sin la extensión) gana el TTL largo; cualquier excepción -- HTTP
+no exitoso, `SubsonicRESTException`, error de red/parseo -- cae al TTL corto. No se agregó un
+tercer estado para autenticación inválida por separado: cae en la misma categoría de "falla,
+reintentar pronto", que ya es lo que el reporte ofrece como alternativa aceptable a mantenerlo
+fijo hasta cambiar de servidor.
+
+`RESTMusicService.fetchOpenSubsonicExtensions()` ahora devuelve el `ProbeResult` correspondiente
+en cada rama (antes devolvía `Set<String>` directo). Los mensajes de log se mantienen separados
+por tipo de fallo (HTTP no exitoso / `SubsonicRESTException` / excepción genérica) para
+diagnóstico, sin registrar nunca URL completa, credenciales, token ni salt -- ninguno de esos
+valores se tocó, ya no se registraban antes tampoco.
+
+**No tocado:** el fallback a `getLyrics` estándar (sin cambios), el modo offline (nunca ejecuta
+esta comprobación, sin cambios estructurales), la invalidación al cambiar de servidor (sigue
+siendo automática porque `RESTMusicService` -- dueño de la instancia de caché -- se recrea
+completo en cada cambio, ver `MusicServiceFactory.resetMusicService()`).
+
+**Tests:** `OpenSubsonicExtensionsCacheTest` reescrito con 8 casos, incluyendo los que pide el
+reporte explícitamente: un timeout inicial cae a fallback pero se puede volver a probar después
+del TTL corto, y una recuperación tras la falla temporal recupera `songLyrics` sin reiniciar la
+app (dentro del mismo proceso, simulando el paso del tiempo con `nowMs`).
+
+**Verificación en el Pixel 7:** letras de una canción con Navidrome saludable -- primera apertura
+dispara `getOpenSubsonicExtensions.view` (200 OK) seguido de `getLyricsBySongId.view` y fallback a
+`getLyrics.view` (esta canción no tiene letras en ninguna fuente); segunda apertura de la misma
+canción no repite la comprobación de extensiones (sigue cacheada bajo el TTL largo). No fue
+posible provocar una caída real de Navidrome dentro de esta sesión para verificar el TTL corto en
+vivo -- ese comportamiento queda cubierto por los tests unitarios deterministas, no por
+repetición en vivo del escenario exacto. Documentado como limitación.
+
 ## Corrección: `LatestQueryTracker` debe identificar cada ejecución de búsqueda, no solo su texto
 
 Reporte externo (`TAKI_TWO_OPTIMIZATION_FIXES.md`) sobre el trabajo de Fase 9. Confirmado contra

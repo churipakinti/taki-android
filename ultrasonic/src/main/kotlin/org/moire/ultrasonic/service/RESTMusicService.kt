@@ -372,33 +372,41 @@ open class RESTMusicService(
 
     /**
      * Probes which OpenSubsonic extensions the server supports (see
-     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 4). A plain Subsonic server doesn't have this endpoint
-     * at all, so every failure path here just means "no extensions" to the caller -- the
-     * distinction is only kept for logging, since an unreachable server or bad credentials are a
-     * different problem than "this server doesn't implement OpenSubsonic".
+     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 4). Only a cleanly parsed response -- successful or
+     * not, empty extension list or not -- counts as [OpenSubsonicExtensionsCache.ProbeResult
+     * .Success]; a plain Subsonic server confirms it that way (its own 200 OK with an empty/
+     * absent extensions field, or a well-formed Subsonic protocol error). Anything that isn't a
+     * clean parse -- HTTP failure, a rejected/malformed request, a network exception -- is a
+     * [OpenSubsonicExtensionsCache.ProbeResult.Failure]: it means "couldn't tell this time", not
+     * "confirmed unsupported", so the caller only memoizes it briefly instead of for a full day.
+     * Never logs the request URL, credentials, token or salt -- only the HTTP code / exception
+     * type, which is enough to tell the failure kinds apart without leaking anything sensitive.
      */
-    private fun fetchOpenSubsonicExtensions(): Set<String> {
+    private fun fetchOpenSubsonicExtensions(): OpenSubsonicExtensionsCache.ProbeResult {
         return try {
             val response = API.getOpenSubsonicExtensions().execute()
             if (!response.isSuccessful) {
                 Timber.i(
-                    "OpenSubsonic extensions request failed (HTTP %d), assuming plain Subsonic",
+                    "OpenSubsonic extensions request failed (HTTP %d), will retry soon",
                     response.code()
                 )
-                return emptySet()
+                return OpenSubsonicExtensionsCache.ProbeResult.Failure
             }
-            response.throwOnFailure().body()!!.openSubsonicExtensions
-                .map { it.name }
-                .toSet()
+            OpenSubsonicExtensionsCache.ProbeResult.Success(
+                response.throwOnFailure().body()!!.openSubsonicExtensions
+                    .map { it.name }
+                    .toSet()
+            )
         } catch (e: SubsonicRESTException) {
             Timber.i(
                 e,
-                "Server rejected the OpenSubsonic extensions request, assuming plain Subsonic"
+                "Server rejected the OpenSubsonic extensions request (code %d), will retry soon",
+                e.code
             )
-            emptySet()
+            OpenSubsonicExtensionsCache.ProbeResult.Failure
         } catch (e: Exception) {
-            Timber.w(e, "Could not check OpenSubsonic extensions, assuming none for now")
-            emptySet()
+            Timber.w(e, "Could not check OpenSubsonic extensions, will retry soon")
+            OpenSubsonicExtensionsCache.ProbeResult.Failure
         }
     }
 

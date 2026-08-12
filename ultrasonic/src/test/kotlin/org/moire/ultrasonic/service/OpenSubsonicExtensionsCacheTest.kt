@@ -12,14 +12,19 @@ import org.junit.Test
 
 class OpenSubsonicExtensionsCacheTest {
 
+    private val success = OpenSubsonicExtensionsCache.ProbeResult.Success(setOf("songLyrics"))
+    private val successNoExtensions =
+        OpenSubsonicExtensionsCache.ProbeResult.Success(emptySet())
+    private val failure = OpenSubsonicExtensionsCache.ProbeResult.Failure
+
     @Test
     fun `first call always probes`() {
-        val cache = OpenSubsonicExtensionsCache(ttlMs = 1000L)
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
         var probeCount = 0
 
         val result = cache.supports("songLyrics", nowMs = 0L) {
             probeCount++
-            setOf("songLyrics")
+            success
         }
 
         result shouldBeEqualTo true
@@ -27,12 +32,12 @@ class OpenSubsonicExtensionsCacheTest {
     }
 
     @Test
-    fun `within the TTL a second call reuses the cached result without probing again`() {
-        val cache = OpenSubsonicExtensionsCache(ttlMs = 1000L)
+    fun `a confirmed success is not re-probed within the success TTL`() {
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
         var probeCount = 0
         val probe = {
             probeCount++
-            setOf("songLyrics")
+            success
         }
 
         cache.supports("songLyrics", nowMs = 0L, probe)
@@ -43,12 +48,12 @@ class OpenSubsonicExtensionsCacheTest {
     }
 
     @Test
-    fun `once the TTL elapses the extension is probed again`() {
-        val cache = OpenSubsonicExtensionsCache(ttlMs = 1000L)
+    fun `once the success TTL elapses the extension is probed again`() {
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
         var probeCount = 0
         val probe = {
             probeCount++
-            setOf("songLyrics")
+            success
         }
 
         cache.supports("songLyrics", nowMs = 0L, probe)
@@ -58,12 +63,12 @@ class OpenSubsonicExtensionsCacheTest {
     }
 
     @Test
-    fun `an unsupported extension is remembered and not re-probed within the TTL`() {
-        val cache = OpenSubsonicExtensionsCache(ttlMs = 1000L)
+    fun `a confirmed absence is remembered and not re-probed within the success TTL`() {
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
         var probeCount = 0
         val probe = {
             probeCount++
-            emptySet<String>()
+            successNoExtensions
         }
 
         val first = cache.supports("songLyrics", nowMs = 0L, probe)
@@ -75,31 +80,66 @@ class OpenSubsonicExtensionsCacheTest {
     }
 
     @Test
-    fun `a probe failure is treated like an empty extension set and still memoized`() {
-        val cache = OpenSubsonicExtensionsCache(ttlMs = 1000L)
+    fun `a temporary failure falls back but is only memoized for the short failure TTL`() {
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
         var probeCount = 0
-        // Mirrors RESTMusicService.fetchOpenSubsonicExtensions(), which never lets an
-        // exception escape -- any failure (unreachable, auth, malformed response) becomes an
-        // empty set so a plain-Subsonic server isn't probed again on every call.
         val probe = {
             probeCount++
-            emptySet<String>()
+            failure
         }
 
-        cache.supports("songLyrics", nowMs = 0L, probe)
-        cache.supports("songLyrics", nowMs = 1L, probe)
-        cache.supports("songLyrics", nowMs = 2L, probe)
+        val duringFailureTtl = cache.supports("songLyrics", nowMs = 0L, probe)
+        val stillWithinFailureTtl = cache.supports("songLyrics", nowMs = 99L, probe)
 
+        duringFailureTtl shouldBeEqualTo false
+        stillWithinFailureTtl shouldBeEqualTo false
         probeCount shouldBeEqualTo 1
     }
 
     @Test
-    fun `different extension names are checked against the same probed set`() {
-        val cache = OpenSubsonicExtensionsCache(ttlMs = 1000L)
+    fun `a temporary failure is re-probed once its short TTL elapses`() {
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
         var probeCount = 0
         val probe = {
             probeCount++
-            setOf("songLyrics", "transcodeOffset")
+            failure
+        }
+
+        cache.supports("songLyrics", nowMs = 0L, probe)
+        cache.supports("songLyrics", nowMs = 100L, probe)
+
+        probeCount shouldBeEqualTo 2
+    }
+
+    @Test
+    fun `recovering after a temporary failure picks up the extension without an app restart`() {
+        // The core bug this fixes: caching every failure as long as a real success meant a
+        // server that was just restarting when the user opened lyrics could look identical to
+        // "confirmed no OpenSubsonic support" for the rest of the day.
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
+        var probeCount = 0
+
+        val duringOutage = cache.supports("songLyrics", nowMs = 0L) {
+            probeCount++
+            failure
+        }
+        val afterRecovery = cache.supports("songLyrics", nowMs = 100L) {
+            probeCount++
+            success
+        }
+
+        duringOutage shouldBeEqualTo false
+        afterRecovery shouldBeEqualTo true
+        probeCount shouldBeEqualTo 2
+    }
+
+    @Test
+    fun `different extension names are checked against the same probed set`() {
+        val cache = OpenSubsonicExtensionsCache(successTtlMs = 1000L, failureTtlMs = 100L)
+        var probeCount = 0
+        val probe = {
+            probeCount++
+            OpenSubsonicExtensionsCache.ProbeResult.Success(setOf("songLyrics", "transcodeOffset"))
         }
 
         val lyricsSupported = cache.supports("songLyrics", nowMs = 0L, probe)
