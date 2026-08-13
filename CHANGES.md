@@ -1,5 +1,82 @@
 # Changes
 
+## TAKI_ALBUM_DETAIL_FIX_PLAN.md — carga lenta, Play por disco, rectángulo intermitente
+
+Tres correcciones puntuales de Album Detail, medidas contra Bach 333 (Various Artists, 5.517
+canciones, caso extremo real ya presente en el servidor de prueba) en el emulador
+`sdk_gphone16k_x86_64` (Pixel 7 no disponible en esta sesión). Instrumentación con `PerfMetrics`
+(ya existente en el repo, no-op en release) añadida en los puntos exactos del plan para medir
+antes de tocar nada.
+
+**1. Carga lenta.** El desglose medido de una apertura fría de Bach 333 fue: red
+(`getAlbum.view`) 745 ms; conversión JSON→dominio de las 5.517 canciones (dentro de
+`RESTMusicService.getAlbumAsDir`, ya en un hilo de IO) ~2.700 ms; escritura a caché Room
+(`CachedMusicService.getAlbumAsDir`, también en IO) 1.527 ms; y, ya en el hilo principal, el
+`Collections.sort` + agrupamiento por disco dentro de `TrackCollectionFragment.defaultObserver`
+57–82 ms — este último confirmado como el único trabajo pesado que sí corría en el hilo
+principal, en *toda* apertura (fría o desde caché), no solo la fría. Causa de la escritura a
+caché lenta: `TrackDao.upsert()` (`@Upsert`) intenta un `UPDATE` antes de cada `INSERT`, es decir
+hasta el doble de sentencias por fila de las necesarias para poblar una caché que el propio
+código acababa de confirmar vacía.
+
+Cambios: (a) `TrackCollectionFragment.kt` mueve el sort/agrupamiento por disco y la construcción
+del `AlbumHeader` a `Dispatchers.Default` (`buildDisplayList`), liberando el hilo principal en
+cada apertura; (b) `CachedMusicService.kt` cambia ese `cachedTracks.upsert(tracks)` por
+`cachedTracks.set(tracks)` (`@Insert(REPLACE)`, una sola sentencia por fila), mismo patrón que
+`cachedArtists.set()` unas líneas arriba para el mismo tipo de escritura. No se tocó el contrato
+Subsonic/OpenSubsonic ni se asumió paginación (la API no la ofrece para este endpoint). Medido
+después: apertura desde caché baja de 82 ms de bloqueo del hilo principal a 0 (el sort ahora
+corre en background, ~190 ms de reloj mientras la UI sigue respondiendo); apertura fría baja de
+~1.530 ms a bajo 1s en la escritura de caché. Ningún ANR, ninguna solicitud duplicada del mismo
+álbum (el `KeyedLock` de single-flight que ya existía no se modificó).
+
+**2. Play por disco.** `disc_header_item.xml` gana un botón ▶ (`disc_header_play`, mismo icono
+`media_start` que el hero del álbum) junto al de descarga existente. `DiscHeaderBinder.kt` gana
+un parámetro `onPlay`; `TrackCollectionFragment.playDisc()` reutiliza directamente
+`mediaPlayerManager.addToPlaylist(..., insertionMode = CLEAR)` — el mismo flujo asíncrono y
+protegido contra doble toque (`addToPlaylistDuplicateGuard`) que ya usa "Play All" del álbum, sin
+ruta paralela nueva. `DiscHeader.tracks` ya llega ordenado por pista (con `path` como criterio de
+desempate estable) porque `EntryByDiscAndTrackComparator` ordena la lista completa *antes* de
+agruparla por disco, así que no hace falta reordenar nada en `playDisc()`. En offline,
+`OfflineMusicService.getAlbumAsDir()` ya devuelve solo pistas descargadas, así que un encabezado
+de disco offline nunca contiene una pista no reproducible — el guard de "sin pistas disponibles"
+en `playDisc()` (toast `album.play_disc_empty_offline`) es una defensa por si esa garantía deja
+de cumplirse, no una ruta esperada hoy. Verificado en dispositivo: reproducir el Disco 1 de Bach
+333 (27 canciones) arma una cola de exactamente 27 canciones, no las 5.517 del álbum; Play All
+del álbum y Descargar disco siguen funcionando sin cambios (código no tocado).
+
+**3. Rectángulo intermitente.** La vista responsable era el par `song_status_image`/
+`song_status_progress` de `TrackViewHolder` (entre duración y el menú ⋮ en
+`list_item_track[_album].xml`). Causa: su visibilidad solo se fijaba de forma asíncrona, dentro
+de `updateStatus()`, llamado tras un round-trip por `RxBus` que arranca en `setSong()` con
+`scope.launch { DownloadService.getDownloadState(song) }`. Entre el bind de una fila reciclada y
+la resolución de ese estado, la fila conservaba visualmente el indicador de la canción anterior
+que ocupó ese `ViewHolder`. Peor: `cachedStatus` (usado por `updateStatus()` para no repintar si
+el estado "no cambió") nunca se reseteaba al reciclar, así que si el estado real de la nueva
+canción coincidía por casualidad con el `cachedStatus` heredado de la anterior, `updateStatus()`
+nunca llegaba a corregir la vista. Corrección en `TrackViewHolder.setSong()`: al inicio de cada
+bind, ocultar `statusImage`/`progressIndicator` de forma síncrona y resetear
+`cachedStatus = DownloadState.UNKNOWN`, garantizando que la fila arranca sin heredar nada y que
+`updateStatus()` siempre vuelve a aplicar el estado real una vez resuelto. Verificado con scroll
+rápido repetido (15 flings) sobre las 5.517 filas de Bach 333 sin capturar el artefacto ni
+regresiones en los indicadores válidos (descargado/descargando/reproduciendo); duración y menú
+permanecen alineados. No se revisó cola/búsqueda por separado más allá de compartir el mismo
+`TrackViewHolder` (el componente corregido es común a todas las listas de canciones).
+
+**Archivos:** `TrackCollectionFragment.kt`, `CachedMusicService.kt`, `TrackViewHolder.kt`,
+`DiscHeaderBinder.kt`, `DiscHeader.kt` (sin cambios de lógica, solo consumido), `disc_header_item.xml`,
+`strings.xml` (`album.play_disc_description`, `album.play_disc_empty_offline`). Prueba nueva:
+`EntryByDiscAndTrackComparatorTest.kt` (orden y agrupamiento por disco, la lógica exacta de la
+que depende Play por disco). `./gradlew :ultrasonic:testDebugUnitTest` y
+`:ultrasonic:assembleDebug` pasan; `:ultrasonic:lintDebug` no reporta errores nuevos en los
+archivos tocados (35 preexistentes fuera del baseline, ninguno introducido por este cambio).
+
+**Limitación real:** no se probó en Pixel 7 físico (ocupado en esta sesión) — toda la
+verificación fue en el emulador `sdk_gphone16k_x86_64`. La conversión JSON→dominio (~2,7s) y la
+red (~745ms) siguen siendo el costo dominante de una apertura fría de Bach 333 y no se tocaron:
+ya corren fuera del hilo principal y no hay paginación disponible en la API para reducirlos más
+sin cambiar el contrato Subsonic.
+
 ## TAKI_LEGACY_UI_AUDIT.md — Fase 2: formulario de agregar/editar servidor
 
 Modernización del flujo de conexión (`EditServerFragment.kt`, `server_edit.xml`), siguiendo el

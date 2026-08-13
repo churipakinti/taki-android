@@ -28,11 +28,22 @@
         a:background="?attr/colorOutlineVariant" />
 
     <com.google.android.material.button.MaterialButton
-        a:id="@+id/disc_header_download"
+        a:id="@+id/disc_header_play"
         style="@style/Widget.Material3.Button.IconButton"
         a:layout_width="32dp"
         a:layout_height="32dp"
         a:layout_marginStart="12dp"
+        a:contentDescription="@string/album.play_disc_description"
+        app:icon="@drawable/media_start"
+        app:iconSize="16dp"
+        app:iconTint="?attr/colorOnSurfaceVariant" />
+
+    <com.google.android.material.button.MaterialButton
+        a:id="@+id/disc_header_download"
+        style="@style/Widget.Material3.Button.IconButton"
+        a:layout_width="32dp"
+        a:layout_height="32dp"
+        a:layout_marginStart="4dp"
         a:contentDescription="@string/album.download_disc_description"
         app:icon="@drawable/ic_menu_download"
         app:iconSize="16dp"

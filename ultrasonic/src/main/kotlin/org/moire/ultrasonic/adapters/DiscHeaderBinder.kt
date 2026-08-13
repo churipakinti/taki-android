@@ -16,14 +16,17 @@ import com.drakeet.multitype.ItemViewBinder
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Track
 
-class DiscHeaderBinder(private val onDownload: (List<Track>) -> Unit) :
-    ItemViewBinder<DiscHeader, DiscHeaderBinder.ViewHolder>() {
+class DiscHeaderBinder(
+    private val onPlay: (List<Track>) -> Unit,
+    private val onDownload: (List<Track>) -> Unit
+) : ItemViewBinder<DiscHeader, DiscHeaderBinder.ViewHolder>() {
 
     override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): ViewHolder =
         ViewHolder(inflater.inflate(R.layout.disc_header_item, parent, false))
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val label: TextView = itemView.findViewById(R.id.disc_header_label)
+        val play: View = itemView.findViewById(R.id.disc_header_play)
         val download: View = itemView.findViewById(R.id.disc_header_download)
     }
 
@@ -32,6 +35,7 @@ class DiscHeaderBinder(private val onDownload: (List<Track>) -> Unit) :
             R.string.album_disc_header,
             item.discNumber
         )
+        holder.play.setOnClickListener { onPlay(item.tracks) }
         holder.download.setOnClickListener { onDownload(item.tracks) }
     }
 }

@@ -104,6 +104,17 @@ class TrackViewHolder(val view: View) :
         entry = song
         usesQueueStyle = queueStyle
 
+        // Reset the recycled row's download-status indicators synchronously. The real status
+        // is looked up async below (RxBus round-trip through DownloadService), so without this
+        // a row reused for a different track kept showing whichever of statusImage/
+        // progressIndicator the *previous* occupant last had visible until that lookup resolved
+        // -- an intermittent rectangle flashing between duration and the menu button while
+        // scrolling. Resetting cachedStatus too ensures updateStatus() below can't skip
+        // re-applying the correct state just because it happens to match the previous track's.
+        cachedStatus = DownloadState.UNKNOWN
+        statusImage.isGone = true
+        progressIndicator.isGone = true
+
         albumArt?.let { cover ->
             imageLoaderProvider.executeOn {
                 it.loadImage(cover, song, false, 0, R.drawable.unknown_album)

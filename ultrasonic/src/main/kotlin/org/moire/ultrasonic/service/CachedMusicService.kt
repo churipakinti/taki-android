@@ -34,6 +34,7 @@ import org.moire.ultrasonic.domain.Share
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.domain.UserInfo
 import org.moire.ultrasonic.util.LRUCache
+import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.TimeLimitedCache
 import org.moire.ultrasonic.util.Util
@@ -244,12 +245,26 @@ class CachedMusicService(private val musicService: MusicService) :
             cachedTracks.clearByAlbum(id)
         }
 
+        val readToken = PerfMetrics.start("album_dir:cache_read:$id")
         var tracks = cachedTracks.byAlbum(id)
+        PerfMetrics.end("album_dir:cache_read:$id:count=${tracks.size}", readToken)
 
         if (tracks.isEmpty()) {
+            val networkToken = PerfMetrics.start("album_dir:network:$id")
             val dir = musicService.getAlbumAsDir(id, name, refresh)
+            PerfMetrics.end("album_dir:network:$id", networkToken)
             tracks = dir.getTracks()
-            if (tracks.isNotEmpty()) cachedTracks.upsert(tracks)
+            if (tracks.isNotEmpty()) {
+                val writeToken = PerfMetrics.start("album_dir:cache_write:$id:count=${tracks.size}")
+                // set() (single INSERT OR REPLACE per row) instead of upsert() (a no-op UPDATE
+                // attempt followed by an INSERT for every row that doesn't already exist, i.e.
+                // ~2x the statement executions) -- safe here specifically because the cache for
+                // this album was just confirmed empty above, so every row is a fresh insert, not
+                // an update of existing data. Measured on Bach 333 (5,517 tracks): ~1.5s with
+                // upsert(). Same pattern already used by getArtists()/cachedArtists.set() above.
+                cachedTracks.set(tracks)
+                PerfMetrics.end("album_dir:cache_write:$id:count=${tracks.size}", writeToken)
+            }
             return@withLock dir
         }
 

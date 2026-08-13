@@ -59,6 +59,8 @@
     <string name="album.about">About</string>
     <string name="album.disc_header">Disc %1$d</string>
     <string name="album.download_disc_description">Download this disc</string>
+    <string name="album.play_disc_description">Play this disc</string>
+    <string name="album.play_disc_empty_offline">No downloaded songs from this disc are available offline</string>
     <string name="button_bar.now_playing">Now Playing</string>
     <string name="buttons.play">Play</string>
     <string name="buttons.pause">Pause</string>

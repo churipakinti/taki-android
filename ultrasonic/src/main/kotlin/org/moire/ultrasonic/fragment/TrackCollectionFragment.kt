@@ -291,13 +291,16 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         if (navArgs.isAlbum) {
             viewAdapter.register(
-                DiscHeaderBinder { tracks ->
-                    DownloadUtil.justDownload(
-                        action = DownloadAction.DOWNLOAD,
-                        fragment = this,
-                        tracks = tracks
-                    )
-                }
+                DiscHeaderBinder(
+                    onPlay = ::playDisc,
+                    onDownload = { tracks ->
+                        DownloadUtil.justDownload(
+                            action = DownloadAction.DOWNLOAD,
+                            fragment = this,
+                            tracks = tracks
+                        )
+                    }
+                )
             )
         }
 
@@ -494,6 +497,33 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             }
         }
     }
+    /**
+     * Disc header's Play button (docs/TAKI_ALBUM_DETAIL_FIX_PLAN.md problem 2). [tracks] is
+     * [org.moire.ultrasonic.adapters.DiscHeader.tracks], already scoped to a single disc and in
+     * track-number order (falling back to path for incomplete metadata) by
+     * [EntryByDiscAndTrackComparator], which [defaultObserver] already sorts the whole album
+     * with before grouping by disc -- offline, that list is also already restricted to locally
+     * playable tracks, since [org.moire.ultrasonic.service.OfflineMusicService.getAlbumAsDir]
+     * only returns downloaded ones, so a disc header only exists here at all when it has at
+     * least one. Reuses [MediaPlayerManager.addToPlaylist] directly (same as the album header's
+     * Play button) instead of a separate playback path, which is also where the existing
+     * double-tap guard (`addToPlaylistDuplicateGuard`) and background queue-building already
+     * live.
+     */
+    private fun playDisc(tracks: List<Track>) {
+        if (tracks.isEmpty()) {
+            toast(R.string.album_play_disc_empty_offline)
+            return
+        }
+        mediaPlayerManager.addToPlaylist(
+            songs = tracks,
+            autoPlay = true,
+            shuffle = false,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR
+        )
+        navigateToCurrent()
+    }
+
     private fun downloadSelectedOrAllTracks(save: Boolean) {
         DownloadUtil.justDownload(
             action = if (save) DownloadAction.PIN else DownloadAction.DOWNLOAD,
@@ -684,10 +714,26 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
-    override val defaultObserver: (List<MusicDirectory.Child>) -> Unit = {
+    /**
+     * Result of [buildDisplayList]: the sort, per-disc grouping and hero-header construction are
+     * pure data transforms with no Android API calls, so on a large album (Bach 333, 5,517
+     * tracks: measured ~60-80ms) they're moved off the main thread instead of running inline in
+     * the LiveData observer, which was blocking a frame on every open -- cold *and* from cache.
+     * See TAKI_ALBUM_DETAIL_FIX_PLAN.md problem 1.
+     */
+    private data class ProcessedTrackList(
+        val displayList: List<Identifiable>,
+        val isEmpty: Boolean,
+        val songCount: Int,
+        val allVideos: Boolean,
+        val hasMultipleArtists: Boolean,
+        val hasMultipleDiscs: Boolean
+    )
 
-        Timber.i("Received list")
-        val entryList: MutableList<MusicDirectory.Child> = it.toMutableList()
+    private suspend fun buildDisplayList(
+        children: List<MusicDirectory.Child>
+    ): ProcessedTrackList = withContext(Dispatchers.Default) {
+        val entryList: MutableList<MusicDirectory.Child> = children.toMutableList()
 
         if (listModel.currentListIsSortable && Settings.SHOULD_SORT_BY_DISC) {
             Collections.sort(entryList, EntryByDiscAndTrackComparator())
@@ -705,35 +751,23 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             }
         }
 
-        // Show a text if we have no entries
-        emptyView.isVisible = entryList.isEmpty()
+        var hasMultipleArtists = albumHasMultipleArtists
+        var hasMultipleDiscs = albumHasMultipleDiscs
 
-        triggerButtonUpdate()
-
-        val isAlbumList = (navArgs.albumListType != null)
-
-        // Album/Playlist Detail have their own persistent play/shuffle row in the hero, so the
-        // overflow menu's "play all" would be redundant there.
-        playAllButtonVisible = !useLibraryTrackRows &&
-            !(navArgs.isAlbum || navArgs.playlistId != null) &&
-            !(isAlbumList || entryList.isEmpty()) && !allVideos
-
-        playAllButton?.isVisible = playAllButtonVisible
-
-        if (songCount > 0 && listModel.showHeader) {
+        val displayList: List<Identifiable> = if (songCount > 0 && listModel.showHeader) {
             val intentAlbumName = navArgs.name ?: navArgs.playlistName
-            val albumHeader = AlbumHeader(it, intentAlbumName)
+            val albumHeader = AlbumHeader(children, intentAlbumName)
 
             if (navArgs.isAlbum) {
-                albumHasMultipleArtists = albumHeader.artists.size > 1
-                albumHasMultipleDiscs = entryList.filterIsInstance<Track>()
+                hasMultipleArtists = albumHeader.artists.size > 1
+                hasMultipleDiscs = entryList.filterIsInstance<Track>()
                     .mapNotNull { track -> track.discNumber }
                     .toSet().size > 1
                 albumHeader.notes = albumNotes
             }
 
             val mixedList: MutableList<Identifiable> = mutableListOf(albumHeader)
-            if (navArgs.isAlbum && albumHasMultipleDiscs) {
+            if (navArgs.isAlbum && hasMultipleDiscs) {
                 val tracksByDisc = entryList.filterIsInstance<Track>()
                     .groupBy { it.discNumber ?: 1 }
                 var lastDisc: Int? = null
@@ -748,20 +782,65 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             } else {
                 mixedList.addAll(entryList)
             }
-            viewAdapter.submitList(mixedList)
+            mixedList
         } else {
-            viewAdapter.submitList(entryList)
+            entryList
         }
 
-        val playAll = navArgs.autoPlay
+        ProcessedTrackList(
+            displayList = displayList,
+            isEmpty = entryList.isEmpty(),
+            songCount = songCount,
+            allVideos = allVideos,
+            hasMultipleArtists = hasMultipleArtists,
+            hasMultipleDiscs = hasMultipleDiscs
+        )
+    }
 
-        if (playAll && songCount > 0) {
-            playAll(navArgs.shuffle, MediaPlayerManager.InsertionMode.CLEAR)
+    override val defaultObserver: (List<MusicDirectory.Child>) -> Unit = { children ->
+
+        Timber.i("Received list")
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val sortToken = PerfMetrics.start(
+                "track_collection:sort_and_group:count=${children.size}"
+            )
+            val processed = buildDisplayList(children)
+            PerfMetrics.end(
+                "track_collection:sort_and_group:count=${children.size}",
+                sortToken
+            )
+
+            albumHasMultipleArtists = processed.hasMultipleArtists
+            albumHasMultipleDiscs = processed.hasMultipleDiscs
+
+            // Show a text if we have no entries
+            emptyView.isVisible = processed.isEmpty
+
+            triggerButtonUpdate()
+
+            val isAlbumList = (navArgs.albumListType != null)
+
+            // Album/Playlist Detail have their own persistent play/shuffle row in the hero, so
+            // the overflow menu's "play all" would be redundant there.
+            playAllButtonVisible = !useLibraryTrackRows &&
+                !(navArgs.isAlbum || navArgs.playlistId != null) &&
+                !(isAlbumList || processed.isEmpty) && !processed.allVideos
+
+            playAllButton?.isVisible = playAllButtonVisible
+
+            viewAdapter.submitList(processed.displayList)
+
+            val playAll = navArgs.autoPlay
+
+            if (playAll && processed.songCount > 0) {
+                playAll(navArgs.shuffle, MediaPlayerManager.InsertionMode.CLEAR)
+            }
+
+            listModel.currentListIsSortable = true
+
+            Timber.i("Processed list")
         }
-
-        listModel.currentListIsSortable = true
-
-        Timber.i("Processed list")
     }
 
     internal fun getSelectedTracks(): List<Track> {
