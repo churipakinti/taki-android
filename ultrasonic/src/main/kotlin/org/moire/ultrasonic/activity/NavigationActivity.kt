@@ -95,6 +95,14 @@ class NavigationActivity : ScopeActivity() {
     private var currentFragmentId: Int = 0
     private var imeVisible = false
     private var navigationBarBottomInset = 0
+
+    // Removed in onDestroy() -- never releasing it left the NavController (owned by this
+    // Activity's NavHostFragment) holding a listener that closes over `this`, which on repeated
+    // rotation showed up as a genuine, linearly growing StrictMode InstanceCountViolation for
+    // NavigationActivity (confirmed with rotations paced 3s apart, well past any GC lag: instance
+    // count climbed by exactly 1 per rotation, not just a transient blip). See
+    // TAKI_BETA_COMPLETION_PLAN.md P0.3 audit, 2026-08-12.
+    private var destinationChangedListener: NavController.OnDestinationChangedListener? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         PerfMetrics.mark("nav_activity_create_start")
         Timber.d("onCreate called")
@@ -187,7 +195,7 @@ class NavigationActivity : ScopeActivity() {
         bottomNavigation?.setOnItemSelectedListener(switchToBottomNavTab)
         bottomNavigation?.setOnItemReselectedListener { switchToBottomNavTab(it) }
 
-        navController.addOnDestinationChangedListener { _, destination, arguments ->
+        destinationChangedListener = NavController.OnDestinationChangedListener { _, destination, arguments ->
             val dest: String = try {
                 resources.getResourceName(destination.id)
             } catch (ignored: Resources.NotFoundException) {
@@ -264,6 +272,7 @@ class NavigationActivity : ScopeActivity() {
             invalidateOptionsMenu()
             updateChromeVisibility()
         }
+        navController.addOnDestinationChangedListener(destinationChangedListener!!)
 
         // Determine if this is a first run
         val showWelcomeScreen = UApp.instance!!.isFirstRun
@@ -362,6 +371,8 @@ class NavigationActivity : ScopeActivity() {
     override fun onDestroy() {
         Timber.d("onDestroy called")
         rxBusSubscription.dispose()
+        destinationChangedListener?.let { host?.navController?.removeOnDestinationChangedListener(it) }
+        destinationChangedListener = null
         super.onDestroy()
     }
 

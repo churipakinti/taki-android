@@ -1,5 +1,91 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P0.3: auditoría interna, continuación
+
+**Contexto:** al retomar P0.3 se confirmó (leyendo `CHANGES.md` y verificando contra el código
+actual, no solo confiando en la narrativa) que el grueso de la auditoría de
+`docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md` ya se había cerrado en una sesión previa (commit
+`5f29371c`, 2026-08-11): los sospechosos A (`PlayerFragment.ioScope`) y B (`TrackViewHolder`),
+el cierre del hallazgo histórico #7 (Cursor/`CloseGuardException`), y varios bugs adicionales
+encontrados en el mismo barrido (D, E, G, H, I) ya estaban corregidos y documentados. Se
+verificó puntualmente contra el código vigente (no solo el texto de `CHANGES.md`) que las
+correcciones siguen presentes: `PlayerFragment` ya no tiene `ioScope`, `savePlaylistInBackground()`
+usa `launchWithToast()`, `TrackViewHolder.dispose()` cancela y recrea su `scope`,
+`ArtistDetailFragment`/`GenericListModel` guardan y cancelan su `loadJob`, `DownloadService` tiene
+`downloadQueueMutex`, y `MediaLibrarySessionCallback.shuffleCurrentPlaylist()` trocea con
+`ADD_MEDIA_ITEMS_CHUNK_SIZE`. `TAKI_BETA_COMPLETION_PLAN.md` marcaba P0.3 como "Pendiente" sin
+reflejar este trabajo — no se reabrió nada de lo ya cerrado.
+
+Lo que sí quedaba genuinamente abierto era la Capa 2 (verificación dinámica en dispositivo) para
+varios de esos fixes, señalada como pendiente en la última entrada de auditoría por falta de un
+Pixel 7 físico en esa sesión. Un Pixel 7 real se conectó durante esta sesión y se usó para esa
+verificación.
+
+### Verificación dinámica (Pixel 7 físico, `2B191FDH200E36`)
+
+Sesión larga con `StrictMode.detectAll()+penaltyLog()` ya activo (`UApp.kt`), logcat completo
+filtrado por `StrictMode|FATAL EXCEPTION|ANR|CloseGuardException` después de cada patrón:
+
+- Scroll rápido repetido (20 flings) sobre una lista de canciones real: sin hits.
+- Abrir/cerrar el menú overflow del Player 6 veces seguidas: sin hits.
+- **Guardar playlist y salir del Player inmediatamente** (el escenario exacto del sospechoso A:
+  tocar "Save Playlist" y presionar atrás dos veces sin esperar) repetido varias veces: sin
+  `IllegalStateException`, sin toast fantasma, sin hits de StrictMode. Confirma en dispositivo
+  real la corrección ya aplicada (`launchWithToast()`).
+- Rotación de pantalla repetida: **encontró un bug real, no documentado antes** (ver abajo).
+
+### J. `NavigationActivity` se filtraba en cada rotación de pantalla (bug nuevo)
+
+**Síntoma:** `StrictMode.InstanceCountViolation` para `NavigationActivity` (límite 2 instancias)
+al rotar la pantalla repetidamente. Descartada la hipótesis de falso positivo por lag de GC:
+rotando con 3 segundos de por medio entre cada cambio (tiempo de sobra para cualquier ciclo de
+GC), el conteo de instancias creció de forma perfectamente lineal — 5, 6, 7, 8 — exactamente una
+instancia nueva permanente por rotación, no una fluctuación transitoria. `onDestroy()` se
+confirmó llamado correctamente en cada ciclo (trazado en logcat: create/resume/destroy
+intercalados 1 a 1), así que no era un `onDestroy()` faltante sino una referencia externa viva
+reteniendo cada Activity vieja.
+
+**Causa:** dos problemas distintos, uno de los cuales crecía por rotación:
+
+1. `NavigationActivity.onCreate()` instala `UncaughtExceptionHandler(this)` como
+   `Thread.setDefaultUncaughtExceptionHandler` de todo el proceso, pero solo si el handler actual
+   **no** es ya un `UncaughtExceptionHandler` — así que después de la primera vez nunca se
+   reemplaza. `UncaughtExceptionHandler` guardaba el `Context` recibido (la Activity) en un campo
+   para siempre: la primerísima instancia de `NavigationActivity` del proceso quedaba fijada en
+   memoria permanentemente vía ese handler estático. Esto explica una instancia extra fija, pero
+   no el crecimiento lineal por sí solo.
+2. `navController.addOnDestinationChangedListener { ... }` en `onCreate()` — el lambda cierra
+   sobre `this@NavigationActivity` (usa `resources`, `bottomNavigation`, `invalidateOptionsMenu()`,
+   etc.) y nunca se removía en `onDestroy()`, a diferencia de `rxBusSubscription.dispose()` que sí
+   se limpia ahí mismo. Esta es la causa del crecimiento por rotación.
+
+**Fix:**
+- `UncaughtExceptionHandler` ahora guarda `context.applicationContext` en vez del `Context`
+  recibido — su único uso real (`Util.getVersionName`/`getVersionCode`, que solo necesitan
+  `packageManager`/`packageName`) funciona igual con `applicationContext`.
+- El listener de `NavController` se guarda en un campo (`destinationChangedListener`) y se remueve
+  explícitamente en `onDestroy()` con `removeOnDestinationChangedListener()`, siguiendo el mismo
+  patrón que `rxBusSubscription.dispose()` ya establecido en el mismo método.
+
+**Verificación**: repetido el mismo protocolo (6 rotaciones, 3s de separación) en el Pixel 7 con
+el fix instalado — **cero** `InstanceCountViolation` en las 6 rotaciones (antes: 4 violaciones en
+4 rotaciones, creciendo 5→6→7→8). Sin regresiones: navegación, header dinámico y bottom nav
+siguen funcionando idénticamente (la lógica del listener no se tocó, solo su ciclo de vida).
+`testDebugUnitTest` y `assembleDebug` en verde.
+
+Archivos: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/activity/NavigationActivity.kt`,
+`ultrasonic/src/main/kotlin/org/moire/ultrasonic/util/UncaughtExceptionHandler.kt`.
+
+### Cierre de P0.3
+
+Con este hallazgo corregido y verificado, no quedan sospechosos conocidos sin conclusión escrita
+de `docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md`: todos están corregidos (A, B, C-histórico, D, E,
+G, H, I, J) o descartados con evidencia (barrido estático de `CoroutineScope by
+CoroutineScope(...)` restantes, todos singletons de Koin de vida completa del proceso; el Cursor
+del `CloseGuardException` histórico, atribuido a un path interno de Android fuera del código de
+la app). No se agregaron abstracciones nuevas — cada fix es local al archivo donde vivía el
+problema.
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P1: fila Offline del selector de colecciones
 
 `ServerRowAdapter.kt` mostraba `setting.url` sin condición para cualquier fila, incluida la de
