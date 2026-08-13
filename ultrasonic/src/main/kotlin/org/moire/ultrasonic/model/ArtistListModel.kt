@@ -35,7 +35,7 @@ import org.moire.ultrasonic.view.SortOrder
 class ArtistListModel(application: Application) : GenericListModel(application) {
     private val artists: MutableLiveData<List<ArtistOrIndex>> = MutableLiveData()
     private var allArtists: List<ArtistOrIndex> = emptyList()
-    private var sortOrder: SortOrder = SortOrder.NEWEST
+    private var sortOrder: SortOrder = SortOrder.BY_NAME
     private var selectedGenre: String? = null
     private var sortJob: Job? = null
 

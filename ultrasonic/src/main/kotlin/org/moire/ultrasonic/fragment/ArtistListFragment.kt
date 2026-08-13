@@ -13,12 +13,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.coroutines.launch
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.ArtistGridBinder
@@ -29,7 +27,6 @@ import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.model.ArtistListModel
 import org.moire.ultrasonic.util.LayoutType
 import org.moire.ultrasonic.util.Settings
-import org.moire.ultrasonic.util.toastingExceptionHandler
 import org.moire.ultrasonic.view.FilterButtonBar
 import org.moire.ultrasonic.view.SortOrder
 import org.moire.ultrasonic.view.ViewCapabilities
@@ -53,19 +50,23 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
 
     private val navArgs: ArtistListFragmentArgs by navArgs()
     private var filterButtonBar: FilterButtonBar? = null
-    private var orderType: SortOrder = SortOrder.NEWEST
-    private var selectedGenre: String? = null
+    private var orderType: SortOrder = SortOrder.BY_NAME
+
+    // Set only when setOrderType() changes the order (never on initial load or when the same
+    // order is re-applied, e.g. state restored on back navigation) - see onListCommitted().
+    private var resetScrollOnNextUpdate = false
 
     override var viewCapabilities = ViewCapabilities(
         supportsGrid = true,
-        supportedSortOrders = getListOfSortOrders()
+        supportedSortOrders = getListOfSortOrders(),
+        sortOrderLabels = mapOf(SortOrder.BY_NAME to R.string.main_artists_alphaByName)
     )
 
     private val isStandalone: Boolean
         get() = parentFragment !is MainFragment
 
     override fun getLiveData(refresh: Boolean, append: Boolean): LiveData<List<ArtistOrIndex>> {
-        listModel.setSortOrder(orderType, genre = selectedGenre)
+        listModel.setSortOrder(orderType)
         return listModel.getItems(navArgs.refresh || refresh, swipeRefresh!!)
     }
 
@@ -78,7 +79,6 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
             savedInstanceState.getString(ORDER_TYPE_KEY)?.let {
                 orderType = SortOrder.valueOf(it)
             }
-            selectedGenre = savedInstanceState.getString(SELECTED_GENRE_KEY)
         }
     }
 
@@ -94,21 +94,6 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setTitle(navArgs.title ?: getString(R.string.main_artists_title))
-
-        childFragmentManager.setFragmentResultListener(
-            ItemSelectionDialogFragment.REQUEST_KEY,
-            viewLifecycleOwner
-        ) { _, bundle ->
-            if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) {
-                swipeRefresh?.isRefreshing = false
-                return@setFragmentResultListener
-            }
-
-            bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)?.let { genre ->
-                selectedGenre = genre
-                listModel.setSortOrder(SortOrder.BY_GENRE, swipeRefresh, genre)
-            }
-        }
 
         val onClick = { entry: ArtistOrIndex -> onItemClick(entry) }
         val onMenuClick = { menuItem: android.view.MenuItem, entry: ArtistOrIndex ->
@@ -157,21 +142,24 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
     }
 
     override fun setOrderType(newOrder: SortOrder) {
+        // Re-sorting the same dataset by a different criterion invalidates the current scroll
+        // position entirely (the item that was on screen means nothing in the new order), so
+        // the list must land back at the top - but only when the order actually changes, not on
+        // initial load or when the previous order is merely re-applied (e.g. restored on back
+        // navigation), where the existing scroll position is still meaningful and must survive.
+        if (newOrder != orderType) resetScrollOnNextUpdate = true
         orderType = newOrder
-        if (newOrder == SortOrder.BY_GENRE) {
-            val genre = selectedGenre
-            if (genre == null) {
-                showGenreSelection()
-            } else {
-                listModel.setSortOrder(newOrder, swipeRefresh, genre)
-            }
-        } else {
-            selectedGenre = null
-            listModel.setSortOrder(newOrder, swipeRefresh)
-        }
+        listModel.setSortOrder(newOrder, swipeRefresh)
     }
 
     override fun getOrderType(): SortOrder = orderType
+
+    override fun onListCommitted() {
+        if (resetScrollOnNextUpdate) {
+            resetScrollOnNextUpdate = false
+            listView?.scrollToPosition(0)
+        }
+    }
 
     private fun setupFilterBar(view: View) {
         filterButtonBar = view.findViewById(R.id.filter_button_bar)
@@ -181,39 +169,21 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
         filterButtonBar?.setLayoutType(layoutType)
     }
 
-    private fun showGenreSelection() {
-        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
-            swipeRefresh?.isRefreshing = true
-            val genres = try {
-                listModel.getGenres(true)
-            } finally {
-                swipeRefresh?.isRefreshing = false
-            }
-
-            if (genres.isEmpty()) return@launch
-            val genreNames = genres.map { it.name }.toTypedArray()
-            if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
-                ItemSelectionDialogFragment.create(R.string.main_genres_title, genreNames)
-                    .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
-            }
-        }
-    }
-
-    @Suppress("ComplexMethod")
+    // Kept deliberately small: Name, Recently Played, Recently Added, Most Played (in that
+    // order) - matches docs/TAKI_ARTISTS_SORT_SIMPLIFICATION.md. Random/Starred/By Genre are
+    // gone; Albums/Songs keep their own full option sets (getListOfSortOrders is local to this
+    // fragment, not shared). The online/offline gating mirrors what each order actually needs:
+    // RECENT/FREQUENT require a live server, NEWEST/BY_NAME can also work from an ID3-tagged
+    // offline cache.
     private fun getListOfSortOrders(): List<SortOrder> {
-        val useId3 = Settings.id3TagsEnabledOnline
         val useId3Offline = Settings.id3TagsEnabledOffline
         val isOnline = !ActiveServerProvider.isOffline()
         val supported = mutableListOf<SortOrder>()
 
-        if (isOnline || useId3Offline) supported.add(SortOrder.NEWEST)
-        if (isOnline) supported.add(SortOrder.RECENT)
-        if (isOnline) supported.add(SortOrder.FREQUENT)
-        if (isOnline && !useId3) supported.add(SortOrder.HIGHEST)
-        if (isOnline) supported.add(SortOrder.RANDOM)
-        if (isOnline) supported.add(SortOrder.STARRED)
         if (isOnline || useId3Offline) supported.add(SortOrder.BY_NAME)
-        if (isOnline || useId3Offline) supported.add(SortOrder.BY_GENRE)
+        if (isOnline) supported.add(SortOrder.RECENT)
+        if (isOnline || useId3Offline) supported.add(SortOrder.NEWEST)
+        if (isOnline) supported.add(SortOrder.FREQUENT)
 
         return supported
     }
@@ -241,13 +211,11 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
         super.onSaveInstanceState(outState)
         outState.putString(LAYOUT_TYPE_KEY, layoutType.name)
         outState.putString(ORDER_TYPE_KEY, orderType.name)
-        outState.putString(SELECTED_GENRE_KEY, selectedGenre)
     }
 
     companion object {
         private const val ARTIST_GRID_COLUMNS = 3
         private const val LAYOUT_TYPE_KEY = "artist_layout_type"
         private const val ORDER_TYPE_KEY = "artist_order_type"
-        private const val SELECTED_GENRE_KEY = "artist_selected_genre"
     }
 }

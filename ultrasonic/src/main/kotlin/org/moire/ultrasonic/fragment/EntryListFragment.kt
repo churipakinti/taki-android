@@ -104,14 +104,21 @@ abstract class EntryListFragment<T : GenericEntry> :
         // swipeRefresh.isRefreshing.
         emptyView.isVisible = it.isEmpty()
 
-        if (showFolderHeader()) {
-            val list = mutableListOf<Identifiable>(folderHeader)
-            list.addAll(it)
-            viewAdapter.submitList(list)
+        val list: List<Identifiable> = if (showFolderHeader()) {
+            mutableListOf<Identifiable>(folderHeader).apply { addAll(it) }
         } else {
-            viewAdapter.submitList(it)
+            it
         }
+        viewAdapter.submitList(list) { onListCommitted() }
     }
+
+    /**
+     * Called once [defaultObserver]'s list has actually been applied to [viewAdapter] (i.e.
+     * after DiffUtil's background diff has been dispatched, not merely submitted). No-op by
+     * default - subclasses can use this for post-update UI work that needs the new list to
+     * already be laid out, e.g. resetting scroll position after a sort-order change.
+     */
+    protected open fun onListCommitted() {}
 
     /**
      * Get a folder header and update it on changes

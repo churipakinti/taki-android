@@ -181,6 +181,7 @@
     <string name="main.albums_starred">Starred</string>
     <string name="main.albums_by_year">Chronological</string>
     <string name="main.albums_title">Albums</string>
+    <string name="main.artists_alphaByName">Name</string>
     <string name="main.artists_title">Artists</string>
     <string name="main.genres_title">Genres</string>
     <string name="main.offline">Offline</string>

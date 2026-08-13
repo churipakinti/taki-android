@@ -76,15 +76,14 @@ class FilterButtonBar : ConstraintLayout {
         if (caps.supportedSortOrders.isNotEmpty()) {
             Timber.i("Calculating order")
             val translatedOrders = caps.supportedSortOrders.map {
-                TranslatedSortOrder(
-                    sortOrder = it,
-                    string = context.getString(getStringForSortOrder(it))
-                )
+                val labelRes = caps.sortOrderLabels[it] ?: getStringForSortOrder(it)
+                TranslatedSortOrder(sortOrder = it, string = context.getString(labelRes))
             }
 
             // Set the current SortOrder, fall back to the first in the list if none was specified.
             val selected = currentSortOrder ?: translatedOrders.first().sortOrder
-            val selectedText = context.getString(getStringForSortOrder(selected))
+            val selectedLabelRes = caps.sortOrderLabels[selected] ?: getStringForSortOrder(selected)
+            val selectedText = context.getString(selectedLabelRes)
             sortOrderOptions!!.setText(selectedText, false)
             songsSortOrderOptions!!.setText(selectedText, false)
 
@@ -272,11 +271,15 @@ data class TranslatedSortOrder(val sortOrder: SortOrder, val string: String) {
  *
  * @property supportsGrid
  * @property supportedSortOrders
+ * @property sortOrderLabels Per-screen label overrides for specific [SortOrder] values (e.g.
+ * Artists showing "Name" instead of the shared "By Name" used by Albums). Falls back to
+ * [FilterButtonBar.getStringForSortOrder] for anything not present here.
  */
 data class ViewCapabilities(
     val supportsGrid: Boolean = false,
     val supportedSortOrders: List<SortOrder>,
-    val primaryAction: FilterPrimaryAction? = null
+    val primaryAction: FilterPrimaryAction? = null,
+    val sortOrderLabels: Map<SortOrder, Int> = emptyMap()
 )
 
 enum class FilterPrimaryAction {
