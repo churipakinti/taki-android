@@ -1,5 +1,30 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P1: ícono de estado vacío desactualizado
+
+**Reporte de usuario:** una lista vacía (Playlists sin ninguna playlist, confirmado en
+dispositivo; el mismo componente cubre también una playlist/cola sin canciones) todavía mostraba
+"el viejo ícono de pantallas vacías", inconsistente con el resto del pase visual Material3/Taki.
+
+**Causa:** `list_parts_empty_view.xml` (el estado vacío compartido por Playlists, Queue, Songs,
+etc.) usa `@drawable/ic_empty`, que nunca se tocó durante el rediseño: era un ícono genérico de
+"brillo/cargando" (un burst de 8 puntas) heredado del fork original de Ultrasonic, sin relación
+temática con "no hay nada acá". Search ya tenía su propio ícono correcto
+(`ic_menu_search`, asignado por código en `SearchFragment.kt`), por lo que ese caso no mostraba el
+problema — la inconsistencia estaba específicamente en los consumidores que se quedan con el
+`ic_empty` por defecto del XML.
+
+**Fix:** `ic_empty.xml` ahora reusa el mismo `pathData` que `ic_menu_playlists.xml` (el ícono de
+playlist/cola ya establecido en la app), en vez de inventar un glifo nuevo. Un solo archivo,
+ningún layout ni código tocado — todos los consumidores del componente compartido heredan el
+cambio automáticamente.
+
+**Verificación:** confirmado en el Pixel 7 físico — Library → Playlists sin ninguna playlist
+guardada muestra el nuevo ícono (líneas + triángulo de play) en vez del burst anterior; Search
+sigue mostrando su lupa sin cambios. `testDebugUnitTest` y `assembleDebug` en verde.
+
+Archivo: `ultrasonic/src/main/res/drawable/ic_empty.xml`.
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P0.3: auditoría interna, continuación
 
 **Contexto:** al retomar P0.3 se confirmó (leyendo `CHANGES.md` y verificando contra el código
