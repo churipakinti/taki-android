@@ -13,16 +13,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.drakeet.multitype.ItemViewBinder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.Track
+import org.moire.ultrasonic.service.DownloadService
+import org.moire.ultrasonic.service.DownloadState
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 
 /** A compact, playback-first song row used by the Media Library Songs tab. */
@@ -47,12 +52,21 @@ class LibraryTrackBinder(
             track.album?.takeIf { it.isNotBlank() }
         ).joinToString(SUBTITLE_SEPARATOR)
 
+        // Resolved async (Storage.isPathExists() is a disk read) and cached on the holder, same
+        // pattern as TrackViewHolder.cachedStatus -- read by showMenu() so Pin/Unpin/Download/
+        // Delete only show for the state they actually apply to. See
+        // TAKI_BETA_COMPLETION_PLAN.md P1.
+        holder.downloadState = DownloadState.UNKNOWN
+        holder.scope.launch {
+            holder.downloadState = DownloadService.getDownloadState(track)
+        }
+
         holder.container.setOnClickListener { onItemClick(track) }
         holder.container.setOnLongClickListener {
-            showMenu(holder.container, track)
+            showMenu(holder.container, track, holder.downloadState)
             true
         }
-        holder.menu.setOnClickListener { showMenu(holder.menu, track) }
+        holder.menu.setOnClickListener { showMenu(holder.menu, track, holder.downloadState) }
         holder.heart.isVisible = showHeart
         if (showHeart) {
             updateHeart(holder, track)
@@ -75,12 +89,14 @@ class LibraryTrackBinder(
         )
     }
 
-    private fun showMenu(anchor: View, track: Track) {
-        PopupMenu(anchor.context, anchor).apply {
-            menuInflater.inflate(R.menu.context_menu_track_collection, menu)
-            setOnMenuItemClickListener { onContextMenuClick(it, track) }
-            show()
-        }
+    private fun showMenu(anchor: View, track: Track, downloadState: DownloadState) {
+        val popup = Utils.createPopupMenu(anchor, R.menu.context_menu_track_collection, downloadState)
+        popup.setOnMenuItemClickListener { onContextMenuClick(it, track) }
+    }
+
+    override fun onViewRecycled(holder: ViewHolder) {
+        holder.dispose()
+        super.onViewRecycled(holder)
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -90,6 +106,19 @@ class LibraryTrackBinder(
         val subtitle: TextView = view.findViewById(R.id.library_track_subtitle)
         val heart: ImageButton = view.findViewById(R.id.library_track_heart)
         val menu: ImageButton = view.findViewById(R.id.library_track_menu)
+
+        var downloadState: DownloadState = DownloadState.UNKNOWN
+
+        // Cancelled and recreated on every recycle (TrackViewHolder does the same) -- a
+        // ViewHolder is reused for different tracks as the list scrolls, so a lookup started for
+        // song A must not land on song B's row after it's recycled.
+        var scope = CoroutineScope(Dispatchers.IO)
+
+        fun dispose() {
+            scope.cancel()
+            scope = CoroutineScope(Dispatchers.IO)
+            downloadState = DownloadState.UNKNOWN
+        }
     }
 
     companion object {

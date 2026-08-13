@@ -1,5 +1,28 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P1: mismo fix de menú contextual en Songs/Liked Songs
+
+Continuación del fix anterior: `LibraryTrackBinder` (Songs, Liked Songs — usado cuando
+`useLibraryTrackRows` es true) tenía el mismo problema por un camino de código separado —
+`showMenu()` inflaba `context_menu_track_collection` directamente con un `PopupMenu` propio, sin
+pasar por `Utils.createPopupMenu()`, así que ni el estado de descarga ni siquiera el modo
+offline (`song_menu_add_playlist`/`menu_download`) se ocultaban ahí.
+
+**Fix:** mismo patrón que `TrackViewHolder` (ya auditado en P0.3): el `ViewHolder` de
+`LibraryTrackBinder` gana un `scope: CoroutineScope` propio, cancelado y recreado en cada
+reciclaje (`onViewRecycled` → `dispose()`), que resuelve `DownloadService.getDownloadState()` de
+forma asíncrona y lo cachea en `downloadState`. `showMenu()` ahora llama a
+`Utils.createPopupMenu()` (la misma función ya corregida) en vez de construir su propio
+`PopupMenu`, heredando automáticamente tanto el filtro de online/offline que ya tenía como el
+nuevo filtro por estado de descarga.
+
+**Verificación** en el Pixel 7 físico, pestaña Songs de Library: una canción no descargada ("The
+Tower") muestra Pin + Download, sin Unpin ni Delete — igual que en Album/Playlist Detail, que ya
+se había verificado con ambos estados (descargada y no descargada) para la lógica compartida de
+`Utils.createPopupMenu()`. `testDebugUnitTest` y `assembleDebug` en verde.
+
+Archivo: `ultrasonic/src/main/kotlin/org/moire/ultrasonic/adapters/LibraryTrackBinder.kt`.
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P1: menú contextual mostraba Pin/Unpin/Download/Delete sin importar el estado real
 
 **Reporte de usuario:** en el menú "⋮" de una canción (Play Next/Last/From Here, Start radio,
