@@ -268,6 +268,15 @@ class PlayerFragment :
         }
         view.findViewById<View>(R.id.player_overflow)?.setOnClickListener(::showPlayerMenu)
 
+        // Shown while a large queue is being built in chunks (e.g. Play All on a
+        // several-thousand-song album). That still takes a few seconds even after the
+        // ADD_MEDIA_ITEMS_CHUNK_SIZE fix - see MediaPlayerManager.withTimelinePublishSuppressed -
+        // so this tells the user something is happening instead of the screen looking frozen.
+        val queueLoadingIndicator = view.findViewById<View>(R.id.current_playing_queue_loading)
+        rxBusSubscription += RxBus.queueLoadingObservable.subscribe { isLoading ->
+            queueLoadingIndicator?.isVisible = isLoading
+        }
+
         swipeDistance = (width + height) * PERCENTAGE_OF_SCREEN_FOR_SWIPE / 100
         swipeVelocity = swipeDistance
         gestureScanner = GestureDetector(context, this)

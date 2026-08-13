@@ -65,6 +65,13 @@ class CreatePlaylistFragment : Fragment() {
     private var availableArtists: List<ArtistOrIndex> = emptyList()
     private var loadJob: Job? = null
 
+    // Tracks what the list is currently showing so loadMoreTracks() (triggered by scroll, with
+    // no arguments of its own) knows which paginated call to repeat with append=true.
+    private var currentOrder: SortOrder = SortOrder.ALL_SONGS
+    private var selectedArtist: ArtistOrIndex? = null
+    private var selectedGenreName: String? = null
+    private var showingSearchResults = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -88,8 +95,16 @@ class CreatePlaylistFragment : Fragment() {
             )
         )
         view.findViewById<RecyclerView>(R.id.playlist_song_list).apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            val linearLayoutManager = LinearLayoutManager(requireContext())
+            layoutManager = linearLayoutManager
             adapter = trackAdapter
+            addOnScrollListener(
+                object : EndlessScrollListener(linearLayoutManager) {
+                    override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
+                        loadMoreTracks()
+                    }
+                }
+            )
         }
 
         setupSearch(view)
@@ -168,6 +183,8 @@ class CreatePlaylistFragment : Fragment() {
     }
 
     private fun loadOrder(order: SortOrder) {
+        currentOrder = order
+        showingSearchResults = false
         // Cancel any still-running load so a slow, stale response can't overwrite the list
         // after the user has already switched to a different filter or search.
         loadJob?.cancel()
@@ -187,12 +204,60 @@ class CreatePlaylistFragment : Fragment() {
         }
     }
 
+    /**
+     * Triggered by [EndlessScrollListener] as the user scrolls near the bottom. Repeats
+     * whichever load [currentOrder] represents with append=true, using the same
+     * [TrackCollectionModel] pagination (canLoadMoreAllSongs/canLoadMoreArtistSongs/
+     * canLoadMoreGenreSongs) already relied on by TrackCollectionFragment - this screen just
+     * never called it, which is why "All Songs" only ever showed the first
+     * [Settings.MAX_SONGS] tracks.
+     */
+    private fun loadMoreTracks() {
+        if (showingSearchResults || loadJob?.isActive == true) return
+        loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+            when (currentOrder) {
+                SortOrder.ALL_SONGS -> {
+                    if (!trackModel.canLoadMoreAllSongs) return@launch
+                    setLoading(true)
+                    trackModel.getAllSongs(Settings.MAX_SONGS, offset = 0, append = true)
+                }
+
+                SortOrder.RANDOM -> {
+                    setLoading(true)
+                    trackModel.getRandom(Settings.MAX_SONGS, append = true)
+                }
+
+                SortOrder.BY_ARTIST -> {
+                    val artist = selectedArtist ?: return@launch
+                    if (!trackModel.canLoadMoreArtistSongs) return@launch
+                    setLoading(true)
+                    trackModel.getSongsForArtist(
+                        artist.id,
+                        artist.name.orEmpty(),
+                        Settings.MAX_SONGS,
+                        append = true
+                    )
+                }
+
+                SortOrder.BY_GENRE -> {
+                    val genre = selectedGenreName ?: return@launch
+                    if (!trackModel.canLoadMoreGenreSongs) return@launch
+                    setLoading(true)
+                    trackModel.getSongsForGenre(genre, Settings.MAX_SONGS, offset = 0, append = true)
+                }
+
+                else -> Unit
+            }
+        }
+    }
+
     private fun runSearch() {
         val query = searchInput?.text?.toString()?.trim().orEmpty()
         if (query.isBlank()) {
             loadOrder(SortOrder.ALL_SONGS)
             return
         }
+        showingSearchResults = true
         Util.hideKeyboard(activity)
         loadJob?.cancel()
         loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
@@ -237,6 +302,9 @@ class CreatePlaylistFragment : Fragment() {
 
     private fun loadArtist(name: String) {
         val artist = availableArtists.firstOrNull { it.name == name } ?: return
+        currentOrder = SortOrder.BY_ARTIST
+        selectedArtist = artist
+        showingSearchResults = false
         loadJob?.cancel()
         loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)
@@ -245,6 +313,9 @@ class CreatePlaylistFragment : Fragment() {
     }
 
     private fun loadGenre(name: String) {
+        currentOrder = SortOrder.BY_GENRE
+        selectedGenreName = name
+        showingSearchResults = false
         loadJob?.cancel()
         loadJob = viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             setLoading(true)

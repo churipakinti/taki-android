@@ -150,18 +150,18 @@ class PlaybackStateSerializer : KoinComponent {
     }
 
     private fun normalizeQueue(tracks: List<Track>, currentIndex: Int): NormalizedQueue {
-        if (tracks.size <= MAX_PERSISTED_QUEUE_SIZE) return NormalizedQueue(tracks, currentIndex)
+        if (tracks.size <= MAX_QUEUE_SIZE) return NormalizedQueue(tracks, currentIndex)
 
         val safeIndex = currentIndex.coerceIn(0, tracks.lastIndex)
-        val start = (safeIndex - MAX_PERSISTED_QUEUE_SIZE / 2)
-            .coerceIn(0, tracks.size - MAX_PERSISTED_QUEUE_SIZE)
+        val start = (safeIndex - MAX_QUEUE_SIZE / 2)
+            .coerceIn(0, tracks.size - MAX_QUEUE_SIZE)
         Timber.w(
             "Limiting persisted playback queue from %d to %d tracks",
             tracks.size,
-            MAX_PERSISTED_QUEUE_SIZE
+            MAX_QUEUE_SIZE
         )
         return NormalizedQueue(
-            tracks = tracks.subList(start, start + MAX_PERSISTED_QUEUE_SIZE).toList(),
+            tracks = tracks.subList(start, start + MAX_QUEUE_SIZE).toList(),
             currentIndex = safeIndex - start
         )
     }
@@ -169,7 +169,6 @@ class PlaybackStateSerializer : KoinComponent {
     private data class NormalizedQueue(val tracks: List<Track>, val currentIndex: Int)
 
     companion object {
-        private const val MAX_PERSISTED_QUEUE_SIZE = 100
         private val isSetup = AtomicBoolean(false)
         private val isSerializing = AtomicBoolean(false)
         private val isDeserializing = AtomicBoolean(false)

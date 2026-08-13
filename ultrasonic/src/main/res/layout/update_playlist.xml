@@ -1,76 +1,49 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:orientation="vertical"
+    a:paddingHorizontal="24dp"
+    a:paddingTop="4dp">
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+    <com.google.android.material.textfield.TextInputLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:hint="@string/common.name">
 
-        <TextView
-            android:id="@+id/get_playlist_name_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:labelFor="@+id/get_playlist_name"
-            android:text="@string/common.name"
-            android:textSize="20sp" />
+        <com.google.android.material.textfield.TextInputEditText
+            a:id="@+id/get_playlist_name"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:importantForAutofill="no"
+            a:inputType="textCapSentences"
+            a:maxLines="1" />
 
-        <EditText
-            android:id="@+id/get_playlist_name"
-            android:layout_width="0dip"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:importantForAutofill="no"
-            android:inputType="text" />
-    </LinearLayout>
+    </com.google.android.material.textfield.TextInputLayout>
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+    <com.google.android.material.textfield.TextInputLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:layout_marginTop="12dp"
+        a:hint="@string/common.comment">
 
-        <TextView
-            android:id="@+id/get_playlist_comment_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:labelFor="@+id/get_playlist_comment"
-            android:text="@string/common.comment"
-            android:textSize="20sp" />
+        <com.google.android.material.textfield.TextInputEditText
+            a:id="@+id/get_playlist_comment"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:importantForAutofill="no"
+            a:inputType="textCapSentences"
+            a:maxLines="1" />
 
-        <EditText
-            android:id="@+id/get_playlist_comment"
-            android:layout_width="0dip"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:importantForAutofill="no"
-            android:inputType="text" />
-    </LinearLayout>
+    </com.google.android.material.textfield.TextInputLayout>
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+    <com.google.android.material.checkbox.MaterialCheckBox
+        a:id="@+id/get_playlist_public"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:layout_marginTop="8dp"
+        a:checked="false"
+        a:text="@string/common.public" />
 
-        <TextView
-            android:id="@+id/get_playlist_public_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:labelFor="@+id/get_playlist_public"
-            android:text="@string/common.public"
-            android:textSize="20sp" />
-
-        <CheckBox
-            android:id="@+id/get_playlist_public"
-            android:layout_width="0dip"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:checked="false" />
-    </LinearLayout>
 </LinearLayout>

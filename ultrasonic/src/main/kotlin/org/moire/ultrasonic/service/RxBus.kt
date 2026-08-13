@@ -70,6 +70,17 @@ class RxBus {
                 // Need to specify thread, see comment at beginning
                 .throttleLatest(300, TimeUnit.MILLISECONDS, mainThread())
 
+        // Whether a large queue is currently being built in chunks (see
+        // MediaPlayerManager.withTimelinePublishSuppressed). UI can use this to show a loading
+        // state instead of appearing frozen while it waits for playlistObservable/
+        // playerStateObservable to fire.
+        val queueLoadingPublisher: PublishSubject<Boolean> =
+            PublishSubject.create()
+        val queueLoadingObservable: Observable<Boolean> =
+            queueLoadingPublisher
+                .replay(1)
+                .autoConnect(0)
+
         val trackDownloadStatePublisher: PublishSubject<TrackDownloadState> =
             PublishSubject.create()
         val trackDownloadStateObservable: Observable<TrackDownloadState> =

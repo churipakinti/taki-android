@@ -41,6 +41,20 @@
 
     </LinearLayout>
 
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        a:id="@+id/current_playing_queue_loading"
+        a:layout_width="match_parent"
+        a:layout_height="2dp"
+        a:clickable="false"
+        a:focusable="false"
+        a:importantForAccessibility="no"
+        a:indeterminate="true"
+        a:visibility="gone"
+        app:indicatorColor="@color/taki_progress"
+        app:trackColor="@color/taki_divider"
+        app:trackCornerRadius="0dp"
+        app:trackThickness="2dp" />
+
     <ViewFlipper
         a:id="@+id/current_playing_playlist_flipper"
         a:layout_width="fill_parent"

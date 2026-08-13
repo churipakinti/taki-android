@@ -174,6 +174,7 @@
             a:layout_width="0dp"
             a:layout_height="wrap_content"
             a:layout_marginStart="5dp"
+            a:layout_marginTop="24dp"
             a:text="@string/settings.title.allow_self_signed_certificate"
             a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:layout_constraintBottom_toTopOf="@id/edit_self_signed_description"
@@ -259,15 +260,15 @@
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             a:id="@+id/edit_jukebox"
-            a:layout_width="0dp"
+            a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_marginStart="8dp"
-            a:layout_marginTop="8dp"
             a:layout_marginEnd="5dp"
             a:checked="false"
+            app:layout_constraintBottom_toBottomOf="@id/edit_jukebox_title"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/edit_jukebox_title"
-            app:layout_constraintTop_toBottomOf="@id/edit_plaintext_description" />
+            app:layout_constraintStart_toEndOf="@id/edit_jukebox_description"
+            app:layout_constraintTop_toTopOf="@id/edit_jukebox_title" />
 
         <TextView
             a:id="@+id/edit_jukebox_description"

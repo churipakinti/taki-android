@@ -1,5 +1,198 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P0.4: filas superpuestas y switch mal armado en Advanced settings del servidor
+
+**Reporte de usuario** durante el punto 1 de la matriz de P0.4 (instalación limpia y configuración):
+en el formulario de servidor, sección "Advanced settings", el swatch de "Server color" quedaba
+pegado/superpuesto con el switch de "Allow self-signed HTTPS certificate", y la descripción de
+"Jukebox By Default" se veía en una columna angosta en vez de usar todo el ancho disponible.
+
+**Causa 1 (superposición):** la transición de la fila "Server color" a "Allow self-signed HTTPS
+certificate" era la única de las cuatro filas de esta sección sin ningún margen vertical entre
+ambas — el resto (self-signed→plaintext, plaintext→jukebox) sí tenía 8dp vía `marginBottom` en la
+descripción anterior o `marginTop` en el título siguiente; esta transición no tenía ninguno de los
+dos. Ese hueco no era visible antes del rediseño porque `edit_server_color_text` estaba desalineado
+del picker (fix de P0.1, `NotSibling` en `edit_advanced_header`) — el layout nunca se verificó
+visualmente después de corregir esa constraint. Fix: `edit_self_signed_title` gana
+`layout_marginTop="24dp"` (más que el estándar de 8dp del resto, a pedido del usuario, porque el
+picker de color de 32dp+8dp de margen es visualmente más alto que una fila de texto simple).
+
+**Causa 2 (columna angosta en Jukebox):** `edit_jukebox` (el `SwitchMaterial`) tenía
+`layout_width="0dp"` con `Start_toEndOf="@id/edit_jukebox_title"` — a diferencia de
+`edit_self_signed`/`edit_plaintext`, que son `wrap_content` y están anclados a
+`Start_toEndOf` de su **descripción**, no de su título. Como "Jukebox By Default" es un título corto,
+anclar el switch ahí en vez de a la descripción larga hacía que `edit_jukebox_description`
+(`End_toStartOf="@id/edit_jukebox"`) quedara con mucho menos ancho disponible que sus pares y
+envolviera en una columna angosta. Fix: `edit_jukebox` reescrito para igualar exactamente el patrón
+de `edit_plaintext` (`wrap_content`, anclado a la descripción, alineado verticalmente contra el
+título vía `Top_toTopOf`/`Bottom_toBottomOf`).
+
+**Verificación** en el Pixel 7 físico, sección Advanced settings completa: separación clara entre
+las cuatro filas, descripción de Jukebox a ancho completo igual que las otras dos. `assembleDebug`
+en verde.
+
+Archivo: `server_edit.xml`.
+
+## TAKI_BETA_COMPLETION_PLAN.md — Backlog post-beta: árbol de Android Auto sin carátulas ni Home
+
+**Verificación P0.4-13** en head unit real (vía otro teléfono): Android Auto funciona correctamente
+— Taki aparece como app de medios, navegación, reproducción, controles y reanudación tras
+desconectar, todo normal. No bloquea la beta.
+
+**Nota de pulido, no bloqueante:** el árbol de navegación (`MediaLibrarySessionCallback`, ruta
+legacy de Android Auto) se ve más como una lista de texto que con carátulas, y no tiene una pantalla
+de inicio equivalente al Home de la app. Queda para después de la beta — no rompe instalación,
+sesión ni reproducción básica (criterio de cierre de la sección 9 del plan).
+
+## TAKI_BETA_COMPLETION_PLAN.md — P0.4: playlists — scroll infinito roto y diálogo legacy sin estilo
+
+**Reporte de usuario** durante el punto 12 de la matriz de P0.4 (Playlists CRUD): al crear una
+playlist nueva con "All Songs" seleccionado, la lista solo hace un scroll corto y se queda ahí sin
+cargar más; y el diálogo "Update Information" (⋮ en la lista de Playlists) "se ve horrible", como si
+conservara la vista antigua.
+
+**Hallazgo 1 — scroll infinito nunca conectado.** `CreatePlaylistFragment.kt` llamaba a
+`trackModel.getAllSongs(Settings.MAX_SONGS, offset = 0, append = false)` una sola vez al abrir la
+pantalla, sin ningún `RecyclerView.OnScrollListener`. La paginación (`canLoadMoreAllSongs`,
+`append = true`) ya existía en `TrackCollectionModel` — la usa `TrackCollectionFragment` desde hace
+tiempo — pero nunca se conectó en este picker de canciones, así que "All Songs" jamás mostraba más
+de `Settings.MAX_SONGS` (25) canciones sin importar el tamaño real de la biblioteca.
+
+**Fix:** se agregó el mismo `EndlessScrollListener` que ya usa `TrackCollectionFragment`, más
+`loadMoreTracks()` y campos (`currentOrder`, `selectedArtist`, `selectedGenreName`,
+`showingSearchResults`) para saber qué llamada paginada repetir con `append = true` según el filtro
+activo (All Songs, Random, por artista, por género). Búsqueda por texto queda fuera del scroll
+infinito (sin cambios ahí). Verificado en el Pixel 7: el scroll ahora sigue cargando canciones más
+allá de las primeras 25.
+
+**Hallazgo 2 — diálogo "Update Information" sin rediseñar.** El único código que referencia
+`R.string.playlist.update_info` es `fragment/legacy/PlaylistsFragment.kt` — la pantalla de lista de
+Playlists nunca se separó del paquete `legacy` pese al rediseño visual ya hecho ahí; su acción
+"Update Information" seguía inflando `update_playlist.xml`, un layout viejo de `EditText`/`CheckBox`
+planos con `textSize="20sp"` hardcodeado, sin relación con el resto de la app ya migrada a Material3.
+
+**Fix:** `update_playlist.xml` reescrito con `TextInputLayout`/`TextInputEditText` (mismo patrón que
+`create_playlist.xml`, ya usado para renombrar playlist) y `MaterialCheckBox`. Nada de
+`PlaylistsFragment.kt` cambió más allá de que ahora infla un layout distinto con los mismos IDs
+(`get_playlist_name`/`get_playlist_comment`/`get_playlist_public`) - `TextInputEditText`/
+`MaterialCheckBox` son subclases de `EditText`/`CheckBox`, así que el código Kotlin existente
+(`findViewById<EditText>`, `findViewById<CheckBox>`) sigue funcionando sin tocarlo.
+
+Encontrado en la verificación: el `layout_marginHorizontal` en la vista raíz que se pasa a
+`AlertDialog.setView()` se ignora (no hay padre que aplique `MarginLayoutParams` en ese punto de
+attach) — los campos quedaban pegados al borde de la tarjeta pese al margen declarado. Cambiado a
+`paddingHorizontal`/`paddingTop` en la raíz, que sí se respeta porque es intrínseco a la vista.
+Verificado visualmente en el Pixel 7 tras el cambio: separación correcta del borde.
+
+Archivos: `CreatePlaylistFragment.kt`, `update_playlist.xml`.
+
+## TAKI_BETA_COMPLETION_PLAN.md — P1 pendiente: título de canción muestra el nombre de archivo crudo en Search offline
+
+**Reporte de usuario:** en Search, en modo Offline, una canción descargada de Arctic Monkeys apareció
+como **"01-Do I Wanna Know-"** (número de pista y guion sobrante incluidos) en vez del título limpio
+que sí se ve en Album Detail para la misma canción.
+
+**Sospecha, no confirmada:** `OfflineMusicService.kt`, ruta de búsqueda por texto
+(`recursiveAlbumSearch()` → `createEntry()` → `Track.populateWithDataFrom()`, línea ~594). Esta
+función sí intenta leer el tag ID3 real vía `MediaMetadataRetriever` (`title = meta.title ?: title`,
+línea 621) — a diferencia de la ruta básica de `MusicDirectory.Child`, que solo usa el nombre de
+archivo. Pero el `try` que envuelve la extracción tiene un `catch (ignored: Exception) {}` sin loguear
+nada (línea 616): si `MediaMetadataRetriever` falla por cualquier motivo — posible candidato: el
+`FileDescriptor` se cierra (línea 604) inmediatamente después de pasárselo a `mmr.setDataSource()`,
+antes de que se llame a `extractMetadata()` — cae en silencio al nombre de archivo crudo, que es
+justamente el nombre que Taki usa al descargar (número de pista + título).
+
+**No investigado a fondo esta sesión** — es cosmético (no crashea, no pierde datos), se decidió
+priorizar el resto de la matriz P0.4 (bloqueante para la beta) antes de esto. Próximo paso sugerido:
+loguear la excepción real en ese `catch` para confirmar la causa antes de tocar nada.
+
+## TAKI_BETA_COMPLETION_PLAN.md — P0.4: ANR real al cambiar de servidor con una cola grande cargada
+
+**Contexto:** durante el punto 8 de la matriz de P0.4 ("Cambio entre colección online y modo Offline")
+en el Pixel 7 físico, cambiar a Offline mientras Bach 333 (5.517 canciones) estaba cargado en la cola
+producía un ANR real: `Input dispatching timed out`, esperado ~5 segundos, y el sistema mataba y
+reiniciaba el proceso (percibido por el usuario como un crash). Se reprodujo dos veces con timing casi
+idéntico (~5002ms y ~5013ms de espera).
+
+**Causa (dos capas distintas, la segunda es la que realmente importa):**
+
+1. `MediaPlayerManager.removeIncompleteTracksFromPlaylist()` (llamada al cambiar de servidor, para
+   quitar del queue las canciones no descargadas) removía ítems **uno por uno** en un loop sin
+   trocear, cada `removeMediaItem()` disparando el mismo `onTimelineChanged` costoso que ya se había
+   identificado en el hallazgo anterior de esta sesión (recorrido O(n) completo de la timeline por
+   cada llamada) — agravado por correr dentro de un método `@Synchronized`.
+2. La causa real del ANR de 5s, confirmada con el trace completo de `dumpsys dropbox
+   --print data_app_anr`: **Media3 serializa la timeline completa en una sola transacción Binder**
+   (`MediaSessionLegacyStub` → `MediaSessionCompat.setQueue()` → `Parcel.writeBundle/writeParcelable`)
+   para mantener sincronizados los clientes de sesión "legacy" (Android Auto, Bluetooth AVRCP, Wear
+   OS) cada vez que cambia la timeline — independientemente de cualquier código de la app. Con 5.517
+   ítems, esa única transacción bloqueaba el hilo principal el tiempo suficiente para el ANR. No hay
+   forma conocida de trocear o desactivar ese broadcast desde la API pública de Media3.
+
+**Fix:** en vez de intentar trocear o interceptar el broadcast legacy de Media3 (no viable), se limita
+el tamaño máximo de cola en **toda la app**, no solo en la restauración de sesión. `MediaPlayerManager`
+gana `MAX_QUEUE_SIZE = 100` (mismo valor ya probado en producción para la ventana de restauración de
+`PlaybackStateSerializer`, que ahora reusa esta misma constante en vez de duplicarla) y
+`capQueueSize()`, aplicado en `addToPlaylistLocked()` antes de construir los `MediaItem`: si la lista
+excede el límite, se recorta a una ventana de 100 centrada en `startIndex` (o desde el principio si no
+hay uno), igual que ya hacía `PlaybackStateSerializer.normalizeQueue()`. El usuario ve un toast
+("Queue limited to 100 of 5517 songs") cuando esto ocurre. De paso, `removeIncompleteTracksFromPlaylist()`
+se envolvió con `withTimelinePublishSuppressed` (variante sync) para no repetir el problema #1 mientras
+tanto.
+
+**Verificación** en el Pixel 7 físico, mismo escenario exacto (Bach 333 sonando → cambio a Offline):
+sin ANR, sin crash, cambio de servidor instantáneo. Logcat confirma
+`Limiting queue from 5517 to 100 tracks` en el momento correcto. `testDebugUnitTest` y `assembleDebug`
+en verde.
+
+**Nota de alcance:** esto cambia comportamiento visible — un álbum de miles de canciones ya no se
+carga completo de una vez vía Play All, solo una ventana de 100. Es la misma limitación que ya existía
+(y estaba aceptada) para la restauración de sesión; se decidió extenderla en vez de dejar el ANR,
+confirmado con el propietario del producto.
+
+Archivos: `MediaPlayerManager.kt`, `PlaybackStateSerializer.kt`, `strings.xml`.
+
+## TAKI_BETA_COMPLETION_PLAN.md — P0.4: freeze real al hacer Play All sobre una cola de miles de canciones
+
+**Contexto:** durante el punto 6 de la matriz de P0.4 ("Cola creada desde una biblioteca grande") en
+el Pixel 7 físico, reproducir Bach 333 completo (5.517 canciones) mediante Play All se sentía
+congelado durante la construcción de la cola: la app no respondía con fluidez hasta que el primer
+track empezaba a sonar.
+
+**Causa:** `MediaPlayerManager.addToPlaylistLocked()` ya trocea el `addMediaItems()` en chunks de
+`ADD_MEDIA_ITEMS_CHUNK_SIZE` (200) con `yield()` entre cada uno — la protección anti-ANR de
+`docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md` seguía funcionando (nunca hubo `ANR`/`Input dispatching
+timed out`). Pero el `Player.Listener.onTimelineChanged()` de `MediaPlayerManager` se dispara una
+vez por cada chunk, y en cada disparo recorre la timeline **completa** con
+`Util.getPlayListFromTimeline()` y convierte cada `MediaItem` a `Track`. Con ~28 chunks y una
+timeline creciendo de 200 a 5.517 ítems, eso son ~78.000 conversiones redundantes en el hilo
+principal — medido en logcat: `Choreographer` saltando hasta 133 frames y `Davey!` de hasta 1494 ms
+por chunk, sumando **~21 segundos** de jank visible, aunque sin ANR formal.
+
+**Fix:** `MediaPlayerManager` gana `withTimelinePublishSuppressed { block }` (interno, no privado):
+suprime la publicación cara de `onTimelineChanged` mientras `block` corre, y publica una sola vez al
+final con la timeline ya completa. `addToPlaylistLocked()` envuelve su loop de chunks con esta
+función. `MediaLibrarySessionCallback.shuffleCurrentPlaylist()` comparte el mismo `Player.Listener`
+(mismo `Player` subyacente) y tenía el mismo riesgo al mezclar una cola grande — se inyectó
+`MediaPlayerManager` por Koin y se envolvió su loop de la misma forma.
+
+Medido de nuevo con el mismo álbum: el freeze bajó de ~21 s a ~7 s (el resto es costo real de Media3
+armando 5.517 `MediaItem` en el `ExoPlayer` interno, no evitable sin tocar la librería). Para que esos
+~7 s no se sientan como que la app no responde, se agregó un indicador de carga: `RxBus` gana
+`queueLoadingPublisher`/`queueLoadingObservable` (mismo patrón que `playlistPublisher`), emitido
+desde `withTimelinePublishSuppressed`. `PlayerFragment` muestra una `LinearProgressIndicator`
+indeterminada y delgada (`current_playing_queue_loading`) debajo de la barra superior mientras dura
+la carga, en `current_playing.xml` y `layout-land/current_playing.xml`.
+
+**Verificación** en el Pixel 7 físico, mismo álbum Bach 333: cola final correcta ("5517 songs"),
+reproducción normal desde el primer track, indicador visible durante la carga y oculto al terminar,
+sin `ANR`, `FATAL EXCEPTION` ni regresión en el `CloseGuardException` histórico (sigue siendo el
+mismo, ya documentado, sin frames de `org.moire.ultrasonic`). `testDebugUnitTest` y `assembleDebug`
+en verde.
+
+Archivos: `MediaPlayerManager.kt`, `MediaLibrarySessionCallback.kt`, `RxBus.kt`, `PlayerFragment.kt`,
+`current_playing.xml`, `layout-land/current_playing.xml`.
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P1: mismo fix de menú contextual en Songs/Liked Songs
 
 Continuación del fix anterior: `LibraryTrackBinder` (Songs, Liked Songs — usado cuando

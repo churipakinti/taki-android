@@ -106,6 +106,7 @@ class MediaLibrarySessionCallback :
 
     private val activeServerProvider: ActiveServerProvider by inject()
     private val lifecycleSupport: MediaPlayerLifecycleSupport by inject()
+    private val mediaPlayerManager: MediaPlayerManager by inject()
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
@@ -1656,11 +1657,15 @@ class MediaLibrarySessionCallback :
         // A single unchunked addMediaItems() here would reintroduce, via the Shuffle button
         // on a very large queue, the exact main-thread ANR that MediaPlayerManager.
         // addToPlaylistLocked() already fixed for the "add tracks" path - see
-        // docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md. Mirror the same chunked+yielded pattern.
+        // docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md. Mirror the same chunked+yielded pattern,
+        // and suppress the per-chunk timeline publish the same way for the same reason
+        // (see MediaPlayerManager.withTimelinePublishSuppressed).
         mainScope.launch {
-            for (chunk in mediaItemsToShuffle.shuffled().chunked(ADD_MEDIA_ITEMS_CHUNK_SIZE)) {
-                player.addMediaItems(chunk)
-                yield()
+            mediaPlayerManager.withTimelinePublishSuppressed {
+                for (chunk in mediaItemsToShuffle.shuffled().chunked(ADD_MEDIA_ITEMS_CHUNK_SIZE)) {
+                    player.addMediaItems(chunk)
+                    yield()
+                }
             }
         }
     }

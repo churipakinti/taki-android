@@ -67,6 +67,16 @@ private const val PLAYBACK_CHECKPOINT_INTERVAL = 5_000L
 // the same protection for its own addMediaItems() call - see docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md.
 internal const val ADD_MEDIA_ITEMS_CHUNK_SIZE = 200
 
+// Independent of ADD_MEDIA_ITEMS_CHUNK_SIZE above: chunking only protects our own listener
+// from blocking. Media3's MediaSessionLegacyStub still serializes the *entire* Player timeline
+// into one Binder transaction (MediaSessionCompat.setQueue(), for Android Auto/Bluetooth/Wear
+// legacy clients) every time the timeline changes - measured to ANR for 5+ seconds with a
+// 5,517-song queue (single Play All on a large album), with no app code on the blocked stack.
+// There's no known way to chunk or disable that legacy broadcast, so the actual fix is capping
+// how large the queue is allowed to get in the first place. Shares the value already proven
+// safe for PlaybackStateSerializer's session-restore window - see MAX_QUEUE_SIZE usage there.
+internal const val MAX_QUEUE_SIZE = 100
+
 /**
  * The Media Player Manager can forward commands to the Media3 controller as
  * well as switch between different player interfaces (local, remote, cast etc).
@@ -138,8 +148,15 @@ class MediaPlayerManager(
                 it()
                 deferredPlay = null
             }
-            val playlist = Util.getPlayListFromTimeline(timeline, false).map(MediaItem::toTrack)
-            RxBus.playlistPublisher.onNext(playlist)
+            // While a bulk chunked addMediaItems() is in progress (see
+            // withTimelinePublishSuppressed), this fires once per chunk with an
+            // ever-growing timeline - walking and converting it every time turns an
+            // O(n) publish into an O(n^2) one and is what actually freezes the UI for
+            // several seconds on a large album, even though the chunking already
+            // prevents a hard ANR. Skip here; withTimelinePublishSuppressed publishes
+            // once with the final timeline instead.
+            if (isBulkAddInProgress) return
+            publishCurrentPlaylist(timeline)
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -214,6 +231,52 @@ class MediaPlayerManager(
     }
 
     private var deferredPlay: (() -> Unit)? = null
+
+    // Guards against the O(n^2) UI freeze described in the onTimelineChanged listener
+    // above. Internal (not private) so MediaLibrarySessionCallback.shuffleCurrentPlaylist()
+    // can use the same suppression for its own chunked addMediaItems() call - it shares
+    // the same underlying Player and listener.
+    private var isBulkAddInProgress = false
+
+    private fun publishCurrentPlaylist(timeline: Timeline?) {
+        val playlist = Util.getPlayListFromTimeline(timeline, false).map(MediaItem::toTrack)
+        RxBus.playlistPublisher.onNext(playlist)
+    }
+
+    /**
+     * Runs [block] with the expensive per-chunk timeline publish suppressed, then publishes
+     * once with the final timeline. Use around any loop that calls addMediaItems() in chunks.
+     */
+    internal suspend fun withTimelinePublishSuppressed(block: suspend () -> Unit) {
+        isBulkAddInProgress = true
+        RxBus.queueLoadingPublisher.onNext(true)
+        try {
+            block()
+        } finally {
+            isBulkAddInProgress = false
+            publishCurrentPlaylist(controller?.currentTimeline)
+            RxBus.queueLoadingPublisher.onNext(false)
+        }
+    }
+
+    /**
+     * Synchronous counterpart of [withTimelinePublishSuppressed] for callers that aren't
+     * suspend functions (e.g. [removeIncompleteTracksFromPlaylist], invoked directly from an
+     * RxJava subscription). Same suppress-then-publish-once behavior; see that function's doc
+     * for why this matters. removeMediaItem() is a single synchronous call with no chunking
+     * concern of its own here, only the listener's per-call timeline walk.
+     */
+    private fun withTimelinePublishSuppressedSync(block: () -> Unit) {
+        isBulkAddInProgress = true
+        RxBus.queueLoadingPublisher.onNext(true)
+        try {
+            block()
+        } finally {
+            isBulkAddInProgress = false
+            publishCurrentPlaylist(controller?.currentTimeline)
+            RxBus.queueLoadingPublisher.onNext(false)
+        }
+    }
 
     private var cachedMediaItem: MediaItem? = null
 
@@ -555,6 +618,8 @@ class MediaPlayerManager(
             return
         }
 
+        val (songs, startIndex) = capQueueSize(songs, startIndex)
+
         var insertAt = 0
 
         when (insertionMode) {
@@ -580,10 +645,12 @@ class MediaPlayerManager(
         // of a single addMediaItems() call, so a huge queue can't block input dispatch
         // long enough to ANR.
         var addedAt = insertAt
-        for (chunk in mediaItems.chunked(ADD_MEDIA_ITEMS_CHUNK_SIZE)) {
-            controller?.addMediaItems(addedAt, chunk)
-            addedAt += chunk.size
-            yield()
+        withTimelinePublishSuppressed {
+            for (chunk in mediaItems.chunked(ADD_MEDIA_ITEMS_CHUNK_SIZE)) {
+                controller?.addMediaItems(addedAt, chunk)
+                addedAt += chunk.size
+                yield()
+            }
         }
 
         // There is a bug in media3 ( https://github.com/androidx/media/issues/480 ),
@@ -593,6 +660,30 @@ class MediaPlayerManager(
         prepare()
 
         startPlaybackAt(startIndex, startPositionMs, autoPlay)
+    }
+
+    /**
+     * Caps [songs] to [MAX_QUEUE_SIZE], windowed around [startIndex] (or from the start if
+     * null), adjusting [startIndex] to its new position. See MAX_QUEUE_SIZE for why - this is
+     * what actually prevents the Media3 legacy-queue-broadcast ANR, not the chunking above.
+     * No-op (and silent) when [songs] already fits.
+     */
+    private fun capQueueSize(songs: List<Track>, startIndex: Int?): Pair<List<Track>, Int?> {
+        if (songs.size <= MAX_QUEUE_SIZE) return songs to startIndex
+
+        val safeIndex = startIndex?.coerceIn(0, songs.lastIndex) ?: 0
+        val start = (safeIndex - MAX_QUEUE_SIZE / 2).coerceIn(0, songs.size - MAX_QUEUE_SIZE)
+        Timber.w("Limiting queue from %d to %d tracks", songs.size, MAX_QUEUE_SIZE)
+
+        // capQueueSize() only runs on the Main dispatcher (called from addToPlaylistLocked,
+        // itself inside mainScope.launch), so toast() can be called directly here.
+        toast(
+            UApp.applicationContext().getString(R.string.queue_size_limited, MAX_QUEUE_SIZE, songs.size),
+            UApp.applicationContext()
+        )
+
+        return songs.subList(start, start + MAX_QUEUE_SIZE).toList() to
+            startIndex?.let { it - start }
     }
 
     /**
@@ -766,13 +857,21 @@ class MediaPlayerManager(
     fun removeIncompleteTracksFromPlaylist() {
         val list = playlist.toList()
         var removed = 0
-        for ((index, item) in list.withIndex()) {
-            val state = DownloadService.getDownloadState(item.toTrack())
+        // Switching away from a server calls this to drop songs the new server/Offline can't
+        // play. Without suppression, removing each item one by one from a large queue (e.g.
+        // a several-thousand-song album, mostly not downloaded) fires onTimelineChanged once
+        // per removal, each doing a full timeline walk - the exact same O(n^2) freeze as
+        // withTimelinePublishSuppressed fixes for adding, except here it ran under this
+        // method's own lock and produced a real ANR (see CHANGES.md, P0.4 server-switch entry).
+        withTimelinePublishSuppressedSync {
+            for ((index, item) in list.withIndex()) {
+                val state = DownloadService.getDownloadState(item.toTrack())
 
-            // The track is not downloaded, remove it
-            if (state != DownloadState.DONE && state != DownloadState.PINNED) {
-                removeFromPlaylist(index - removed)
-                removed++
+                // The track is not downloaded, remove it
+                if (state != DownloadState.DONE && state != DownloadState.PINNED) {
+                    removeFromPlaylist(index - removed)
+                    removed++
+                }
             }
         }
     }

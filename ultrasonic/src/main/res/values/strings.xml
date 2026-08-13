@@ -449,6 +449,7 @@
         <item quantity="one">%d song inserted after current song</item>
         <item quantity="other">%d songs inserted after current song</item>
     </plurals>
+    <string name="queue_size_limited">Queue limited to %1$d of %2$d songs</string>
     <!-- Subsonic api errors -->
     <string name="api.subsonic.generic">Generic API error: %1$s</string>
     <string name="api.subsonic.generic.no.message">no message given from server</string>
