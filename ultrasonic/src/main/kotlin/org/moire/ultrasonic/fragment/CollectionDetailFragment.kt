@@ -14,6 +14,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -26,33 +27,43 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.CollectionDiscAdapter
 import org.moire.ultrasonic.domain.Album
+import org.moire.ultrasonic.domain.MusicCollection
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.CollectionDetailModel
+import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.LayoutType
 import org.moire.ultrasonic.util.Util.toast
+import org.moire.ultrasonic.util.bindStackedArtwork
 
 /**
  * One Collection/Box Set's discs (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md sections 10,
- * 11, 15). Only ever works with lightweight Album rows already in view - opening this screen, or
- * scrolling through 222 of them, never fetches a single track. Navigation-only: tapping a disc
- * opens it via the existing, unmodified TrackCollectionFragment (Album Detail), where Play/queue
- * actions already live - this screen doesn't duplicate them.
+ * 11, 15; visual redesign per docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 6). Only ever works
+ * with lightweight Album rows already in view - opening this screen, or scrolling through 222 of
+ * them, never fetches a single track. Navigation-only: tapping a disc opens it via the existing,
+ * unmodified TrackCollectionFragment (Album Detail), where Play/queue actions already live - this
+ * screen doesn't duplicate them.
  */
-class CollectionDetailFragment : Fragment() {
+class CollectionDetailFragment : Fragment(), KoinComponent {
 
     private val navArgs: CollectionDetailFragmentArgs by navArgs()
     private val listModel: CollectionDetailModel by viewModels()
+    private val imageLoaderProvider: ImageLoaderProvider by inject()
     private var emptyView: View? = null
     private var swipeRefresh: SwipeRefreshLayout? = null
     private var discoverMenuItem: MenuItem? = null
     private var toggleLayoutMenuItem: MenuItem? = null
     private var recyclerView: RecyclerView? = null
     private var adapter: CollectionDiscAdapter? = null
-    private var layoutType = LayoutType.LIST
+    private var headerArtwork: View? = null
+    private var headerTitle: TextView? = null
+    private var headerSubtitle: TextView? = null
+    private var layoutType = LayoutType.COVER
 
     private val menuProvider: MenuProvider = object : MenuProvider {
         override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
@@ -81,7 +92,7 @@ class CollectionDetailFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View = inflater.inflate(R.layout.list_layout_generic, container, false)
+    ): View = inflater.inflate(R.layout.collection_detail_layout, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -94,6 +105,10 @@ class CollectionDetailFragment : Fragment() {
         )
 
         emptyView = view.findViewById(R.id.empty_list_view)
+        headerArtwork = view.findViewById(R.id.collection_header_artwork)
+        headerTitle = view.findViewById(R.id.collection_header_title)
+        headerSubtitle = view.findViewById(R.id.collection_header_subtitle)
+        headerTitle?.text = navArgs.grouping
 
         adapter = CollectionDiscAdapter(onOpen = ::openDisc)
         recyclerView = view.findViewById<RecyclerView>(R.id.recycler_view).apply {
@@ -111,6 +126,7 @@ class CollectionDetailFragment : Fragment() {
             adapter?.submitList(albums)
             emptyView?.isVisible = albums.isEmpty()
             swipeRefresh?.isRefreshing = false
+            updateHeader(collection)
         }
 
         var previousCount: Int? = null
@@ -129,6 +145,18 @@ class CollectionDetailFragment : Fragment() {
         }
 
         listModel.load(navArgs.grouping)
+    }
+
+    private fun updateHeader(collection: MusicCollection?) {
+        val artwork = headerArtwork ?: return
+        val albumCount = collection?.albumCount ?: 0
+        headerTitle?.text = collection?.title ?: navArgs.grouping
+        headerSubtitle?.text = resources.getQuantityString(
+            R.plurals.n_discs,
+            albumCount,
+            albumCount
+        )
+        bindStackedArtwork(artwork, collection?.stackArtwork.orEmpty(), imageLoaderProvider)
     }
 
     private fun setLayoutType(newType: LayoutType) {
@@ -168,6 +196,6 @@ class CollectionDetailFragment : Fragment() {
     }
 
     companion object {
-        private const val GRID_SPAN_COUNT = 3
+        private const val GRID_SPAN_COUNT = 2
     }
 }

@@ -8,8 +8,8 @@
 package org.moire.ultrasonic.adapters
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -19,12 +19,14 @@ import org.koin.core.component.inject
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.MusicCollection
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
+import org.moire.ultrasonic.util.bindStackedArtwork
 
 /**
- * Rows for the Collections/Box Sets list (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md section
- * 9): visually distinct from a normal album row (BOX SET label + disc count instead of artist),
- * plain [ListAdapter] rather than the app's multitype delegates since this list is always
- * homogeneous - no need for the polymorphic machinery TrackCollectionFragment's list needs.
+ * Rows for the Collections/Box Sets grid (docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 2):
+ * artwork-first 2-column grid using the stacked-cover effect (see [bindStackedArtwork]) instead
+ * of a flat text row. Plain [ListAdapter] rather than the app's multitype delegates since this
+ * list is always homogeneous - no need for the polymorphic machinery TrackCollectionFragment's
+ * list needs.
  */
 class CollectionRowAdapter(
     private val onClick: (MusicCollection) -> Unit
@@ -39,19 +41,20 @@ class CollectionRowAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
-        holder.title.text = item.title
-        holder.subtitle.text = holder.itemView.resources.getString(
-            R.string.collection_box_set_subtitle,
+        val discsText = holder.itemView.resources.getQuantityString(
+            R.plurals.n_discs,
+            item.albumCount,
             item.albumCount
         )
+        holder.title.text = item.title
+        holder.subtitle.text = discsText
+        holder.itemView.contentDescription = "${item.title}, $discsText"
         holder.itemView.setOnClickListener { onClick(item) }
-        imageLoaderProvider.executeOn {
-            it.loadImage(holder.coverArt, item.artworkAlbum, false, 0, R.drawable.unknown_album)
-        }
+        bindStackedArtwork(holder.stackedArtwork, item.stackArtwork, imageLoaderProvider)
     }
 
-    class ViewHolder(view: android.view.View) : RecyclerView.ViewHolder(view) {
-        val coverArt: ImageView = view.findViewById(R.id.cover_art)
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val stackedArtwork: View = view.findViewById(R.id.stacked_artwork)
         val title: TextView = view.findViewById(R.id.collection_title)
         val subtitle: TextView = view.findViewById(R.id.collection_subtitle)
     }

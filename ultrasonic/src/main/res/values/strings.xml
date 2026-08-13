@@ -15,7 +15,6 @@
          means something else (the server/library collection selector), not box sets/multi-album
          releases (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). -->
     <string name="library.box_sets">Box Sets</string>
-    <string name="collection.box_set_subtitle">BOX SET · %1$d discs</string>
     <string name="collection.empty">No Box Sets found yet</string>
     <string name="collection.discover_more">Find missing discs</string>
     <string name="collection.discovering">Looking for more discs…</string>

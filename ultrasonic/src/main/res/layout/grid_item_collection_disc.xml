@@ -13,10 +13,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         a:layout_width="match_parent"
-        a:layout_height="wrap_content"
-        a:background="?android:attr/selectableItemBackground"
-        a:clickable="true"
-        a:focusable="true">
+        a:layout_height="wrap_content">
 
         <ImageView
             a:id="@+id/cover_art"
@@ -57,7 +54,8 @@
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
-                a:singleLine="true"
+                a:maxLines="2"
+                a:minLines="2"
                 a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                 tools:text="Cantatas 150, 4, 71, 106" />
 

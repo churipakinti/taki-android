@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Collection Detail hero section (docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 6): fixed, does
+    not scroll away with the disc grid below it - deliberately simpler than making it a spanning
+    first item in the grid's adapter, and it only ever loads up to 3 covers once.
+-->
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:gravity="center_horizontal"
+    a:orientation="vertical"
+    a:paddingHorizontal="48dp"
+    a:paddingTop="16dp"
+    a:paddingBottom="8dp">
+
+    <FrameLayout
+        a:layout_width="152dp"
+        a:layout_height="152dp">
+
+        <include
+            a:id="@+id/collection_header_artwork"
+            layout="@layout/view_stacked_artwork" />
+
+    </FrameLayout>
+
+    <TextView
+        a:id="@+id/collection_header_title"
+        style="@style/Ultrasonic.PrimaryText"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:layout_marginTop="16dp"
+        a:ellipsize="end"
+        a:gravity="center"
+        a:maxLines="2"
+        a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+        tools:text="Bach 333" />
+
+    <TextView
+        a:id="@+id/collection_header_subtitle"
+        style="@style/Ultrasonic.SecondaryText"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:layout_marginTop="4dp"
+        a:gravity="center"
+        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        a:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="222 discs" />
+
+</LinearLayout>

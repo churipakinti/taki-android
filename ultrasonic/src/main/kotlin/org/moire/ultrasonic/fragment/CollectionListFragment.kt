@@ -15,7 +15,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.moire.ultrasonic.R
@@ -54,7 +54,7 @@ class CollectionListFragment : Fragment() {
 
         val adapter = CollectionRowAdapter(::onItemClick)
         view.findViewById<RecyclerView>(R.id.recycler_view).apply {
-            layoutManager = LinearLayoutManager(context)
+            layoutManager = GridLayoutManager(context, GRID_SPAN_COUNT)
             this.adapter = adapter
         }
 
@@ -76,5 +76,9 @@ class CollectionListFragment : Fragment() {
         findNavController().navigate(
             CollectionListFragmentDirections.toCollectionDetail(collection.title)
         )
+    }
+
+    companion object {
+        private const val GRID_SPAN_COUNT = 2
     }
 }
