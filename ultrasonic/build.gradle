@@ -7,6 +7,22 @@ apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: "androidx.navigation.safeargs.kotlin"
 apply from: "../gradle_scripts/code_quality.gradle"
 
+// Taki's own release signing identity (TAKI_BETA_COMPLETION_PLAN.md P0.1) -- deliberately
+// NOT the legacy ultrasonic-keystore.enc, which must never become Taki's signing identity.
+// keystore.properties is gitignored and lives only on machines that build a release; see
+// docs/RELEASE_SIGNING.md for the variable names and regeneration procedure (never the values).
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+def hasReleaseSigning = keystorePropertiesFile.exists()
+if (hasReleaseSigning) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} else {
+    logger.warn(
+            "keystore.properties not found at ${keystorePropertiesFile} -- assembleRelease " +
+                    "will produce an UNSIGNED apk. See docs/RELEASE_SIGNING.md."
+    )
+}
+
 android {
     compileSdkVersion versions.compileSdk
 
@@ -22,10 +38,24 @@ android {
 
     bundle.language.enableSplit = false
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources = true
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     'minify/proguard-main.pro',
                     'minify/proguard-okhttp.pro',

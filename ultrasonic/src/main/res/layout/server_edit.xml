@@ -89,7 +89,7 @@
             a:layout_marginBottom="21dp"
             a:hint="@string/settings.server_password"
             app:endIconMode="password_toggle"
-            app:layout_constraintBottom_toTopOf="@id/edit_advanced_header"
+            app:layout_constraintBottom_toTopOf="@id/edit_advanced_toggle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/edit_server_username">
