@@ -7,8 +7,25 @@
         <exclude domain="root"/>
         <include domain="sharedpref" path="."/>
         <include domain="database" path="."/>
+        <!--
+          ultrasonic-database stores ServerSetting rows (url, userName, password in plaintext,
+          see ServerSetting.kt / AppDatabase.kt). Excluded so cloud backup/restore can never
+          recover server credentials. The per-server metadata caches
+          (ultrasonic-database-meta-<id>, track/album/artist listings only, no credentials) are
+          NOT excluded here and remain backed up. TAKI_BETA_COMPLETION_PLAN.md P0.2.
+        -->
+        <exclude domain="database" path="ultrasonic-database"/>
+        <exclude domain="database" path="ultrasonic-database-wal"/>
+        <exclude domain="database" path="ultrasonic-database-shm"/>
+        <exclude domain="database" path="ultrasonic-database-journal"/>
     </cloud-backup>
     <device-transfer>
         <!-- Specifying nothing here means: Include all: https://developer.android.com/guide/topics/data/autobackup#include-exclude-android-11 -->
+        <!-- Same exclusion as cloud-backup above: device-to-device transfer must not carry
+             plaintext server credentials either. -->
+        <exclude domain="database" path="ultrasonic-database"/>
+        <exclude domain="database" path="ultrasonic-database-wal"/>
+        <exclude domain="database" path="ultrasonic-database-shm"/>
+        <exclude domain="database" path="ultrasonic-database-journal"/>
     </device-transfer>
 </data-extraction-rules>

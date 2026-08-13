@@ -1,5 +1,47 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P0.1: firma release propia
+
+Añade `signingConfig` al build type `release` en `ultrasonic/build.gradle`, leído desde
+`keystore.properties` (gitignored, nunca en el repo) en vez de depender del `ultrasonic-keystore.enc`
+heredado del fork de Ultrasonic. El keystore (RSA 4096, PKCS12) vive fuera del repositorio, en el
+equipo que compila el release; procedimiento y nombres de variables (nunca valores) documentados
+en `docs/RELEASE_SIGNING.md`. De paso corrige un `NotSibling` real en `server_edit.xml`
+(`edit_server_password` constreñía contra `edit_advanced_header`, que dejó de ser sibling directo
+en el `ConstraintLayout` al envolverse en `edit_advanced_toggle` en el rediseño del formulario) —
+sin este fix `lintVitalRelease` bloqueaba `assembleRelease` por completo. Verificado:
+`assembleRelease` compila limpio y `apksigner verify --verbose --print-certs` confirma
+`Verifies` con `CN=Taki Release, OU=Taki Android, O=Taki`.
+
+## TAKI_BETA_COMPLETION_PLAN.md — P0.2: credenciales y Android Backup
+
+Inventario confirmó que la única fuente de credenciales en texto plano es el archivo Room
+`ultrasonic-database` (tabla `ServerSetting`: `url`, `userName`, `password`) — verificado
+extrayendo la base real del emulador de prueba y confirmando filas con contraseña legible. Las
+cachés de metadata por servidor (`ultrasonic-database-meta-<id>`) solo contienen tracks/álbumes/
+artistas, sin credenciales, y `SharedPreferences` (`Default_SP`) tampoco almacena secretos.
+
+`backup_rules.xml` (Android 12+) y `backup_descriptor.xml` (Android ≤11) mantienen
+`android:allowBackup="true"` y siguen incluyendo `sharedpref`/`database` en general (para no
+perder configuración no sensible), pero ahora excluyen explícitamente `ultrasonic-database` y sus
+variantes (`-wal`, `-shm`, `-journal`) tanto de `cloud-backup` como de `device-transfer` — las
+reglas posteriores más específicas ganan sobre el `include domain="database"` general anterior,
+semántica documentada de Android. No se optó por cifrado en reposo (SQLCipher/
+EncryptedSharedPreferences) ni por desactivar `allowBackup` por completo: el plan prioriza la
+solución conservadora que se pueda implementar y probar antes de la beta, y la exclusión
+selectiva ya cumple el criterio ("ningún backup recupera credenciales") sin perder el resto de
+la configuración del usuario en una restauración legítima.
+
+**Limitación de prueba:** intenté validar el flujo real de `bmgr backupnow` con el transporte
+local del emulador; el transporte local rechazó el paquete (`PFTBT: Error -1002`, `TRANSPORT_
+PACKAGE_REJECTED`) de forma consistente incluso en un backup trivial — comportamiento conocido
+del transporte local en AVDs, no relacionado con las reglas añadidas. La validación de
+backup/restore real (con cuenta de Google o transferencia entre dispositivos físicos) queda
+pendiente para P0.4. Sí se confirmó que una actualización in-place (reinstalación con `-r`,
+preservando datos) conserva ambas conexiones configuradas y la app sigue funcionando con
+normalidad — este cambio no toca código, solo reglas de backup, así que no hay mecanismo por el
+que pudiera afectar altas/ediciones/bajas de colecciones.
+
 ## TAKI_ALBUM_DETAIL_FIX_PLAN.md — carga lenta, Play por disco, rectángulo intermitente
 
 Tres correcciones puntuales de Album Detail, medidas contra Bach 333 (Various Artists, 5.517
