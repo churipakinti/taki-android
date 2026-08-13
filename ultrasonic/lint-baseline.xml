@@ -1,14 +1,146 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.0.1" type="baseline" client="gradle" dependencies="true" name="AGP (8.0.1)" variant="all" version="8.0.1">
-	
+<issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="true" name="AGP (9.2.1)" variant="all" version="9.2.1">
+
+    <issue
+        id="NewApi"
+        message="`android:windowLightNavigationBar` requires API level 27 (current min is 26)"
+        errorLine1="        &lt;item name=&quot;android:windowLightNavigationBar&quot;>false&lt;/item>"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/themes.xml"
+            line="52"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val filename = name?.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                  ~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/util/FileUtil.kt"
+            line="307"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val filepath = path?.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                  ~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/util/FileUtil.kt"
+            line="323"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        string.isNullOrEmpty() || string.trim { it &lt;= &apos; &apos; }.isEmpty()"
+        errorLine2="                                              ~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/util/Util.kt"
+            line="419"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `clipToOutline` is only used in API level 31 and higher (current min is 26)"
+        errorLine1="    a:clipToOutline=&quot;true&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/now_playing.xml"
+            line="10"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UseAppTint"
+        message="Must use `app:tint` instead of `android:tint`"
+        errorLine1="        a:tint=&quot;@color/taki_accent_secondary&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/list_item_library_track.xml"
+            line="61"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseAppTint"
+        message="Must use `app:tint` instead of `android:tint`"
+        errorLine1="        a:tint=&quot;?attr/colorOnSurfaceVariant&quot; />"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/list_item_library_track.xml"
+            line="73"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseAppTint"
+        message="Must use `app:tint` instead of `android:tint`"
+        errorLine1="        a:tint=&quot;@android:color/white&quot; />"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/playlist_cover_collage.xml"
+            line="22"
+            column="9"/>
+    </issue>
+
     <issue
         id="PluralsCandidate"
-        message="Formatting %d followed by words (&quot;tracks&quot;): This should probably be a plural rather than a string"
-        errorLine1="    &lt;string name=&quot;select_album.n_selected&quot;>%d tracks selected&lt;/string>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Formatting %d followed by words (&quot;songs&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;home.mix_song_count&quot;>%1$d songs for today&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="151"
+            line="27"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;songs&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;home.mix_short&quot;>Today\&apos;s Mix is shorter than usual (%1$d songs).&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="30"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;songs&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;artist.radio_short&quot;>Artist radio is shorter than usual (%1$d songs).&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="49"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;songs&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;song.radio_short&quot;>Radio is shorter than usual (%1$d songs).&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="262"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;songs&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;queue_size_limited&quot;>Queue limited to %1$d of %2$d songs&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="452"
             column="5"/>
     </issue>
 
@@ -24,6 +156,137 @@
         message="`checkServerTrusted` is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers">
         <location
             file="../core/subsonic-api/build/libs/subsonic-api.jar"/>
+    </issue>
+
+    <issue
+        id="NotifyDataSetChanged"
+        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
+        errorLine1="        viewAdapter.notifyDataSetChanged()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/fragment/ArtistListFragment.kt"
+            line="156"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NotifyDataSetChanged"
+        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
+        errorLine1="        notifyDataSetChanged()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/adapters/ServerRowAdapter.kt"
+            line="51"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseCompoundDrawables"
+        message="This tag and its children can be replaced by one `&lt;TextView/>` and a compound drawable"
+        errorLine1="                &lt;LinearLayout"
+        errorLine2="                 ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/lyrics.xml"
+            line="55"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="MergeRootFrame"
+        message="This `&lt;FrameLayout>` can be replaced with a `&lt;merge>` tag"
+        errorLine1="&lt;FrameLayout xmlns:a=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/layout/playlist_cover_collage.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="DisableBaselineAlignment"
+        message="Set `android:baselineAligned=&quot;false&quot;` on this element for better performance"
+        errorLine1="    &lt;LinearLayout"
+        errorLine2="     ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/filter_button_bar.xml"
+            line="46"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="DisableBaselineAlignment"
+        message="Set `android:baselineAligned=&quot;false&quot;` on this element for better performance"
+        errorLine1="    &lt;LinearLayout"
+        errorLine2="     ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/grid_item_playlist.xml"
+            line="33"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="NestedWeights"
+        message="Nested weights are bad for performance"
+        errorLine1="                a:layout_weight=&quot;1&quot;"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/filter_button_bar.xml"
+            line="76"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/UltrasonicTheme.Dark`)"
+        errorLine1="    a:background=&quot;?attr/colorSurface&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/current_playing.xml"
+            line="7"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `@color/taki_black` with a theme that also paints a background (inferred theme is `@style/UltrasonicTheme.Dark`)"
+        errorLine1="    a:background=&quot;@color/taki_black&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout-land/current_playing.xml"
+            line="7"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/UltrasonicTheme.Dark`)"
+        errorLine1="    a:background=&quot;?attr/colorSurface&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/navigation_activity.xml"
+            line="8"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.common_appname` appears to be unused">
+        <location
+            file="build.gradle"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.common_appname` appears to be unused">
+        <location
+            file="build.gradle"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.common_appname` appears to be unused">
+        <location
+            file="build.gradle"/>
     </issue>
 
     <issue
@@ -71,6 +334,138 @@
     </issue>
 
     <issue
+        id="UnusedResources"
+        message="The resource `R.menu.search_view_menu` appears to be unused"
+        errorLine1="&lt;menu xmlns:a=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/menu/search_view_menu.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.playlist_download_description` appears to be unused"
+        errorLine1="    &lt;string name=&quot;playlist.download_description&quot;>Download playlist&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="209"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.playlist_remove_download_description` appears to be unused"
+        errorLine1="    &lt;string name=&quot;playlist.remove_download_description&quot;>Remove downloaded playlist&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="216"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.server_editor_disabled_feature` appears to be unused"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>One or more features were disabled because the server doesn\&apos;t support them.\nYou can run this test again anytime.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="405"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.supported_server_features` appears to be unused"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Supported features&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="469"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.jukebox` appears to be unused"
+        errorLine1="    &lt;string name=&quot;jukebox&quot;>Jukebox&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="470"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ReportShortcutUsage"
+        message="Calling this method indicates use of dynamic shortcuts, but there are no calls to methods that track shortcut usage, such as `pushDynamicShortcut` or `reportShortcutUsed`. Calling these methods is recommended, as they track shortcut usage and allow launchers to adjust which shortcuts appear based on activation history. Please see https://developer.android.com/develop/ui/views/launch/shortcuts/managing-shortcuts#track-usage"
+        errorLine1="        shortcutManager?.dynamicShortcuts = listOf(shortcut)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/util/ShortcutUtil.kt"
+            line="32"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        preferences.edit().remove(KEY_QUERIES).apply()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/util/RecentSearches.kt"
+            line="32"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        preferences.edit().putString(KEY_QUERIES, JSONArray(queries).toString()).apply()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/util/RecentSearches.kt"
+            line="36"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="ContentDescription"
+        message="Missing `contentDescription` attribute on image"
+        errorLine1="    &lt;ImageView"
+        errorLine2="     ~~~~~~~~~">
+        <location
+            file="src/main/res/layout/list_item_queue_track.xml"
+            line="69"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="ContentDescription"
+        message="Missing `contentDescription` attribute on image"
+        errorLine1="    &lt;ImageView"
+        errorLine2="     ~~~~~~~~~">
+        <location
+            file="src/main/res/layout/list_item_queue_track.xml"
+            line="87"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="ContentDescription"
+        message="Missing `contentDescription` attribute on image"
+        errorLine1="                    &lt;ImageView"
+        errorLine2="                     ~~~~~~~~~">
+        <location
+            file="src/main/res/layout/lyrics.xml"
+            line="62"
+            column="22"/>
+    </issue>
+
+    <issue
         id="LabelFor"
         message="Missing accessibility label: provide either a view with an `android:labelFor` that references this view or provide an `android:hint`"
         errorLine1="    &lt;EditText"
@@ -87,20 +482,42 @@
         errorLine1="        &lt;EditText"
         errorLine2="         ~~~~~~~~">
         <location
-            file="src/main/res/layout/share_details.xml"
-            line="29"
+            file="src/main/res/layout/time_span_dialog.xml"
+            line="28"
             column="10"/>
     </issue>
 
     <issue
-        id="LabelFor"
-        message="Missing accessibility label: provide either a view with an `android:labelFor` that references this view or provide an `android:hint`"
-        errorLine1="        &lt;EditText"
-        errorLine2="         ~~~~~~~~">
+        id="SetTextI18n"
+        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
+        errorLine1="        holder.rank.text = (adapter.items.indexOf(item) + 1).toString()"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/time_span_dialog.xml"
-            line="28"
-            column="10"/>
+            file="src/main/kotlin/org/moire/ultrasonic/adapters/ArtistPopularTrackDelegate.kt"
+            line="41"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        message="Number formatting does not take into account locale settings. Consider using `String.format` instead."
+        errorLine1="        holder.rank.text = (adapter.items.indexOf(item) + 1).toString()"
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/org/moire/ultrasonic/adapters/ArtistPopularTrackDelegate.kt"
+            line="41"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="RelativeOverlap"
+        message="`@id/equalizer_level` can overlap `@id/equalizer_frequency` if @id/equalizer_frequency, @id/equalizer_level grow due to localized text expansion"
+        errorLine1="    &lt;TextView"
+        errorLine2="     ~~~~~~~~">
+        <location
+            file="src/main/res/layout/equalizer_bar.xml"
+            line="18"
+            column="6"/>
     </issue>
 
 </issues>

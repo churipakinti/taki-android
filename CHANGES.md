@@ -1,5 +1,27 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P0.5: baseline de lint regenerado (deuda preexistente, no bloquea)
+
+`gradlew lintDebug` fallaba con 37 errores contra `lint-baseline.xml`. Verificado uno por uno: ninguno
+lo introdujo la sesión de P0.4 (los únicos dos en archivos tocados, `current_playing.xml` y su
+variante `land`, están en la línea del `background` del elemento raíz — sin tocar — y el mismo aviso
+de `Overdraw` aparece también en `navigation_activity.xml`, archivo no tocado esta sesión). El
+baseline estaba desactualizado, probablemente desde una actualización de Android Gradle Plugin/lint
+no relacionada con código de la app.
+
+Categorías (todas preexistentes): `UnusedResources` (9), `PluralsCandidate` (5), `TrimLambda` (3),
+`Overdraw` (3), `ContentDescription` (3), `UseKtx`/`NotifyDataSetChanged`/`DisableBaselineAlignment`
+(2 c/u), `UseCompoundDrawables`/`UnusedAttribute`/`ReportShortcutUsage`/`RelativeOverlap`/
+`NestedWeights`/`MergeRootFrame` (1 c/u), y un `NewApi` (`windowLightNavigationBar` requiere API 27,
+`minSdk` 26 — atributo de `<style>` que Android ignora en versiones no soportadas en vez de crashear,
+sin riesgo funcional real). Ninguno es un bug de correctitud.
+
+**Decisión:** regenerar el baseline (`gradlew updateLintBaseline`) en vez de arreglar los 37 ahora
+— habría sido un desvío grande de archivos no relacionados con el trabajo de esta sesión. Queda como
+deuda técnica documentada, pendiente para después de la beta.
+
+Archivo: `ultrasonic/lint-baseline.xml`.
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P0.4: filas superpuestas y switch mal armado en Advanced settings del servidor
 
 **Reporte de usuario** durante el punto 1 de la matriz de P0.4 (instalación limpia y configuración):
