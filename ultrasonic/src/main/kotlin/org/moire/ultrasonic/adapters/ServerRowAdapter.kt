@@ -9,7 +9,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -60,8 +62,23 @@ internal class ServerRowAdapter(
         val isOffline = setting.id == ActiveServerProvider.OFFLINE_DB_ID
 
         holder.name.text = setting.name
-        holder.description.text = setting.url
         holder.menu.isInvisible = isOffline
+
+        // Offline is a mode, not a real server (docs/TAKI_BETA_COMPLETION_PLAN.md P1 "Selector
+        // de colecciones y Offline") -- OFFLINE_DB.url is internally "http://localhost" (see
+        // SubsonicAPIClient.OFFLINE_DB_URL), which must never surface in the UI. With no second
+        // line, the name is re-centered vertically against the icon instead of staying
+        // top-aligned as it is for the two-line (name + url) server rows.
+        holder.description.isGone = isOffline
+        if (!isOffline) holder.description.text = setting.url
+
+        val nameParams = holder.name.layoutParams as ConstraintLayout.LayoutParams
+        nameParams.bottomToBottom = if (isOffline) {
+            R.id.server_image
+        } else {
+            ConstraintLayout.LayoutParams.UNSET
+        }
+        holder.name.layoutParams = nameParams
 
         val icon = ContextCompat.getDrawable(
             context,

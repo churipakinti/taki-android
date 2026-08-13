@@ -1,5 +1,19 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P1: fila Offline del selector de colecciones
+
+`ServerRowAdapter.kt` mostraba `setting.url` sin condición para cualquier fila, incluida la de
+Offline — cuya `url` interna es literalmente `"http://localhost"` (`SubsonicAPIClient.
+OFFLINE_DB_URL`), un detalle de implementación que no debía llegar a la UI (P1 "Selector de
+colecciones y Offline": presentar Offline como modo, no como servidor). Ahora esa segunda línea
+se oculta (`isGone`, no `isInvisible`, para no dejar el hueco) solo para la fila Offline, y el
+nombre se recentra verticalmente contra el ícono ajustando `bottomToBottom` del
+`ConstraintLayout.LayoutParams` por código en `onBindViewHolder` — reseteado explícitamente para
+las filas normales también, ya que el `RecyclerView` recicla el mismo `ViewHolder` entre
+posiciones. Sin cambios de layout XML. Verificado en el selector de colecciones del emulador:
+Offline queda con el texto centrado y sin URL; Demo Server y el servidor real siguen mostrando
+nombre + URL sin cambios.
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P0.1: firma release propia
 
 Añade `signingConfig` al build type `release` en `ultrasonic/build.gradle`, leído desde
