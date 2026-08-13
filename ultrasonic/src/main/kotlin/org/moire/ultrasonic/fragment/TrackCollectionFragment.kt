@@ -261,13 +261,13 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     checkable = true,
                     draggable = false,
                     lifecycleOwner = viewLifecycleOwner,
-                    createContextMenu = { itemView, _ ->
+                    createContextMenu = { itemView, _, downloadState ->
                         val menuRes = if (navArgs.playlistId != null) {
                             R.menu.context_menu_track_collection_playlist
                         } else {
                             R.menu.context_menu_track_collection
                         }
-                        Utils.createPopupMenu(itemView, menuRes)
+                        Utils.createPopupMenu(itemView, menuRes, downloadState)
                     },
                     layout = if (navArgs.isAlbum) {
                         R.layout.list_item_track_album

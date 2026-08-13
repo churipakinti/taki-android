@@ -872,7 +872,7 @@ class PlayerFragment :
                 showRating = false,
                 queueStyle = true,
                 layout = R.layout.list_item_queue_track
-            ) { view, track -> onCreateContextMenu(view, track) }.apply {
+            ) { view, track, _ -> onCreateContextMenu(view, track) }.apply {
                 this.startDrag = { holder ->
                     dragTouchHelper.startDrag(holder)
                 }

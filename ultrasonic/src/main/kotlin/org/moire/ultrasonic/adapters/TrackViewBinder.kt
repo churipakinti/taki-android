@@ -13,6 +13,7 @@ import org.koin.core.component.KoinComponent
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.domain.Track
+import org.moire.ultrasonic.service.DownloadState
 
 @Suppress("LongParameterList")
 class TrackViewBinder(
@@ -30,10 +31,11 @@ class TrackViewBinder(
     // entered via long-press (see onEnterSelectionMode), not an always-on mode like it used to be.
     val isSelectionModeActive: () -> Boolean = { false },
     val onEnterSelectionMode: ((Track) -> Unit)? = null,
-    val createContextMenu: (View, Track) -> PopupMenu = { view, _ ->
+    val createContextMenu: (View, Track, DownloadState) -> PopupMenu = { view, _, downloadState ->
         Utils.createPopupMenu(
             view,
-            R.menu.context_menu_track
+            R.menu.context_menu_track,
+            downloadState
         )
     }
 ) : ItemViewBinder<Identifiable, TrackViewHolder>(),
@@ -74,7 +76,7 @@ class TrackViewBinder(
                 selecting && !track.isVideo -> holder.isChecked = !holder.check.isChecked
 
                 onContextMenuClick != null -> {
-                    val popup = createContextMenu(holder.itemView, track)
+                    val popup = createContextMenu(holder.itemView, track, holder.downloadState)
                     popup.setOnMenuItemClickListener { menuItem ->
                         onContextMenuClick.invoke(menuItem, track)
                     }
@@ -98,7 +100,7 @@ class TrackViewBinder(
         holder.menu.setOnClickListener { view ->
             if (onContextMenuClick == null) return@setOnClickListener
             // createContextMenu() already calls .show() internally (see Utils.createPopupMenu)
-            val popup = createContextMenu(view, track)
+            val popup = createContextMenu(view, track, holder.downloadState)
             popup.setOnMenuItemClickListener { menuItem ->
                 onContextMenuClick.invoke(menuItem, track)
             }

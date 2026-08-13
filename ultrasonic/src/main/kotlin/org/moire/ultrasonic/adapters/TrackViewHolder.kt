@@ -84,6 +84,11 @@ class TrackViewHolder(val view: View) :
 
     private var isMaximized = false
     private var cachedStatus = DownloadState.UNKNOWN
+
+    // Read by TrackViewBinder to decide which of the Pin/Unpin/Download/Delete context menu
+    // items actually apply to this row, without a second (and redundant) lookup -- setSong()
+    // already resolves this asynchronously for the row's own status icon.
+    val downloadState: DownloadState get() = cachedStatus
     private var isPlayingCached = false
     private var usesQueueStyle = false
 

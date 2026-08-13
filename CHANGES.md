@@ -1,5 +1,38 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — P1: menú contextual mostraba Pin/Unpin/Download/Delete sin importar el estado real
+
+**Reporte de usuario:** en el menú "⋮" de una canción (Play Next/Last/From Here, Start radio,
+Add to playlist, Pin, Unpin, Download, Remove from playlist, Delete), preguntó la diferencia
+entre Remove from playlist y Delete (Remove saca la canción de la playlist en el servidor; Delete
+borra la copia descargada localmente) y notó, correctamente, que Delete no debería aparecer si la
+canción nunca se descargó.
+
+**Causa:** `Utils.createPopupMenu()` (usado por `TrackViewBinder`, la ruta compartida por Album
+Detail y Playlist Detail) solo ocultaba ítems según modo online/offline — nunca según el estado
+real de descarga de esa canción puntual. Pin/Unpin/Download/Delete se mostraban siempre los
+cuatro juntos, sin importar si la canción estaba descargada, prendida (pinned) o ninguna de las
+dos. `LibraryTrackBinder` (Songs/Liked Songs) tiene el mismo problema por un camino de código
+distinto (inflaba el menú directamente, sin pasar por `Utils.createPopupMenu`) — **no se tocó en
+este cambio**, queda como seguimiento aparte.
+
+**Fix:** `TrackViewHolder` expone el `DownloadState` que ya resuelve de forma asíncrona para su
+propio ícono de estado (sin una segunda consulta, sin I/O nuevo en el hilo principal).
+`TrackViewBinder.createContextMenu` pasa ese estado a `Utils.createPopupMenu()`, que ahora decide
+visibilidad por estado: IDLE/FAILED/CANCELLED → Pin y Download (oculta Unpin y Delete); DONE →
+Pin y Delete (oculta Download y Unpin); PINNED → Unpin y Delete (oculta Pin y Download). Pin y
+Download además se ocultan en modo offline (requieren red). `PlayerFragment` (menú de la cola,
+`nowplaying_context.xml`, sin estos cuatro ítems) solo necesitó actualizar la firma del callback,
+sin cambio de comportamiento.
+
+**Verificación** en el Pixel 7 físico, álbum con estado real mixto (`'74 Jailbreak`, AC/DC): una
+canción no descargada ("Soul Stripper") muestra Pin + Download, sin Unpin ni Delete; una canción
+ya descargada ("You Ain't Got a Hold on Me") muestra Pin + Delete, sin Download ni Unpin — los
+dos casos exactamente como se diseñó. `testDebugUnitTest` y `assembleDebug` en verde.
+
+Archivos: `TrackViewHolder.kt`, `Utils.kt`, `TrackViewBinder.kt`, `TrackCollectionFragment.kt`,
+`PlayerFragment.kt` (solo firma del callback, sin lógica nueva).
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P1: ícono de estado vacío desactualizado
 
 **Reporte de usuario:** una lista vacía (Playlists sin ninguna playlist, confirmado en
