@@ -121,9 +121,26 @@
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
             a:layout_height="52dp"
+            a:layout_marginBottom="8dp"
             a:gravity="start|center_vertical"
             a:text="@string/main.genres_title"
             app:icon="@drawable/genre_placeholder_icon"
+            app:iconGravity="textStart"
+            app:iconTint="@color/taki_gray" />
+
+        <!-- Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Hidden by
+             default: only shown once at least one Box Set has actually been resolved from
+             already-cached album metadata, so it doesn't clutter Library for the common case of
+             a collection with no box sets. See MainFragment. -->
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_box_sets"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/library.box_sets"
+            a:visibility="gone"
+            app:icon="@drawable/ic_layers"
             app:iconGravity="textStart"
             app:iconTint="@color/taki_gray" />
 

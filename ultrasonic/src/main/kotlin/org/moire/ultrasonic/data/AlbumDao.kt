@@ -77,4 +77,24 @@ interface AlbumDao : GenericDao<Album> {
      */
     @Query("SELECT DISTINCT genre FROM albums ORDER BY genre ASC")
     fun getGenres(): List<String>
+
+    /**
+     * Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Updates only the
+     * `grouping` column instead of a full upsert, since the caller (CachedMusicService.
+     * getAlbumAsDir) only has the album's tracks at that point, not a full Album row to upsert -
+     * see CachedMusicService for why this is derived from tracks rather than a second network
+     * call. No-op if the album row doesn't exist yet (e.g. its Album entity was never separately
+     * fetched/cached) - that's fine, CollectionResolver only needs this for albums it already
+     * knows about.
+     */
+    @Query("UPDATE albums SET grouping = :grouping WHERE id = :albumId")
+    fun updateGrouping(albumId: String, grouping: String)
+
+    /**
+     * Albums with a known, non-blank grouping - the input to [org.moire.ultrasonic.util.
+     * CollectionResolver]. Room can't express "not null and not empty" with a single null check
+     * since grouping is TEXT, hence the explicit `!= ''`.
+     */
+    @Query("SELECT * FROM albums WHERE grouping IS NOT NULL AND grouping != ''")
+    fun withGrouping(): List<Album>
 }

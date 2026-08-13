@@ -31,7 +31,8 @@ data class Album(
     override var genre: String? = null,
     override var starred: Boolean = false,
     override var path: String? = null,
-    override var closeness: Int = 0
+    override var closeness: Int = 0,
+    override var grouping: String? = null
 ) : MusicDirectory.Child() {
     override var isDirectory = true
     override var isVideo = false

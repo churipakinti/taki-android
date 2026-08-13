@@ -39,5 +39,10 @@ data class MusicDirectoryChild(
     val status: String = "",
     val publishDate: Calendar? = null,
     val userRating: Int? = null,
-    val averageRating: Float? = null
+    val averageRating: Float? = null,
+    // OpenSubsonic extension (Navidrome exposes it on <song>, confirmed via a live response
+    // capture 2026-08-13: "groupings":[]). Maps the ID3 "content group"/GROUPING tag. Used by
+    // docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md to detect box-set membership. Not present
+    // at all on the AlbumID3 response, only here.
+    val groupings: List<String> = emptyList()
 )

@@ -265,13 +265,31 @@ class CachedMusicService(private val musicService: MusicService) :
                 cachedTracks.set(tracks)
                 PerfMetrics.end("album_dir:cache_write:$id:count=${tracks.size}", writeToken)
             }
+            updateCachedAlbumGrouping(id, tracks)
             return@withLock dir
         }
+
+        updateCachedAlbumGrouping(id, tracks)
 
         MusicDirectory().apply {
             this.name = name
             addAll(tracks)
         }
+    }
+
+    /**
+     * Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md): getAlbumAsDir() is
+     * the only place that ever sees this album's tracks (whether from cache or network), and
+     * grouping only exists on the Song response, not AlbumID3 - so this is the sole opportunity
+     * to discover and persist it onto the album's own cached row, with no extra network call.
+     * A no-op once already set (Room UPDATE is cheap either way), and intentionally never clears
+     * a previously-discovered grouping if this batch of tracks happens not to carry one (e.g. a
+     * partial cache read) - see AlbumDao.updateGrouping().
+     */
+    private fun updateCachedAlbumGrouping(albumId: String, tracks: List<Track>) {
+        val grouping = tracks.firstNotNullOfOrNull { it.grouping?.takeIf { g -> g.isNotBlank() } }
+            ?: return
+        cachedAlbums.updateGrouping(albumId, grouping)
     }
 
     @Throws(Exception::class)

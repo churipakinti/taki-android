@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    a:layout_width="match_parent"
+    a:layout_height="wrap_content"
+    a:layout_marginHorizontal="6dp"
+    a:layout_marginVertical="8dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:background="?android:attr/selectableItemBackground"
+        a:clickable="true"
+        a:focusable="true">
+
+        <ImageView
+            a:id="@+id/cover_art"
+            a:layout_width="match_parent"
+            a:layout_height="0dp"
+            a:contentDescription="@string/albumArt"
+            a:scaleType="centerCrop"
+            a:src="@drawable/unknown_album"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            a:id="@+id/row_disc_details"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:gravity="center_vertical"
+            a:orientation="vertical"
+            a:paddingTop="8dp"
+            a:paddingBottom="8dp"
+            app:layout_constraintEnd_toEndOf="@id/cover_art"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cover_art">
+
+            <TextView
+                a:id="@+id/disc_position"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Disc 057" />
+
+            <TextView
+                a:id="@+id/disc_title"
+                style="@style/Ultrasonic.PrimaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:ellipsize="end"
+                a:singleLine="true"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                tools:text="Cantatas 150, 4, 71, 106" />
+
+            <TextView
+                a:id="@+id/disc_track_count"
+                style="@style/Ultrasonic.SecondaryText"
+                a:layout_width="match_parent"
+                a:layout_height="wrap_content"
+                a:ellipsize="end"
+                a:singleLine="true"
+                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                a:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="18 tracks" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

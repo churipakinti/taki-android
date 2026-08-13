@@ -52,6 +52,7 @@ private fun populateCommonProps(entry: MusicDirectory.Child, source: MusicDirect
     entry.created = source.created?.time
     entry.starred = source.starred != null
     entry.discNumber = source.discNumber
+    entry.grouping = source.groupings.firstOrNull { it.isNotBlank() }
 
     if (source.streamId.isNotBlank()) {
         entry.id = source.streamId

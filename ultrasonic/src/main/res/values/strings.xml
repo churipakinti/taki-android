@@ -11,6 +11,16 @@
     <string name="library.collection">Collection</string>
     <string name="library.downloaded_music">Downloaded music</string>
     <string name="library.liked_songs">Liked Songs</string>
+    <!-- "Box Sets" deliberately avoids the word "Collection" - library.collection above already
+         means something else (the server/library collection selector), not box sets/multi-album
+         releases (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). -->
+    <string name="library.box_sets">Box Sets</string>
+    <string name="collection.box_set_subtitle">BOX SET · %1$d discs</string>
+    <string name="collection.empty">No Box Sets found yet</string>
+    <string name="collection.discover_more">Find missing discs</string>
+    <string name="collection.discovering">Looking for more discs…</string>
+    <string name="collection.toggle_layout">Switch layout</string>
+    <string name="collection.disc_track_count">%1$d tracks</string>
     <string name="player.back">Back</string>
     <string name="player.options">Player options</string>
     <string name="background_task.network_error">A network error occurred. Please check the server address or try again later.</string>
@@ -421,6 +431,13 @@
     <plurals name="n_discs">
         <item quantity="one">%d disc</item>
         <item quantity="other">%d discs</item>
+    </plurals>
+    <!-- quantity="zero" is only honored by ICU for a few locales (not en/es) - the "other"
+         bucket below already reads fine for zero ("Found 0 new discs"), so it's omitted here
+         rather than relying on zero-handling that wouldn't apply to this app's languages. -->
+    <plurals name="collection_discover_result">
+        <item quantity="one">Found %d new disc</item>
+        <item quantity="other">Found %d new discs</item>
     </plurals>
     <plurals name="n_playlists">
         <item quantity="one">%d playlist</item>

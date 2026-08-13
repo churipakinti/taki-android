@@ -51,7 +51,8 @@ data class Track(
     // finas de historial"). Null means the server didn't expose the data, not "zero plays" -
     // callers must not treat null as a confident signal either way.
     var playCount: Long? = null,
-    var lastPlayed: Date? = null
+    var lastPlayed: Date? = null,
+    override var grouping: String? = null
 ) : MusicDirectory.Child(),
     Serializable {
     fun setDuration(duration: Long) {

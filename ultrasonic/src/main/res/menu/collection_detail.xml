@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:a="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        a:id="@+id/menu_toggle_collection_layout"
+        a:icon="@drawable/ic_baseline_view_grid"
+        a:title="@string/collection.toggle_layout"
+        app:showAsAction="ifRoom" />
+
+    <item
+        a:id="@+id/menu_discover_more_discs"
+        a:icon="@drawable/ic_menu_refresh"
+        a:title="@string/collection.discover_more"
+        app:showAsAction="ifRoom" />
+
+</menu>

@@ -156,7 +156,7 @@ class ActiveServerProvider(private val repository: ServerSettingDao) :
         MetaDatabase::class.java,
         METADATA_DB + serverId
     )
-        .addMigrations(META_MIGRATION_2_3, META_MIGRATION_3_4)
+        .addMigrations(META_MIGRATION_2_3, META_MIGRATION_3_4, META_MIGRATION_4_5)
         .fallbackToDestructiveMigrationOnDowngrade(true)
         .build()
 

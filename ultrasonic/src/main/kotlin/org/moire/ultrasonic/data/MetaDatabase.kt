@@ -42,7 +42,7 @@ import org.moire.ultrasonic.domain.Track
         )
     ],
     exportSchema = true,
-    version = 4
+    version = 5
 )
 @TypeConverters(Converters::class)
 abstract class MetaDatabase : RoomDatabase() {
@@ -97,5 +97,16 @@ val META_MIGRATION_3_4: Migration = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `tracks` ADD COLUMN `playCount` INTEGER")
         db.execSQL("ALTER TABLE `tracks` ADD COLUMN `lastPlayed` INTEGER")
+    }
+}
+
+// Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). `grouping` is nullable
+// with no default on both tables, same reasoning as playCount/lastPlayed above: null means "not
+// yet discovered" (see MusicDirectory.Child.grouping doc), so existing rows correctly read back
+// as null - not "confirmed no collection" - after this migration.
+val META_MIGRATION_4_5: Migration = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `albums` ADD COLUMN `grouping` TEXT")
+        db.execSQL("ALTER TABLE `tracks` ADD COLUMN `grouping` TEXT")
     }
 }
