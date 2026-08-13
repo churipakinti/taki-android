@@ -175,6 +175,8 @@
     <string name="main.genres_title">Genres</string>
     <string name="main.offline">Offline</string>
     <string name="main.songs_all">All songs</string>
+    <string name="play_all_songs">Play all songs</string>
+    <string name="songs_play_all_label">Play all</string>
     <string name="main.songs_random">Random</string>
     <string name="main.songs_starred">Liked Songs</string>
     <string name="main.songs_title">Songs</string>

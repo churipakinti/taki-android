@@ -12,6 +12,8 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import androidx.appcompat.widget.ListPopupWindow
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -34,6 +36,10 @@ class FilterButtonBar : ConstraintLayout {
     private var layoutType: LayoutType = LayoutType.LIST
     private var primaryAction: FilterPrimaryAction? = null
     private var viewTypeToggle: Chip? = null
+    private var songsActionRow: LinearLayout? = null
+    private var songsSortOrderMenu: LinearLayout? = null
+    private var songsSortOrderOptions: AppCompatAutoCompleteTextView? = null
+    private var primaryActionButton: LinearLayout? = null
     private var sortOrderMenu: TextInputLayout? = null
     private var sortOrderOptions: AppCompatAutoCompleteTextView? = null
 
@@ -56,8 +62,10 @@ class FilterButtonBar : ConstraintLayout {
      */
     fun configureWithCapabilities(caps: ViewCapabilities, currentSortOrder: SortOrder? = null) {
         primaryAction = caps.primaryAction
-        viewTypeToggle!!.isVisible = caps.supportsGrid || primaryAction != null
-        sortOrderMenu!!.isVisible = caps.supportedSortOrders.isNotEmpty()
+        val usesSongsActionRow = primaryAction != null
+        viewTypeToggle!!.isVisible = caps.supportsGrid && !usesSongsActionRow
+        songsActionRow!!.isVisible = usesSongsActionRow
+        sortOrderMenu!!.isVisible = caps.supportedSortOrders.isNotEmpty() && !usesSongsActionRow
 
         if (primaryAction != null) {
             updatePrimaryActionState(primaryAction!!)
@@ -76,7 +84,9 @@ class FilterButtonBar : ConstraintLayout {
 
             // Set the current SortOrder, fall back to the first in the list if none was specified.
             val selected = currentSortOrder ?: translatedOrders.first().sortOrder
-            sortOrderOptions!!.setText(context.getString(getStringForSortOrder(selected)), false)
+            val selectedText = context.getString(getStringForSortOrder(selected))
+            sortOrderOptions!!.setText(selectedText, false)
+            songsSortOrderOptions!!.setText(selectedText, false)
 
             adapter!!.clear()
             // Next line addresses a bug in Android components:
@@ -119,17 +129,18 @@ class FilterButtonBar : ConstraintLayout {
     fun setup() {
         // Link layout toggle Chip
         viewTypeToggle = findViewById(R.id.chip_view_toggle)
+        songsActionRow = findViewById(R.id.songs_action_row)
+        songsSortOrderMenu = findViewById(R.id.songs_sort_order_menu)
+        songsSortOrderOptions = findViewById(R.id.songs_sort_order_menu_options)
+        primaryActionButton = findViewById(R.id.songs_play_all_button)
         sortOrderMenu = findViewById(R.id.sort_order_menu)
         sortOrderOptions = findViewById(R.id.sort_order_menu_options)
 
         viewTypeToggle!!.setOnClickListener {
-            if (primaryAction != null) {
-                primaryActionListener?.invoke()
-            } else {
-                val newType = setLayoutType()
-                layoutTypeChangedListener?.let { it(newType) }
-            }
+            val newType = setLayoutType()
+            layoutTypeChangedListener?.let { it(newType) }
         }
+        primaryActionButton!!.setOnClickListener { primaryActionListener?.invoke() }
 
         @SuppressLint("PrivateResource")
         adapter = ArrayAdapter<TranslatedSortOrder>(
@@ -139,10 +150,15 @@ class FilterButtonBar : ConstraintLayout {
         )
 
         sortOrderOptions!!.setAdapter(adapter)
-        sortOrderOptions!!.setOnItemClickListener { _, _, position, _ ->
+        val orderSelectedListener = { position: Int ->
             val item = adapter!!.getItem(position)
             item?.let { setOrderType(it.sortOrder) }
         }
+        sortOrderOptions!!.setOnItemClickListener { _, _, position, _ ->
+            orderSelectedListener(position)
+        }
+        songsSortOrderOptions!!.setOnClickListener { showSongsSortOrderMenu() }
+        songsSortOrderMenu!!.setOnClickListener { showSongsSortOrderMenu() }
     }
 
     /**
@@ -199,14 +215,25 @@ class FilterButtonBar : ConstraintLayout {
 
     private fun updatePrimaryActionState(action: FilterPrimaryAction) {
         when (action) {
-            FilterPrimaryAction.PLAY_ALL -> {
-                viewTypeToggle!!.chipIcon = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.media_start
-                )
-                viewTypeToggle!!.text = null
-                viewTypeToggle!!.contentDescription =
-                    context.getString(R.string.select_album_play_all)
+            FilterPrimaryAction.PLAY_ALL -> Unit
+        }
+    }
+
+    private fun showSongsSortOrderMenu() {
+        adapter!!.filter.filter("") {
+            ListPopupWindow(context).apply {
+                anchorView = songsSortOrderMenu
+                setAdapter(adapter)
+                width = songsSortOrderMenu!!.width
+                isModal = true
+                setOnItemClickListener { _, _, position, _ ->
+                    adapter!!.getItem(position)?.let { selected ->
+                        songsSortOrderOptions!!.setText(selected.string, false)
+                        dismiss()
+                        setOrderType(selected.sortOrder)
+                    }
+                }
+                show()
             }
         }
     }
@@ -221,7 +248,11 @@ class FilterButtonBar : ConstraintLayout {
         SortOrder.BY_NAME -> R.string.main_albums_alphaByName
         SortOrder.BY_ARTIST -> R.string.main_albums_alphaByArtist
         SortOrder.BY_GENRE -> R.string.main_albums_byGenre
-        SortOrder.STARRED -> R.string.main_albums_starred
+        SortOrder.STARRED -> if (primaryAction == FilterPrimaryAction.PLAY_ALL) {
+            R.string.main_songs_starred
+        } else {
+            R.string.main_albums_starred
+        }
         SortOrder.BY_YEAR -> R.string.main_albums_by_year
     }
 }

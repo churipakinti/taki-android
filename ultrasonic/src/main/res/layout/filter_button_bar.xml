@@ -43,6 +43,95 @@
         app:textEndPadding="0dp"
         app:textStartPadding="0dp" />
 
+    <LinearLayout
+        a:id="@+id/songs_action_row"
+        a:layout_width="0dp"
+        a:layout_height="48dp"
+        a:layout_marginStart="20dp"
+        a:layout_marginEnd="20dp"
+        a:gravity="center_vertical"
+        a:orientation="horizontal"
+        a:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
+
+        <LinearLayout
+            a:id="@+id/songs_sort_order_menu"
+            a:layout_width="0dp"
+            a:layout_height="48dp"
+            a:layout_weight="1"
+            a:background="@drawable/bg_songs_play_all_button"
+            a:clickable="true"
+            a:focusable="true"
+            a:gravity="center_vertical"
+            a:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatAutoCompleteTextView
+                a:id="@+id/songs_sort_order_menu_options"
+                a:layout_width="0dp"
+                a:layout_height="48dp"
+                a:layout_weight="1"
+                a:background="@null"
+                a:cursorVisible="false"
+                a:ellipsize="end"
+                a:focusable="false"
+                a:includeFontPadding="false"
+                a:inputType="none"
+                a:paddingStart="16dp"
+                a:paddingEnd="8dp"
+                a:singleLine="true"
+                a:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                a:textColor="?attr/colorOnSurface" />
+
+            <ImageView
+                a:layout_width="20dp"
+                a:layout_height="20dp"
+                a:layout_marginEnd="16dp"
+                a:contentDescription="@null"
+                a:importantForAccessibility="no"
+                a:src="@drawable/ic_songs_selector_arrow"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            a:id="@+id/songs_play_all_button"
+            a:layout_width="wrap_content"
+            a:layout_height="48dp"
+            a:layout_marginStart="12dp"
+            a:background="@drawable/bg_songs_play_all_button"
+            a:clickable="true"
+            a:contentDescription="@string/play_all_songs"
+            a:focusable="true"
+            a:gravity="center"
+            a:orientation="horizontal"
+            a:paddingStart="16dp"
+            a:paddingEnd="16dp">
+
+            <ImageView
+                a:layout_width="20dp"
+                a:layout_height="20dp"
+                a:contentDescription="@null"
+                a:importantForAccessibility="no"
+                a:src="@drawable/ic_play_all_compact"
+                app:tint="@color/taki_accent" />
+
+            <TextView
+                a:layout_width="wrap_content"
+                a:layout_height="wrap_content"
+                a:layout_marginStart="8dp"
+                a:includeFontPadding="false"
+                a:text="@string/songs_play_all_label"
+                a:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                a:textColor="?attr/colorOnSurface" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 
     <com.google.android.material.textfield.TextInputLayout
         a:id="@+id/sort_order_menu"
