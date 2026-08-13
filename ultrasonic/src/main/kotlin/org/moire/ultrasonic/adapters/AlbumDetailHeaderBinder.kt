@@ -8,7 +8,6 @@
 package org.moire.ultrasonic.adapters
 
 import android.content.Context
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,6 +31,9 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
  * unaffected. The trailing action button is parameterized (download for albums, an overflow
  * menu for playlists) instead of duplicating this whole binder for playlists - see
  * docs/TAKI_PLAYLIST_UX_REDESIGN.md.
+ *
+ * The Information action (docs/TAKI_ALBUM_INFO_MUSIC_FIRST.md) is album-only - [onInfoAction] is
+ * null for playlists, which keeps the button gone and leaves playlist behavior untouched.
  */
 class AlbumDetailHeaderBinder(
     context: Context,
@@ -39,7 +41,8 @@ class AlbumDetailHeaderBinder(
     private val onShuffle: () -> Unit,
     private val trailingActionIcon: Int,
     private val trailingActionDescription: Int,
-    private val onTrailingAction: () -> Unit
+    private val onTrailingAction: () -> Unit,
+    private val onInfoAction: ((AlbumHeader) -> Unit)? = null
 ) : ItemViewBinder<AlbumHeader, AlbumDetailHeaderBinder.ViewHolder>(),
     KoinComponent {
 
@@ -56,10 +59,7 @@ class AlbumDetailHeaderBinder(
         val play: View = itemView.findViewById(R.id.album_detail_play)
         val shuffle: View = itemView.findViewById(R.id.album_detail_shuffle)
         val download: MaterialButton = itemView.findViewById(R.id.album_detail_download)
-        val aboutSection: View = itemView.findViewById(R.id.album_detail_about_section)
-        val notes: TextView = itemView.findViewById(R.id.album_detail_notes)
-        val notesToggle: TextView = itemView.findViewById(R.id.album_detail_notes_toggle)
-        var notesExpanded = false
+        val info: MaterialButton = itemView.findViewById(R.id.album_detail_info)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, item: AlbumHeader) {
@@ -95,34 +95,10 @@ class AlbumDetailHeaderBinder(
         holder.shuffle.setOnClickListener { onShuffle() }
         holder.download.setOnClickListener { onTrailingAction() }
 
-        val notes = item.notes
-        holder.aboutSection.isVisible = !notes.isNullOrEmpty()
-        if (!notes.isNullOrEmpty()) {
-            holder.notes.text = notes
-            holder.notesExpanded = false
-            holder.notesToggle.isVisible = notes.length > NOTES_COLLAPSE_LENGTH
-            applyNotesExpansion(holder)
-            holder.notesToggle.setOnClickListener {
-                holder.notesExpanded = !holder.notesExpanded
-                applyNotesExpansion(holder)
-            }
-        }
-    }
-
-    private fun applyNotesExpansion(holder: ViewHolder) {
-        holder.notes.maxLines = if (holder.notesExpanded) {
-            Int.MAX_VALUE
-        } else {
-            NOTES_COLLAPSED_LINES
-        }
-        holder.notes.ellipsize = if (holder.notesExpanded) null else TextUtils.TruncateAt.END
-        holder.notesToggle.setText(
-            if (holder.notesExpanded) R.string.artist_show_less else R.string.artist_show_more
-        )
-    }
-
-    companion object {
-        private const val NOTES_COLLAPSE_LENGTH = 320
-        private const val NOTES_COLLAPSED_LINES = 5
+        // Only shown once album notes have actually been fetched and turned out non-empty -
+        // see loadAlbumInfo()/updateInfoButtonVisibility() in TrackCollectionFragment. Playlists
+        // never pass onInfoAction, so this stays gone there regardless of item.notes.
+        holder.info.isVisible = onInfoAction != null && !item.notes.isNullOrEmpty()
+        holder.info.setOnClickListener { onInfoAction?.invoke(item) }
     }
 }

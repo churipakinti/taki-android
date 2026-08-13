@@ -73,6 +73,7 @@ import org.moire.ultrasonic.util.ContextMenuUtil
 import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.EntryByDiscAndTrackComparator
+import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.PlaylistUtil
 import org.moire.ultrasonic.util.Settings
@@ -222,7 +223,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     onShuffle = { playAll(shuffle = true) },
                     trailingActionIcon = R.drawable.ic_menu_download,
                     trailingActionDescription = R.string.album_download_description,
-                    onTrailingAction = { downloadSelectedOrAllTracks(false) }
+                    onTrailingAction = { downloadSelectedOrAllTracks(false) },
+                    onInfoAction = ::showAlbumInfo
                 )
             )
         } else if (navArgs.playlistId != null) {
@@ -394,6 +396,31 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         val updatedHeader = AlbumHeader(header.entries, header.name).apply { notes = albumNotes }
         viewAdapter.submitList(listOf(updatedHeader) + current.drop(1))
+    }
+
+    /**
+     * Album Detail's Information action (docs/TAKI_ALBUM_INFO_MUSIC_FIRST.md). Everything shown
+     * here is already resolved by the time this can be tapped - [AlbumDetailHeaderBinder] only
+     * shows the button once [AlbumHeader.notes] came back non-empty from [loadAlbumInfo], and the
+     * rest (artist/year/song count/disc count/cover) is synchronous, computed when the header
+     * was built. No network call happens here.
+     */
+    private fun showAlbumInfo(header: AlbumHeader) {
+        val discCount = header.entries.filterIsInstance<Track>()
+            .mapNotNull { it.discNumber }
+            .toSet().size
+        val coverEntry = header.entries.firstOrNull()
+
+        AlbumInfoBottomSheetFragment.newInstance(
+            description = header.notes,
+            albumName = header.name,
+            artist = header.artists.joinToString(", ").ifEmpty { null },
+            year = header.years.singleOrNull()?.toString(),
+            songCount = header.childCount,
+            discCount = discCount,
+            coverArtId = coverEntry?.coverArt,
+            coverArtKey = FileUtil.getAlbumArtKey(coverEntry, false)
+        ).show(childFragmentManager, AlbumInfoBottomSheetFragment.TAG)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

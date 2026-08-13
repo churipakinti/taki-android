@@ -86,6 +86,19 @@
             app:iconTint="?attr/colorOnSurface" />
 
         <com.google.android.material.button.MaterialButton
+            a:id="@+id/album_detail_info"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="38dp"
+            a:layout_height="38dp"
+            a:layout_marginEnd="4dp"
+            a:contentDescription="@string/album.info_description"
+            a:visibility="gone"
+            app:icon="@drawable/ic_info_outline"
+            app:iconSize="18dp"
+            app:iconTint="?attr/colorOnSurface"
+            tools:visibility="visible" />
+
+        <com.google.android.material.button.MaterialButton
             a:id="@+id/album_detail_shuffle"
             style="@style/Widget.Material3.Button.IconButton"
             a:layout_width="38dp"
@@ -110,52 +123,6 @@
             app:maxImageSize="16dp"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ultrasonic.Circle"
             app:tint="?attr/colorOnSurface" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        a:id="@+id/album_detail_about_section"
-        a:layout_width="match_parent"
-        a:layout_height="wrap_content"
-        a:orientation="vertical"
-        a:visibility="gone"
-        tools:visibility="visible">
-
-        <TextView
-            a:layout_width="wrap_content"
-            a:layout_height="wrap_content"
-            a:layout_marginStart="16dp"
-            a:layout_marginTop="4dp"
-            a:layout_marginEnd="16dp"
-            a:layout_marginBottom="8dp"
-            a:text="@string/album.about"
-            a:textAppearance="@style/TextAppearance.Material3.TitleLarge" />
-
-        <TextView
-            a:id="@+id/album_detail_notes"
-            style="@style/Ultrasonic.SecondaryText"
-            a:layout_width="match_parent"
-            a:layout_height="wrap_content"
-            a:layout_marginHorizontal="16dp"
-            a:ellipsize="end"
-            a:lineSpacingExtra="3dp"
-            a:maxLines="5"
-            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            a:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="Album notes supplied by the music server." />
-
-        <com.google.android.material.button.MaterialButton
-            a:id="@+id/album_detail_notes_toggle"
-            style="@style/Widget.Material3.Button.TextButton"
-            a:layout_width="wrap_content"
-            a:layout_height="40dp"
-            a:layout_marginStart="4dp"
-            a:layout_marginBottom="4dp"
-            a:minHeight="40dp"
-            a:text="@string/artist.show_more"
-            a:textColor="?attr/colorOnSurface"
-            a:visibility="gone"
-            tools:visibility="visible" />
 
     </LinearLayout>
 
