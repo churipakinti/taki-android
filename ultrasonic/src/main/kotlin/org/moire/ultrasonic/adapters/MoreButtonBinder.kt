@@ -17,7 +17,9 @@ class MoreButtonBinder : ItemViewBinder<MoreButtonBinder.MoreButton, RecyclerVie
     val layout = R.layout.list_item_more_button
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, item: MoreButton) {
-        holder.itemView.setOnClickListener {
+        // The MaterialButton child is clickable by default and consumes the tap before it
+        // reaches itemView, so the listener must go on the button itself, not the row.
+        holder.itemView.findViewById<View>(R.id.search_more).setOnClickListener {
             item.onClick()
         }
     }
