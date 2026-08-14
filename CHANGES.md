@@ -1,5 +1,80 @@
 # Changes
 
+## TAKI_BETA_COMPLETION_PLAN.md — Sleep Timer: ajuste visual (icono en controles secundarios)
+
+Ajuste puramente visual sobre el Sleep Timer ya cerrado funcionalmente — sin tocar
+`SleepTimerController`, deadlines, eventos Media3 ni `RxBus` (solo se agregó un consumidor nuevo
+del `RxBus.sleepTimerStateObservable` ya existente).
+
+Se quitó la entrada "Sleep timer" del menú overflow (`nowplaying.xml`,
+`PlayerFragment.setupOptionsMenu()`/`menuItemSelected()`) y se agregó un cuarto
+`MaterialButton` de icono (reloj, `ic_sleep_timer.xml` nuevo) en la fila de controles
+secundarios (`player_secondary_controls.xml`, junto a Save Playlist/Lyrics/Queue), con el
+`player_secondary_target` de 48dp ya usado por esa fila. Al tocarlo abre el mismo diálogo
+(`showSleepTimerDialog()`, sin cambios). El color del icono y su `contentDescription` se
+actualizan reactivamente suscribiéndose a `RxBus.sleepTimerStateObservable` (ya existente,
+`replay(1)`) en `PlayerFragment`: neutro (`colorOnSurfaceVariant`, mismo tono que los otros
+tres botones) cuando está `Off`, acento (`colorPrimary`, el mismo helper `playerModeColor()`
+que ya usan shuffle/repeat) cuando hay un temporizador armado. Como el color y la descripción
+se derivan del estado publicado y no de un toggle manual, vencer o cancelar el temporizador
+hace que el botón vuelva solo al estado neutro — no hay una llamada de "reset" separada que
+mantener sincronizada.
+
+**Verificado en Pixel 7:** el ítem ya no aparece en el menú overflow; el botón abre el diálogo;
+activar 15 min tiñe el icono de acento y actualiza `contentDescription` a
+"Sleep timer · 15 min"; sobrevive rotación de pantalla (mismo `contentDescription` antes y
+después); cancelar vuelve el icono a neutro y el `contentDescription` a "Sleep timer"; tras un
+período real en segundo plano (~2h48min, pantalla apagada, app desconectada de depuración) el
+temporizador de 15 min ya había expirado y el botón volvió solo a neutro al reabrir la app,
+confirmando el retorno automático también en expiración real, no solo en tests. La fila de
+controles secundarios no se ve apretada con el cuarto botón. Sin `FATAL EXCEPTION` atribuible a
+este cambio en logcat (el único hallazgo de StrictMode, un leak de cursor de
+`SearchRecentSuggestions`/`AsyncQueryHandler`, es preexistente y no relacionado — no se tocó
+ese código).
+
+**Archivos:** `res/menu/nowplaying.xml`, `res/layout/player_secondary_controls.xml`,
+`res/drawable/ic_sleep_timer.xml` (nuevo), `fragment/PlayerFragment.kt`.
+
+**Feature freeze sigue activo** — este es un ajuste visual sobre una función ya cerrada, no una
+función nueva.
+
+## TAKI_BETA_COMPLETION_PLAN.md — Sleep Timer v1 (última función antes del feature freeze)
+
+Implementado según `TAKI_SLEEP_TIMER_FINAL_FEATURE.md`: temporizador de sueño con seis opciones
+(Desactivado, 15/30/45/60 min, "Al terminar la canción actual"), accesible desde el menú overflow
+del reproductor (`PlayerFragment.showPlayerMenu()`), sin pantalla nueva.
+
+**Arquitectura:** la lógica vive en `SleepTimerController` (nuevo, `service/`), poseído por
+`MediaPlayerManager` — no por `PlayerFragment`, que se destruye al rotar/navegar. El deadline se
+calcula con `SystemClock.elapsedRealtime()` (monotónico, inmune a cambios de hora del sistema) vía
+un único `Job` cancelable por activación; "fin de canción" no usa `Job` ni deadline, solo permanece
+armado hasta que `MediaPlayerManager` reporta una transición natural (`MEDIA_ITEM_TRANSITION_REASON_
+AUTO`/`_REPEAT` o `Player.STATE_ENDED`) — un salto manual (`_SEEK`) nunca llega a esa llamada, así
+que queda armado para la nueva canción en vez de dispararse antes de tiempo. El estado se publica
+por `RxBus.sleepTimerStateObservable` (`replay(1)`) para que un observador nuevo (p. ej. reabrir el
+menú tras rotar) reciba el valor actual sin depender de haber estado suscrito antes.
+
+Cancelar/reemplazar el temporizador nunca invoca el callback de expiración; expirar siempre pausa
+exactamente una vez y vuelve a `Off`. `clear()` y `onDestroy()` de `MediaPlayerManager` cancelan el
+temporizador (cubre limpiar cola, swipe-away, force-stop y shutdown del servicio).
+
+**Verificado en Pixel 7:** las seis opciones aparecen y funcionan; título dinámico del menú
+("Sleep timer · 15 min", "Sleep timer · End of song"); mensajes de confirmación; salto manual
+(Next) no pausa y deja "fin de canción" armado para la nueva pista; el estado sobrevive rotación de
+pantalla (temporizador sigue "15 min" tras rotar, reproducción continúa sin interrupción); cancelar
+no afecta la reproducción; sin `FATAL EXCEPTION`, ANR ni hallazgos de StrictMode en logcat durante
+toda la sesión de pruebas. La expiración real (pausa automática al vencer) se verificó de forma
+determinista vía tests unitarios con reloj falso, no esperando minutos reales en el dispositivo — el
+mismo camino de código (`delay()` + `expire()`) se ejerce en ambos casos.
+
+**Archivos:** `service/SleepTimerController.kt` (nuevo), `service/MediaPlayerManager.kt`,
+`service/RxBus.kt`, `fragment/PlayerFragment.kt`, `res/menu/nowplaying.xml`,
+`res/values/strings.xml`, `res/values-es/strings.xml`,
+`test/.../service/SleepTimerControllerTest.kt` (nuevo, 15 tests).
+
+**Feature freeze activo:** esta es la última función nueva de `v0.1.0-beta.1`. Lo que queda es
+corrección de P0/P1 reproducibles, identidad/release, compilación firmada y regresión final.
+
 ## TAKI_BETA_COMPLETION_PLAN.md — P0.5: baseline de lint regenerado (deuda preexistente, no bloquea)
 
 `gradlew lintDebug` fallaba con 37 errores contra `lint-baseline.xml`. Verificado uno por uno: ninguno

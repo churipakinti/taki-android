@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.Menu
@@ -50,6 +51,7 @@ import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.text.DateFormat
@@ -89,6 +91,7 @@ import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.service.RxBus
+import org.moire.ultrasonic.service.SleepTimerState
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.subsonic.NetworkAndStorageChecker
@@ -166,6 +169,7 @@ class PlayerFragment :
     private lateinit var queueButton: View
     private lateinit var savePlaylistButton: View
     private lateinit var lyricsButton: View
+    private lateinit var sleepTimerButton: MaterialButton
     private lateinit var progressBar: SeekBar
     private lateinit var progressIndicator: CircularProgressIndicator
     private lateinit var queueSummaryTextView: TextView
@@ -230,6 +234,7 @@ class PlayerFragment :
         queueButton = view.findViewById(R.id.button_queue)
         savePlaylistButton = view.findViewById(R.id.button_save_playlist)
         lyricsButton = view.findViewById(R.id.button_lyrics)
+        sleepTimerButton = view.findViewById(R.id.button_sleep_timer)
         heartRatingImageView = view.findViewById(R.id.song_rating_heart)
     }
 
@@ -316,6 +321,10 @@ class PlayerFragment :
 
         lyricsButton.setOnClickListener {
             navigateToLyrics(currentSong)
+        }
+
+        sleepTimerButton.setOnClickListener {
+            showSleepTimerDialog()
         }
 
         songTitleTextView.setOnClickListener {
@@ -439,6 +448,13 @@ class PlayerFragment :
             updateButtonStates(it.state)
         }
 
+        // replay(1) means this fires immediately with whatever's currently armed - including
+        // right after this view is recreated (e.g. rotation), so the button never has to guess
+        // its initial state.
+        rxBusSubscription += RxBus.sleepTimerStateObservable.subscribe { state ->
+            updateSleepTimerButtonState(state)
+        }
+
         rxBusSubscription += RxBus.ratingPublishedObservable.subscribe { update ->
 
             // Ignore updates which are not for the current song
@@ -503,6 +519,18 @@ class PlayerFragment :
             else -> {
             }
         }
+    }
+
+    /**
+     * Sleep timer button visual state (docs/TAKI_SLEEP_TIMER_VISUAL_ADJUSTMENT.md): same neutral/
+     * accent color convention as shuffle and repeat ([playerModeColor]), driven entirely by
+     * [RxBus.sleepTimerStateObservable] - not a fixed toggle, so it also returns to neutral by
+     * itself on expiry, cancellation, or replacement, with no dedicated "reset" call needed here.
+     */
+    private fun updateSleepTimerButtonState(state: SleepTimerState) {
+        val isActive = state !is SleepTimerState.Off
+        sleepTimerButton.iconTint = ColorStateList.valueOf(playerModeColor(isActive))
+        sleepTimerButton.contentDescription = sleepTimerContentDescription(state)
     }
 
     private fun playerModeColor(isActive: Boolean): Int = requireContext().themeColor(
@@ -624,6 +652,22 @@ class PlayerFragment :
             }
         }
     }
+
+    private fun sleepTimerContentDescription(state: SleepTimerState): String =
+        when (state) {
+            SleepTimerState.Off -> getString(R.string.sleep_timer_title)
+            is SleepTimerState.EndOfTrack -> getString(R.string.sleep_timer_title_end_of_song)
+            is SleepTimerState.Duration -> {
+                val remainingMinutes =
+                    ceilMinutes(state.remainingMs(SystemClock.elapsedRealtime()))
+                val remaining = resources.getQuantityString(
+                    R.plurals.sleep_timer_remaining_short,
+                    remainingMinutes,
+                    remainingMinutes
+                )
+                getString(R.string.sleep_timer_title_active, remaining)
+            }
+        }
 
     private fun onCreateContextMenu(view: View, track: Track): PopupMenu {
         val popup = PopupMenu(view.context, view)
@@ -1310,11 +1354,83 @@ class PlayerFragment :
         dialog.show()
     }
 
+    /**
+     * Sleep timer picker: a plain single-choice MaterialAlertDialog reached from the sleep-timer
+     * icon button in the secondary controls row (docs/TAKI_SLEEP_TIMER_VISUAL_ADJUSTMENT.md), no
+     * dedicated screen. "End of current song" is omitted entirely rather than shown disabled
+     * when nothing is playing, so it's structurally impossible to arm an ambiguous end-of-track
+     * state (docs/TAKI_SLEEP_TIMER_FINAL_FEATURE.md section 3.14).
+     */
+    private fun showSleepTimerDialog() {
+        val hasCurrentSong = mediaPlayerManager.currentMediaItem != null
+
+        val labels = mutableListOf(getString(R.string.sleep_timer_off))
+        for (minutes in SLEEP_TIMER_DURATIONS_MINUTES) {
+            labels += resources.getQuantityString(
+                R.plurals.sleep_timer_option_minutes,
+                minutes,
+                minutes
+            )
+        }
+        if (hasCurrentSong) labels += getString(R.string.sleep_timer_end_of_song)
+
+        // Only Off and (when reachable) End-of-song map onto a specific row here - an active
+        // Duration timer's remaining minutes essentially never lines up exactly with one of the
+        // fixed presets, so nothing is pre-checked for it (the button's contentDescription is
+        // where its state is actually shown - see sleepTimerContentDescription()).
+        val checkedIndex = when (mediaPlayerManager.sleepTimerState) {
+            SleepTimerState.Off -> 0
+            is SleepTimerState.EndOfTrack -> if (hasCurrentSong) labels.lastIndex else -1
+            is SleepTimerState.Duration -> -1
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.sleep_timer_title)
+            .setSingleChoiceItems(labels.toTypedArray(), checkedIndex) { dialog, which ->
+                dialog.dismiss()
+                onSleepTimerOptionSelected(which, hasCurrentSong)
+            }
+            .setNegativeButton(R.string.common_cancel, null)
+            .show()
+    }
+
+    private fun onSleepTimerOptionSelected(which: Int, hasCurrentSong: Boolean) {
+        when {
+            which == 0 -> {
+                mediaPlayerManager.cancelSleepTimer()
+                toast(R.string.sleep_timer_confirm_cancelled)
+            }
+
+            which <= SLEEP_TIMER_DURATIONS_MINUTES.size -> {
+                val minutes = SLEEP_TIMER_DURATIONS_MINUTES[which - 1]
+                mediaPlayerManager.setSleepTimer(minutes)
+                toast(
+                    resources.getQuantityString(
+                        R.plurals.sleep_timer_confirm_minutes,
+                        minutes,
+                        minutes
+                    )
+                )
+            }
+
+            hasCurrentSong -> {
+                mediaPlayerManager.setSleepTimerEndOfTrack()
+                toast(R.string.sleep_timer_confirm_end_of_song)
+            }
+        }
+    }
+
+    private fun ceilMinutes(remainingMs: Long): Int = (
+        (remainingMs + MILLIS_PER_MINUTE - 1) / MILLIS_PER_MINUTE
+        ).toInt().coerceAtLeast(1)
+
     companion object {
         private const val PERCENTAGE_OF_SCREEN_FOR_SWIPE = 5
         private const val ALPHA_FULL = 1f
         private const val ALPHA_HALF = 0.5f
         private const val ALPHA_DEACTIVATED = 0.4f
         private const val ICON_SIZE = 32
+        private const val MILLIS_PER_MINUTE = 60_000L
+        private val SLEEP_TIMER_DURATIONS_MINUTES = listOf(15, 30, 45, 60)
     }
 }

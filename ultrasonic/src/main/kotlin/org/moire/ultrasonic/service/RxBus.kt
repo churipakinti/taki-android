@@ -81,6 +81,13 @@ class RxBus {
                 .replay(1)
                 .autoConnect(0)
 
+        val sleepTimerStatePublisher: PublishSubject<SleepTimerState> =
+            PublishSubject.create()
+        val sleepTimerStateObservable: Observable<SleepTimerState> =
+            sleepTimerStatePublisher
+                .replay(1)
+                .autoConnect(0)
+
         val trackDownloadStatePublisher: PublishSubject<TrackDownloadState> =
             PublishSubject.create()
         val trackDownloadStateObservable: Observable<TrackDownloadState> =

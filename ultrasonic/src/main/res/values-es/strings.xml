@@ -79,6 +79,25 @@
     <string name="download.repeat_all">Repetir todo</string>
     <string name="download.repeat_off">No repetir</string>
     <string name="download.repeat_single">Repetir canción</string>
+    <string name="sleep_timer.title">Temporizador</string>
+    <string name="sleep_timer.title_active">Temporizador · %1$s</string>
+    <string name="sleep_timer.title_end_of_song">Temporizador · Fin de la canción</string>
+    <string name="sleep_timer.off">Desactivado</string>
+    <string name="sleep_timer.end_of_song">Al terminar la canción actual</string>
+    <string name="sleep_timer.confirm_end_of_song">El temporizador se detendrá al terminar esta canción</string>
+    <string name="sleep_timer.confirm_cancelled">Temporizador cancelado</string>
+    <plurals name="sleep_timer_remaining_short">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="sleep_timer_option_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <plurals name="sleep_timer_confirm_minutes">
+        <item quantity="one">Temporizador activado por %d minuto</item>
+        <item quantity="other">Temporizador activado por %d minutos</item>
+    </plurals>
     <string name="equalizer.enabled">Activado</string>
     <string name="equalizer.label">Ecualizador</string>
     <string name="equalizer.preset">Seleccionar preajuste</string>

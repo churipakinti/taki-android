@@ -237,7 +237,11 @@ Después de cada fase:
 | 7 | Consistencia de listas/cola | Parcial — fixes de menú contextual ya cerrados, falta pase dedicado | Solo si hay defectos importantes |
 | 8 | Selector de colecciones y Offline | Parcial — oculta `localhost` y centra el nombre (`938f3946`); falta confirmar cancelación de trabajo de la colección anterior | Solo si causa confusión o regresión |
 | 9 | Géneros y letras | Verificar | No, salvo fallo funcional |
-| 10 | Sleep timer | Opcional | No |
+| 10 | Sleep timer | Cerrado — v1 implementado y verificado en Pixel 7 (`TAKI_SLEEP_TIMER_FINAL_FEATURE.md`, ver CHANGES.md) | No |
+
+**Sleep Timer cerrado — feature freeze activo.** No se inicia ninguna función nueva. Lo que queda
+es corrección de defectos P0/P1 reproducibles, identidad/release, compilación firmada y regresión
+final de `v0.1.0-beta.1`.
 
 ## 9. Definición final de beta usable
 

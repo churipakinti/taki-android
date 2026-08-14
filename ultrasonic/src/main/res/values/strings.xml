@@ -144,6 +144,25 @@
     <string name="download.repeat_all">Repeat All</string>
     <string name="download.repeat_off">Repeat Off</string>
     <string name="download.repeat_single">Repeat Song</string>
+    <string name="sleep_timer.title">Sleep timer</string>
+    <string name="sleep_timer.title_active">Sleep timer · %1$s</string>
+    <string name="sleep_timer.title_end_of_song">Sleep timer · End of song</string>
+    <string name="sleep_timer.off">Off</string>
+    <string name="sleep_timer.end_of_song">End of current song</string>
+    <string name="sleep_timer.confirm_end_of_song">Sleep timer will stop after this song</string>
+    <string name="sleep_timer.confirm_cancelled">Sleep timer cancelled</string>
+    <plurals name="sleep_timer_remaining_short">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="sleep_timer_option_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="sleep_timer_confirm_minutes">
+        <item quantity="one">Sleep timer set for %d minute</item>
+        <item quantity="other">Sleep timer set for %d minutes</item>
+    </plurals>
     <string name="equalizer.enabled">Enabled</string>
     <string name="equalizer.label">Equalizer</string>
     <string name="equalizer.preset">Select Preset</string>

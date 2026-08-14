@@ -17,6 +17,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
+import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT
 import androidx.media3.common.Player.REPEAT_MODE_OFF
 import androidx.media3.common.Rating
 import androidx.media3.common.StarRating
@@ -99,6 +100,16 @@ class MediaPlayerManager(
     private val rxBusSubscription: CompositeDisposable = CompositeDisposable()
 
     private var mainScope = CoroutineScope(Dispatchers.Main)
+
+    // Owns the Sleep Timer's lifecycle (docs/TAKI_SLEEP_TIMER_FINAL_FEATURE.md) - reuses this
+    // same headless mainScope rather than a new executor/scope, so it keeps counting across
+    // Activity/Fragment destruction, rotation, backgrounding and screen-off. onExpire runs on
+    // Dispatchers.Main (mainScope), same as every other Media3 call in this class.
+    private val sleepTimerController = SleepTimerController(scope = mainScope) {
+        controller?.pause()
+        publishSleepTimerState()
+    }
+
     private val addToPlaylistMutex = Mutex()
     private var addToPlaylistCallCount = 0
     private val addToPlaylistDuplicateGuard = DuplicateRequestGuard()
@@ -162,6 +173,12 @@ class MediaPlayerManager(
         override fun onPlaybackStateChanged(playbackState: Int) {
             playerStateChangedHandler()
             publishPlaybackState()
+            // The queue reaching its natural end (no next item to auto-transition to) is the
+            // other "end of track" completion path besides onMediaItemTransition below - see
+            // SleepTimerController.onTrackFinishedNaturally's doc.
+            if (playbackState == Player.STATE_ENDED) {
+                sleepTimerController.onTrackFinishedNaturally()
+            }
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -175,6 +192,15 @@ class MediaPlayerManager(
             // TRANSITION_REASON_AUTO means that the previous track finished playing and a new one has started.
             if (reason == MEDIA_ITEM_TRANSITION_REASON_AUTO && cachedMediaItem != null) {
                 scrobbler.scrobble(cachedMediaItem?.toTrack(), true)
+            }
+            // Only AUTO (natural progression) and REPEAT (repeat-one looping the same track)
+            // count as the current track "finishing" for the Sleep Timer's end-of-track mode.
+            // MEDIA_ITEM_TRANSITION_REASON_SEEK (a manual Next/track tap) must NOT reach here -
+            // see SleepTimerController.onTrackFinishedNaturally's doc for why.
+            if (reason == MEDIA_ITEM_TRANSITION_REASON_AUTO ||
+                reason == MEDIA_ITEM_TRANSITION_REASON_REPEAT
+            ) {
+                sleepTimerController.onTrackFinishedNaturally()
             }
             cachedMediaItem = mediaItem
             publishPlaybackState()
@@ -351,6 +377,10 @@ class MediaPlayerManager(
             }
         }
 
+        // Ensures a subscriber that opens before the user ever touches the Sleep Timer still
+        // gets a value from the replay(1) buffer instead of nothing.
+        publishSleepTimerState()
+
         created = true
         Timber.i("MediaPlayerController started")
     }
@@ -429,6 +459,10 @@ class MediaPlayerManager(
         // First stop listening to events
         rxBusSubscription.dispose()
         mainHandler.removeCallbacks(playbackCheckpoint)
+        // Covers swipe-away/force-stop/service shutdown (this is reached via
+        // shutdownCommandObservable/stopServiceCommandObservable) - cancel(), not expire(), so
+        // no late pause() call races the teardown already in progress.
+        sleepTimerController.cancel()
         releaseController()
 
         // Shutdown the rest
@@ -547,6 +581,31 @@ class MediaPlayerManager(
     @Synchronized
     fun stop() {
         controller?.stop()
+    }
+
+    val sleepTimerState: SleepTimerState
+        get() = sleepTimerController.state
+
+    /** Arms the Sleep Timer to pause after [minutes], replacing whatever was armed before. */
+    fun setSleepTimer(minutes: Int) {
+        sleepTimerController.setDuration(minutes)
+        publishSleepTimerState()
+    }
+
+    /** Arms the Sleep Timer to pause at the next natural end of the current track. */
+    fun setSleepTimerEndOfTrack() {
+        sleepTimerController.setEndOfTrack()
+        publishSleepTimerState()
+    }
+
+    /** Cancels the Sleep Timer, if armed. Playback is left untouched. */
+    fun cancelSleepTimer() {
+        sleepTimerController.cancel()
+        publishSleepTimerState()
+    }
+
+    private fun publishSleepTimerState() {
+        RxBus.sleepTimerStatePublisher.onNext(sleepTimerController.state)
     }
 
     fun addToPlaylist(
@@ -841,6 +900,7 @@ class MediaPlayerManager(
     @JvmOverloads
     fun clear(serialize: Boolean = true) {
         controller?.clearMediaItems()
+        cancelSleepTimer()
 
         if (controller != null && serialize) {
             playbackStateSerializer.serializeAsync(

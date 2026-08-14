@@ -40,4 +40,15 @@
         app:iconSize="@dimen/player_secondary_icon"
         app:iconTint="?attr/colorOnSurfaceVariant" />
 
+    <com.google.android.material.button.MaterialButton
+        a:id="@+id/button_sleep_timer"
+        style="@style/Widget.Material3.Button.IconButton"
+        a:layout_width="@dimen/player_secondary_target"
+        a:layout_height="@dimen/player_secondary_target"
+        a:layout_marginHorizontal="@dimen/player_secondary_spacing"
+        a:contentDescription="@string/sleep_timer.title"
+        app:icon="@drawable/ic_sleep_timer"
+        app:iconSize="@dimen/player_secondary_icon"
+        app:iconTint="?attr/colorOnSurfaceVariant" />
+
 </LinearLayout>
