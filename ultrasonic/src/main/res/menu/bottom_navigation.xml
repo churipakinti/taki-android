@@ -3,5 +3,4 @@
     <item android:id="@+id/homeFragment" android:icon="@drawable/ic_menu_home" android:title="@string/button_bar.home" />
     <item android:id="@+id/mainFragment" android:icon="@drawable/ic_menu_browse" android:title="@string/library_hub.bottom_label" />
     <item android:id="@+id/searchFragment" android:icon="@drawable/ic_menu_search" android:title="@string/button_bar.search" />
-    <item android:id="@+id/downloadsFragment" android:icon="@drawable/ic_menu_download" android:title="@string/menu.downloads" />
 </menu>

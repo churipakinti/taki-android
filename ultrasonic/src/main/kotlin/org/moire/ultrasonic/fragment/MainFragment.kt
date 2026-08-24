@@ -69,6 +69,9 @@ class MainFragment :
         view.findViewById<View>(R.id.library_playlists).setOnClickListener {
             findNavController().navigate(R.id.playlistsFragment)
         }
+        view.findViewById<View>(R.id.library_downloads).setOnClickListener {
+            findNavController().navigate(R.id.downloadsFragment)
+        }
         view.findViewById<View>(R.id.library_albums).setOnClickListener {
             findNavController().navigate(
                 NavigationGraphDirections.toAlbumList(AlbumListType.SORTED_BY_NAME)

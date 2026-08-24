@@ -66,10 +66,22 @@
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
             a:layout_height="52dp"
-            a:layout_marginBottom="20dp"
+            a:layout_marginBottom="8dp"
             a:gravity="start|center_vertical"
             a:text="@string/playlist.label"
             app:icon="@drawable/ic_menu_playlists"
+            app:iconGravity="textStart"
+            app:iconTint="@color/taki_gray" />
+
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_downloads"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="52dp"
+            a:layout_marginBottom="20dp"
+            a:gravity="start|center_vertical"
+            a:text="@string/menu.downloads"
+            app:icon="@drawable/ic_menu_download"
             app:iconGravity="textStart"
             app:iconTint="@color/taki_gray" />
 

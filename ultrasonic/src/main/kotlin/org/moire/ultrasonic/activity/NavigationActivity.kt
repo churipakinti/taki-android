@@ -159,8 +159,7 @@ class NavigationActivity : ScopeActivity() {
             setOf(
                 R.id.homeFragment,
                 R.id.mainFragment,
-                R.id.searchFragment,
-                R.id.downloadsFragment
+                R.id.searchFragment
             )
         )
 
@@ -168,8 +167,7 @@ class NavigationActivity : ScopeActivity() {
 
         // setupWithNavController() is kept only for its side effect of auto-syncing the
         // checked bottom nav item against exact destination-id matches (homeFragment,
-        // mainFragment, searchFragment, downloadsFragment) - its own click listener is
-        // replaced right below.
+        // mainFragment, searchFragment) - its own click listener is replaced right below.
         bottomNavigation?.setupWithNavController(navController)
 
         // A tab tap must always land on that tab's own root, never on whatever sub-screen
@@ -223,16 +221,19 @@ class NavigationActivity : ScopeActivity() {
             // trackCollectionFragment/artistDetailFragment used for album/artist/genre/playlist
             // browsing are reachable from both Home and Library depending on how the user got
             // there, so they're deliberately left alone rather than guessed at.
+            // Downloads moved from its own bottom-nav tab into a Library row (P2, see
+            // docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md); it and the downloaded-album detail
+            // screen it opens are reached only from Library now, so Library stays highlighted.
             val libraryOnlyDestination = isLibraryTrackCollection || destination.id in setOf(
                 R.id.playlistsFragment,
                 R.id.albumListFragment,
                 R.id.artistListFragment,
-                R.id.selectGenreFragment
+                R.id.selectGenreFragment,
+                R.id.downloadsFragment,
+                R.id.downloadedAlbumFragment
             )
             if (libraryOnlyDestination) {
                 bottomNavigation?.menu?.findItem(R.id.mainFragment)?.isChecked = true
-            } else if (destination.id == R.id.downloadedAlbumFragment) {
-                bottomNavigation?.menu?.findItem(R.id.downloadsFragment)?.isChecked = true
             }
             val usesContentHeader = destination.id in setOf(
                 R.id.homeFragment,
@@ -263,7 +264,8 @@ class NavigationActivity : ScopeActivity() {
                 R.id.selectGenreFragment,
                 R.id.serverSelectorFragment,
                 R.id.editServerFragment,
-                R.id.aboutFragment
+                R.id.aboutFragment,
+                R.id.downloadsFragment
             ) || isLibraryTrackCollection || isAlbumDetail ||
                 destination.id == R.id.settingsFragment ||
                 destination.id == R.id.equalizerFragment
@@ -301,7 +303,6 @@ class NavigationActivity : ScopeActivity() {
 
         rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
             invalidateOptionsMenu()
-            updateBottomNavigationAvailability()
         }
 
         // Setup app shortcuts on supported devices, but not on first start, when the server
@@ -353,7 +354,6 @@ class NavigationActivity : ScopeActivity() {
             Storage.checkForErrorsWithCustomRoot()
         }
 
-        updateBottomNavigationAvailability()
         // Lifecycle support's constructor registers some event receivers so it should be created early
         lifecycleSupport.onCreate()
 
@@ -600,10 +600,5 @@ class NavigationActivity : ScopeActivity() {
             showNowPlaying()
         }
         applyBottomInset()
-    }
-
-    private fun updateBottomNavigationAvailability() {
-        val isOnline = !ActiveServerProvider.isOffline()
-        bottomNavigation?.menu?.findItem(R.id.downloadsFragment)?.isVisible = isOnline
     }
 }
