@@ -3,14 +3,11 @@ package org.moire.ultrasonic.adapters
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.LayerDrawable
-import android.os.Build
-import android.view.MenuInflater
 import android.view.View
 import android.widget.Checkable
 import android.widget.CheckedTextView
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -247,8 +244,10 @@ class TrackViewHolder(val view: View) :
         star.isVisible = true
         updateRatingDisplay(track.userRating, track.starred)
 
+        // The 1-5 star rating popup (long-press) is a Subsonic/media-server power-user concept
+        // with no equivalent in mainstream streaming apps; only the tap-to-favorite heart stays.
+        // See docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.4.
         star.setOnClickListener { toggleHeart(track) }
-        star.setOnLongClickListener { view -> showRatingPopup(view, track) }
     }
 
     private fun toggleHeart(track: Track) {
@@ -257,33 +256,6 @@ class TrackViewHolder(val view: View) :
         RxBus.ratingSubmitter.onNext(
             RatingUpdate(track.id, HeartRating(track.starred))
         )
-    }
-
-    @Suppress("MagicNumber")
-    private fun showRatingPopup(view: View, track: Track): Boolean {
-        val popup = PopupMenu(view.context, view)
-        val inflater: MenuInflater = popup.menuInflater
-        inflater.inflate(R.menu.rating, popup.menu)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) popup.setForceShowIcon(true)
-
-        popup.setOnMenuItemClickListener {
-            val rating = when (it.itemId) {
-                R.id.popup_rate_1 -> 1
-                R.id.popup_rate_2 -> 2
-                R.id.popup_rate_3 -> 3
-                R.id.popup_rate_4 -> 4
-                R.id.popup_rate_5 -> 5
-                else -> 0
-            }
-            track.userRating = rating
-            updateRatingDisplay(track.userRating, track.starred)
-            RxBus.ratingSubmitter.onNext(
-                RatingUpdate(track.id, StarRating(5, rating.toFloat()))
-            )
-            true
-        }
-        popup.show()
-        return true
     }
 
     @Suppress("MagicNumber")

@@ -42,7 +42,6 @@ import androidx.core.view.isVisible
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.StarRating
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -130,7 +129,6 @@ class PlayerFragment :
     // Settings
     private var swipeDistance = 0
     private var swipeVelocity = 0
-    private var jukeboxAvailable = false
     private var isEqualizerAvailable = false
 
     // Detectors & Callbacks
@@ -470,17 +468,6 @@ class PlayerFragment :
             }
         }
 
-        // Query the Jukebox state in an IO Context. Uses mainScope (not a standalone
-        // scope) so the check is cancelled if the view dies before it completes, instead
-        // of leaking work past onDestroyView like the old dedicated ioScope did.
-        mainScope.launch(Dispatchers.IO + CommunicationError.getHandler(context)) {
-            try {
-                jukeboxAvailable = getMusicService().isJukeboxAvailable()
-            } catch (all: Exception) {
-                Timber.e(all)
-            }
-        }
-
         // Subscribe to change in command availability
         mediaPlayerManager.addListener(object : Player.Listener {
             override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
@@ -642,15 +629,16 @@ class PlayerFragment :
             screenOption?.setTitle(R.string.download_menu_screen_on)
         }
 
-        if (jukeboxOption != null) {
-            jukeboxOption.isEnabled = jukeboxAvailable
-            jukeboxOption.isVisible = jukeboxAvailable
-            if (mediaPlayerManager.isJukeboxEnabled) {
-                jukeboxOption.setTitle(R.string.download_menu_jukebox_off)
-            } else {
-                jukeboxOption.setTitle(R.string.download_menu_jukebox_on)
-            }
-        }
+        // Jukebox mode (remote playback through the library server's own speakers) is a
+        // Subsonic/Navidrome-specific concept with no equivalent in mainstream streaming apps.
+        // Keeping it as a manual toggle on the primary Now Playing screen would surface that
+        // infrastructure detail to every user whose account happens to have jukebox permission,
+        // not just the ones who asked for it. It stays reachable as an explicit opt-in via the
+        // "Jukebox by default" switch in a library's Advanced settings (EditServerFragment),
+        // which alone is enough to turn it on automatically -- see
+        // docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.4.
+        jukeboxOption?.isEnabled = false
+        jukeboxOption?.isVisible = false
     }
 
     private fun sleepTimerContentDescription(state: SleepTimerState): String =
@@ -688,28 +676,6 @@ class PlayerFragment :
         popup.menu.findItem(R.id.menu_lyrics)?.isVisible = !isOffline()
         popup.show()
         return popup
-    }
-
-    @Suppress("MagicNumber")
-    private fun showRatingPopup(track: Track) {
-        val popup = PopupMenu(requireContext(), playlistView)
-        popup.menuInflater.inflate(R.menu.rating, popup.menu)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) popup.setForceShowIcon(true)
-
-        popup.setOnMenuItemClickListener {
-            val rating = when (it.itemId) {
-                R.id.popup_rate_1 -> 1
-                R.id.popup_rate_2 -> 2
-                R.id.popup_rate_3 -> 3
-                R.id.popup_rate_4 -> 4
-                R.id.popup_rate_5 -> 5
-                else -> 0
-            }
-            track.userRating = rating
-            RxBus.ratingSubmitter.onNext(RatingUpdate(track.id, StarRating(5, rating.toFloat())))
-            true
-        }
-        popup.show()
     }
 
     private fun onContextMenuItemSelected(menuItem: MenuItem, item: MusicDirectory.Child): Boolean {
@@ -778,12 +744,6 @@ class PlayerFragment :
                 if (track == null) return false
                 track.starred = !track.starred
                 RxBus.ratingSubmitter.onNext(RatingUpdate(track.id, HeartRating(track.starred)))
-                return true
-            }
-
-            R.id.song_menu_rate -> {
-                if (track == null) return false
-                showRatingPopup(track)
                 return true
             }
 
