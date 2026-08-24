@@ -59,7 +59,6 @@ import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.RecentSearches
 import org.moire.ultrasonic.util.RefreshableFragment
 import org.moire.ultrasonic.util.Util
-import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 
 private const val LIVE_SEARCH_DEBOUNCE_MS = 300L
@@ -400,25 +399,28 @@ class SearchFragment :
         findNavController().navigate(action)
     }
 
-    private fun onSongSelected(song: Track, append: Boolean) {
-        if (!append) {
-            mediaPlayerManager.clear()
-        }
-        val targetIndex = mediaPlayerManager.mediaItemCount
+    /**
+     * Tapping a song in Search plays it immediately, the same as tapping a track row in an
+     * Album/Library list (TrackCollectionFragment.playFromHere) -- it previously appended the
+     * song to the end of the queue while still silently interrupting whatever was already
+     * playing, with a toast claiming it was just queued. Queueing next/last remains available
+     * via the long-press context menu's Play Next/Play Last actions. See
+     * docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md Priority 1.
+     */
+    private fun onSongSelected(song: Track) {
         mediaPlayerManager.addToPlaylist(
-            listOf(song),
+            songs = listOf(song),
             autoPlay = false,
             shuffle = false,
-            insertionMode = MediaPlayerManager.InsertionMode.APPEND,
-            startIndex = targetIndex
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = 0
         )
-        toast(resources.getQuantityString(R.plurals.n_songs_added_to_end, 1, 1))
     }
 
     private fun autoplay() {
         val firstSong = searchResult!!.songs.firstOrNull { !it.isVideo }
         if (firstSong != null) {
-            onSongSelected(firstSong, false)
+            onSongSelected(firstSong)
         } else if (searchResult!!.albums.isNotEmpty()) {
             onAlbumSelected(searchResult!!.albums[0], true)
         }
@@ -432,7 +434,7 @@ class SearchFragment :
                 onArtistSelected(item)
             }
 
-            is Track -> onSongSelected(item, true)
+            is Track -> onSongSelected(item)
 
             is Album -> {
                 onAlbumSelected(item, false)
