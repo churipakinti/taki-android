@@ -221,17 +221,20 @@ class MediaPlayerManager(
         }
 
         override fun onPlayerError(error: PlaybackException) {
+            // The user should see that something went wrong, not why (exception classes, HTTP
+            // codes, backend details stay in the log) -- previously only Jukebox errors got any
+            // feedback at all, and even that passed the raw Media3 error code as if it were a
+            // string resource id, which throws Resources.NotFoundException instead of showing a
+            // message. See docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md Priority 2.
             Timber.w(error.toString())
-            if (!isJukeboxEnabled) return
 
             mainScope.launch {
-                toast(
-                    error.errorCode,
-                    false,
-                    UApp.applicationContext()
-                )
+                toast(R.string.download_play_error, false, UApp.applicationContext())
             }
-            isJukeboxEnabled = false
+
+            if (isJukeboxEnabled) {
+                isJukeboxEnabled = false
+            }
         }
 
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {

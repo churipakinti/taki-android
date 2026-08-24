@@ -133,6 +133,7 @@
     <string name="download.menu_shuffle_off">Shuffle mode disabled</string>
     <string name="download.menu_favorite">Favorite</string>
     <string name="download.playerstate_loading">Buffering …</string>
+    <string name="download.play_error">Couldn\'t play this song.</string>
     <string name="download.playerstate_playing_shuffle">Playing shuffle</string>
     <string name="download.playlist_done">Playlist saved.</string>
     <string name="download.playlist_error">Failed to save playlist, please try later.</string>
