@@ -18,7 +18,7 @@ interface ServerSettingDao {
      *Inserts a new Server Setting to the table
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(vararg serverSetting: ServerSetting)
+    suspend fun insert(serverSetting: ServerSetting): Long
 
     /**
      * Deletes a Server Setting from the table

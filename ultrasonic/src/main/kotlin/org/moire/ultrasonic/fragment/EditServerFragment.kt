@@ -178,14 +178,22 @@ class EditServerFragment : Fragment() {
                 }
             }
         } else {
-            // Creating a new server
+            // Creating a new server: this is the first-connection screen, so keep it to
+            // address/username/password and a single Connect action. Collection name is
+            // derived from the URL host, and advanced options only appear when editing a
+            // saved library afterward.
             FragmentTitle.setTitle(this, R.string.server_editor_new_label)
             updateColor(null)
             currentServerSetting = ServerSetting()
+            configureOnboardingUi()
             saveButton!!.setOnClickListener {
                 if (getFields()) {
-                    serverSettingsModel.saveNewItem(currentServerSetting)
-                    findNavController().navigateUp()
+                    testConnection {
+                        serverSettingsModel.saveNewItem(currentServerSetting) { saved ->
+                            activeServerProvider.setActiveServerById(saved.id)
+                            findNavController().popBackStack(R.id.homeFragment, false)
+                        }
+                    }
                 }
             }
         }
@@ -361,6 +369,17 @@ class EditServerFragment : Fragment() {
         if (shouldExpand) toggleAdvancedSection(true)
     }
 
+    /**
+     * Hides fields that don't belong on the first-connection screen (Collection name,
+     * Advanced settings, the separate Test button) and turns Save into a single Connect action.
+     */
+    private fun configureOnboardingUi() {
+        serverNameEditText?.isVisible = false
+        advancedToggle?.isVisible = false
+        testButton?.isVisible = false
+        saveButton?.text = getString(R.string.server_editor_connect)
+    }
+
     private fun toggleAdvancedSection(expand: Boolean) {
         advancedExpanded = expand
         advancedGroup?.isVisible = expand
@@ -451,7 +470,7 @@ class EditServerFragment : Fragment() {
      * Tests if the network connection to the entered Server Settings can be made
      */
     @Suppress("TooGenericExceptionCaught")
-    private fun testConnection() {
+    private fun testConnection(onSuccess: (() -> Unit)? = null) {
         val testSetting = ServerSetting()
         showConnectionChecking()
 
@@ -472,6 +491,7 @@ class EditServerFragment : Fragment() {
                 currentServerSetting!!.jukeboxSupport = testSetting.jukeboxSupport
 
                 showConnectionSuccess(testSetting.jukeboxSupport)
+                onSuccess?.invoke()
             } catch (cancellationException: CancellationException) {
                 Timber.i(cancellationException)
             } catch (exception: Exception) {
@@ -505,7 +525,9 @@ class EditServerFragment : Fragment() {
 
         if (jukeboxSupported == false) {
             jukeboxDescriptionText?.text = getString(R.string.jukebox_unsupported)
-            toggleAdvancedSection(true)
+            // Advanced settings aren't shown on the first-connection screen; only expand
+            // them here when their toggle header is actually visible (i.e. editing a server).
+            if (advancedToggle?.isVisible == true) toggleAdvancedSection(true)
         } else {
             jukeboxDescriptionText?.text = getString(R.string.jukebox_summary_is_default)
         }

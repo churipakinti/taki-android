@@ -426,6 +426,7 @@
     <string name="server_editor.new_label">Add server</string>
     <string name="server_editor.leave_confirmation">Are you sure you want to leave and lose your changes?</string>
     <string name="server_editor.required">This field is required</string>
+    <string name="server_editor.connect">Connect</string>
     <string name="server_menu.edit">Edit</string>
     <string name="server_menu.delete">Delete</string>
     <string name="server_menu.move_up">Move up</string>

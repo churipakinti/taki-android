@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.ActiveServerProvider.Companion.OFFLINE_DB_ID
 import org.moire.ultrasonic.data.ServerSetting
@@ -120,15 +121,17 @@ class ServerSettingsModel(
     }
 
     /**
-     * Inserts a new Setting into the database
+     * Inserts a new Setting into the database.
+     * [onSaved] is invoked on the main thread with the persisted (now id-populated) Setting.
      */
-    fun saveNewItem(serverSetting: ServerSetting?) {
+    fun saveNewItem(serverSetting: ServerSetting?, onSaved: ((ServerSetting) -> Unit)? = null) {
         if (serverSetting == null) return
 
         appScope.launch {
             serverSetting.index = (repository.count() ?: 0) + 1
-            repository.insert(serverSetting)
+            serverSetting.id = repository.insert(serverSetting).toInt()
             Timber.d("saveNewItem saved server setting: $serverSetting")
+            if (onSaved != null) withContext(Dispatchers.Main) { onSaved(serverSetting) }
         }
     }
 
