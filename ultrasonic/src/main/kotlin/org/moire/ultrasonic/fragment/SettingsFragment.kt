@@ -129,6 +129,7 @@ class SettingsFragment :
         setupCacheLocationPreference()
         setupEqualizerPreference()
         setupClearDownloadsPreference()
+        setupAboutPreference()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -314,6 +315,15 @@ class SettingsFragment :
         equalizerPreference?.onPreferenceClickListener =
             Preference.OnPreferenceClickListener {
                 findNavController().navigate(R.id.toEqualizer)
+                true
+            }
+    }
+
+    private fun setupAboutPreference() {
+        val aboutPreference = findPreference<Preference>("about")
+        aboutPreference?.onPreferenceClickListener =
+            Preference.OnPreferenceClickListener {
+                findNavController().navigate(R.id.aboutFragment)
                 true
             }
     }
