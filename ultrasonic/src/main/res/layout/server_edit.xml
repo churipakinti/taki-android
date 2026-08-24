@@ -343,14 +343,16 @@
         <com.google.android.material.button.MaterialButton
             a:id="@+id/edit_save"
             a:layout_width="0dp"
-            a:layout_height="0dp"
+            a:layout_height="wrap_content"
             a:layout_marginStart="2dp"
+            a:layout_marginTop="8dp"
             a:layout_marginEnd="5dp"
             a:text="@string/common.save"
-            app:layout_constraintBottom_toBottomOf="@id/edit_test"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/edit_test"
-            app:layout_constraintTop_toTopOf="@id/edit_test" />
+            app:layout_constraintTop_toBottomOf="@id/edit_connection_status"
+            app:layout_constraintVertical_bias="1.0" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

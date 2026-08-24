@@ -320,7 +320,7 @@
     <string name="settings.clear_image_cache_confirm">Are you sure you want to delete the cached images?</string>
     <string name="settings.clear_image_cache_cleared">Image cache cleared</string>
     <string name="settings.clear_downloads">Clear All Downloads</string>
-    <string name="settings.clear_downloads_summary">Delete every downloaded and pinned song</string>
+    <string name="settings.clear_downloads_summary">Delete every downloaded song</string>
     <string name="settings.clear_downloads_confirm">Are you sure you want to delete every downloaded song? This can\'t be undone.</string>
     <string name="settings.download_transition">Show Now Playing on Play</string>
     <string name="settings.download_transition_summary">Switch to Now Playing after starting playback in media view</string>
@@ -410,7 +410,7 @@
     <string name="albumArt">Album artwork</string>
     <string name="common_multiple_years">Multiple Years</string>
     <string name="settings.show_confirmation_dialog">Show confirmation dialog</string>
-    <string name="settings.show_confirmation_dialog_summary">Displays a confirmation dialog before deleting or unpinning songs</string>
+    <string name="settings.show_confirmation_dialog_summary">Displays a confirmation dialog before deleting downloaded songs</string>
     <string name="settings.debug.title">Debug options</string>
     <string name="settings.debug.log_to_file">Write debug log to file</string>
     <string name="settings.debug.log_path">The log files are available at %1$s/%2$s</string>
