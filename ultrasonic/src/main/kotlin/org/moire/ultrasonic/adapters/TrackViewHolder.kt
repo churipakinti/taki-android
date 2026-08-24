@@ -318,7 +318,15 @@ class TrackViewHolder(val view: View) :
             }
 
             DownloadState.FAILED -> {
-                showStatusImage(R.drawable.ic_baseline_error)
+                // Icon alone left the user with no explanation and nothing to do about it. Tap
+                // shows why (kept generic on purpose -- see download.download_error); retrying
+                // is already possible via the row's own "Download" menu action once state is
+                // FAILED (Utils.kt's canDownload). See docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md
+                // Priority 4.
+                val message = statusImage.context.getString(R.string.download_download_error)
+                showStatusImage(R.drawable.ic_baseline_error, contentDescription = message) {
+                    Util.toast(message, statusImage.context)
+                }
             }
 
             DownloadState.DOWNLOADING -> {
@@ -339,7 +347,11 @@ class TrackViewHolder(val view: View) :
         }
     }
 
-    private fun showStatusImage(image: Int?) {
+    private fun showStatusImage(
+        image: Int?,
+        contentDescription: String? = null,
+        onClick: (() -> Unit)? = null
+    ) {
         progressIndicator.isGone = true
         statusImage.isVisible = true
         if (image != null) {
@@ -347,6 +359,10 @@ class TrackViewHolder(val view: View) :
         } else {
             statusImage.setImageDrawable(null)
         }
+        // Recycled rows must not keep a previous track's description/click behavior.
+        statusImage.contentDescription = contentDescription
+        statusImage.isClickable = onClick != null
+        statusImage.setOnClickListener { onClick?.invoke() }
     }
 
     private fun showIndefiniteProgress() {
