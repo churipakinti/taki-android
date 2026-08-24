@@ -84,7 +84,9 @@ object CommunicationError {
         } else if (error is SubsonicRESTException) {
             return error.getLocalizedErrorMessage(context)
         }
-        val message = error.message
-        return message ?: error.javaClass.simpleName
+        // Anything else is a raw exception (e.g. MalformedURLException, ConnectException) whose
+        // message is a protocol/implementation detail, not something a non-technical user should
+        // see. It's already logged via Timber above; show a generic message here instead.
+        return context.resources.getString(R.string.background_task_unknown_error)
     }
 }
