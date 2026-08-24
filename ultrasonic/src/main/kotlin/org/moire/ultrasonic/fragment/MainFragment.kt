@@ -25,7 +25,6 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.data.ActiveServerProvider.Companion.OFFLINE_DB_ID
 import org.moire.ultrasonic.util.CollectionResolver
 import org.moire.ultrasonic.view.SortOrder
 import org.moire.ultrasonic.view.ViewCapabilities
@@ -49,12 +48,12 @@ class MainFragment :
         val manageButton = view.findViewById<com.google.android.material.button.MaterialButton>(
             R.id.library_manage_button
         )
+        // The Offline pseudo-library's own name is "Offline" (see ActiveServerProvider.OFFLINE_DB),
+        // matching the library selector screen -- previously this showed "Downloaded music"
+        // instead, a third term for the same state alongside "Offline"/"Offline Media". See
+        // docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md Priority 3.1.
         val activeCollection = activeServerProvider.getActiveServer()
-        manageButton.text = if (activeCollection.id == OFFLINE_DB_ID) {
-            getString(R.string.library_downloaded_music)
-        } else {
-            activeCollection.name
-        }
+        manageButton.text = activeCollection.name
         manageButton.setOnClickListener {
             (activity as? NavigationActivity)?.showLibraryHub(it)
         }

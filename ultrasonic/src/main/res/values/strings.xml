@@ -9,7 +9,6 @@
     <string name="library_hub.bottom_label">Library</string>
     <string name="library.your_music">Your music</string>
     <string name="library.collection">Collection</string>
-    <string name="library.downloaded_music">Downloaded music</string>
     <string name="library.liked_songs">Liked Songs</string>
     <!-- "Box Sets" deliberately avoids the word "Collection" - library.collection above already
          means something else (the server/library collection selector), not box sets/multi-album
@@ -131,7 +130,7 @@
     <string name="download.menu_shuffle">Shuffle</string>
     <string name="download.menu_shuffle_on">Shuffle mode enabled</string>
     <string name="download.menu_shuffle_off">Shuffle mode disabled</string>
-    <string name="download.menu_favorite">Favorite</string>
+    <string name="download.menu_favorite">Like</string>
     <string name="download.playerstate_loading">Buffering …</string>
     <string name="download.play_error">Couldn\'t play this song.</string>
     <string name="download.download_error">Couldn\'t download this song. Try again.</string>
@@ -197,7 +196,7 @@
     <string name="main.albums_newest">Recently Added</string>
     <string name="main.albums_random">Random</string>
     <string name="main.albums_recent">Recently Played</string>
-    <string name="main.albums_starred">Starred</string>
+    <string name="main.albums_starred">Liked Albums</string>
     <string name="main.albums_by_year">Chronological</string>
     <string name="main.albums_title">Albums</string>
     <string name="main.artists_alphaByName">Name</string>
@@ -368,7 +367,7 @@
     <string name="settings.use_id3">Browse Using ID3 Tags</string>
     <string name="settings.use_id3_summary">Use ID3 tag methods instead of file system based methods</string>
     <string name="settings.use_id3_offline">Use ID3 method also when offline</string>
-    <string name="settings.use_id3_offline_summary">If you enable this setting, only downloaded music with the required metadata will be shown. You can toggle between Pin and Save mode to download any missing metadata.</string>
+    <string name="settings.use_id3_offline_summary">If you enable this setting, only downloaded music with the required metadata will be shown. Download any missing tracks again to include their metadata.</string>
     <string name="main.video" tools:ignore="UnusedResources">Video</string>
     <string name="settings.wifi_required_summary">Only download media on unmetered connections</string>
     <string name="settings.wifi_required_title">Download on Wi-Fi only</string>
@@ -383,7 +382,7 @@
     <string name="share_set_share_options">Set Share Options</string>
     <string name="share_on_server">Create share</string>
     <string name="no_expiration">No Expiration</string>
-    <string name="download.menu_star">Star</string>
+    <string name="download.menu_star">Like</string>
     <string name="download.menu_clear_playlist">Clear Playlist</string>
     <string name="button_bar.shares">Shares</string>
     <string name="select_share.empty">No shares available</string>
