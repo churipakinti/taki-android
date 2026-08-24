@@ -11,12 +11,6 @@
         android:id="@+id/playlist_menu_play_shuffled"
         android:title="@string/common.play_shuffled"/>
     <item
-        android:id="@+id/playlist_menu_pin"
-        android:title="@string/common.pin"/>
-    <item
-        android:id="@+id/playlist_menu_unpin"
-        android:title="@string/common.unpin"/>
-    <item
         android:id="@+id/playlist_menu_download"
         android:title="@string/common.download"/>
     <item

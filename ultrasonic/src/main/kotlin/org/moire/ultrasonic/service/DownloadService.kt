@@ -430,47 +430,12 @@ class DownloadService :
         }
 
         @Synchronized
-        fun unpin(tracks: List<Track>) {
-            tracks.forEach(::unpin)
-        }
-
-        @Synchronized
         fun delete(tracks: List<Track>) {
             tracks.forEach(::delete)
         }
 
-        suspend fun unpinAsync(tracks: List<Track>) {
-            tracks.forEach { unpinAsync(it) }
-        }
-
         suspend fun deleteAsync(tracks: List<Track>) {
             tracks.forEach { deleteAsync(it) }
-        }
-
-        private fun unpin(track: Track) {
-            CoroutineScope(Dispatchers.IO).launch {
-                unpinAsync(track)
-            }
-        }
-
-        private suspend fun unpinAsync(track: Track) {
-            withContext(Dispatchers.IO) {
-                // Update Pinned flag of items in progress
-                downloadQueue.get(track.id)?.pinned = false
-                activeDownloads[track.id]?.downloadTrack?.pinned = false
-                failedList[track.id]?.pinned = false
-
-                val pinnedFile = track.getPinnedFile()
-                if (!Storage.isPathExists(pinnedFile)) return@withContext
-                val file = Storage.getFromPath(track.getPinnedFile()) ?: return@withContext
-                try {
-                    Storage.rename(file, track.getCompleteFile())
-                } catch (ignored: FileAlreadyExistsException) {
-                    // Play console has revealed a crash when for some reason both files exist
-                    Storage.delete(file.path)
-                }
-                postState(track, DownloadState.DONE)
-            }
         }
 
         @Suppress("ReturnCount")

@@ -223,7 +223,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     onShuffle = { playAll(shuffle = true) },
                     trailingActionIcon = R.drawable.ic_menu_download,
                     trailingActionDescription = R.string.album_download_description,
-                    onTrailingAction = { downloadSelectedOrAllTracks(false) },
+                    onTrailingAction = { downloadSelectedOrAllTracks() },
                     onInfoAction = ::showAlbumInfo
                 )
             )
@@ -455,7 +455,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         addPlaylistButton = view.findViewById(R.id.select_album_add_playlist)
 
         downloadButton?.setOnClickListener {
-            downloadSelectedOrAllTracks(false)
+            downloadSelectedOrAllTracks()
         }
 
         addPlaylistButton?.setOnClickListener {
@@ -551,9 +551,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         navigateToCurrent()
     }
 
-    private fun downloadSelectedOrAllTracks(save: Boolean) {
+    private fun downloadSelectedOrAllTracks() {
         DownloadUtil.justDownload(
-            action = if (save) DownloadAction.PIN else DownloadAction.DOWNLOAD,
+            action = DownloadAction.DOWNLOAD,
             fragment = this,
             tracks = getSelectedOrAllTracks()
         )
@@ -658,7 +658,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return
 
         when (bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)) {
-            getString(R.string.common_download) -> downloadSelectedOrAllTracks(false)
+            getString(R.string.common_download) -> downloadSelectedOrAllTracks()
             getString(R.string.playlist_rename_action) -> showRenamePlaylistDialog()
             getString(R.string.common_delete) -> confirmDeletePlaylist()
         }

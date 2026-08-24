@@ -39,21 +39,16 @@ object DownloadUtil {
             val tracksToDownload: List<Track> = tracks
                 ?: getTracksFromServerAsync(isArtist, id!!, isDirectory, name, isShare)
 
-            // If we are just downloading tracks we don't need to add them to the controller
+            // If we are just downloading tracks we don't need to add them to the controller.
+            // "Download" always saves permanently (previously the separate "Pin" behavior) --
+            // there is no user-facing distinction between a cache-evictable and a permanent
+            // download; see docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.3.
             when (action) {
                 DownloadAction.DOWNLOAD -> DownloadService.downloadAsync(
-                    tracksToDownload,
-                    save = false,
-                    updateSaveFlag = true
-                )
-
-                DownloadAction.PIN -> DownloadService.downloadAsync(
                     tracksToDownload,
                     save = true,
                     updateSaveFlag = true
                 )
-
-                DownloadAction.UNPIN -> DownloadService.unpinAsync(tracksToDownload)
 
                 DownloadAction.DELETE -> DownloadService.deleteAsync(tracksToDownload)
             }
@@ -159,22 +154,6 @@ object DownloadUtil {
             tracksToDownload.size
         )
 
-        DownloadAction.UNPIN -> {
-            fragment.resources.getQuantityString(
-                R.plurals.n_songs_unpinned,
-                tracksToDownload.size,
-                tracksToDownload.size
-            )
-        }
-
-        DownloadAction.PIN -> {
-            fragment.resources.getQuantityString(
-                R.plurals.n_songs_pinned,
-                tracksToDownload.size,
-                tracksToDownload.size
-            )
-        }
-
         DownloadAction.DELETE -> {
             fragment.resources.getQuantityString(
                 R.plurals.n_songs_deleted,
@@ -187,7 +166,5 @@ object DownloadUtil {
 
 enum class DownloadAction {
     DOWNLOAD,
-    PIN,
-    UNPIN,
     DELETE
 }

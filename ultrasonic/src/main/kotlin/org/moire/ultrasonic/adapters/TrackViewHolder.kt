@@ -339,12 +339,10 @@ class TrackViewHolder(val view: View) :
         cachedStatus = status
 
         when (status) {
-            DownloadState.DONE -> {
+            // DONE and PINNED both just mean "downloaded" to the user -- the cache-vs-permanent
+            // distinction is kept internal (see docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.3).
+            DownloadState.DONE, DownloadState.PINNED -> {
                 showStatusImage(R.drawable.ic_downloaded_circle)
-            }
-
-            DownloadState.PINNED -> {
-                showStatusImage(R.drawable.ic_menu_pin)
             }
 
             DownloadState.FAILED -> {

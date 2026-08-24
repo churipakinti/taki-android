@@ -28,22 +28,19 @@ object Utils {
         val removeFromPlaylistMenuItem = popup.menu.findItem(R.id.song_menu_remove_from_playlist)
         removeFromPlaylistMenuItem?.isVisible = !ActiveServerProvider.isOffline()
 
-        // Pin/Unpin/Download/Delete only make sense for the states they actually apply to --
-        // e.g. "Delete" (deletes the local downloaded copy) showed up even for a track that was
+        // Download/Delete only make sense for the states they actually apply to -- e.g.
+        // "Delete" (removes the local downloaded copy) showed up even for a track that was
         // never downloaded. UNKNOWN (state not resolved yet, or a menu with no per-track state
-        // to give) hides all four rather than guessing. See TAKI_BETA_COMPLETION_PLAN.md P1.
-        val isPinned = downloadState == DownloadState.PINNED
-        val isDownloadedOrPinned = downloadState == DownloadState.DONE || isPinned
+        // to give) hides both rather than guessing. See
+        // docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.3.
+        val isDownloaded = downloadState == DownloadState.DONE || downloadState == DownloadState.PINNED
         val canDownload = downloadState == DownloadState.IDLE ||
             downloadState == DownloadState.FAILED ||
             downloadState == DownloadState.CANCELLED
 
         popup.menu.findItem(R.id.song_menu_download)?.isVisible =
             canDownload && !ActiveServerProvider.isOffline()
-        popup.menu.findItem(R.id.song_menu_pin)?.isVisible =
-            !isPinned && downloadState != DownloadState.UNKNOWN && !ActiveServerProvider.isOffline()
-        popup.menu.findItem(R.id.song_menu_unpin)?.isVisible = isPinned
-        popup.menu.findItem(R.id.song_menu_delete)?.isVisible = isDownloadedOrPinned
+        popup.menu.findItem(R.id.song_menu_delete)?.isVisible = isDownloaded
 
         popup.show()
         return popup

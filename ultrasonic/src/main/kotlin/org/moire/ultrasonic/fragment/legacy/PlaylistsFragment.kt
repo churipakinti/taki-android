@@ -234,28 +234,6 @@ class PlaylistsFragment :
         val playlist = playlistsView?.getItemAtPosition(info.position) as? Playlist
             ?: return super.onContextItemSelected(menuItem)
         when (menuItem.itemId) {
-            R.id.playlist_menu_pin -> {
-                DownloadUtil.justDownload(
-                    action = DownloadAction.PIN,
-                    fragment = this,
-                    id = playlist.id,
-                    name = playlist.name,
-                    isShare = false,
-                    isDirectory = false
-                )
-            }
-
-            R.id.playlist_menu_unpin -> {
-                DownloadUtil.justDownload(
-                    action = DownloadAction.UNPIN,
-                    fragment = this,
-                    id = playlist.id,
-                    name = playlist.name,
-                    isShare = false,
-                    isDirectory = false
-                )
-            }
-
             R.id.playlist_menu_download -> {
                 handleDownloadAction(playlist)
             }

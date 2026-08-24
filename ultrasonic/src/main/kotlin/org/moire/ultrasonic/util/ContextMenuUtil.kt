@@ -95,22 +95,6 @@ object ContextMenuUtil {
                 }
             }
 
-            R.id.menu_pin ->
-                DownloadUtil.justDownload(
-                    action = DownloadAction.PIN,
-                    fragment = fragment,
-                    id = item.id,
-                    isArtist = isArtist
-                )
-
-            R.id.menu_unpin ->
-                DownloadUtil.justDownload(
-                    action = DownloadAction.UNPIN,
-                    fragment = fragment,
-                    id = item.id,
-                    isArtist = isArtist
-                )
-
             R.id.menu_download ->
                 DownloadUtil.justDownload(
                     action = DownloadAction.DOWNLOAD,
@@ -183,22 +167,6 @@ object ContextMenuUtil {
                     )
                     fragment.navigateToCurrent()
                 }
-            }
-
-            R.id.song_menu_pin -> {
-                DownloadUtil.justDownload(
-                    action = DownloadAction.PIN,
-                    fragment = fragment,
-                    tracks = tracks
-                )
-            }
-
-            R.id.song_menu_unpin -> {
-                DownloadUtil.justDownload(
-                    action = DownloadAction.UNPIN,
-                    fragment = fragment,
-                    tracks = tracks
-                )
             }
 
             R.id.song_menu_download -> {

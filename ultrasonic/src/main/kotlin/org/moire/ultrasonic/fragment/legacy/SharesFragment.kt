@@ -130,28 +130,6 @@ class SharesFragment :
         val info = menuItem.menuInfo as AdapterView.AdapterContextMenuInfo
         val share = sharesListView!!.getItemAtPosition(info.position) as Share
         when (menuItem.itemId) {
-            R.id.share_menu_pin -> {
-                DownloadUtil.justDownload(
-                    action = DownloadAction.PIN,
-                    fragment = this,
-                    id = share.id,
-                    name = share.name,
-                    isShare = true,
-                    isDirectory = false
-                )
-            }
-
-            R.id.share_menu_unpin -> {
-                DownloadUtil.justDownload(
-                    action = DownloadAction.UNPIN,
-                    fragment = this,
-                    id = share.id,
-                    name = share.name,
-                    isShare = true,
-                    isDirectory = false
-                )
-            }
-
             R.id.share_menu_download -> {
                 DownloadUtil.justDownload(
                     action = DownloadAction.DOWNLOAD,

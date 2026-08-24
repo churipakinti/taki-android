@@ -99,7 +99,6 @@
     <string name="common.multiple_genres">Multiple Genres</string>
     <string name="common.name">Name</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Pin</string>
     <string name="common.play_last">Play Last</string>
     <string name="common.play_next">Play Next</string>
     <string name="common.play_now">Play Now</string>
@@ -108,7 +107,6 @@
     <string name="common.public">Public</string>
     <string name="common.save">Save</string>
     <string name="common.title">Title</string>
-    <string name="common.unpin">Unpin</string>
     <string name="common.various_artists">Various Artists</string>
     <string name="delete_playlist">Do you want to delete %1$s</string>
     <string name="download.empty">Nothing is downloading</string>
@@ -463,17 +461,9 @@
         <item quantity="one">%d playlist</item>
         <item quantity="other">%d playlists</item>
     </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d song selected to be pinned</item>
-        <item quantity="other">%d songs selected to be pinned</item>
-    </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d song selected to be downloaded</item>
         <item quantity="other">%d songs selected to be downloaded</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d song unpinned</item>
-        <item quantity="other">%d songs unpinned</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="one">%d song deleted</item>

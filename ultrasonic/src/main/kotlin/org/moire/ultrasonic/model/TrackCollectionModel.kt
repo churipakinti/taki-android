@@ -386,22 +386,14 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
     @Synchronized
     fun calculateButtonState(selection: List<Track>, onComplete: (ButtonStates) -> Unit) {
         val enabled = selection.isNotEmpty()
-        var unpinEnabled = false
         var deleteEnabled = false
         var downloadEnabled = false
-        var pinnedCount = 0
 
         viewModelScope.launch(Dispatchers.IO) {
             for (song in selection) {
                 when (DownloadService.getDownloadState(song)) {
-                    DownloadState.DONE -> {
+                    DownloadState.DONE, DownloadState.PINNED -> {
                         deleteEnabled = true
-                    }
-
-                    DownloadState.PINNED -> {
-                        deleteEnabled = true
-                        pinnedCount++
-                        unpinEnabled = true
                     }
 
                     DownloadState.IDLE, DownloadState.FAILED -> {
@@ -412,13 +404,9 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
                 }
             }
         }.invokeOnCompletion {
-            val pinEnabled = selection.size > pinnedCount
-
             onComplete(
                 ButtonStates(
                     all = enabled,
-                    pin = pinEnabled,
-                    unpin = unpinEnabled,
                     delete = deleteEnabled,
                     download = downloadEnabled
                 )
@@ -429,8 +417,6 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
     companion object {
         data class ButtonStates(
             val all: Boolean,
-            val pin: Boolean,
-            val unpin: Boolean,
             val delete: Boolean,
             val download: Boolean
         )
