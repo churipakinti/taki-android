@@ -125,7 +125,7 @@
     <string name="main.albums_newest">Añadidas recientemente</string>
     <string name="main.albums_random">Aleatorio</string>
     <string name="main.albums_recent">Reproducidas recientemente</string>
-    <string name="main.albums_starred">Número de estrellas</string>
+    <string name="main.albums_starred">Favoritos</string>
     <string name="main.albums_by_year">Cronológico</string>
     <string name="main.albums_title">Álbumes</string>
     <string name="main.artists_title">Artistas</string>
