@@ -148,12 +148,6 @@ object Settings {
 
     const val SHOW_NOW_PLAYING = true
 
-    @JvmStatic
-    var shouldTransitionOnPlayback by BooleanSetting(
-        getKey(R.string.setting_key_download_transition),
-        true
-    )
-
     // No per-server capability flag exists for scrobble support (unlike chat/bookmarks/shares),
     // so there's nothing to auto-detect -- always attempt it; a server with no scrobble target
     // configured (e.g. no Last.fm link) just no-ops.

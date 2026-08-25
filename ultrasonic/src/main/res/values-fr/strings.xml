@@ -270,8 +270,6 @@
     <string name="jukebox">Jukebox</string>
     <string name="download.menu_shuffle_on">Mode aléatoire activé</string>
     <string name="download.menu_shuffle_off">Mode aléatoire désactivé</string>
-    <string name="settings.download_transition">Afficher À l\'écoute sur Lecture</string>
-    <string name="settings.download_transition_summary">Passage à la lecture en cours après le démarrage de la lecture dans l\'affichage multimédia</string>
     <string name="list_view">Liste</string>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d chanson sélectionnée pour téléchargement</item>

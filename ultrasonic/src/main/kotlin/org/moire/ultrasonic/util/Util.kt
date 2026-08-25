@@ -47,7 +47,6 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
-import androidx.navigation.fragment.findNavController
 import java.io.Closeable
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
@@ -783,10 +782,4 @@ object Util {
         .apply { theme.resolveAttribute(attrRes, this, true) }
         .data
 
-    fun Fragment.navigateToCurrent() {
-        if (Settings.shouldTransitionOnPlayback) {
-            findNavController().popBackStack(R.id.playerFragment, true)
-            findNavController().navigate(R.id.playerFragment)
-        }
-    }
 }

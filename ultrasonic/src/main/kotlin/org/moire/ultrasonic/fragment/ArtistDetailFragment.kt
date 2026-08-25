@@ -53,7 +53,6 @@ import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.RefreshableFragment
-import org.moire.ultrasonic.util.Util.navigateToCurrent
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 
@@ -278,7 +277,6 @@ class ArtistDetailFragment :
                 shuffle = false,
                 insertionMode = MediaPlayerManager.InsertionMode.CLEAR
             )
-            navigateToCurrent()
         }
     }
 

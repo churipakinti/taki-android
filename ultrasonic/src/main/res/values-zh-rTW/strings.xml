@@ -166,8 +166,6 @@
     <string name="select_artist.all_folders">所有資料夾</string>
     <string name="select_artist.folder">選擇資料夾</string>
     <string name="select_playlist.empty">伺服器上沒有已保存的播放清單</string>
-    <string name="settings.download_transition">播放時顯示正在播放介面</string>
-    <string name="settings.download_transition_summary">在媒體庫介面開始播放後切換到正在播放介面</string>
     <string name="settings.share_minutes">分鐘</string>
     <string name="util.zero_time">0:00</string>
     <string name="settings.share_hours">小時</string>

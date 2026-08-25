@@ -119,8 +119,6 @@
     <string name="settings.cache_size_9000">9 GB</string>
     <string name="settings.cache_size_unlimited">無制限</string>
     <string name="settings.cache_title">音楽キャッシュ</string>
-    <string name="settings.download_transition">再生時に、再生中画面を表示</string>
-    <string name="settings.download_transition_summary">メディア一覧表示から再生を開始した場合、自動で再生中画面に切り替えます</string>
     <string name="settings.invalid_url">有効なURLを指定してください。</string>
     <string name="settings.network_title">ネットワーク</string>
     <string name="settings.override_language">言語を指定</string>

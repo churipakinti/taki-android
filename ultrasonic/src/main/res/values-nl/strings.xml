@@ -159,8 +159,6 @@
     <string name="settings.cache_size_unlimited">Ongelimiteerd</string>
     <string name="settings.cache_title">Muziekcache</string>
     <string name="settings.clear_search_history">Zoekgeschiedenis wissen</string>
-    <string name="settings.download_transition">Nu aan het afspelen tonen op afspeelscherm</string>
-    <string name="settings.download_transition_summary">Toon ‘Nu aan het afspelen’ in de mediaweergave</string>
     <string name="settings.invalid_url">Geef een geldige URL op.</string>
     <string name="settings.max_bitrate_mobile">Max. bitsnelheid over mobiel internet</string>
     <string name="settings.max_bitrate_wifi">Max. bitsnelheid via wifi</string>

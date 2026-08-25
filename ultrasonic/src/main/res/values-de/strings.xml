@@ -157,8 +157,6 @@
     <string name="settings.cache_size_unlimited">Unbegrenzt</string>
     <string name="settings.cache_title">Musik Cache</string>
     <string name="settings.clear_search_history">Suchverlauf löschen</string>
-    <string name="settings.download_transition">Zeige Aktuelle Wiedergabe bei Play</string>
-    <string name="settings.download_transition_summary">Zeige Aktuelle Wiedergabe nach dem Start der Wiedergabe in der Medienansicht</string>
     <string name="settings.invalid_url">Bitte eine gültige URL angeben.</string>
     <string name="settings.max_bitrate_mobile">Max. Bitrate - Mobil</string>
     <string name="settings.max_bitrate_wifi">Max. Bitrate - WLAN</string>

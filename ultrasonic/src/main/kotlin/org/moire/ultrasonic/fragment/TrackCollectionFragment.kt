@@ -77,7 +77,6 @@ import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.PlaylistUtil
 import org.moire.ultrasonic.util.Settings
-import org.moire.ultrasonic.util.Util.navigateToCurrent
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 import org.moire.ultrasonic.view.FilterButtonBar
@@ -519,9 +518,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 autoPlay = (insertionMode != MediaPlayerManager.InsertionMode.APPEND),
                 shuffle = shuffle
             )
-            if (insertionMode == MediaPlayerManager.InsertionMode.CLEAR) {
-                navigateToCurrent()
-            }
         }
     }
     /**
@@ -548,7 +544,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             shuffle = false,
             insertionMode = MediaPlayerManager.InsertionMode.CLEAR
         )
-        navigateToCurrent()
     }
 
     private fun downloadSelectedOrAllTracks() {

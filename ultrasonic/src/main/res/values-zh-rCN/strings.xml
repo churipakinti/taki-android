@@ -144,7 +144,6 @@
     <string name="settings.cache_size_unlimited">不限制</string>
     <string name="settings.cache_title">音乐缓存</string>
     <string name="settings.clear_search_history">清空搜索历史</string>
-    <string name="settings.download_transition">播放时显示正在播放界面</string>
     <string name="settings.invalid_url">请填写有效的 URL。</string>
     <string name="settings.max_bitrate_mobile">最大比特率 - 移动网络</string>
     <string name="settings.max_bitrate_wifi">最大比特率 - WIFI</string>
@@ -255,7 +254,6 @@
     <string name="language.zh_TW">繁体中文（中国台湾）</string>
     <string name="language.en">英语</string>
     <string name="main.albums_by_year">按时间排序</string>
-    <string name="settings.download_transition_summary">在媒体库中开始播放后切换到正在播放页面</string>
     <string name="settings.override_language">覆盖当前语言</string>
     <string name="settings.override_language_summary">更改 App 语言后需要重启</string>
     <string name="settings.summary.force_plain_text_password">这会强制应用程序始终以未加密的方式发送密码。如果此 Subsonic 服务器不支持新的用户身份验证 API，则该选项非常有用。</string>

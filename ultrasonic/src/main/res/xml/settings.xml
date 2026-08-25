@@ -9,12 +9,6 @@
         a:title="@string/settings.now_playing_title"
         a:summary="@string/settings.now_playing_summary"
         app:iconSpaceReserved="false">
-        <SwitchPreferenceCompat
-            a:defaultValue="true"
-            a:key="@string/setting_key.download_transition"
-            a:summary="@string/settings.download_transition_summary"
-            a:title="@string/settings.download_transition"
-            app:iconSpaceReserved="false"/>
         <Preference
             a:key="@string/setting_key.equalizer"
             a:persistent="false"

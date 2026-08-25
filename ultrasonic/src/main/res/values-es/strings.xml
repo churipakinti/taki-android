@@ -216,8 +216,6 @@
     <string name="settings.cache_size_unlimited">Ilimitado</string>
     <string name="settings.cache_title">Caché de música</string>
     <string name="settings.clear_search_history">Borrar el historial de búsqueda</string>
-    <string name="settings.download_transition">Mostrar reproduciendo ahora al reproducir</string>
-    <string name="settings.download_transition_summary">Cambiar a reproduciendo ahora después de iniciar la reproducción en la vista multimedia</string>
     <string name="settings.invalid_url">Por favor especifica un URL válido.</string>
     <string name="settings.max_bitrate_mobile">Calidad por datos móviles</string>
     <string name="settings.max_bitrate_wifi">Calidad por Wi-Fi</string>

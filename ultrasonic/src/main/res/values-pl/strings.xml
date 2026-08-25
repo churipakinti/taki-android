@@ -248,7 +248,6 @@
     <string name="common.title">Tytuł</string>
     <string name="albumArt">Okładka albumu</string>
     <string name="common.album">Album</string>
-    <string name="settings.download_transition">Pokaż Obecnie odtwarzane po kliknięciu przycisku Odtwarzaj</string>
     <string name="language.es">Hiszpański</string>
     <string name="settings.override_language_summary">Wymagane jest ponowne uruchomienie aplikacji po zmianie języka</string>
     <string name="foreground_exception_title">Nie można wznowić odtwarzania</string>
@@ -268,7 +267,6 @@
     <string name="jukebox">Jukebox</string>
     <string name="select_album.no_network">Uwaga: Brak dostępnych sieci do użycia.
 \n Jeżeli używasz danych mobilnych, potrzebne może być włączenie płatnych połączeń w ustawieniach.</string>
-    <string name="settings.download_transition_summary">Przełącz na Obecnie odtwarzane po rozpoczęciu odtwarzania w widoku multimediów</string>
     <string name="settings.use_id3_offline_summary">Jeśli włączysz to ustawienie, będzie ono wyświetlać tylko muzykę pobraną za pomocą Taki w wersji 4.0 lub nowszej. Wcześniejsze pobrane pliki nie zawierają wymaganych metadanych. Możesz przełączać się między trybami Przypinania i Zapisywania, aby wyzwolić pobieranie brakujących metadanych.</string>
     <string name="settings.wifi_required_summary">Pobieraj tylko podczas połączeń niepłatnych</string>
     <string name="settings.show_confirmation_dialog">Pokaż okno potwierdzające</string>

@@ -157,8 +157,6 @@
     <string name="settings.cache_size_unlimited">Ilimitado</string>
     <string name="settings.cache_title">Cache de Música</string>
     <string name="settings.clear_search_history">Limpar Histórico de Pesquisas</string>
-    <string name="settings.download_transition">Mostrar Tocando Agora ao Reproduzir</string>
-    <string name="settings.download_transition_summary">Alternar para Tocando Agora após iniciar o playback na visualização de mídia </string>
     <string name="settings.invalid_url">Especifique uma URL válida.</string>
     <string name="settings.max_bitrate_mobile">Taxa Máxima de Bits - Celular</string>
     <string name="settings.max_bitrate_wifi">Taxa Máxima de Bits - Wi-Fi</string>

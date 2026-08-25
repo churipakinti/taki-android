@@ -463,10 +463,12 @@ class NavigationActivity : ScopeActivity() {
                 insertionMode = MediaPlayerManager.InsertionMode.CLEAR
             )
 
-            if (Settings.shouldTransitionOnPlayback) {
-                currentFragment.findNavController().popBackStack(R.id.playerFragment, true)
-                currentFragment.findNavController().navigate(R.id.playerFragment)
-            }
+            // Unlike in-app browsing actions, this is only ever reached from the "Play Random
+            // Songs" launcher shortcut (see onNewIntent() above) -- there's no browsing screen
+            // behind it to stay on, so always transition to Now Playing. See
+            // docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 4.2.
+            currentFragment.findNavController().popBackStack(R.id.playerFragment, true)
+            currentFragment.findNavController().navigate(R.id.playerFragment)
         }
     }
 

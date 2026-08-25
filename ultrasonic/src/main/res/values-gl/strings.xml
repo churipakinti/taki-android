@@ -143,8 +143,6 @@
     <string name="settings.cache_size_8000">8 GB</string>
     <string name="settings.cache_size_9000">9 GB</string>
     <string name="settings.cache_title">Caché de música</string>
-    <string name="settings.download_transition">Mostrar A Reproducir cando estea reproducindo</string>
-    <string name="settings.download_transition_summary">Cambiar a A Reproducir despois de iniciar a reprodución no explorador multimedia</string>
     <string name="settings.invalid_url">Indica un URL válido.</string>
     <string name="settings.max_bitrate_mobile">Taxa de bits Máx - Móbil</string>
     <string name="settings.max_bitrate_wifi">Taxa de bits Máx - Wi-Fi</string>

@@ -19,7 +19,6 @@ import org.moire.ultrasonic.service.ArtistRadioQueueBuilder
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.TrackRadioQueueBuilder
-import org.moire.ultrasonic.util.Util.navigateToCurrent
 import org.moire.ultrasonic.util.Util.toast
 
 object ContextMenuUtil {
@@ -91,7 +90,6 @@ object ContextMenuUtil {
                         shuffle = false,
                         insertionMode = MediaPlayerManager.InsertionMode.CLEAR
                     )
-                    fragment.navigateToCurrent()
                 }
             }
 
@@ -165,7 +163,6 @@ object ContextMenuUtil {
                         shuffle = false,
                         insertionMode = MediaPlayerManager.InsertionMode.CLEAR
                     )
-                    fragment.navigateToCurrent()
                 }
             }
 

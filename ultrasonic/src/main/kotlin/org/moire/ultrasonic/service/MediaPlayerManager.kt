@@ -45,7 +45,6 @@ import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
-import org.moire.ultrasonic.util.Util.navigateToCurrent
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.getTrackId
 import org.moire.ultrasonic.util.launchWithToast
@@ -834,10 +833,6 @@ class MediaPlayerManager(
                 shuffle = shuffle
             )
 
-            if (insertionMode == InsertionMode.CLEAR) {
-                fragment.navigateToCurrent()
-            }
-
             when (insertionMode) {
                 InsertionMode.AFTER_CURRENT ->
                     quantize(R.plurals.n_songs_added_after_current, list)
@@ -845,13 +840,8 @@ class MediaPlayerManager(
                 InsertionMode.APPEND ->
                     quantize(R.plurals.n_songs_added_to_end, list)
 
-                InsertionMode.CLEAR -> {
-                    if (Settings.shouldTransitionOnPlayback) {
-                        null
-                    } else {
-                        quantize(R.plurals.n_songs_added_play_now, list)
-                    }
-                }
+                InsertionMode.CLEAR ->
+                    quantize(R.plurals.n_songs_added_play_now, list)
             }
         }
     }

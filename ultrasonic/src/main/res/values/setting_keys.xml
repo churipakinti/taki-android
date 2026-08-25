@@ -12,7 +12,6 @@
     <string name="setting_key.wifi_required_for_download" translatable="false">wifiRequiredForDownload</string>
     <string name="setting_key.clear_search_history" translatable="false">clearSearchHistory</string>
     <string name="setting_key.clear_image_cache" translatable="false">clearImageCache</string>
-    <string name="setting_key.download_transition" translatable="false">transitionToDownloadOnPlay</string>
     <string name="setting_key.id3_tags" translatable="false">useId3Tags</string>
     <string name="setting_key.id3_tags_offline" translatable="false">useId3TagsOffline</string>
     <string name="setting_key.clear_bookmark" translatable="false">clearBookmark</string>

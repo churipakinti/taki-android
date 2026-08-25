@@ -205,7 +205,6 @@
     <string name="equalizer.preset">Velg forhåndsinnstilling</string>
     <string name="lyrics.nomatch">Fant ingen sangtekster</string>
     <string name="menu.deleted_playlist_error">Klarte ikke å slette %s-spillelisten</string>
-    <string name="settings.download_transition_summary">Bytt til «Spilles nå» etter at avspilling startes i medievisning</string>
     <string name="settings.wifi_required_summary">Kun last ned på ubegrensede tilkoblinger</string>
     <string name="notification.downloading_title">Last ned medier i bakgrunnen …\?</string>
     <string name="notification.permission_required">Merknader kreves for medieavspilling. Du kan innvilge tilgangen når som helst i Android-innstillingene.</string>
@@ -242,7 +241,6 @@
     <string name="settings.custom_cache_location">Bruk egendefinert hurtiglagringsplassering</string>
     <string name="settings.cache_location_error">Ugyldig hurtiglagringsplassering. Bruker forvalget.</string>
     <string name="settings.cache_title">Musikkhurtiglager</string>
-    <string name="settings.download_transition">Vis «Spilles nå» ved avspilling</string>
     <string name="settings.max_bitrate_mobile">Maks. bitrate — Mobilnett</string>
     <string name="settings.max_bitrate_wifi">Maks. bitrate — Wi-Fi</string>
     <string name="settings.override_language_summary">Nytt språk vises når du starter programmet igjen</string>

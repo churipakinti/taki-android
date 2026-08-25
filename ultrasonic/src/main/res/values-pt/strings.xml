@@ -254,8 +254,6 @@
     <string name="language.ru">Russo</string>
     <string name="select_album.no_network">Atenção: Nenhuma rede encontrada.
 \nSe usa dados móveis, deve permitir descargas em conexões deste tipo, nas configurações.</string>
-    <string name="settings.download_transition">Mostrar Agora Tocando ao Reproduzir</string>
-    <string name="settings.download_transition_summary">Alternar para Tocando Agora após iniciar o playback na visualização de mídia</string>
     <string name="settings.override_language">Sobrescrever o idioma</string>
     <string name="settings.override_language_summary">Precisa reiniciar a app após alterar o idioma</string>
     <string name="settings.wifi_required_summary">Descarregar média somente em conexões não medidas</string>
