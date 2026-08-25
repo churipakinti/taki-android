@@ -183,11 +183,12 @@ class DownloadService :
     ) {
         postState(item.track, downloadState, progress)
 
-        if (downloadState.isFinalState()) {
-            activeDownloads.remove(item.id)
-            processNextTracks()
-        }
-
+        // Must run before the isFinalState() check below: RETRYING is itself a final state for
+        // the just-finished DownloadTask, and processNextTracks() stops the service once
+        // activeDownloads and downloadQueue are both empty. Re-queueing the item first ensures
+        // that check sees it, instead of stopping the service with the retry stranded in
+        // downloadQueue with nothing left to ever process it. See
+        // docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 1.
         when (downloadState) {
             DownloadState.FAILED -> {
                 downloadQueue.remove(item)
@@ -200,6 +201,11 @@ class DownloadService :
             }
 
             else -> {}
+        }
+
+        if (downloadState.isFinalState()) {
+            activeDownloads.remove(item.id)
+            processNextTracks()
         }
     }
 
@@ -313,7 +319,14 @@ class DownloadService :
 
                     if (tracksToDownload.isNotEmpty()) {
                         downloadQueue.addAll(tracksToDownload)
-                        tracksToDownload.forEach { postState(it.track, DownloadState.QUEUED) }
+                        tracksToDownload.forEach {
+                            // A manual retry re-queues a track that may still have a stale
+                            // FAILED entry from a previous attempt. getDownloadState() checks
+                            // failedList before checking whether the file now exists, so leaving
+                            // it here would keep showing FAILED even after this retry succeeds.
+                            failedList.remove(it.id)
+                            postState(it.track, DownloadState.QUEUED)
+                        }
                         processNextTracksOnService()
                     }
                 }
