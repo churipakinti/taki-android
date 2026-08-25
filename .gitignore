@@ -57,3 +57,6 @@ lint-release.txt
 
 # Local debugging evidence (UI dumps/screenshots from agent testing sessions)
 artifacts/
+
+# Local Claude configuration and worktrees
+.claude/
