@@ -149,7 +149,6 @@
     <string name="settings.invalid_url">Пожалуйста, укажите действительный URL.</string>
     <string name="settings.max_bitrate_mobile">Максимальный битрейт - Мобильный интернет</string>
     <string name="settings.max_bitrate_wifi">Максимальный битрейт - Wi-Fi подключение</string>
-    <string name="settings.network_title">Сеть</string>
     <string name="settings.search_history_cleared">История поиска очищена</string>
     <string name="settings.server_address">Адрес сервера</string>
     <string name="settings.server_name">Имя</string>

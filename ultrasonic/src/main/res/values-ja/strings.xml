@@ -120,7 +120,6 @@
     <string name="settings.cache_size_unlimited">無制限</string>
     <string name="settings.cache_title">音楽キャッシュ</string>
     <string name="settings.invalid_url">有効なURLを指定してください。</string>
-    <string name="settings.network_title">ネットワーク</string>
     <string name="settings.override_language">言語を指定</string>
     <string name="settings.override_language_summary">言語の変更には、アプリ再起動が必要です</string>
     <string name="settings.server_name">サーバー名</string>

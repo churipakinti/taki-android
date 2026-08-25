@@ -162,7 +162,6 @@
     <string name="settings.invalid_url">Geef een geldige URL op.</string>
     <string name="settings.max_bitrate_mobile">Max. bitsnelheid over mobiel internet</string>
     <string name="settings.max_bitrate_wifi">Max. bitsnelheid via wifi</string>
-    <string name="settings.network_title">Netwerk</string>
     <string name="settings.override_language">Taal afdwingen</string>
     <string name="settings.override_language_summary">Herstart de app om de wijziging toe te passen</string>
     <string name="settings.search_history_cleared">Zoekgeschiedenis gewist</string>

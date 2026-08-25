@@ -225,7 +225,6 @@
     <string name="settings.quality_maximum">Máxima · 320 Kbps</string>
     <string name="settings.quality_original">Original · Sin límite</string>
     <string name="settings.advanced_playback">Reproducción avanzada</string>
-    <string name="settings.network_title">Red</string>
     <string name="settings.override_language">Cambiar el idioma</string>
     <string name="settings.override_language_summary">Es necesario reiniciar la aplicación después de cambiar el idioma</string>
     <string name="settings.search_history_cleared">Se ha borrado el historial de búsqueda</string>

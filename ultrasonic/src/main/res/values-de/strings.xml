@@ -160,7 +160,6 @@
     <string name="settings.invalid_url">Bitte eine gültige URL angeben.</string>
     <string name="settings.max_bitrate_mobile">Max. Bitrate - Mobil</string>
     <string name="settings.max_bitrate_wifi">Max. Bitrate - WLAN</string>
-    <string name="settings.network_title">Netzwerk</string>
     <string name="settings.override_language">Sprache ändern</string>
     <string name="settings.override_language_summary">Nach dem Ändern der Sprache muss die App muss neu startet werden</string>
     <string name="settings.search_history_cleared">Suchhistorie gelöscht</string>

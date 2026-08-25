@@ -134,7 +134,6 @@
     <string name="settings.invalid_url">Adjon meg egy érvényes URL-t!</string>
     <string name="settings.max_bitrate_mobile">Max. bitráta - Mobil kapcsolat</string>
     <string name="settings.max_bitrate_wifi">Max. bitráta - Wi-Fi kapcsolat</string>
-    <string name="settings.network_title">Hálózat</string>
     <string name="settings.search_history_cleared">Keresési előzmények törölve.</string>
     <string name="settings.server_address">Kiszolgáló címe</string>
     <string name="settings.server_name">Név</string>

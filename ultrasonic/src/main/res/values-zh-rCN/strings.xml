@@ -147,7 +147,6 @@
     <string name="settings.invalid_url">请填写有效的 URL。</string>
     <string name="settings.max_bitrate_mobile">最大比特率 - 移动网络</string>
     <string name="settings.max_bitrate_wifi">最大比特率 - WIFI</string>
-    <string name="settings.network_title">网络</string>
     <string name="settings.search_history_cleared">搜索记录已清除</string>
     <string name="settings.server_address">服务器地址</string>
     <string name="settings.server_name">名称</string>

@@ -15,6 +15,20 @@
             a:title="@string/settings.equalizer_title"
             a:summary="@string/settings.equalizer_summary"
             app:iconSpaceReserved="false"/>
+        <ListPreference
+            a:defaultValue="256"
+            a:entries="@array/maxBitrateNames"
+            a:entryValues="@array/maxBitrateValues"
+            a:key="@string/setting_key.max_bitrate_mobile"
+            a:title="@string/settings.max_bitrate_mobile"
+            app:iconSpaceReserved="false"/>
+        <ListPreference
+            a:defaultValue="0"
+            a:entries="@array/maxBitrateNames"
+            a:entryValues="@array/maxBitrateValues"
+            a:key="@string/setting_key.max_bitrate_wifi"
+            a:title="@string/settings.max_bitrate_wifi"
+            app:iconSpaceReserved="false"/>
     </PreferenceScreen>
 
     <PreferenceScreen
@@ -22,6 +36,13 @@
         a:title="@string/settings.downloads_title"
         a:summary="@string/settings.downloads_summary"
         app:iconSpaceReserved="false">
+        <ListPreference
+            a:defaultValue="0"
+            a:entries="@array/maxBitrateNames"
+            a:entryValues="@array/maxBitrateValues"
+            a:key="@string/setting_key.max_bitrate_pinning"
+            a:title="@string/settings.max_bitrate_pinning"
+            app:iconSpaceReserved="false"/>
         <SwitchPreferenceCompat
             a:defaultValue="false"
             a:key="@string/setting_key.wifi_required_for_download"
@@ -51,64 +72,23 @@
         a:summary="@string/settings.advanced_summary"
         app:iconSpaceReserved="false">
 
-        <PreferenceScreen
-            a:key="library_group"
-            a:title="@string/settings.library_title"
-            a:summary="@string/settings.library_summary"
+        <PreferenceCategory
+            a:title="@string/settings.advanced_playback"
             app:iconSpaceReserved="false">
+            <ListPreference
+                a:defaultValue="@string/setting_key.replaygain_disabled"
+                a:entries="@array/replayGainNames"
+                a:entryValues="@array/replayGainValues"
+                a:key="@string/setting_key.replaygain"
+                a:title="@string/settings.replaygain_title"
+                app:iconSpaceReserved="false"/>
             <SwitchPreferenceCompat
-                a:defaultValue="true"
-                a:key="@string/setting_key.id3_tags"
-                a:summary="@string/settings.use_id3_summary"
-                a:title="@string/settings.use_id3"
-                app:iconSpaceReserved="false"/>
-            <SwitchPreferenceCompat
-                a:defaultValue="true"
-                a:key="@string/setting_key.id3_tags_offline"
-                a:summary="@string/settings.use_id3_offline_summary"
-                a:title="@string/settings.use_id3_offline"
-                app:iconSpaceReserved="false"/>
-        </PreferenceScreen>
-
-        <PreferenceScreen
-            a:key="images_group"
-            a:title="@string/settings.images_title"
-            a:summary="@string/settings.images_summary"
-            app:iconSpaceReserved="false">
-            <Preference
-                a:key="@string/setting_key.clear_image_cache"
-                a:persistent="false"
-                a:title="@string/settings.clear_image_cache"
-                app:iconSpaceReserved="false"/>
-        </PreferenceScreen>
-
-        <PreferenceScreen
-            a:key="network_group"
-            a:title="@string/settings.network_title"
-            a:summary="@string/settings.network_summary"
-            app:iconSpaceReserved="false">
-            <ListPreference
-                a:defaultValue="256"
-                a:entries="@array/maxBitrateNames"
-                a:entryValues="@array/maxBitrateValues"
-                a:key="@string/setting_key.max_bitrate_mobile"
-                a:title="@string/settings.max_bitrate_mobile"
-                app:iconSpaceReserved="false"/>
-            <ListPreference
-                a:defaultValue="0"
-                a:entries="@array/maxBitrateNames"
-                a:entryValues="@array/maxBitrateValues"
-                a:key="@string/setting_key.max_bitrate_wifi"
-                a:title="@string/settings.max_bitrate_wifi"
-                app:iconSpaceReserved="false"/>
-            <ListPreference
-                a:defaultValue="0"
-                a:entries="@array/maxBitrateNames"
-                a:entryValues="@array/maxBitrateValues"
-                a:key="@string/setting_key.max_bitrate_pinning"
-                a:title="@string/settings.max_bitrate_pinning"
-                app:iconSpaceReserved="false"/>
-        </PreferenceScreen>
+                a:defaultValue="false"
+                a:key="@string/setting_key.hardware_offload"
+                a:summary="@string/settings.use_hw_offload_description"
+                a:title="@string/settings.use_hw_offload_title"
+                app:iconSpaceReserved="false" />
+        </PreferenceCategory>
 
         <PreferenceScreen
             a:key="music_cache_group"
@@ -130,6 +110,30 @@
                 a:key="@string/setting_key.cache_location"
                 a:title="@string/settings.cache_location"
                 app:iconSpaceReserved="false"/>
+            <Preference
+                a:key="@string/setting_key.clear_image_cache"
+                a:persistent="false"
+                a:title="@string/settings.clear_image_cache"
+                app:iconSpaceReserved="false"/>
+        </PreferenceScreen>
+
+        <PreferenceScreen
+            a:key="library_group"
+            a:title="@string/settings.library_title"
+            a:summary="@string/settings.library_summary"
+            app:iconSpaceReserved="false">
+            <SwitchPreferenceCompat
+                a:defaultValue="true"
+                a:key="@string/setting_key.id3_tags"
+                a:summary="@string/settings.use_id3_summary"
+                a:title="@string/settings.use_id3"
+                app:iconSpaceReserved="false"/>
+            <SwitchPreferenceCompat
+                a:defaultValue="true"
+                a:key="@string/setting_key.id3_tags_offline"
+                a:summary="@string/settings.use_id3_offline_summary"
+                a:title="@string/settings.use_id3_offline"
+                app:iconSpaceReserved="false"/>
         </PreferenceScreen>
 
         <PreferenceScreen
@@ -146,34 +150,20 @@
         </PreferenceScreen>
 
         <PreferenceCategory
-            a:title="@string/settings.advanced_playback"
+            a:title="@string/settings.other_title"
             app:iconSpaceReserved="false">
-            <ListPreference
-                a:defaultValue="@string/setting_key.replaygain_disabled"
-                a:entries="@array/replayGainNames"
-                a:entryValues="@array/replayGainValues"
-                a:key="@string/setting_key.replaygain"
-                a:title="@string/settings.replaygain_title"
-                app:iconSpaceReserved="false"/>
             <SwitchPreferenceCompat
                 a:defaultValue="false"
-                a:key="@string/setting_key.hardware_offload"
-                a:summary="@string/settings.use_hw_offload_description"
-                a:title="@string/settings.use_hw_offload_title"
-                app:iconSpaceReserved="false" />
+                a:key="@string/setting_key.show_confirmation_dialog"
+                a:title="@string/settings.show_confirmation_dialog"
+                a:summary="@string/settings.show_confirmation_dialog_summary"
+                app:iconSpaceReserved="false"/>
+            <Preference
+                a:key="@string/setting_key.clear_search_history"
+                a:persistent="false"
+                a:title="@string/settings.clear_search_history"
+                app:iconSpaceReserved="false"/>
         </PreferenceCategory>
-
-        <SwitchPreferenceCompat
-            a:defaultValue="false"
-            a:key="@string/setting_key.show_confirmation_dialog"
-            a:title="@string/settings.show_confirmation_dialog"
-            a:summary="@string/settings.show_confirmation_dialog_summary"
-            app:iconSpaceReserved="false"/>
-        <Preference
-            a:key="@string/setting_key.clear_search_history"
-            a:persistent="false"
-            a:title="@string/settings.clear_search_history"
-            app:iconSpaceReserved="false"/>
 
     </PreferenceScreen>
 

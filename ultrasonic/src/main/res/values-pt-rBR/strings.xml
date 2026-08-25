@@ -160,7 +160,6 @@
     <string name="settings.invalid_url">Especifique uma URL válida.</string>
     <string name="settings.max_bitrate_mobile">Taxa Máxima de Bits - Celular</string>
     <string name="settings.max_bitrate_wifi">Taxa Máxima de Bits - Wi-Fi</string>
-    <string name="settings.network_title">Rede</string>
     <string name="settings.override_language">Sobrescrever o Idioma</string>
     <string name="settings.override_language_summary">Você precisa reiniciar o aplicativo após alterar o idioma</string>
     <string name="settings.search_history_cleared">Histórico de pesquisas apagado</string>

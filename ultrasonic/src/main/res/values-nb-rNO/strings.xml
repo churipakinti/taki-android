@@ -150,7 +150,6 @@
     <string name="settings.cache_size_5000">5 GB</string>
     <string name="settings.cache_size_6000">6 GB</string>
     <string name="settings.invalid_url">Angi en gyldig nettadresse.</string>
-    <string name="settings.network_title">Nettverk</string>
     <string name="settings.override_language">Overstyr språket</string>
     <string name="settings.server_address">Tjeneradresse</string>
     <string name="settings.server_name">Navn</string>

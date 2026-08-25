@@ -158,7 +158,6 @@
     <string name="settings.invalid_url">Veuillez spécifier une URL valide.</string>
     <string name="settings.max_bitrate_mobile">Débit maximal - Mobile</string>
     <string name="settings.max_bitrate_wifi">Débit maximal - Wi-Fi</string>
-    <string name="settings.network_title">Réseau</string>
     <string name="settings.override_language">Remplacer la langue</string>
     <string name="settings.override_language_summary">Vous avez besoin de redémarrer l\'application après avoir changé la langue</string>
     <string name="settings.search_history_cleared">Historique des recherches effacé</string>

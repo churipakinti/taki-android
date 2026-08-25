@@ -126,7 +126,6 @@
     <string name="settings.invalid_url">Specifica un URL valido per favore.</string>
     <string name="settings.max_bitrate_mobile">Bitrate Max - Mobile</string>
     <string name="settings.max_bitrate_wifi">Bitrate Max - Wi-Fi</string>
-    <string name="settings.network_title">Rete</string>
     <string name="settings.search_history_cleared">Storico ricerche eliminato</string>
     <string name="settings.server_address">Indirizzo Server</string>
     <string name="settings.server_name">Nome</string>

@@ -146,7 +146,6 @@
     <string name="settings.invalid_url">Indica un URL válido.</string>
     <string name="settings.max_bitrate_mobile">Taxa de bits Máx - Móbil</string>
     <string name="settings.max_bitrate_wifi">Taxa de bits Máx - Wi-Fi</string>
-    <string name="settings.network_title">Rede</string>
     <string name="settings.override_language">Escoller idioma</string>
     <string name="settings.override_language_summary">Tes que reiniciar a app ao cambiar o idioma</string>
     <string name="settings.server_address">Enderezo do servidor</string>

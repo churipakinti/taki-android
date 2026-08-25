@@ -128,7 +128,6 @@
     <string name="settings.invalid_url">Zadejte funkční adresu URL.</string>
     <string name="settings.max_bitrate_mobile">Max Bitrate - mobilní síť</string>
     <string name="settings.max_bitrate_wifi">Max Bitrate - wi-fi</string>
-    <string name="settings.network_title">Síť</string>
     <string name="settings.search_history_cleared">Historie hledání vyčištěna</string>
     <string name="settings.server_address">Adresa serveru</string>
     <string name="settings.server_name">Název</string>
