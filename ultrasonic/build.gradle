@@ -41,7 +41,11 @@ android {
         resourceConfigurations += ['cs', 'de', 'en', 'es', 'fr', 'gl', 'hu', 'it', 'ja', 'nb-rNO', 'nl', 'pl', 'pt', 'pt-rBR', 'ru', 'zh-rCN', 'zh-rTW']
     }
 
-    bundle.language.enableSplit = false
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
 
     signingConfigs {
         if (hasReleaseSigning) {
