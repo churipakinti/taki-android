@@ -56,7 +56,19 @@ class SleepTimerControllerTest {
             state.shouldBeInstanceOf<SleepTimerState.Duration>()
             (state as SleepTimerState.Duration).deadlineElapsedRealtime shouldBeEqualTo
                 before + minutes * 60_000L
+            state.presetMinutes shouldBeEqualTo minutes
         }
+    }
+
+    @Test
+    fun `replacing an active timer with a different preset updates presetMinutes`() = runTest {
+        val controller = buildController(this) {}
+
+        controller.setDuration(30)
+        (controller.state as SleepTimerState.Duration).presetMinutes shouldBeEqualTo 30
+
+        controller.setDuration(15)
+        (controller.state as SleepTimerState.Duration).presetMinutes shouldBeEqualTo 15
     }
 
     @Test
@@ -120,7 +132,7 @@ class SleepTimerControllerTest {
     fun `remaining time never goes negative`() {
         // Pure computation, independent of the controller/scheduler: reading remaining time
         // arbitrarily far past a deadline must clamp to zero, never go negative.
-        val state = SleepTimerState.Duration(deadlineElapsedRealtime = 10_000L)
+        val state = SleepTimerState.Duration(deadlineElapsedRealtime = 10_000L, presetMinutes = 15)
 
         state.remainingMs(nowElapsedRealtime = 10_000L) shouldBeEqualTo 0L
         state.remainingMs(nowElapsedRealtime = 50_000L) shouldBeEqualTo 0L

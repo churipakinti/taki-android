@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="21" />
+    <bytecodeTargetLevel target="25" />
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="22_ultrasonic.core.subsonic-api" options="-Xlint:deprecation" />
+      <module name="22_ultrasonic.core.subsonic-api.main" options="-Xlint:deprecation" />
+      <module name="22_ultrasonic.core.subsonic-api.test" options="-Xlint:deprecation" />
       <module name="Ultrasonic.core.subsonic-api" options="-Xlint:deprecation" />
       <module name="Ultrasonic.core.subsonic-api.main" options="-Xlint:deprecation" />
       <module name="Ultrasonic.core.subsonic-api.test" options="-Xlint:deprecation" />

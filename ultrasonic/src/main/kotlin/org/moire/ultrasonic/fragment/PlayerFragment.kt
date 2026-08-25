@@ -1334,14 +1334,16 @@ class PlayerFragment :
         }
         if (hasCurrentSong) labels += getString(R.string.sleep_timer_end_of_song)
 
-        // Only Off and (when reachable) End-of-song map onto a specific row here - an active
-        // Duration timer's remaining minutes essentially never lines up exactly with one of the
-        // fixed presets, so nothing is pre-checked for it (the button's contentDescription is
-        // where its state is actually shown - see sleepTimerContentDescription()).
-        val checkedIndex = when (mediaPlayerManager.sleepTimerState) {
+        // An active Duration timer re-checks the row for the preset it was originally armed
+        // with (SleepTimerState.Duration.presetMinutes), not a guess from its remaining time.
+        val timerState = mediaPlayerManager.sleepTimerState
+        val checkedIndex = when (timerState) {
             SleepTimerState.Off -> 0
             is SleepTimerState.EndOfTrack -> if (hasCurrentSong) labels.lastIndex else -1
-            is SleepTimerState.Duration -> -1
+            is SleepTimerState.Duration -> {
+                val presetIndex = SLEEP_TIMER_DURATIONS_MINUTES.indexOf(timerState.presetMinutes)
+                if (presetIndex >= 0) presetIndex + 1 else -1
+            }
         }
 
         MaterialAlertDialogBuilder(requireContext())

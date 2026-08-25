@@ -22,7 +22,12 @@ import kotlinx.coroutines.launch
 sealed class SleepTimerState {
     object Off : SleepTimerState()
 
-    data class Duration(val deadlineElapsedRealtime: Long) : SleepTimerState() {
+    data class Duration(
+        val deadlineElapsedRealtime: Long,
+        /** The preset (15/30/45/60) minutes value this was armed with, kept only so the picker
+         *  dialog can re-check the right row when reopened - not used for any timing decision. */
+        val presetMinutes: Int
+    ) : SleepTimerState() {
         fun remainingMs(nowElapsedRealtime: Long): Long =
             (deadlineElapsedRealtime - nowElapsedRealtime).coerceAtLeast(0)
     }
@@ -59,7 +64,12 @@ class SleepTimerController(
     private var job: Job? = null
 
     fun setDuration(minutes: Int) {
-        arm(SleepTimerState.Duration(elapsedRealtimeMs() + minutes * MILLIS_PER_MINUTE))
+        arm(
+            SleepTimerState.Duration(
+                deadlineElapsedRealtime = elapsedRealtimeMs() + minutes * MILLIS_PER_MINUTE,
+                presetMinutes = minutes
+            )
+        )
     }
 
     fun setEndOfTrack() {
