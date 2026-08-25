@@ -334,15 +334,21 @@ class DownloadService :
         }
 
         private fun removeDownloadedTracksFromList(tracks: List<Track>): List<Track> {
+            // Storage.getFromPath() never returns null for the default (non-SAF) storage
+            // backend -- JavaFile.getFromPath() unconditionally wraps File(path) regardless of
+            // whether it exists, unlike Storage.isPathExists() which correctly checks
+            // File.exists(). Using getFromPath()'s nullability as an existence check here meant
+            // every track passed to this function (e.g. PlaybackService's next-track pre-cache)
+            // was treated as already downloaded and skipped, posting a false DONE/PINNED state
+            // before any real download was ever attempted. Confirmed on-device: Offline mode
+            // showed "No media found" while affected tracks still showed the downloaded
+            // checkmark. See docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 6 follow-up.
             return tracks.filter { track ->
-                val pinnedFile = Storage.getFromPath(track.getPinnedFile())
-                val completeFile = Storage.getFromPath(track.getCompleteFile())
-
-                completeFile?.let {
+                if (Storage.isPathExists(track.getCompleteFile())) {
                     postState(track, DownloadState.DONE)
                     return@filter false
                 }
-                pinnedFile?.let {
+                if (Storage.isPathExists(track.getPinnedFile())) {
                     postState(track, DownloadState.PINNED)
                     return@filter false
                 }
@@ -375,27 +381,27 @@ class DownloadService :
             // to the other state, rename it, but don't return it, thereby excluding it from
             // further processing.
             // If it is neither pinned nor saved, return it, so that it can be processed.
+            //
+            // Same Storage.getFromPath()-as-an-existence-check bug as
+            // removeDownloadedTracksFromList above: it never returns null for the default
+            // storage backend, so every track looked already complete/pinned. Since the real
+            // "Download" button always calls into this function (DownloadUtil.justDownload
+            // passes updateSaveFlag = true), this fired on every single download attempt,
+            // immediately posting a false PINNED/DONE state and attempting a doomed rename of a
+            // nonexistent file (silently swallowed by renameOrDeleteIfAlreadyExists's
+            // catch-all) before the track was ever actually queued.
             val filteredTracks: List<Track> = tracks.map { track ->
-                val pinnedFile = Storage.getFromPath(track.getPinnedFile())
-                val completeFile = Storage.getFromPath(track.getCompleteFile())
-
                 if (shouldPin) {
-                    pinnedFile?.let {
-                        null
-                    }
-                    completeFile?.let {
-                        Storage.renameOrDeleteIfAlreadyExists(it, track.getPinnedFile())
+                    if (Storage.isPathExists(track.getCompleteFile())) {
+                        val completeFile = Storage.getFromPath(track.getCompleteFile())!!
+                        Storage.renameOrDeleteIfAlreadyExists(completeFile, track.getPinnedFile())
                         postState(track, DownloadState.PINNED)
-                        null
                     }
                 } else {
-                    completeFile?.let {
-                        null
-                    }
-                    pinnedFile?.let {
-                        Storage.renameOrDeleteIfAlreadyExists(it, track.getCompleteFile())
+                    if (Storage.isPathExists(track.getPinnedFile())) {
+                        val pinnedFile = Storage.getFromPath(track.getPinnedFile())!!
+                        Storage.renameOrDeleteIfAlreadyExists(pinnedFile, track.getCompleteFile())
                         postState(track, DownloadState.DONE)
-                        null
                     }
                 }
                 track
