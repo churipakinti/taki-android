@@ -27,7 +27,12 @@ android {
     compileSdkVersion versions.compileSdk
 
     defaultConfig {
-        applicationId "org.moire.ultrasonic"
+        // Taki's own installable identity (docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase
+        // 2) -- deliberately not org.moire.ultrasonic, the upstream project's id. The Kotlin
+        // namespace below intentionally stays org.moire.ultrasonic; only the installable id
+        // changes. Existing installs under the old id (including test devices) cannot update in
+        // place and need a clean reinstall.
+        applicationId "io.github.churipakinti.taki"
         versionCode 131
         versionName "0.1.0-beta"
 

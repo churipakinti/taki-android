@@ -75,7 +75,7 @@ Unit Tests:
 Assemble Release:
   stage: Build
   script:
-    - sed -i 's/applicationId \"org.moire.ultrasonic\"/applicationId "org.moire.ultrasonic.gitlab"/' ultrasonic/build.gradle
+    - sed -i 's/applicationId \"io.github.churipakinti.taki\"/applicationId "io.github.churipakinti.taki.gitlab"/' ultrasonic/build.gradle
     - ./gradlew assembleRelease
   artifacts:
     name: taki-release-unsigned-${CI_COMMIT_SHA}

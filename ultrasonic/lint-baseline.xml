@@ -2,6 +2,248 @@
 <issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="true" name="AGP (9.2.1)" variant="all" version="9.2.1">
 
     <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-gl has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="47"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-gl has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="52"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-ja has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="195"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-ja has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="198"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-nb-rNO has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="199"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-nb-rNO has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="203"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-pt has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="209"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-pt has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="214"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-zh-rCN has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="232"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-zh-rCN has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="238"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-de has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="247"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-pt-rBR has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="250"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-nl has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="252"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-de has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="255"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-nl has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="260"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-pt-rBR has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="260"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-pl has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="265"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-pl has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="278"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-fr has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="287"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-fr has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="297"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_pinned&quot; in values-es has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="329"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MissingDefaultResource"
+        message="The plurals &quot;n_songs_unpinned&quot; in values-es has no declaration in the base `values` folder; this can lead to crashes when the resource is queried in a configuration that does not match this qualifier"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="339"
+            column="14"/>
+    </issue>
+
+    <issue
         id="NewApi"
         message="`android:windowLightNavigationBar` requires API level 27 (current min is 26)"
         errorLine1="        &lt;item name=&quot;android:windowLightNavigationBar&quot;>false&lt;/item>"
@@ -101,13 +343,1201 @@
     </issue>
 
     <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>固定&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="25"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Blocca&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="26"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Připnout&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="27"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Przypnij&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="27"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Fixar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="27"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Fest&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="29"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Løsne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="32"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Tárolás (Megőrzés az eszközön)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="33"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Sblocca&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="33"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Odepnout&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="34"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Odepnij&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="34"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Desafixar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="34"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Пин&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="35"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Anheften&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Épingler&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Fixar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>固定&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Vastmaken&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Anclar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="39"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Desancorar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="40"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Visszavonás&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="40"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Открепить&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="43"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Lösen&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Détacher&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Desafixar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>取消固定&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Ancorar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="45"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Losmaken&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="45"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Desanclar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="47"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;download_menu_rate&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;download.menu_rate&quot;>Calificar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="71"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_pin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>固定&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="101"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>取消固定&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="109"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>その他の設定&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="128"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Altre Impostazioni&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="133"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Další nastavení&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="135"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Inne ustawienia&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="135"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Outras Configurações&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="135"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Egyéb beállítások&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="141"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>其他设置&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="155"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Другие настройки&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="156"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Andre innstillinger&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="157"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Outros Axustes&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="163"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Autres paramètres&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="165"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Andere Einstellungen&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="169"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Outras Configurações&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="169"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Overige instellingen&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="171"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>其他設定&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="184"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>サーバーがサポート外のため、いくつかの機能が無効になりました。"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="185"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Um ou mais recursos foram desativados porque o servidor não os suporta."
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="205"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Одна или несколько функций были отключены, потому что сервер их не поддерживает.\nВы можете запустить этот тест снова в любое время.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="216"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>一项或多项功能被禁用，因为此服务器不支持它们。"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="220"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>サポートされている機能&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="221"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Wspierane funkcje&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="223"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Características soportadas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="225"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Une ou plusieurs fonctionnalités ont été désactivées car le serveur ne les prend pas en charge.\nVous pouvez réexécuter ce test à tout moment.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="232"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;common_unpin&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>固定解除&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="236"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Recursos suportados&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="236"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;settings_other_title&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Otra configuración&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="238"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_5&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 звёзд&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="239"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Einer oder mehrere Funktionen wurden deaktiviert, da der Server diese nicht unterstützt.\nDu kannst diesen Test jederzeit nochmals ausführen.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="240"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Um ou mais recursos foram desativados porque o servidor não os suporta.\nVocê pode rodar este teste novamente a qualquer momento.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="241"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Eén of meerdere functies zijn uitgeschakeld omdat de server ze niet ondersteunt.\nVoer deze test later opnieuw uit.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="244"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Fonctionnalités prises en charge&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="274"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>En eller flere funksjoner ble skrudd av fordi tjeneren ikke støtter dem."
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="280"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>已支持的功能&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="283"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Støttede funksjoner&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="293"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Desactiváronse unha ou máis características porque o servidor non ten soporte para elas."
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="294"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Jedna lub więcej funkcji zostało wyłączonych ponieważ serwer ich nie obsługiwał."
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="295"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Recursos suportados&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="298"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Unterstützte Funktionen&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="299"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_no_rating&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_no_rating&quot;>Aucune évaluation&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="302"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_1&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_1&quot;>1 Étoile&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="303"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_2&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_2&quot;>2 Étoiles&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="304"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_3&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_3&quot;>3 Étoiles&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="305"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_4&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_4&quot;>4 Étoiles&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="306"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_5&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 Étoiles&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="307"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_no_rating&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_no_rating&quot;>Keine Bewertung&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="307"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_1&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_1&quot;>1 Stern&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="308"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_2&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_2&quot;>2 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="309"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_4&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_4&quot;>4 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="309"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_3&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_3&quot;>3 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="310"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_5&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="310"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_4&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_4&quot;>4 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="311"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_no_rating&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_no_rating&quot;>Sen valoración&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="311"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_1&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_1&quot;>1 Estrela&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="312"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_5&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="312"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_2&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_2&quot;>2 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="313"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_no_rating&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_no_rating&quot;>Sem Avaliação&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="313"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;server_editor_disabled_feature&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Una o más funciones se han desactivado porque el servidor no las admite.\nPuedes ejecutar esta prueba nuevamente en cualquier momento.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="313"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_1&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_1&quot;>1 Estrela&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="314"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_3&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_3&quot;>3 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="314"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_2&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_2&quot;>2 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="315"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_3&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_3&quot;>3 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="316"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_4&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_4&quot;>4 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="317"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_5&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="318"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_no_rating&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_no_rating&quot;>Sem Avaliação&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="319"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_1&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_1&quot;>1 Estrela&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="320"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_2&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_2&quot;>2 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="321"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_3&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_3&quot;>3 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="322"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_4&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_4&quot;>4 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="323"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_5&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 Estrelas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="324"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;supported_server_features&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Funciones soportadas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="376"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_no_rating&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_no_rating&quot;>Sin valoración&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="388"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_1&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_1&quot;>1 estrella&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="389"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_2&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_2&quot;>2 estrellas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="390"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_3&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_3&quot;>3 estrellas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="391"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_4&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_4&quot;>4 estrellas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="392"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ExtraTranslation"
+        message="&quot;menu_rating_5&quot; is translated here but not found in default locale"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 estrellas&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="393"
+            column="13"/>
+    </issue>
+
+    <issue
         id="PluralsCandidate"
         message="Formatting %d followed by words (&quot;tracks&quot;): This should probably be a plural rather than a string"
         errorLine1="    &lt;string name=&quot;collection.disc_track_count&quot;>%1$d tracks&lt;/string>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="22"
+            line="21"
             column="5"/>
     </issue>
 
@@ -151,7 +1581,7 @@
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="272"
+            line="285"
             column="5"/>
     </issue>
 
@@ -162,8 +1592,504 @@
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="473"
+            line="480"
             column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>API serveru v%1$s nepodporuje tuto funkci.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>Server API v%1$s unterstützt diese Funktion nicht.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>La API del servidor v%1$s no admite esta función.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>L’API v%1$s du serveur ne supporte pas cette fonction.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>A API do servidor v%1$s non admite esta función.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>A v%1$s verziójú Szerver api nem támogatja ezt a funkciót.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>De server-api, v %1$s, heeft geen ondersteuning voor deze functie.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>API serwera w wersji v%1$s nie wspiera tej funkcjonalności.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>O servidor API v%1$s não tem suporte para esta função.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>A API do servidor v%1$s não suporta esta função.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>Серверный API версии %1$s не поддерживает эту функцию.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>服务端 API v%1$s 不支持此功能。&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="4"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>HTTPS証明書エラー: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="5"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Errore certificato HTTPS. %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="7"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Chyba HTTPS certifikátu: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>HTTPS Zertifikatsfehler: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Error del certificado HTTPS: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Erreur de certificat HTTPS : %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Erro do certificado HTTPS: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>HTTPS tanúsítványhiba: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-hu/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>HTTPS-certificaatfout: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Błąd certyfikatu HTTPS: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Erro de certificado HTTPS: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt-rBR/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Erro de certificado HTTPS: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>Ошибка сертификата HTTPS: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>HTTPS 证书错误：%1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="8"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>Tjener-API v%1$s støtter ikke denne funksjonen.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="84"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>HTTPS-sertifikatsfeil: %1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="88"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.ssl_cert_error`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.ssl_cert_error&quot;>HTTPS 憑證錯誤：%1$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="114"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>伺服器 API v%1$s 不支援此功能。&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rTW/strings.xml"
+            line="156"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `background_task.unsupported_api`; found both 1 here and 0 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;background_task.unsupported_api&quot;>サーバーAPI v%1$s ではこの機能がサポートされていません。&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="224"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="5"
+            message="Conflicting number of arguments (0) here"/>
     </issue>
 
     <issue
@@ -187,7 +2113,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/kotlin/org/moire/ultrasonic/fragment/ArtistListFragment.kt"
-            line="156"
+            line="141"
             column="9"/>
     </issue>
 
@@ -324,6 +2250,17 @@
 
     <issue
         id="UnusedResources"
+        message="The resource `R.drawable.ic_menu_pin` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_menu_pin.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.drawable.media3_notification_pause` appears to be unused"
         errorLine1="&lt;vector android:height=&quot;48dp&quot;"
         errorLine2="^">
@@ -379,12 +2316,67 @@
 
     <issue
         id="UnusedResources"
+        message="The resource `R.string.common_pin` appears to be unused"
+        errorLine1="    &lt;string name=&quot;common.pin&quot;>Připnout&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="27"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.common_unpin` appears to be unused"
+        errorLine1="    &lt;string name=&quot;common.unpin&quot;>Odepnout&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="34"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.download_menu_rate` appears to be unused"
+        errorLine1="    &lt;string name=&quot;download.menu_rate&quot;>Calificar&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="71"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.download_menu_jukebox_off` appears to be unused"
+        errorLine1="    &lt;string name=&quot;download.menu_jukebox_off&quot;>Jukebox Off&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="123"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.settings_other_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;settings.other_title&quot;>Další nastavení&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="135"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.string.playlist_download_description` appears to be unused"
         errorLine1="    &lt;string name=&quot;playlist.download_description&quot;>Download playlist&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="219"
+            line="232"
             column="13"/>
     </issue>
 
@@ -395,29 +2387,117 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="226"
+            line="239"
             column="13"/>
     </issue>
 
     <issue
         id="UnusedResources"
         message="The resource `R.string.server_editor_disabled_feature` appears to be unused"
-        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>One or more features were disabled because the server doesn\&apos;t support them.\nYou can run this test again anytime.&lt;/string>"
+        errorLine1="    &lt;string name=&quot;server_editor.disabled_feature&quot;>Einer oder mehrere Funktionen wurden deaktiviert, da der Server diese nicht unterstützt.\nDu kannst diesen Test jederzeit nochmals ausführen.&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/values/strings.xml"
-            line="415"
+            file="src/main/res/values-de/strings.xml"
+            line="240"
             column="13"/>
     </issue>
 
     <issue
         id="UnusedResources"
+        message="The resource `R.plurals.n_songs_pinned` appears to be unused"
+        errorLine1="    &lt;plurals name=&quot;n_songs_pinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="247"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.plurals.n_songs_unpinned` appears to be unused"
+        errorLine1="    &lt;plurals name=&quot;n_songs_unpinned&quot;>"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="255"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.string.supported_server_features` appears to be unused"
-        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Supported features&lt;/string>"
+        errorLine1="    &lt;string name=&quot;supported_server_features&quot;>Unterstützte Funktionen&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/values/strings.xml"
-            line="490"
+            file="src/main/res/values-de/strings.xml"
+            line="299"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.menu_rating_no_rating` appears to be unused"
+        errorLine1="    &lt;string name=&quot;menu.rating_no_rating&quot;>Keine Bewertung&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="307"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.menu_rating_1` appears to be unused"
+        errorLine1="    &lt;string name=&quot;menu.rating_1&quot;>1 Stern&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="308"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.menu_rating_2` appears to be unused"
+        errorLine1="    &lt;string name=&quot;menu.rating_2&quot;>2 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="309"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.menu_rating_3` appears to be unused"
+        errorLine1="    &lt;string name=&quot;menu.rating_3&quot;>3 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="310"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.menu_rating_4` appears to be unused"
+        errorLine1="    &lt;string name=&quot;menu.rating_4&quot;>4 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="311"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.menu_rating_5` appears to be unused"
+        errorLine1="    &lt;string name=&quot;menu.rating_5&quot;>5 Sterne&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="312"
             column="13"/>
     </issue>
 
@@ -428,7 +2508,7 @@
         errorLine2="            ~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="491"
+            line="497"
             column="13"/>
     </issue>
 

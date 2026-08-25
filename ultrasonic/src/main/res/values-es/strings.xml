@@ -318,7 +318,6 @@
     <string name="library_hub.current_name">%1$s</string>
     <string name="library_hub.switch">Cambiar colección</string>
     <string name="library_hub.add">Añadir colección</string>
-    <string name="library.downloaded_music">Música descargada</string>
     <string name="about.webpage">Visitar el sitio web</string>
     <string name="about.report">Reportar un problema</string>
     <string name="about.text"><b>Taki</b> es un reproductor enfocado en colecciones musicales personales y compartidas. Escucha en línea o descarga tu música para reproducirla sin conexión, sin dejar que la tecnología se interponga.\n\nTaki funciona con Navidrome y otros servidores compatibles con las APIs de Subsonic y OpenSubsonic.\n\nTaki es software libre y de código abierto basado en Ultrasonic y distribuido bajo la licencia GNU GPLv3. Ultrasonic y sus colaboradores reciben crédito como proyecto original.</string>
