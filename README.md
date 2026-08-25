@@ -1,57 +1,60 @@
-# Taki for Android
+# Taki
 
 **Your music, without distractions.**
 
-Taki is a focused Android player for personal and shared music collections.
-Listen online or download your music for offline playback, without letting the
-technology get in the way.
+Taki is a focused Android music player that makes a personal music library feel simple to use. Stream from [Navidrome](https://www.navidrome.org/) or another OpenSubsonic/Subsonic-compatible server, keep music available offline, and stay close to your collection without server-management clutter.
 
-Taki works with [Navidrome](https://www.navidrome.org/) and other servers
-compatible with the [Subsonic](http://www.subsonic.org/pages/api.jsp) and
-[OpenSubsonic](https://opensubsonic.netlify.app/) APIs.
+> **Beta:** Taki is preparing its first public beta. There is no official public APK yet, and downloads from the original Ultrasonic project are not Taki releases.
 
-> Taki is currently in beta. It is not yet published on Google Play or F-Droid;
-> builds linked to the original Ultrasonic project are not Taki releases.
+## Screenshots
+
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" alt="Taki Home" width="30%" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" alt="Taki Library" width="30%" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" alt="Taki Now Playing" width="30%" />
+</p>
+
+## Why Taki?
+
+Taki keeps everyday listening direct: connect a library, find music, press play, and download what you want offline. Its interface is intentionally dark, calm, and music-first.
 
 ## Features
 
-- Stream personal and shared music collections
+- Stream albums, artists, playlists, songs, genres, and liked music
 - Download music for offline playback
-- Connect to multiple compatible servers
-- Browse playlists, albums, artists, songs, genres, and liked songs
-- Search across your library
-- Dark, distraction-free interface
-- Android Auto and media-session integration
+- Search across your library and connect multiple compatible servers
+- Integrate with Android media controls and Android Auto
+- Use a focused interface without server administration features
 
-## Development
+## Requirements
 
-The project requires a recent Android Studio installation and the Android SDK.
-To build the debug application from the command line:
+- Android 8.0 (API 26) or later
+- A Navidrome or compatible OpenSubsonic/Subsonic server
+
+Compatibility varies between server implementations and API versions. Navidrome is the primary compatibility target for the beta.
+
+## Install / Download
+
+The first public beta has not been published yet. When it is available, official builds will be attached to this repository's [GitHub Releases](https://github.com/churipakinti/taki-android/releases). Until then, build from source if you want to test Taki.
+
+## Build from source
+
+Install a recent Android Studio and Android SDK, clone the repository, then run:
 
 ```shell
 ./gradlew :ultrasonic:assembleDebug
 ```
 
-The Gradle module and Java/Kotlin package still use the legacy `ultrasonic` and
-`org.moire.ultrasonic` identifiers for compatibility. They do not represent the
-public product name.
+The APK is generated under `ultrasonic/build/outputs/apk/debug/`. The module and Kotlin package retain the legacy `ultrasonic` and `org.moire.ultrasonic` names for compatibility.
 
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md) before proposing a change.
+## Reporting bugs
 
-The source repository is hosted at
-[github.com/churipakinti/taki-android](https://github.com/churipakinti/taki-android).
+Use the [issue tracker](https://github.com/churipakinti/taki-android/issues) and choose the bug report form. Do not post credentials, private server URLs, or sensitive logs. Security and privacy concerns should follow [SECURITY.md](SECURITY.md).
 
-## Issues
+## Contributing
 
-Report bugs and request features in the
-[Taki issue tracker](https://github.com/churipakinti/taki-android/issues).
+Contributions are welcome when they fit Taki's focused direction. Read the [contribution guide](docs/CONTRIBUTING.md) before opening a pull request.
 
-## License and credits
+## Credits and License
 
-Taki is free and open-source software distributed under the
-[GNU General Public License v3](LICENSE). See [NOTICE](NOTICE.md) for the Taki
-project notice and upstream attribution.
-
-Taki is based on [Ultrasonic](https://gitlab.com/ultrasonic/ultrasonic).
-Ultrasonic and its contributors are credited as the original project; they do
-not maintain or endorse Taki.
+Taki is free and open-source software distributed under the [GNU General Public License v3](LICENSE). It is based on [Ultrasonic](https://gitlab.com/ultrasonic/ultrasonic); Ultrasonic contributors are credited as the original project and are not responsible for Taki-specific changes, releases, support, or defects. See [NOTICE.md](NOTICE.md) for full attribution.

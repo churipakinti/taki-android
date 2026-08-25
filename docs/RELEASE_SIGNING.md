@@ -7,9 +7,9 @@ otros equipos.** Solo nombres de variables y pasos.
 ## Identidad de firma
 
 Taki usa un keystore propio, generado específicamente para este proyecto (P0.1 de
-`TAKI_BETA_COMPLETION_PLAN.md`). El archivo heredado `ultrasonic-keystore.enc` en la raíz del
-repo **no es y no debe convertirse en** la identidad de firma de Taki — es un artefacto del
-fork original de Ultrasonic.
+`TAKI_BETA_COMPLETION_PLAN.md`). El archivo heredado `ultrasonic-keystore.enc`, retirado del
+árbol actual durante la preparación pública pero conservado en el historial de Ultrasonic,
+**no es y no debe convertirse en** la identidad de firma de Taki.
 
 - Algoritmo: RSA 4096, formato PKCS12.
 - Validez: 10.000 días desde la generación.

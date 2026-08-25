@@ -1,0 +1,52 @@
+name: Bug report
+description: Report reproducible incorrect behavior in Taki
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened?
+      description: Describe the problem without including credentials or private server URLs.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open…\n2. Tap…\n3. Observe…"
+    validations:
+      required: true
+  - type: input
+    id: taki-version
+    attributes:
+      label: Taki version
+    validations:
+      required: true
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: Navidrome/server version
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or screenshots
+      description: Optional. Remove credentials, tokens, private URLs, and personal library details first.

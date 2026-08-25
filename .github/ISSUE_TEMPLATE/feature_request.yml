@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a focused improvement to Taki
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What listening problem are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Desired behavior
+    validations:
+      required: true
+  - type: textarea
+    id: fit
+    attributes:
+      label: Why this belongs in Taki
+      description: Explain how it supports a focused, music-first experience.
+    validations:
+      required: true
