@@ -133,8 +133,7 @@
         <provider
             android:name=".provider.SearchSuggestionProvider"
             android:authorities="${applicationId}.provider.SearchSuggestionProvider"
-            android:exported="true"
-            tools:ignore="ExportedContentProvider" />
+            android:exported="false" />
 
         <provider
             android:name=".provider.AlbumArtContentProvider"
