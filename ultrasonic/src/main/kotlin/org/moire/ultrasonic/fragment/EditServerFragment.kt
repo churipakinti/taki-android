@@ -419,7 +419,14 @@ class EditServerFragment : Fragment() {
             }
         }
 
-        if (serverNameEditText!!.editText?.text.isNullOrBlank()) {
+        // On the first-connection screen the name field is hidden entirely, so it must keep
+        // tracking the current host rather than freezing on whatever host was typed the first
+        // time this ran - otherwise a failed attempt followed by a corrected address saves the
+        // stale, never-connected host as the library's name.
+        if (
+            serverNameEditText?.isVisible == false ||
+            serverNameEditText!!.editText?.text.isNullOrBlank()
+        ) {
             if (isValid && url != null) {
                 serverNameEditText!!.editText?.setText(url.host)
             }
