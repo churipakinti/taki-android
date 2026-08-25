@@ -147,7 +147,6 @@ dependencies {
 
     implementation libs.car
     implementation libs.core
-    implementation libs.testCore
     implementation libs.design
     implementation libs.multidex
     implementation libs.roomRuntime
