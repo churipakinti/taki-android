@@ -33,7 +33,6 @@
     <string name="common.multiple_genres">Múltiplos Gêneros</string>
     <string name="common.name">Nome</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Fixar</string>
     <string name="common.play_last">Tocar por Último</string>
     <string name="common.play_next">Tocar na Próxima</string>
     <string name="common.play_now">Tocar Agora</string>
@@ -41,7 +40,6 @@
     <string name="common.public">Público</string>
     <string name="common.save">Salvar</string>
     <string name="common.title">Título</string>
-    <string name="common.unpin">Desafixar</string>
     <string name="common.various_artists">Vários Artistas</string>
     <string name="delete_playlist">Você quer excluir %1$s</string>
     <string name="download.empty">Nada está baixando</string>
@@ -109,7 +107,6 @@
     <string name="main.songs_starred">Favoritas</string>
     <string name="main.songs_title">Músicas</string>
     <string name="main.videos">Vídeos</string>
-    <string name="main.welcome_title">Bem-vindo ao Taki!</string>
     <string name="menu.about">Sobre</string>
     <string name="menu.deleted_playlist">Playlist excluída %s</string>
     <string name="menu.deleted_playlist_error">Falha ao excluir a playlist %s</string>
@@ -166,7 +163,6 @@
     <string name="settings.max_bitrate_mobile">Taxa Máxima de Bits - Celular</string>
     <string name="settings.max_bitrate_wifi">Taxa Máxima de Bits - Wi-Fi</string>
     <string name="settings.network_title">Rede</string>
-    <string name="settings.other_title">Outras Configurações</string>
     <string name="settings.override_language">Sobrescrever o Idioma</string>
     <string name="settings.override_language_summary">Você precisa reiniciar o aplicativo após alterar o idioma</string>
     <string name="settings.search_history_cleared">Histórico de pesquisas apagado</string>
@@ -238,7 +234,6 @@
     <string name="server_menu.move_down">Para baixo</string>
     <string name="server_editor.authentication">Autenticação</string>
     <string name="server_editor.advanced">Configurações avançadas</string>
-    <string name="server_editor.disabled_feature">Um ou mais recursos foram desativados porque o servidor não os suporta.\nVocê pode rodar este teste novamente a qualquer momento.</string>
     <string name="about.webpage">Visitar a página web</string>
     <string name="about.report">Reportar um erro</string>
     <string name="about.text"><b>Taki</b> é um cliente gratuito e open-source para Android de streaming de música para API de servidores compatíveis com Subsonic (version 1.7.0 ou maior).\n\nCom <b>Taki</b> você pode facilmente reproduzir online ou baixar música de seu computador doméstico para seu telefone Android usando um servidor de mídia compatível com Subsonic. O software do servidor Subsonic necessita uma configuração independente do Taki.\n\nPor padrão, o servidor Taki não é configurado. Uma vez que você configurou seu próprio servidor, altere a configuração no Taki para poder conectá-lo.</string>
@@ -247,20 +242,10 @@
         <item quantity="many">%d músicas</item>
         <item quantity="other">%d músicas</item>
     </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d música selecionada para ser fixada</item>
-        <item quantity="many">%d músicas selecionadas para serem fixadas</item>
-        <item quantity="other">%d músicas selecionadas para serem fixadas</item>
-    </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d música selecionada para ser baixada</item>
         <item quantity="many">%d músicas selecionadas para serem baixadas</item>
         <item quantity="other">%d músicas selecionadas para serem baixadas</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d música desfixada</item>
-        <item quantity="many">%d músicas desfixadas</item>
-        <item quantity="other">%d músicas desfixadas</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="one">%d música excluída</item>
@@ -295,7 +280,6 @@
     <string name="settings.share_options">Opções</string>
     <string name="settings.use_id3_offline_summary">Se você ativar esta configuração, ela mostrará apenas as músicas que você baixou com o Taki 4.0 ou posterior. Os downloads anteriores não têm os metadados necessários baixados. Você pode alternar entre os modos Fixar e Salvar para acionar o download dos metadados ausentes.</string>
     <string name="albumArt">Arte do álbum</string>
-    <string name="supported_server_features">Recursos suportados</string>
     <string name="foreground_exception_text">Pressione o botão play na notificação de mídia se ainda estiver presente. Caso contrário, abra o aplicativo para iniciar a reprodução e reconectar a sessão ao controlador</string>
     <string name="main.albums_by_year">Cronológico</string>
     <string name="shortcut_play_random_songs_long">Tocar músicas aleatórias</string>
@@ -310,10 +294,4 @@
         <item quantity="other">%d músicas adicionadas na fila</item>
     </plurals>
     <string name="chat.user_avatar">Imagem do Avatar</string>
-    <string name="menu.rating_no_rating">Sem Avaliação</string>
-    <string name="menu.rating_1">1 Estrela</string>
-    <string name="menu.rating_2">2 Estrelas</string>
-    <string name="menu.rating_3">3 Estrelas</string>
-    <string name="menu.rating_4">4 Estrelas</string>
-    <string name="menu.rating_5">5 Estrelas</string>
 </resources>

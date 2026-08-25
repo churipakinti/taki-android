@@ -24,14 +24,12 @@
     <string name="common.multiple_genres">Múltiplos Gêneros</string>
     <string name="common.name">Nome</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Fixar</string>
     <string name="common.play_last">Tocar por Último</string>
     <string name="common.play_next">Tocar na Próxima</string>
     <string name="common.play_now">Tocar Agora</string>
     <string name="common.play_shuffled">Tocar Aleatoriamente</string>
     <string name="common.public">Público</string>
     <string name="common.save">Salvar</string>
-    <string name="common.unpin">Desafixar</string>
     <string name="common.various_artists">Vários Artistas</string>
     <string name="delete_playlist">Você quer apagar %1$s</string>
     <string name="playlist.empty">Playlist está vazia</string>
@@ -80,7 +78,6 @@
     <string name="main.songs_starred">Favoritas</string>
     <string name="main.songs_title">Músicas</string>
     <string name="main.videos">Vídeos</string>
-    <string name="main.welcome_title">Bem-vindo!</string>
     <string name="menu.about">Sobre</string>
     <string name="menu.deleted_playlist">Playlist %s apagada</string>
     <string name="menu.deleted_playlist_error">Falha ao apagar a playlist %s</string>
@@ -132,7 +129,6 @@
     <string name="settings.max_bitrate_mobile">Máx. de Taxa de Bits - Celular</string>
     <string name="settings.max_bitrate_wifi">Máx. de Taxa de Bits - Wi-Fi</string>
     <string name="settings.network_title">Rede</string>
-    <string name="settings.other_title">Outras Configurações</string>
     <string name="settings.search_history_cleared">Histórico de pesquisas apagado</string>
     <string name="settings.server_address">Endereço do Servidor</string>
     <string name="settings.server_name">Nome</string>
@@ -202,20 +198,8 @@
     <string name="api.subsonic.upgrade_client">Versões incompativeis. Atualize o aplicativo Taki para Android.</string>
     <string name="api.subsonic.upgrade_server">Versões incompativeis. Atualize o servidor Taki.</string>
     <!-- Subsonic features  -->
-    <string name="server_editor.disabled_feature">Um ou mais recursos foram desativados porque o servidor não os suporta.
-\nPode executar este teste novamente a qualquer momento.</string>
     <string name="about.webpage">Visitar a página web</string>
     <string name="about.report">Reportar um erro</string>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d música selecionada para ser fixada</item>
-        <item quantity="many">%d músicas selecionadas para serem fixadas</item>
-        <item quantity="other">%d músicas selecionadas para serem fixadas</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d música desfixada</item>
-        <item quantity="many">%d músicas desfixadas</item>
-        <item quantity="other">%d músicas desfixadas</item>
-    </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="one">%d música excluída</item>
         <item quantity="many">%d músicas excluídas</item>
@@ -233,7 +217,6 @@
     <string name="buttons.next">Próxima</string>
     <string name="grid_view">Cápa</string>
     <string name="list_view">Lista</string>
-    <string name="supported_server_features">Recursos suportados</string>
     <string name="jukebox">Jukebox</string>
     <string name="chat.user_avatar">Imagem Avatar</string>
     <string name="language.it">Italiano</string>
@@ -316,12 +299,6 @@
     <string name="foreground_exception_text">Pressione no botão de reprodução na notificação de média se ainda estiver presente, caso contrário, abra a app para iniciar a reprodução e reconecte a sessão ao controlador</string>
     <string name="foreground_exception_title">A reprodução não pode ser retomada</string>
     <string name="settings.max_bitrate_pinning">Taxa Máxima de Bits - Favoritando música permanentemente</string>
-    <string name="menu.rating_no_rating">Sem Avaliação</string>
-    <string name="menu.rating_1">1 Estrela</string>
-    <string name="menu.rating_2">2 Estrelas</string>
-    <string name="menu.rating_3">3 Estrelas</string>
-    <string name="menu.rating_4">4 Estrelas</string>
-    <string name="menu.rating_5">5 Estrelas</string>
     <string name="settings.replaygain_title">Modo ReplayGain</string>
     <string name="settings.replaygain_disabled">Desativado</string>
     <string name="settings.replaygain_dynamic">Faixa Isolada, Salvo ao Reproduzir Álbum</string>

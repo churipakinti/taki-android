@@ -22,7 +22,6 @@
     <string name="common.multiple_genres">複数ジャンル</string>
     <string name="common.name">名前</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">固定</string>
     <string name="common.play_last">最後に再生</string>
     <string name="common.play_next">次に再生</string>
     <string name="common.play_now">今すぐ再生</string>
@@ -81,7 +80,6 @@
     <string name="main.songs_random">ランダム</string>
     <string name="main.songs_starred">スター付き</string>
     <string name="main.videos">動画</string>
-    <string name="main.welcome_title">ようこそ、Takiへ!</string>
     <string name="menu.about">アプリについて</string>
     <string name="menu.deleted_playlist">プレイリスト %s を削除しました</string>
     <string name="menu.deleted_playlist_error">プレイリスト %s を削除できません</string>
@@ -125,7 +123,6 @@
     <string name="settings.download_transition_summary">メディア一覧表示から再生を開始した場合、自動で再生中画面に切り替えます</string>
     <string name="settings.invalid_url">有効なURLを指定してください。</string>
     <string name="settings.network_title">ネットワーク</string>
-    <string name="settings.other_title">その他の設定</string>
     <string name="settings.override_language">言語を指定</string>
     <string name="settings.override_language_summary">言語の変更には、アプリ再起動が必要です</string>
     <string name="settings.server_name">サーバー名</string>
@@ -182,8 +179,6 @@
     <string name="server_menu.delete">削除</string>
     <string name="server_menu.move_up">上に移動</string>
     <string name="server_editor.advanced">詳細設定</string>
-    <string name="server_editor.disabled_feature">サーバーがサポート外のため、いくつかの機能が無効になりました。
-\nこのテストはいつでも再実行することができます。</string>
     <string name="about.webpage">Webページにアクセス</string>
     <string name="about.report">バグを報告</string>
     <plurals name="n_songs">
@@ -191,12 +186,6 @@
     </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="other">%d 曲がダウンロード選択されました</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="other">%d 曲が固定解除されました</item>
-    </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="other">%d 曲が固定されるよう選択されました</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="other">%d 曲が削除されました</item>
@@ -218,7 +207,6 @@
     <string name="api.subsonic.upgrade_server">互換性のないバージョンです。Subsonicサーバーをバージョンアップしてください。</string>
     <string name="list_view">リスト</string>
     <string name="grid_view">カバー</string>
-    <string name="supported_server_features">サポートされている機能</string>
     <string name="jukebox">ジュークボックス</string>
     <string name="foreground_exception_title">再生を再開できません</string>
     <string name="background_task.unsupported_api">サーバーAPI v%1$s ではこの機能がサポートされていません。</string>
@@ -233,7 +221,6 @@
     <string name="chat.user_avatar">アバター画像</string>
     <string name="common.album">アルバム</string>
     <string name="button_bar.search">検索</string>
-    <string name="common.unpin">固定解除</string>
     <string name="common.various_artists">様々なアーティスト</string>
     <string name="download.empty">何もダウンロードしていません</string>
     <string name="delete_playlist">%1$s を削除してよろしいですか</string>

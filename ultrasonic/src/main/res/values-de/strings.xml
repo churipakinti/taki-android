@@ -33,7 +33,6 @@
     <string name="common.multiple_genres">Mehrere Genres</string>
     <string name="common.name">Name</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Anheften</string>
     <string name="common.play_last">Zuletzt spielen</string>
     <string name="common.play_next">Als nächstes spielen</string>
     <string name="common.play_now">Jetzt spielen</string>
@@ -41,7 +40,6 @@
     <string name="common.public">Öffentlich</string>
     <string name="common.save">Speichern</string>
     <string name="common.title">Titel</string>
-    <string name="common.unpin">Lösen</string>
     <string name="common.various_artists">Mehrere Künstler</string>
     <string name="delete_playlist">Möchtest du %1$s löschen</string>
     <string name="download.empty">Es wird nichts heruntergeladen</string>
@@ -109,7 +107,6 @@
     <string name="main.songs_starred">Mit Stern</string>
     <string name="main.songs_title">Titel</string>
     <string name="main.videos">Filme</string>
-    <string name="main.welcome_title">Willkommen zu Taki!</string>
     <string name="menu.about">Über</string>
     <string name="menu.deleted_playlist">Wiedergabeliste %s gelöscht</string>
     <string name="menu.deleted_playlist_error">Löschen der Wiedergabeliste %s ist fehlgeschlagen</string>
@@ -166,7 +163,6 @@
     <string name="settings.max_bitrate_mobile">Max. Bitrate - Mobil</string>
     <string name="settings.max_bitrate_wifi">Max. Bitrate - WLAN</string>
     <string name="settings.network_title">Netzwerk</string>
-    <string name="settings.other_title">Andere Einstellungen</string>
     <string name="settings.override_language">Sprache ändern</string>
     <string name="settings.override_language_summary">Nach dem Ändern der Sprache muss die App muss neu startet werden</string>
     <string name="settings.search_history_cleared">Suchhistorie gelöscht</string>
@@ -237,24 +233,15 @@
     <string name="server_menu.move_down">Herunterschieben</string>
     <string name="server_editor.authentication">Authentifizierung</string>
     <string name="server_editor.advanced">Erweiterte Einstellungen</string>
-    <string name="server_editor.disabled_feature">Einer oder mehrere Funktionen wurden deaktiviert, da der Server diese nicht unterstützt.\nDu kannst diesen Test jederzeit nochmals ausführen.</string>
     <string name="about.webpage">Website besuchen</string>
     <string name="about.report">Einen Fehler melden</string>
     <plurals name="n_songs">
         <item quantity="one">%d Titel</item>
         <item quantity="other">%d Titel</item>
     </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d Titel zum Anheften ausgewählt</item>
-        <item quantity="other">%d Titel zum Anheften ausgewählt</item>
-    </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d Titel zum herunterladen ausgewählt</item>
         <item quantity="other">%d Titel zum herunterladen ausgewählt</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d Titel losgelöst</item>
-        <item quantity="other">%d Titel losgelöst</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="one">%d Titel gelöscht</item>
@@ -296,7 +283,6 @@
     <string name="settings.use_hw_offload_description">Versuche, die Medien mit dem Mediendecoder-Chip auf Deinem Telefon abzuspielen. Dadurch kann der Akku besser genutzt werden. Einige Nutzer berichten über Stotterer beim Abspielen, wenn diese Option aktiv ist.</string>
     <string name="list_view">Liste</string>
     <string name="grid_view">Cover</string>
-    <string name="supported_server_features">Unterstützte Funktionen</string>
     <string name="jukebox">Jukebox</string>
     <string name="shortcut_play_random_songs_long">Zufällige Titel abspielen</string>
     <string name="shortcut_play_random_songs_short">Zufällige Titel</string>
@@ -304,12 +290,6 @@
         <item quantity="one">Ein Titel wurde zur Wiedergabeliste hinzugefügt</item>
         <item quantity="other">%d Titel wurden zur Wiedergabeliste hinzugefügt</item>
     </plurals>
-    <string name="menu.rating_no_rating">Keine Bewertung</string>
-    <string name="menu.rating_1">1 Stern</string>
-    <string name="menu.rating_2">2 Sterne</string>
-    <string name="menu.rating_3">3 Sterne</string>
-    <string name="menu.rating_4">4 Sterne</string>
-    <string name="menu.rating_5">5 Sterne</string>
     <string name="settings.share_options">Optionen</string>
     <string name="main.albums_byGenre">Nach Genre</string>
     <string name="settings.replaygain_title">ReplayGain-Modus</string>

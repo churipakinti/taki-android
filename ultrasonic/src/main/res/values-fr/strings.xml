@@ -33,7 +33,6 @@
     <string name="common.multiple_genres">Genres multiples</string>
     <string name="common.name">Nom</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Épingler</string>
     <string name="common.play_last">Jouer en dernier</string>
     <string name="common.play_next">Jouer à la suite</string>
     <string name="common.play_now">Jouer maintenant</string>
@@ -41,7 +40,6 @@
     <string name="common.public">Public</string>
     <string name="common.save">Enregistrer</string>
     <string name="common.title">Titre</string>
-    <string name="common.unpin">Détacher</string>
     <string name="common.various_artists">Artistes divers</string>
     <string name="delete_playlist">Voulez-vous supprimer %1$s</string>
     <string name="download.empty">Rien ne se télécharge</string>
@@ -107,7 +105,6 @@
     <string name="main.songs_starred">Favoris</string>
     <string name="main.songs_title">Titres</string>
     <string name="main.videos">Vidéos</string>
-    <string name="main.welcome_title">Bienvenue sur Taki !</string>
     <string name="menu.about">À propos</string>
     <string name="menu.deleted_playlist">Liste de lecture supprimée %s</string>
     <string name="menu.deleted_playlist_error">Échec de la suppression de la liste de lecture %s</string>
@@ -162,7 +159,6 @@
     <string name="settings.max_bitrate_mobile">Débit maximal - Mobile</string>
     <string name="settings.max_bitrate_wifi">Débit maximal - Wi-Fi</string>
     <string name="settings.network_title">Réseau</string>
-    <string name="settings.other_title">Autres paramètres</string>
     <string name="settings.override_language">Remplacer la langue</string>
     <string name="settings.override_language_summary">Vous avez besoin de redémarrer l\'application après avoir changé la langue</string>
     <string name="settings.search_history_cleared">Historique des recherches effacé</string>
@@ -229,7 +225,6 @@
     <string name="server_menu.move_down">Déplacer vers le bas</string>
     <string name="server_editor.authentication">Authentification</string>
     <string name="server_editor.advanced">Paramètres avancés</string>
-    <string name="server_editor.disabled_feature">Une ou plusieurs fonctionnalités ont été désactivées car le serveur ne les prend pas en charge.\nVous pouvez réexécuter ce test à tout moment.</string>
     <string name="about.webpage">Visiter la page web</string>
     <string name="about.report">Signaler un bug</string>
     <string name="about.text"><b>Taki</b> est un client Android de streaming musical gratuit et open-source pour les serveurs compatibles avec l\'API Subsonic (version 1.7.0 ou supérieure). Avec <b>Taki</b>, vous pouvez facilement diffuser ou télécharger de la musique depuis votre ordinateur personnel vers votre téléphone Android en utilisant votre serveur multimédia compatible Subsonic. Le logiciel du serveur Subsonic nécessite une configuration supplémentaire distincte d\'Taki. Par défaut, Taki n\'est pas configuré. Une fois que vous avez mis en place votre propre serveur, veuillez modifier la configuration du serveur afin qu\'il se connecte à votre ordinateur.</string>
@@ -271,7 +266,6 @@
     <string name="settings.show_confirmation_dialog">Afficher le dialogue de confirmation</string>
     <string name="notification.permission_required">Les notifications sont nécessaires pour la lecture des médias. Vous pouvez accorder cette autorisation à tout moment dans les paramètres Android.</string>
     <string name="settings.use_hw_offload_description">Essayez de lire le média à l\'aide de la puce de décodage média de votre téléphone. Ceci peut augmenter l\'utilisation de la batterie. Certains utilisateurs signalent des problèmes de lecture lorsqu\'ils activent cette option !</string>
-    <string name="supported_server_features">Fonctionnalités prises en charge</string>
     <string name="settings.use_hw_offload_title">Utiliser la lecture matérielle (expérimental)</string>
     <string name="jukebox">Jukebox</string>
     <string name="download.menu_shuffle_on">Mode aléatoire activé</string>
@@ -284,27 +278,11 @@
         <item quantity="many">%d chansons sélectionnées pour téléchargement</item>
         <item quantity="other">%d chansons sélectionnées pour téléchargement</item>
     </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d chanson désépinglée</item>
-        <item quantity="many">%d chansons désépinglées</item>
-        <item quantity="other">%d chansons désépinglées</item>
-    </plurals>
     <plurals name="n_songs_added_after_current">
         <item quantity="one">%d chanson insérée après la chanson en cours</item>
         <item quantity="many">%d chansons insérées après la chanson en cours</item>
         <item quantity="other">%d chansons insérées après la chanson en cours</item>
     </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d chanson sélectionnée à épingler</item>
-        <item quantity="many">%d chansons sélectionnées à épingler</item>
-        <item quantity="other">%d chansons sélectionnées à épingler</item>
-    </plurals>
-    <string name="menu.rating_no_rating">Aucune évaluation</string>
-    <string name="menu.rating_1">1 Étoile</string>
-    <string name="menu.rating_2">2 Étoiles</string>
-    <string name="menu.rating_3">3 Étoiles</string>
-    <string name="menu.rating_4">4 Étoiles</string>
-    <string name="menu.rating_5">5 Étoiles</string>
     <string name="settings.max_bitrate_pinning">Débit binaire maximal - Lors de l\'épinglage permanent d\'une chanson</string>
     <string name="settings.share_options">Options</string>
     <plurals name="n_songs_added_play_now">

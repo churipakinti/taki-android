@@ -23,14 +23,12 @@
     <string name="common.multiple_genres">Generi multipli</string>
     <string name="common.name">Nome</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Blocca</string>
     <string name="common.play_last">Riproduci ultimo </string>
     <string name="common.play_next">Riproduci successivo</string>
     <string name="common.play_now">Riproduci ora</string>
     <string name="common.play_shuffled">Riproduci casuale</string>
     <string name="common.public">Pubblico</string>
     <string name="common.save">Salva</string>
-    <string name="common.unpin">Sblocca</string>
     <string name="common.various_artists">Artisti vari</string>
     <string name="delete_playlist">Vuoi eliminare %1$s</string>
     <string name="playlist.empty">Playlist vuota</string>
@@ -79,7 +77,6 @@
     <string name="main.songs_starred">Preferiti</string>
     <string name="main.songs_title">Canzoni</string>
     <string name="main.videos">Video</string>
-    <string name="main.welcome_title">Benvenuto!</string>
     <string name="menu.about">Informazioni</string>
     <string name="menu.deleted_playlist">Playlist %s eliminata</string>
     <string name="menu.deleted_playlist_error">Impossibile eliminare la playlist %s</string>
@@ -130,7 +127,6 @@
     <string name="settings.max_bitrate_mobile">Bitrate Max - Mobile</string>
     <string name="settings.max_bitrate_wifi">Bitrate Max - Wi-Fi</string>
     <string name="settings.network_title">Rete</string>
-    <string name="settings.other_title">Altre Impostazioni</string>
     <string name="settings.search_history_cleared">Storico ricerche eliminato</string>
     <string name="settings.server_address">Indirizzo Server</string>
     <string name="settings.server_name">Nome</string>

@@ -26,10 +26,8 @@
     <string name="common.multiple_genres">Flere sjangere</string>
     <string name="common.name">Navn</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Fest</string>
     <string name="download.empty">Ingenting lastes ned</string>
     <string name="playlist.empty">Spillelisten er tom</string>
-    <string name="common.unpin">Løsne</string>
     <string name="settings.cache_size_9000">9 GB</string>
     <string name="main.albums_highest">Toppvurdert</string>
     <string name="language.default">Systemforvalg</string>
@@ -119,7 +117,6 @@
     <string name="main.albums_alphaByArtist">Etter artist</string>
     <string name="main.songs_random">Tilfeldig</string>
     <string name="main.songs_starred">Stjernemerket</string>
-    <string name="main.welcome_title">Velkommen til Taki.</string>
     <string name="main.songs_title">Spor</string>
     <string name="main.videos">Videoer</string>
     <string name="menu.about">Om</string>
@@ -154,7 +151,6 @@
     <string name="settings.cache_size_6000">6 GB</string>
     <string name="settings.invalid_url">Angi en gyldig nettadresse.</string>
     <string name="settings.network_title">Nettverk</string>
-    <string name="settings.other_title">Andre innstillinger</string>
     <string name="settings.override_language">Overstyr språket</string>
     <string name="settings.server_address">Tjeneradresse</string>
     <string name="settings.server_name">Navn</string>
@@ -195,14 +191,6 @@
     <plurals name="n_songs">
         <item quantity="one">%d spor</item>
         <item quantity="other">%d spor</item>
-    </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d spor å feste</item>
-        <item quantity="other">%d spor å feste</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d spor løsnet</item>
-        <item quantity="other">%d spor løsnet</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="one">%d spor slettet</item>
@@ -277,8 +265,6 @@
     <string name="settings.show_confirmation_dialog_summary">Viser bekreftelsesdialog før sletting eller løsning av spor</string>
     <string name="server_editor.leave_confirmation">Forlat og forkast endringene dine\?</string>
     <string name="settings.debug.log_summary">Det finnes %1$s loggfiler som bruker ~%2$s MB plass i %3$s-mappen. Vil du beholde disse\?</string>
-    <string name="server_editor.disabled_feature">En eller flere funksjoner ble skrudd av fordi tjeneren ikke støtter dem.
-\nDu kan kjøre denne testen igjen når som helst.</string>
     <string name="api.subsonic.generic.no.message">ingen meldinger ankommet fra tjeneren</string>
     <string name="api.subsonic.token_auth_not_supported_for_ldap">Identitetsbekreftelse med symbol støttes ikke for LDAP-brukere.</string>
     <string name="api.subsonic.not_authenticated">Feil brukernavn eller passord.</string>
@@ -290,7 +276,6 @@
     <string name="api.subsonic.not_authorized">Ikke identitetsbekreftet. Sjekk brukertilganger på Subsonic-tjeneren.</string>
     <string name="settings.use_hw_offload_title">Bruk maskinvarebasert avspilling (eksperimentelt)</string>
     <string name="grid_view">Omslag</string>
-    <string name="supported_server_features">Støttede funksjoner</string>
     <string name="jukebox">Jukebox</string>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d spor valgt for nedlasting</item>

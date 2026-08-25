@@ -24,14 +24,12 @@
     <string name="common.multiple_genres">Vícero žánrů</string>
     <string name="common.name">Jméno</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Připnout</string>
     <string name="common.play_last">Přehrát jako poslední</string>
     <string name="common.play_next">Přehrát jako další</string>
     <string name="common.play_now">Přehrát teď</string>
     <string name="common.play_shuffled">Přehrát náhodně</string>
     <string name="common.public">Veřejné</string>
     <string name="common.save">Uložit</string>
-    <string name="common.unpin">Odepnout</string>
     <string name="common.various_artists">Různí umělci</string>
     <string name="delete_playlist">Opravdu smazat %1$s</string>
     <string name="playlist.empty">Playlist je prázdný</string>
@@ -80,7 +78,6 @@
     <string name="main.songs_starred">Označené hvězdičkou</string>
     <string name="main.songs_title">Skladby</string>
     <string name="main.videos">Videa</string>
-    <string name="main.welcome_title">Vítejte!</string>
     <string name="menu.about">O aplikaci</string>
     <string name="menu.deleted_playlist">Smazaný playlist %s</string>
     <string name="menu.deleted_playlist_error">Chyba smazání playlistu %s</string>
@@ -132,7 +129,6 @@
     <string name="settings.max_bitrate_mobile">Max Bitrate - mobilní síť</string>
     <string name="settings.max_bitrate_wifi">Max Bitrate - wi-fi</string>
     <string name="settings.network_title">Síť</string>
-    <string name="settings.other_title">Další nastavení</string>
     <string name="settings.search_history_cleared">Historie hledání vyčištěna</string>
     <string name="settings.server_address">Adresa serveru</string>
     <string name="settings.server_name">Název</string>

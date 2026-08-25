@@ -32,7 +32,6 @@
     <string name="common.multiple_genres">Несколько жанров</string>
     <string name="common.name">Имя</string>
     <string name="common.ok">Ок</string>
-    <string name="common.pin">Пин</string>
     <string name="common.play_last">Воспроизвести последний</string>
     <string name="common.play_next">Воспроизвести следующий</string>
     <string name="common.play_now">Воспроизвести сейчас</string>
@@ -40,7 +39,6 @@
     <string name="common.public">Публичный</string>
     <string name="common.save">Сохранить</string>
     <string name="common.title">Заголовок</string>
-    <string name="common.unpin">Открепить</string>
     <string name="common.various_artists">Различные исполнители</string>
     <string name="delete_playlist">Вы хотите удалить %1$s</string>
     <string name="download.empty">Нечего загружать</string>
@@ -100,7 +98,6 @@
     <string name="main.songs_starred">Отмеченные</string>
     <string name="main.songs_title">Песни</string>
     <string name="main.videos">Видео</string>
-    <string name="main.welcome_title">Добро пожаловать в Taki!</string>
     <string name="menu.about">О приложении</string>
     <string name="menu.deleted_playlist">Удалить плейлист %s</string>
     <string name="menu.deleted_playlist_error">Не удалось удалить плейлист %s</string>
@@ -153,7 +150,6 @@
     <string name="settings.max_bitrate_mobile">Максимальный битрейт - Мобильный интернет</string>
     <string name="settings.max_bitrate_wifi">Максимальный битрейт - Wi-Fi подключение</string>
     <string name="settings.network_title">Сеть</string>
-    <string name="settings.other_title">Другие настройки</string>
     <string name="settings.search_history_cleared">История поиска очищена</string>
     <string name="settings.server_address">Адрес сервера</string>
     <string name="settings.server_name">Имя</string>
@@ -213,7 +209,6 @@
     <string name="server_menu.move_down">Опустить</string>
     <string name="server_editor.authentication">Аутентификация</string>
     <string name="server_editor.advanced">Дополнительные настройки</string>
-    <string name="server_editor.disabled_feature">Одна или несколько функций были отключены, потому что сервер их не поддерживает.\nВы можете запустить этот тест снова в любое время.</string>
     <plurals name="n_songs">
         <item quantity="one">%d песня</item>
         <item quantity="few">%d песни</item>
@@ -236,7 +231,6 @@
     <string name="chat.user_avatar">Аватар</string>
     <string name="download.playerstate_loading">Загрузка…</string>
     <string name="language.fr">Французский</string>
-    <string name="menu.rating_5">5 звёзд</string>
     <string name="settings.custom_cache_location">Использовать пользовательское расположение кэша</string>
     <string name="settings.replaygain_title">Режим ReplayGain</string>
     <string name="settings.replaygain_disabled">Выключено</string>

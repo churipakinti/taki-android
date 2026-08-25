@@ -24,14 +24,12 @@
     <string name="common.multiple_genres">Różne gatunki</string>
     <string name="common.name">Nazwa</string>
     <string name="common.ok">OK</string>
-    <string name="common.pin">Przypnij</string>
     <string name="common.play_last">Odtwórz na końcu</string>
     <string name="common.play_next">Odtwórz następne</string>
     <string name="common.play_now">Odtwórz teraz</string>
     <string name="common.play_shuffled">Odtwórz losowo</string>
     <string name="common.public">Publiczna</string>
     <string name="common.save">Zapisz</string>
-    <string name="common.unpin">Odepnij</string>
     <string name="common.various_artists">Różni wykonawcy</string>
     <string name="delete_playlist">Czy chcesz usunąć %1$s</string>
     <string name="playlist.empty">Playlista jest pusta</string>
@@ -80,7 +78,6 @@
     <string name="main.songs_starred">Ulubione</string>
     <string name="main.songs_title">Utwory</string>
     <string name="main.videos">Klipy wideo</string>
-    <string name="main.welcome_title">Witaj!</string>
     <string name="menu.about">O aplikacji</string>
     <string name="menu.deleted_playlist">Usunięto playlistę %s</string>
     <string name="menu.deleted_playlist_error">Usunięcie playlisty %s nie powiodło się</string>
@@ -132,7 +129,6 @@
     <string name="settings.max_bitrate_mobile">Maksymalny bitrate dla połączenia komórkowego</string>
     <string name="settings.max_bitrate_wifi">Maksymalny bitrate dla połączenia Wi-Fi</string>
     <string name="settings.network_title">Sieć</string>
-    <string name="settings.other_title">Inne ustawienia</string>
     <string name="settings.search_history_cleared">Wyczyść historię wyszukiwania</string>
     <string name="settings.server_address">Adres serwera</string>
     <string name="settings.server_name">Nazwa</string>
@@ -220,7 +216,6 @@
     <string name="language.de">Niemiecki</string>
     <string name="about.report">Zgłoś błąd</string>
     <string name="notification.downloading_title">Pobieranie w tle…</string>
-    <string name="supported_server_features">Wspierane funkcje</string>
     <string name="language.pl">Polski</string>
     <string name="common.artist">Wykonawca</string>
     <string name="language.nl">Holenderski</string>
@@ -262,12 +257,6 @@
     <string name="settings.summary.force_plain_text_password">Zmusza aplikację do przesyłania hasła w postaci niezaszyfrowanej. Przydaje się, gdy serwer Subsonic nie obsługuje nowego API uwierzytelniania użytkowników.</string>
     <string name="settings.wifi_required_title">Pobieraj tylko przez Wi-Fi</string>
     <string name="settings.debug.log_delete">Usuń pliki</string>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d utwór zaznaczony do przypięcia</item>
-        <item quantity="few">%d utwory zaznaczone do przypięcia</item>
-        <item quantity="many">%d utworów zaznaczonych do przypięcia</item>
-        <item quantity="other">%d utworów zaznaczonych do przypięcia</item>
-    </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d utworów zaznaczonych do pobrania</item>
         <item quantity="few">%d utwory zaznaczone do pobrania</item>
@@ -275,12 +264,6 @@
         <item quantity="other">%d utworów zaznaczonych do pobrania</item>
     </plurals>
     <string name="about.webpage">Odwiedź stronę internetową</string>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">Odpięto %d utwór</item>
-        <item quantity="few">Odpięto %d utwory</item>
-        <item quantity="many">Odpięto %d utworów</item>
-        <item quantity="other">Odpięto %d utworów</item>
-    </plurals>
     <string name="settings.use_hw_offload_title">Użyj odtwarzania sprzętowego (eksperymentalne)</string>
     <string name="jukebox">Jukebox</string>
     <string name="select_album.no_network">Uwaga: Brak dostępnych sieci do użycia.
@@ -292,8 +275,6 @@
     <string name="settings.debug.title">Opcje debugowania</string>
     <string name="settings.debug.log_to_file">Zapisz logi debugowania do pliku</string>
     <string name="notification.permission_required">Powiadomienia są wymagane do odtwarzania multimediów. Możesz przyznać uprawnienie do nich w dowolnym momencie w ustawieniach Androida.</string>
-    <string name="server_editor.disabled_feature">Jedna lub więcej funkcji zostało wyłączonych ponieważ serwer ich nie obsługiwał.
-\nMożesz uruchomić ten test ponownie kiedykolwiek.</string>
     <string name="list_view">Lista</string>
     <string name="grid_view">Okładka</string>
     <string name="settings.use_hw_offload_description">Spróbuj odtworzyć pliki multimedialne za pomocą układu dekodującego w telefonie. Może to zmniejszyć zużycie baterii!</string>

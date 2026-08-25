@@ -37,22 +37,12 @@
     <string name="common.play_shuffled">Reproducir ao chou</string>
     <string name="common.public">Público</string>
     <string name="common.save">Gardar</string>
-    <string name="common.unpin">Desancorar</string>
     <string name="common.title">Título</string>
     <string name="common.artist">Artista</string>
     <string name="common.cancel">Cancelar</string>
     <string name="common.play_last">Reproducir última</string>
-    <string name="common.pin">Ancorar</string>
     <string name="settings.show_confirmation_dialog_summary">Mostra un cadro de diálogo de confirmación antes de eliminar ou desancorar as cancións</string>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d canción seleccionada para ser ancorada</item>
-        <item quantity="other">%d cancións seleccionadas para ser ancoradas</item>
-    </plurals>
     <string name="settings.max_bitrate_pinning">Taxa de bits máxima - Ao fixar unha canción de forma permanente</string>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d canción desancorada</item>
-        <item quantity="other">%d cancións desancoradas</item>
-    </plurals>
     <string name="download.menu_shuffle_on">Modo barallado activado</string>
     <string name="language.en">Inglés</string>
     <string name="download.repeat_off">Repetición desactivada</string>
@@ -125,7 +115,6 @@
     <string name="download.jukebox_offline">O control remoto non está dispoñible no modo sen conexión.</string>
     <string name="download.jukebox_on">Control remoto acendido. A música reprodúcese desde o servidor.</string>
     <string name="download.jukebox_server_too_old">Non hai soporte para control remoto. Debes usar unha versión superior do servidor Subsonic.</string>
-    <string name="main.welcome_title">Benvida a Taki!</string>
     <string name="menu.deleted_playlist_error">Fallou a eliminación da lista %s</string>
     <string name="menu.downloads">Descargas</string>
     <string name="menu.settings">Axustes</string>
@@ -160,7 +149,6 @@
     <string name="settings.max_bitrate_mobile">Taxa de bits Máx - Móbil</string>
     <string name="settings.max_bitrate_wifi">Taxa de bits Máx - Wi-Fi</string>
     <string name="settings.network_title">Rede</string>
-    <string name="settings.other_title">Outros Axustes</string>
     <string name="settings.override_language">Escoller idioma</string>
     <string name="settings.override_language_summary">Tes que reiniciar a app ao cambiar o idioma</string>
     <string name="settings.server_address">Enderezo do servidor</string>
@@ -222,7 +210,6 @@
     <string name="jukebox">Jukebox</string>
     <string name="list_view">Lista</string>
     <string name="grid_view">Cuberta</string>
-    <string name="supported_server_features">Características soportadas</string>
     <string name="foreground_exception_title">Non se pode retomar a reprodución</string>
     <string name="shortcut_play_random_songs_short">Cancións ao chou</string>
     <plurals name="n_songs_added_play_now">
@@ -291,8 +278,6 @@
     <string name="api.subsonic.generic.no.message">non se recibiu mensaxe desde o servidor</string>
     <string name="server_menu.move_down">Mover abaixo</string>
     <string name="server_editor.authentication">Autenticación</string>
-    <string name="server_editor.disabled_feature">Desactiváronse unha ou máis características porque o servidor non ten soporte para elas.
-\nPodes volver a facer esta proba cando queiras.</string>
     <string name="about.webpage">Visitar páxina web</string>
     <string name="server_editor.leave_confirmation">Tes a certeza de querer saír sen gardar os cambios?</string>
     <string name="notification.permission_required">Requírense as notificacións para a reprodución multimedia. Poder conceder o permiso en calquera momento nos axustes de Android.</string>
@@ -306,12 +291,6 @@
     <string name="menu.share">Compartir</string>
     <string name="download.menu_show_artist">Ir a Artista</string>
     <string name="albumArt">Imaxes do Álbum</string>
-    <string name="menu.rating_4">4 Estrelas</string>
-    <string name="menu.rating_5">5 Estrelas</string>
-    <string name="menu.rating_no_rating">Sen valoración</string>
-    <string name="menu.rating_1">1 Estrela</string>
-    <string name="menu.rating_2">2 Estrelas</string>
-    <string name="menu.rating_3">3 Estrelas</string>
     <string name="settings.replaygain_title">Modo para ReplayGain</string>
     <string name="settings.replaygain_disabled">Desactivado</string>
     <string name="settings.replaygain_dynamic">Canción a non se que se reproduza un Álbum</string>

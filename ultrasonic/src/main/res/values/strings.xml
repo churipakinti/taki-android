@@ -210,10 +210,6 @@
     <string name="main.songs_starred">Liked Songs</string>
     <string name="main.songs_title">Songs</string>
     <string name="main.videos">Videos</string>
-    <string name="main.welcome_title">Welcome to Taki</string>
-    <string name="main.welcome_text">Connect Taki to your music collection to start listening.</string>
-    <string name="main.welcome_add_collection">Add collection</string>
-    <string name="main.welcome_not_now">Not now</string>
     <string name="menu.about">About</string>
     <string name="menu.deleted_playlist">Deleted playlist %s</string>
     <string name="menu.deleted_playlist_error">Failed to delete playlist %s</string>

@@ -98,7 +98,6 @@
     <string name="download.jukebox_server_too_old">不支援遠端控制，請升級您的 Subsonic 伺服器。</string>
     <string name="podcasts.label">播客</string>
     <string name="background_task.ssl_error">SSL 連線異常。請檢查伺服器憑證。</string>
-    <string name="common.pin">固定</string>
     <string name="chat.send_button">傳送</string>
     <string name="button_bar.chat">聊天</string>
     <string name="chat.user_avatar">頭像</string>
@@ -106,7 +105,6 @@
     <string name="language.nl">荷蘭語</string>
     <string name="download.jukebox_off">已關閉遠端控制，音樂將在手機上播放。</string>
     <string name="language.de">德語</string>
-    <string name="common.unpin">取消固定</string>
     <string name="download.playlist_name">輸入播放清單名稱：</string>
     <string name="main.albums_by_year">依照時間排列</string>
     <string name="download.playlist_saving">正在儲存播放清單 \"%s\"…</string>
@@ -148,7 +146,6 @@
     <string name="language.en">英語</string>
     <string name="language.pt">葡萄牙語</string>
     <string name="main.songs_title">歌曲</string>
-    <string name="main.welcome_title">歡迎！</string>
     <string name="menu.deleted_playlist">已刪除播放清單 %s</string>
     <string name="menu.deleted_playlist_error">播放清單刪除失敗 %s</string>
     <string name="search.no_match">沒有匹配的結果，請重試</string>
@@ -181,7 +178,6 @@
     <string name="time_span_disable">禁用</string>
     <string name="song_details.kbps">%d kbps</string>
     <string name="settings.network_title">網路</string>
-    <string name="settings.other_title">其他設定</string>
     <string name="settings.server_color">伺服器顏色</string>
     <string name="settings.server_username">用戶名</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>

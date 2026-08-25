@@ -33,7 +33,6 @@
     <string name="common.multiple_genres">多种流派</string>
     <string name="common.name">名称</string>
     <string name="common.ok">确定</string>
-    <string name="common.pin">固定</string>
     <string name="common.play_last">最后一首</string>
     <string name="common.play_next">下一首</string>
     <string name="common.play_now">播放</string>
@@ -41,7 +40,6 @@
     <string name="common.public">公开</string>
     <string name="common.save">保存</string>
     <string name="common.title">标题</string>
-    <string name="common.unpin">取消固定</string>
     <string name="common.various_artists">群星</string>
     <string name="delete_playlist">确定要删除 %1$s 吗</string>
     <string name="download.empty">未下载任何内容</string>
@@ -95,7 +93,6 @@
     <string name="main.songs_starred">收藏夹</string>
     <string name="main.songs_title">歌曲</string>
     <string name="main.videos">视频</string>
-    <string name="main.welcome_title">欢迎！</string>
     <string name="menu.about">关于</string>
     <string name="menu.deleted_playlist">已删除播放列表 %s</string>
     <string name="menu.deleted_playlist_error">播放列表删除失败 %s</string>
@@ -152,7 +149,6 @@
     <string name="settings.max_bitrate_mobile">最大比特率 - 移动网络</string>
     <string name="settings.max_bitrate_wifi">最大比特率 - WIFI</string>
     <string name="settings.network_title">网络</string>
-    <string name="settings.other_title">其他设置</string>
     <string name="settings.search_history_cleared">搜索记录已清除</string>
     <string name="settings.server_address">服务器地址</string>
     <string name="settings.server_name">名称</string>
@@ -217,8 +213,6 @@
     <string name="server_menu.move_down">下移</string>
     <string name="server_editor.authentication">认证</string>
     <string name="server_editor.advanced">高级设置</string>
-    <string name="server_editor.disabled_feature">一项或多项功能被禁用，因为此服务器不支持它们。
-\n可以随时再次运行此测试。</string>
     <string name="about.webpage">访问网页</string>
     <string name="about.report">提交漏洞报告</string>
     <string name="about.text"><b>Taki</b> 是一个免费且开源的安卓流式音乐客户端，支持 Subsonic API（1.7.0版本以上）兼容的服务端。
@@ -229,14 +223,8 @@
     <plurals name="n_songs">
         <item quantity="other">%d 首曲目</item>
     </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="other">已选择 %d 首歌曲进行固定</item>
-    </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="other">已选择要下载 %d 首歌曲</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="other">已选择 %d 首歌曲取消固定</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="other">%d 首歌曲被删除</item>
@@ -280,7 +268,6 @@
     <string name="settings.use_hw_offload_description">尝试使用手机上的媒体解码器芯片来播放媒体。这可以改善电池使用情况。部分用户报告启用该选项后播放会有问题！</string>
     <string name="list_view">列表</string>
     <string name="grid_view">封面</string>
-    <string name="supported_server_features">已支持的功能</string>
     <string name="language.es">西班牙语</string>
     <string name="language.fr">法语</string>
     <string name="language.it">意大利语</string>

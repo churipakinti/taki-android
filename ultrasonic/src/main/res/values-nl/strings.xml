@@ -34,7 +34,6 @@
     <string name="common.multiple_genres">Meerdere genres</string>
     <string name="common.name">Naam</string>
     <string name="common.ok">Oké</string>
-    <string name="common.pin">Vastmaken</string>
     <string name="common.play_last">Laatste afspelen</string>
     <string name="common.play_next">Volgende afspelen</string>
     <string name="common.play_now">Nu afspelen</string>
@@ -42,7 +41,6 @@
     <string name="common.public">Openbaar</string>
     <string name="common.save">Opslaan</string>
     <string name="common.title">Titel</string>
-    <string name="common.unpin">Losmaken</string>
     <string name="common.various_artists">Verschillende artiesten</string>
     <string name="delete_playlist">Wil je %1$s verwijderen?</string>
     <string name="download.empty">Er wordt niks gedownload</string>
@@ -111,7 +109,6 @@
     <string name="main.songs_starred">Favorieten</string>
     <string name="main.songs_title">Nummers</string>
     <string name="main.videos">Video\'s</string>
-    <string name="main.welcome_title">Welkom!</string>
     <string name="menu.about">Over</string>
     <string name="menu.deleted_playlist">Afspeellijst %s verwijderd</string>
     <string name="menu.deleted_playlist_error">Afspeellijst %s kan niet worden verwijderd</string>
@@ -168,7 +165,6 @@
     <string name="settings.max_bitrate_mobile">Max. bitsnelheid over mobiel internet</string>
     <string name="settings.max_bitrate_wifi">Max. bitsnelheid via wifi</string>
     <string name="settings.network_title">Netwerk</string>
-    <string name="settings.other_title">Overige instellingen</string>
     <string name="settings.override_language">Taal afdwingen</string>
     <string name="settings.override_language_summary">Herstart de app om de wijziging toe te passen</string>
     <string name="settings.search_history_cleared">Zoekgeschiedenis gewist</string>
@@ -241,7 +237,6 @@
     <string name="server_menu.move_down">Omlaag</string>
     <string name="server_editor.authentication">Authenticatie</string>
     <string name="server_editor.advanced">Geavanceerde instellingen</string>
-    <string name="server_editor.disabled_feature">Eén of meerdere functies zijn uitgeschakeld omdat de server ze niet ondersteunt.\nVoer deze test later opnieuw uit.</string>
     <string name="about.webpage">Website openen</string>
     <string name="about.report">Bug melden</string>
     <string name="about.text"><b>Taki</b> is een gratis, open source muziekstreamingclient voor Android, die gebruikmaakt van servers die compatibel zijn met de Subsonic-api (versie 1.7.0 of hoger).\n\nMet <b>Taki</b> kun je eenvoudig muziek streamen of downloaden van je computer naar je Android-telefoon met behulp van een met Subsonic compatibele mediaserver. Let op: de Subsonic-serversoftware vereist aanvullende configuratie.\n\nStandaard is Taki niet ingesteld. Zet je eigen server op en wijzig de serverconfiguratie in die van je eigen.</string>
@@ -249,17 +244,9 @@
         <item quantity="one">%d nummer</item>
         <item quantity="other">%d nummers</item>
     </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d vast te maken nummer geselecteerd</item>
-        <item quantity="other">%d vast te maken nummers geselecteerd</item>
-    </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d te downloaden nummer geselecteerd</item>
         <item quantity="other">%d te downloaden nummers geselecteerd</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d nummer losgemaakt</item>
-        <item quantity="other">%d nummers losgemaakt</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="one">%d nummer verwijderd</item>

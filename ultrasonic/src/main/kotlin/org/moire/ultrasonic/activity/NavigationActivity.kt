@@ -49,6 +49,7 @@ import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.app.UApp
 import org.moire.ultrasonic.data.ActiveServerProvider
+import org.moire.ultrasonic.data.ServerSettingDao
 import org.moire.ultrasonic.provider.SearchSuggestionProvider
 import org.moire.ultrasonic.service.MediaPlayerLifecycleSupport
 import org.moire.ultrasonic.service.MediaPlayerManager
@@ -57,7 +58,6 @@ import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.util.CommunicationError
 import org.moire.ultrasonic.util.Constants
-import org.moire.ultrasonic.util.InfoDialog
 import org.moire.ultrasonic.util.LocaleHelper
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.RecentSearches
@@ -91,6 +91,7 @@ class NavigationActivity : ScopeActivity() {
     private val lifecycleSupport: MediaPlayerLifecycleSupport by inject()
     private val mediaPlayerManager: MediaPlayerManager by inject()
     private val activeServerProvider: ActiveServerProvider by inject()
+    private val serverSettingDao: ServerSettingDao by inject()
 
     private var currentFragmentId: Int = 0
     private var imeVisible = false
@@ -276,13 +277,21 @@ class NavigationActivity : ScopeActivity() {
         }
         navController.addOnDestinationChangedListener(destinationChangedListener!!)
 
-        // Determine if this is a first run
-        val showWelcomeScreen = UApp.instance!!.isFirstRun
-
-        // On first run, invite the listener to connect a collection. Taki deliberately ships
-        // without a bundled demo or third-party credentials.
-        if (showWelcomeScreen) {
-            showWelcomeDialog()
+        // Go straight to Connect when no library has ever been configured, instead of landing
+        // on Home behind a "Welcome" dialog decision. Taki deliberately ships without a bundled
+        // demo or third-party credentials. Checks the real server count (not a one-time
+        // "first run" flag) so this also covers every configured server having since been
+        // removed. Mirrors exactly how the removed dialog's "Add collection" button already
+        // navigated here -- Home stays underneath on the back stack so EditServerFragment's
+        // own popBackStack(R.id.homeFragment, false) on a successful connect keeps working.
+        // See docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 3.
+        lifecycleScope.launch {
+            if (serverSettingDao.count() == 0) {
+                navController.navigate(
+                    R.id.editServerFragment,
+                    Bundle().apply { putInt("index", -1) }
+                )
+            }
         }
 
         // Ask for permission to send notifications
@@ -471,28 +480,6 @@ class NavigationActivity : ScopeActivity() {
             super.attachBaseContext(localeUpdatedContext)
         } else {
             super.attachBaseContext(newBase)
-        }
-    }
-
-    private fun showWelcomeDialog() {
-        if (!UApp.instance!!.setupDialogDisplayed) {
-            Settings.firstInstalledVersion = Util.getVersionCode(UApp.applicationContext())
-
-            InfoDialog.Builder(this)
-                .setTitle(R.string.main_welcome_title)
-                .setMessage(R.string.main_welcome_text)
-                .setNegativeButton(R.string.main_welcome_not_now) { dialog, _ ->
-                    UApp.instance!!.setupDialogDisplayed = true
-                    dialog.dismiss()
-                }
-                .setPositiveButton(R.string.main_welcome_add_collection) { dialog, _ ->
-                    UApp.instance!!.setupDialogDisplayed = true
-                    findNavController(R.id.nav_host_fragment).navigate(
-                        R.id.editServerFragment,
-                        Bundle().apply { putInt("index", -1) }
-                    )
-                    dialog.dismiss()
-                }.show()
         }
     }
 

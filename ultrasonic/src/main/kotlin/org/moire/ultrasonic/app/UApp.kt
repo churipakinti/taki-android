@@ -58,7 +58,6 @@ class UApp :
 
     var initiated = false
     var isFirstRun = false
-    var setupDialogDisplayed = false
 
     override fun onCreate() {
         initiated = true

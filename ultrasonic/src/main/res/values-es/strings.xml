@@ -36,7 +36,6 @@
     <string name="common.multiple_genres">Varios géneros</string>
     <string name="common.name">Nombre</string>
     <string name="common.ok">Aceptar</string>
-    <string name="common.pin">Anclar</string>
     <string name="common.play_last">Reproducir última</string>
     <string name="common.play_next">Reproducir a continuación</string>
     <string name="common.play_now">Reproducir ahora</string>
@@ -44,7 +43,6 @@
     <string name="common.public">Público</string>
     <string name="common.save">Guardar</string>
     <string name="common.title">Título</string>
-    <string name="common.unpin">Desanclar</string>
     <string name="common.various_artists">Varios artistas</string>
     <string name="delete_playlist">Quieres eliminar %1$s</string>
     <string name="download.empty">No se está descargando nada</string>
@@ -68,7 +66,6 @@
     <string name="download.menu_shuffle_on">Modo aleatorio activado</string>
     <string name="download.menu_shuffle_off">Modo aleatorio desactivado</string>
     <string name="download.menu_favorite">Favorito</string>
-    <string name="download.menu_rate">Calificar</string>
     <string name="download.playerstate_loading">Almacenando en el buffer …</string>
     <string name="download.playerstate_playing_shuffle">Reproduciendo en modo aleatorio</string>
     <string name="download.playlist_done">Lista de reproducción guardada.</string>
@@ -139,10 +136,6 @@
     <string name="main.songs_starred">Favoritas</string>
     <string name="main.songs_title">Canciones</string>
     <string name="main.videos">Vídeos</string>
-    <string name="main.welcome_title">Te damos la bienvenida a Taki</string>
-    <string name="main.welcome_text">Conecta Taki con tu colección de música para empezar a escuchar.</string>
-    <string name="main.welcome_add_collection">Agregar colección</string>
-    <string name="main.welcome_not_now">Ahora no</string>
     <string name="menu.about">Acerca de</string>
     <string name="menu.deleted_playlist">Eliminada lista de reproducción %s</string>
     <string name="menu.deleted_playlist_error">Fallo al eliminar la lista de reproducción %s</string>
@@ -235,7 +228,6 @@
     <string name="settings.quality_original">Original · Sin límite</string>
     <string name="settings.advanced_playback">Reproducción avanzada</string>
     <string name="settings.network_title">Red</string>
-    <string name="settings.other_title">Otra configuración</string>
     <string name="settings.override_language">Cambiar el idioma</string>
     <string name="settings.override_language_summary">Es necesario reiniciar la aplicación después de cambiar el idioma</string>
     <string name="settings.search_history_cleared">Se ha borrado el historial de búsqueda</string>
@@ -310,7 +302,6 @@
     <string name="server_menu.move_down">Bajar</string>
     <string name="server_editor.authentication">Autenticación</string>
     <string name="server_editor.advanced">Configuración avanzada</string>
-    <string name="server_editor.disabled_feature">Una o más funciones se han desactivado porque el servidor no las admite.\nPuedes ejecutar esta prueba nuevamente en cualquier momento.</string>
     <string name="server_editor.connection_checking">Comprobando conexión…</string>
     <string name="server_editor.connection_success">Conexión correcta</string>
     <string name="server_editor.connection_failed">No se pudo conectar</string>
@@ -326,20 +317,10 @@
         <item quantity="many">%d de canciones</item>
         <item quantity="other">%d canciones</item>
     </plurals>
-    <plurals name="n_songs_pinned">
-        <item quantity="one">%d canción seleccionada para ser anclada</item>
-        <item quantity="many">%d de canciones seleccionadas para ser ancladas</item>
-        <item quantity="other">%d canciones seleccionadas para ser ancladas</item>
-    </plurals>
     <plurals name="n_songs_to_be_downloaded">
         <item quantity="one">%d canción seleccionada para ser descargada</item>
         <item quantity="many">%d de canciones seleccionadas para ser descargadas</item>
         <item quantity="other">%d canciones seleccionadas para ser descargadas</item>
-    </plurals>
-    <plurals name="n_songs_unpinned">
-        <item quantity="one">%d canción desanclada</item>
-        <item quantity="many">%d de canciones desancladas</item>
-        <item quantity="other">%d canciones desancladas</item>
     </plurals>
     <plurals name="n_songs_deleted">
         <item quantity="one">%d canción eliminada</item>
@@ -373,7 +354,6 @@
     <string name="list_view">Lista</string>
     <string name="grid_view">Portada</string>
     <string name="jukebox">Gramola</string>
-    <string name="supported_server_features">Funciones soportadas</string>
     <string name="foreground_exception_title">No se puede reanudar la reproducción</string>
     <string name="foreground_exception_text">Pulsa el botón de reproducción en la notificación multimedia si aún está presente; de lo contrario, abre la aplicación para iniciar la reproducción y vuelve a conectar la sesión al controlador</string>
     <string name="settings.max_bitrate_pinning">Calidad de descarga</string>
@@ -385,12 +365,6 @@
         <item quantity="other">%d canciones añadidas a la cola de reproducción</item>
     </plurals>
     <string name="settings.share_options">Opciones</string>
-    <string name="menu.rating_no_rating">Sin valoración</string>
-    <string name="menu.rating_1">1 estrella</string>
-    <string name="menu.rating_2">2 estrellas</string>
-    <string name="menu.rating_3">3 estrellas</string>
-    <string name="menu.rating_4">4 estrellas</string>
-    <string name="menu.rating_5">5 estrellas</string>
     <string name="settings.replaygain_title">Modo ReplayGain</string>
     <string name="settings.replaygain_disabled">Desactivado</string>
     <string name="settings.replaygain_dynamic">Pista, a menos que se esté reproduciendo un álbum</string>
