@@ -16,8 +16,6 @@
     <string name="buttons.stop">Állj</string>
     <string name="buttons.next">Következő</string>
     <string name="buttons.previous">Előző</string>
-    <string name="podcasts.label">Podcast</string>
-    <string name="podcasts_channels.empty">Nincsenek podcast-csatornák regisztrálva</string>
     <string name="button_bar.search">Keresés</string>
     <string name="common.cancel">Mégse</string>
     <string name="common.comment">Megjegyzés</string>

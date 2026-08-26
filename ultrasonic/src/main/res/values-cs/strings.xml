@@ -10,8 +10,6 @@
     <string name="button_bar.bookmarks">Záložky</string>
     <string name="button_bar.now_playing">Právě hraje</string>
     <string name="buttons.shuffle">Náhodně</string>
-    <string name="podcasts.label">Podcasty</string>
-    <string name="podcasts_channels.empty">Není registrován žádný podcast kanál</string>
     <string name="button_bar.search">Hledat</string>
     <string name="common.cancel">Zrušit</string>
     <string name="common.comment">Komentář</string>

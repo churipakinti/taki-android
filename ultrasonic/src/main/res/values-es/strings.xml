@@ -17,8 +17,6 @@
     <string name="buttons.next">Siguiente</string>
     <string name="buttons.previous">Anterior</string>
     <string name="buttons.queue">Cola</string>
-    <string name="podcasts.label">Pódcast</string>
-    <string name="podcasts_channels.empty">No hay canales de pódcasts registrados</string>
     <string name="button_bar.search">Buscar</string>
     <string name="common.album">Álbum</string>
     <string name="common.artist">Artista</string>

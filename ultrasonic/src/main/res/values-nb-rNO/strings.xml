@@ -8,7 +8,6 @@
     <string name="button_bar.search">Søk</string>
     <string name="buttons.play">Spill</string>
     <string name="buttons.previous">Forrige</string>
-    <string name="podcasts.label">Nettradioopptak</string>
     <string name="buttons.repeat">Gjenta</string>
     <string name="common.album">Album</string>
     <string name="common.artist">Artist</string>
@@ -81,7 +80,6 @@
     <string name="background_task.ssl_cert_error">HTTPS-sertifikatsfeil: %1$s.</string>
     <string name="button_bar.bookmarks">Bokmerker</string>
     <string name="button_bar.now_playing">Spilles nå</string>
-    <string name="podcasts_channels.empty">Ingen nettradioopptakskanaler registrert.</string>
     <string name="common.play_next">Spill neste</string>
     <string name="common.play_now">Spill nå</string>
     <string name="download.menu_equalizer">Tonekontroll</string>

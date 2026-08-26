@@ -96,7 +96,6 @@
     <string name="language.zh_CN">簡體中文（中國）</string>
     <string name="download.menu_save">儲存播放清單</string>
     <string name="download.jukebox_server_too_old">不支援遠端控制，請升級您的 Subsonic 伺服器。</string>
-    <string name="podcasts.label">播客</string>
     <string name="background_task.ssl_error">SSL 連線異常。請檢查伺服器憑證。</string>
     <string name="background_task.parse_error">無法理解答覆，請檢查伺服器位址。</string>
     <string name="language.nl">荷蘭語</string>
@@ -108,7 +107,6 @@
     <string name="language.default">系統預設</string>
     <string name="background_task.ssl_cert_error">HTTPS 憑證錯誤：%1$s.</string>
     <string name="language.pl">波蘭語</string>
-    <string name="podcasts_channels.empty">沒有已註冊的播客頻道</string>
     <string name="download.menu_screen_on">打開熒幕常亮</string>
     <string name="language.it">義大利語</string>
     <string name="language.fr">法語</string>

@@ -16,8 +16,6 @@
     <string name="buttons.stop">Stop</string>
     <string name="buttons.next">Nächstes</string>
     <string name="buttons.previous">Vorheriges</string>
-    <string name="podcasts.label">Podcast</string>
-    <string name="podcasts_channels.empty">Keine Podcast Kanäle registriert</string>
     <string name="button_bar.search">Suche</string>
     <string name="common.album">Album</string>
     <string name="common.artist">Künstler</string>

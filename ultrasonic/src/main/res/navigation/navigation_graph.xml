@@ -164,11 +164,6 @@
             app:argType="string"
             app:nullable="true" />
         <argument
-            android:name="podcastChannelId"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
             android:name="albumListType"
             android:defaultValue="@null"
             app:argType="string"
@@ -312,10 +307,6 @@
     <fragment
         android:id="@+id/bookmarksFragment"
         android:name="org.moire.ultrasonic.fragment.BookmarksFragment" />
-    <fragment
-        android:id="@+id/podcastFragment"
-        android:name="org.moire.ultrasonic.fragment.legacy.PodcastFragment">
-    </fragment>
     <fragment
         android:id="@+id/settingsFragment"
         android:name="org.moire.ultrasonic.fragment.SettingsFragment">

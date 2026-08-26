@@ -901,7 +901,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         val isAlbum = navArgs.isAlbum
         val name = navArgs.name
         val playlistId = navArgs.playlistId
-        val podcastChannelId = navArgs.podcastChannelId
         val playlistName = navArgs.playlistName
         val shareId = navArgs.shareId
         val shareName = navArgs.shareName
@@ -937,9 +936,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 // scrolled past (see the OnScrollListener added in onViewCreated).
                 setTitle("")
                 listModel.getPlaylist(playlistId, playlistName!!)
-            } else if (podcastChannelId != null) {
-                setTitle(getString(R.string.podcasts_label))
-                listModel.getPodcastEpisodes(podcastChannelId)
             } else if (shareId != null) {
                 setTitle(shareName)
                 listModel.getShare(shareId)

@@ -16,8 +16,6 @@
     <string name="buttons.stop">停止</string>
     <string name="buttons.next">下一首</string>
     <string name="buttons.previous">上一首</string>
-    <string name="podcasts.label">播客</string>
-    <string name="podcasts_channels.empty">没有已注册的播客频道</string>
     <string name="button_bar.search">搜索</string>
     <string name="common.album">专辑</string>
     <string name="common.artist">艺术家</string>

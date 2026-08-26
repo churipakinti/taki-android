@@ -73,7 +73,6 @@ private const val MEDIA_LIBRARY_ID = "MEDIA_LIBRARY_ID"
 private const val MEDIA_PLAYLIST_ID = "MEDIA_PLAYLIST_ID"
 private const val MEDIA_SHARE_ID = "MEDIA_SHARE_ID"
 private const val MEDIA_BOOKMARK_ID = "MEDIA_BOOKMARK_ID"
-private const val MEDIA_PODCAST_ID = "MEDIA_PODCAST_ID"
 private const val MEDIA_ALBUM_ITEM = "MEDIA_ALBUM_ITEM"
 private const val MEDIA_PLAYLIST_SONG_ITEM = "MEDIA_PLAYLIST_SONG_ITEM"
 private const val MEDIA_PLAYLIST_ITEM = "MEDIA_PLAYLIST_ITEM"
@@ -85,8 +84,6 @@ private const val MEDIA_SONG_RANDOM_ITEM = "MEDIA_SONG_RANDOM_ITEM"
 private const val MEDIA_SHARE_ITEM = "MEDIA_SHARE_ITEM"
 private const val MEDIA_SHARE_SONG_ITEM = "MEDIA_SHARE_SONG_ITEM"
 private const val MEDIA_BOOKMARK_ITEM = "MEDIA_BOOKMARK_ITEM"
-private const val MEDIA_PODCAST_ITEM = "MEDIA_PODCAST_ITEM"
-private const val MEDIA_PODCAST_EPISODE_ITEM = "MEDIA_PODCAST_EPISODE_ITEM"
 private const val MEDIA_SEARCH_SONG_ITEM = "MEDIA_SEARCH_SONG_ITEM"
 
 // Currently the display limit for long lists is 100 items
@@ -585,13 +582,6 @@ class MediaLibrarySessionCallback :
 
             MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
 
-            MEDIA_PODCAST_ITEM -> playPodcast(mediaIdParts[1])
-
-            MEDIA_PODCAST_EPISODE_ITEM -> playPodcastEpisode(
-                mediaIdParts[1],
-                mediaIdParts[2]
-            )
-
             MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
 
             else -> null
@@ -651,8 +641,6 @@ class MediaLibrarySessionCallback :
 
             MEDIA_BOOKMARK_ID -> getBookmarks()
 
-            MEDIA_PODCAST_ID -> getPodcasts()
-
             MEDIA_PLAYLIST_ITEM -> getPlaylist(parentIdParts[1], parentIdParts[2])
 
             MEDIA_ARTIST_ITEM -> getAlbumsForArtist(
@@ -663,8 +651,6 @@ class MediaLibrarySessionCallback :
             MEDIA_ALBUM_ITEM -> getSongsForAlbum(parentIdParts[1], parentIdParts[2])
 
             MEDIA_SHARE_ITEM -> getSongsForShare(parentIdParts[1])
-
-            MEDIA_PODCAST_ITEM -> getPodcastEpisodes(parentIdParts[1])
 
             else -> Futures.immediateFuture(LibraryResult.ofItemList(listOf(), null))
         }
@@ -770,13 +756,6 @@ class MediaLibrarySessionCallback :
             MEDIA_SHARE_SONG_ITEM -> playShareSong(mediaIdParts[1], mediaIdParts[2])
 
             MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
-
-            MEDIA_PODCAST_ITEM -> playPodcast(mediaIdParts[1])
-
-            MEDIA_PODCAST_EPISODE_ITEM -> playPodcastEpisode(
-                mediaIdParts[1],
-                mediaIdParts[2]
-            )
 
             MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
 
@@ -1182,75 +1161,6 @@ class MediaLibrarySessionCallback :
         val songs = listSongsInMusicService(id, name)
         val song = songs?.getTracks()?.firstOrNull { x -> x.id == songId }
         if (song != null) return listOf(song)
-        return null
-    }
-
-    private fun getPodcasts(): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        val mediaItems: MutableList<MediaItem> = ArrayList()
-
-        return mainScope.future {
-            val podcasts = serviceScope.future {
-                callWithErrorHandling { musicService.getPodcastsChannels(false) }
-            }.await()
-
-            podcasts?.map { podcast ->
-                mediaItems.add(
-                    podcast.title ?: "",
-                    listOf(MEDIA_PODCAST_ITEM, podcast.id).joinToString("|"),
-                    mediaType = MEDIA_TYPE_FOLDER_MIXED
-                )
-            }
-            return@future LibraryResult.ofItemList(mediaItems, null)
-        }
-    }
-
-    private fun getPodcastEpisodes(
-        id: String
-    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        val mediaItems: MutableList<MediaItem> = ArrayList()
-        return mainScope.future {
-            val episodes = serviceScope.future {
-                callWithErrorHandling { musicService.getPodcastEpisodes(id) }
-            }.await()
-
-            if (episodes != null) {
-                if (episodes.getTracks().count() > 1) {
-                    mediaItems.addPlayAllItem(listOf(MEDIA_PODCAST_ITEM, id).joinToString("|"))
-                }
-
-                episodes.getTracks().map { episode ->
-                    mediaItems.add(
-                        episode.toMediaItem(
-                            listOf(MEDIA_PODCAST_EPISODE_ITEM, id, episode.id)
-                                .joinToString("|")
-                        )
-                    )
-                }
-            }
-            return@future LibraryResult.ofItemList(mediaItems, null)
-        }
-    }
-
-    private fun playPodcast(id: String): List<Track>? {
-        val episodes = serviceScope.future {
-            callWithErrorHandling { musicService.getPodcastEpisodes(id) }
-        }.get()
-        if (episodes != null) {
-            return episodes.getTracks()
-        }
-        return null
-    }
-
-    private fun playPodcastEpisode(id: String, episodeId: String): List<Track>? {
-        val episodes = serviceScope.future {
-            callWithErrorHandling { musicService.getPodcastEpisodes(id) }
-        }.get()
-        if (episodes != null) {
-            val selectedEpisode = episodes
-                .getTracks()
-                .firstOrNull { episode -> episode.id == episodeId }
-            if (selectedEpisode != null) return listOf(selectedEpisode)
-        }
         return null
     }
 

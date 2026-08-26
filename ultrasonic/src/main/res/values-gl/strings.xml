@@ -15,8 +15,6 @@
     <string name="buttons.stop">Deter</string>
     <string name="buttons.next">Seguinte</string>
     <string name="buttons.previous">Anterior</string>
-    <string name="podcasts.label">Podcast</string>
-    <string name="podcasts_channels.empty">Non hai canles de Podcasts rexistrados</string>
     <string name="button_bar.search">Buscar</string>
     <string name="button_bar.bookmarks">Marcadores</string>
     <string name="common.album">Álbum</string>

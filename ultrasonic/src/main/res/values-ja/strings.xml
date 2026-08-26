@@ -208,8 +208,6 @@
     <string name="background_task.not_found">リソースが見つかりません。サーバーのアドレスを確認してください。</string>
     <string name="buttons.next">次へ</string>
     <string name="buttons.previous">前へ</string>
-    <string name="podcasts.label">ポッドキャスト</string>
-    <string name="podcasts_channels.empty">ポッドキャストが何も登録されていません</string>
     <string name="common.album">アルバム</string>
     <string name="button_bar.search">検索</string>
     <string name="common.various_artists">様々なアーティスト</string>

@@ -16,8 +16,6 @@
     <string name="buttons.stop">Стоп</string>
     <string name="buttons.next">Следующий</string>
     <string name="buttons.previous">Предыдущий</string>
-    <string name="podcasts.label">Подкаст</string>
-    <string name="podcasts_channels.empty">Подкасты не зарегистрированы</string>
     <string name="button_bar.search">Поиск</string>
     <string name="common.album">Альбом</string>
     <string name="common.artist">Артист</string>

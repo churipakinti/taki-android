@@ -10,8 +10,6 @@
     <string name="button_bar.bookmarks">Favoritos</string>
     <string name="button_bar.now_playing">Tocando Agora</string>
     <string name="buttons.shuffle">Misturar</string>
-    <string name="podcasts.label">Podcasts</string>
-    <string name="podcasts_channels.empty">Nenhum canal de podcasts registrado</string>
     <string name="button_bar.search">Pesquisa</string>
     <string name="common.cancel">Cancelar</string>
     <string name="common.comment">Comentar</string>

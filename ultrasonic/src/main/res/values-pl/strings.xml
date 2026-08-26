@@ -10,8 +10,6 @@
     <string name="button_bar.bookmarks">Zakładki</string>
     <string name="button_bar.now_playing">Teraz gra</string>
     <string name="buttons.shuffle">Wymieszaj</string>
-    <string name="podcasts.label">Podcasty</string>
-    <string name="podcasts_channels.empty">Nie zarejestrowano żadnych kanałów podcastowych</string>
     <string name="button_bar.search">Szukaj</string>
     <string name="common.cancel">Anuluj</string>
     <string name="common.comment">Komentarz</string>

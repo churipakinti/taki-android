@@ -9,8 +9,6 @@
     <string name="button_bar.bookmarks">Segnalibri</string>
     <string name="button_bar.now_playing">In riproduzione</string>
     <string name="buttons.shuffle">Casuale</string>
-    <string name="podcasts.label">Podcast</string>
-    <string name="podcasts_channels.empty">Nessun canale podcast registrato</string>
     <string name="button_bar.search">Cerca</string>
     <string name="common.cancel">Annulla</string>
     <string name="common.comment">Commenta</string>

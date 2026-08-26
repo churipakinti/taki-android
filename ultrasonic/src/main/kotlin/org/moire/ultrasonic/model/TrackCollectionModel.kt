@@ -321,17 +321,6 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         }
     }
 
-    suspend fun getPodcastEpisodes(podcastChannelId: String) {
-        withContext(Dispatchers.IO) {
-            val service = MusicServiceFactory.getMusicService()
-            val musicDirectory = service.getPodcastEpisodes(podcastChannelId)
-            if (musicDirectory != null) {
-                currentListIsSortable = false
-                updateList(musicDirectory)
-            }
-        }
-    }
-
     suspend fun getShare(shareId: String) {
         withContext(Dispatchers.IO) {
             val service = MusicServiceFactory.getMusicService()
