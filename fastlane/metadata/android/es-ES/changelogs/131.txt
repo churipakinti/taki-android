@@ -1,0 +1,8 @@
+Primera beta pública de Taki.
+
+- Navegación y reproducción centradas en la música
+- Descargas sin conexión
+- Radio por canción y artista
+- Mix diario
+- Temporizador de apagado
+- Navegación y ajustes simplificados

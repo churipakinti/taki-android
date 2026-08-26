@@ -27,6 +27,13 @@ These are deliberate exclusions, not gaps. Contributions that reintroduce
 this kind of scope should be discussed as an explicit change of direction
 first, not folded into an unrelated change.
 
+## Positioning
+
+There are already excellent, feature-rich music players available for
+Navidrome and Subsonic/OpenSubsonic libraries. Taki isn't trying to compete
+with or replace them. It takes a narrower approach: a small, focused player
+for people who mainly want to open their personal library and listen.
+
 ## Server compatibility
 
 - **Navidrome** is the primary compatibility target and the server Taki is
