@@ -52,7 +52,9 @@
         <activity android:name=".activity.NavigationActivity"
             android:configChanges="orientation|keyboardHidden"
             android:launchMode="singleTask"
-            android:exported="true">
+            android:screenOrientation="portrait"
+            android:exported="true"
+            tools:ignore="LockedOrientationActivity,DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.SEARCH"/>
