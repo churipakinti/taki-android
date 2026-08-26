@@ -5,6 +5,7 @@ The repository [README](../README.md) is the primary introduction to Taki. This 
 ## Project and developer documentation
 
 - [Product direction](PRODUCT.md)
+- [Default behavior](DEFAULT_BEHAVIOR.md)
 - [Contributing](CONTRIBUTING.md)
 - [Release signing](RELEASE_SIGNING.md)
 

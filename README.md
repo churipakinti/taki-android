@@ -26,6 +26,8 @@ Taki is intentionally **music-only**. It leaves out chat, social features, shari
 - Integrate with Android media controls and Android Auto
 - Keep everyday listening separate from server administration
 
+During normal online playback, Taki reports Now Playing and qualifying completed plays to the connected server using the Subsonic/OpenSubsonic scrobble API. Server-side forwarding to services such as Last.fm, when configured, is controlled by the server. See [Default behavior](docs/DEFAULT_BEHAVIOR.md) for Taki's other automatic behaviors and defaults.
+
 ## What it deliberately leaves out
 
 Taki is built around simplification rather than feature accumulation. Chat, social feeds, sharing features, podcasts, and similar extras are intentionally outside the listening experience. The aim is a small, direct player for people who mainly want to listen to their own music.

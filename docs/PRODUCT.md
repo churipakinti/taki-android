@@ -54,3 +54,14 @@ When evaluating a change, prefer:
 A feature earns a place in Taki by making everyday listening easier, not by
 matching what another client offers. See [Contributing](CONTRIBUTING.md) for
 how this applies to pull requests.
+
+## Working principle: defaults should be predictable
+
+Taki should avoid asking users to configure concepts that can be handled with
+a sensible default. At the same time, automatic behavior should not be
+surprising or unnecessarily expensive in mobile data, storage, battery, or
+attention.
+
+Any behavior that happens implicitly during normal listening should be easy
+to discover in the documentation. The current user-visible defaults and
+automatic behaviors are recorded in [Default behavior](DEFAULT_BEHAVIOR.md).
