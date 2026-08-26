@@ -31,3 +31,4 @@ Notable changes to Taki are documented here.
 
 - Some localized strings are incomplete and may fall back to English.
 - Compatibility may vary across OpenSubsonic/Subsonic server implementations; Navidrome is the primary compatibility target for this beta.
+- Taki currently uses a portrait-only phone interface.

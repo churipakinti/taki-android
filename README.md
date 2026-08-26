@@ -34,6 +34,7 @@ Taki is built around simplification rather than feature accumulation. Chat, soci
 
 - Android 8.0 (API 26) or later
 - A Navidrome or compatible OpenSubsonic/Subsonic server
+- Taki currently uses a portrait-only phone interface
 
 Compatibility varies between server implementations and API versions. Navidrome is the primary compatibility target for the beta.
 
