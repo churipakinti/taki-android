@@ -2,7 +2,9 @@
 
 Contributions are welcome. Before starting substantial work, search the [issue tracker](https://github.com/churipakinti/taki-android/issues) and open an issue to discuss the proposed change when appropriate.
 
-Taki is intentionally a simple music player for personal and shared Navidrome/OpenSubsonic-compatible libraries. Changes should preserve that character: music-first, approachable, and free of unnecessary server-management complexity.
+Taki is intentionally a simple, music-only player for personal and shared Navidrome/OpenSubsonic-compatible libraries. Its value comes from **removing unnecessary product surface**, not from accumulating features.
+
+That means contributions should preserve a focused listening experience. Chat, social feeds, sharing systems, podcasts, and day-to-day server administration are deliberately outside the core product direction unless the project's scope changes explicitly in the future.
 
 ## Contributing code
 
@@ -46,6 +48,8 @@ The `ultrasonic` module name and `org.moire.ultrasonic` package are retained for
 ## Project identity
 
 - Describe the application as Taki, not Ultrasonic.
+- Prefer simplification over adding another settings surface or mode.
+- Keep the primary experience centered on browsing and listening to music.
 - Do not publish links to Ultrasonic releases as Taki downloads.
 - Keep internal legacy identifiers when renaming them would break compatibility.
 - Preserve copyright, licensing, and upstream attribution notices.

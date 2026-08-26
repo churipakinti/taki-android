@@ -1,6 +1,6 @@
 Tu música, sin distracciones.
 
-Taki es un reproductor Android enfocado en bibliotecas musicales personales. Escucha en línea o conserva música disponible sin conexión sin llevar la administración del servidor a la experiencia de escucha.
+Taki es un reproductor Android enfocado en bibliotecas musicales personales. Su propuesta parte de la simplificación: explorar tu biblioteca, reproducir música y conservar contenido sin conexión sin añadir capas innecesarias a la experiencia de escucha.
 
 Taki funciona con Navidrome y otros servidores compatibles con las APIs de Subsonic y OpenSubsonic.
 
@@ -12,6 +12,8 @@ Funciones:
 * Busca en toda tu biblioteca
 * Interfaz oscura y sin distracciones
 * Integración con Android Auto y controles multimedia
+
+Taki es intencionalmente solo para música. Chat, funciones sociales, compartir contenido, podcasts y la administración cotidiana del servidor quedan fuera para mantener la app centrada en escuchar.
 
 Taki se mantiene de forma independiente como un proyecto personal de código abierto, no como un servicio comercial ni un producto respaldado por una empresa. Está basado en Ultrasonic y se distribuye bajo la licencia GNU GPLv3.
 

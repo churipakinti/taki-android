@@ -2,7 +2,9 @@
 
 **Your music, without distractions.**
 
-Taki is a focused Android music player for [Navidrome](https://www.navidrome.org/) and other OpenSubsonic/Subsonic-compatible servers. Browse your personal library, play music, and keep albums available offline without bringing server administration into the listening experience.
+Taki is a focused Android music player for [Navidrome](https://www.navidrome.org/) and other OpenSubsonic/Subsonic-compatible servers. Its goal is deliberately simple: open your library, find music, press play, and keep a few things available offline.
+
+Taki is intentionally **music-only**. It leaves out chat, social features, sharing, podcasts, and day-to-day server administration so the player can stay centered on focused listening.
 
 > **Beta:** The first Taki beta has not been released yet. Official builds will be published through this repository's GitHub Releases. Downloads from the original Ultrasonic project are not Taki releases.
 
@@ -22,7 +24,11 @@ Taki is a focused Android music player for [Navidrome](https://www.navidrome.org
 - Download music for offline playback
 - Search across your library and connect multiple compatible servers
 - Integrate with Android media controls and Android Auto
-- Keep server administration out of the everyday listening interface
+- Keep everyday listening separate from server administration
+
+## What it deliberately leaves out
+
+Taki is built around simplification rather than feature accumulation. Chat, social feeds, sharing features, podcasts, and similar extras are intentionally outside the listening experience. The aim is a small, direct player for people who mainly want to listen to their own music.
 
 ## Requirements
 
@@ -51,7 +57,7 @@ Use the [issue tracker](https://github.com/churipakinti/taki-android/issues) for
 
 ## Contributing
 
-Issues and contributions are welcome. For larger changes, opening an issue first helps keep the scope aligned with Taki's intentionally simple music-player experience. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for repository guidelines.
+Issues and contributions are welcome. For larger changes, opening an issue first helps keep the scope aligned with Taki's deliberately simple, music-only direction. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for repository guidelines.
 
 ## Project status
 
