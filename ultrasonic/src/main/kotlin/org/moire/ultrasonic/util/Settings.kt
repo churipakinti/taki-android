@@ -74,8 +74,6 @@ object Settings {
     val pinWithHighestQuality: Boolean
         get() = (maxBitRatePinning == 0)
 
-    const val PRELOAD_COUNT = 3
-
     const val PARALLEL_DOWNLOADS = 3
 
     @JvmStatic

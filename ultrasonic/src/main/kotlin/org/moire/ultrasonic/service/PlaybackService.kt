@@ -19,7 +19,6 @@ import androidx.media3.common.C
 import androidx.media3.common.C.USAGE_MEDIA
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
 import androidx.media3.datasource.DataSource
@@ -35,7 +34,6 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import okhttp3.Credentials
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -355,15 +353,6 @@ class PlaybackService :
     }
 
     private val listener: Player.Listener = object : Player.Listener {
-        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-            cacheNextSongs()
-        }
-
-        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-            // Handles playlist changes, e.g. when tracks are reordered or deleted
-            cacheNextSongs()
-        }
-
         override fun onTracksChanged(tracks: Tracks) {
             updateReplayGain(tracks)
         }
@@ -377,36 +366,15 @@ class PlaybackService :
                 updateCustomHeartButton(track.starred)
             }
             updateWidgetTrack(track)
-            cacheNextSongs()
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             updateWidgetPlayerState(isPlaying)
-            cacheNextSongs()
         }
     }
 
     private fun updateCustomHeartButton(isHeart: Boolean) {
         librarySessionCallback.updateCustomHeartButton(mediaLibrarySession, isHeart)
-    }
-
-    private fun cacheNextSongs() {
-        if (actualBackend == MediaPlayerManager.PlayerBackend.JUKEBOX) return
-        Timber.d("PlaybackService caching the next songs")
-        val nextSongs = Util.getPlayListFromTimeline(
-            player.currentTimeline,
-            player.shuffleModeEnabled,
-            player.currentMediaItemIndex,
-            Settings.PRELOAD_COUNT
-        ).map {
-            // These items should skip the MediaItemConverter cache.
-            // The cache contains the controller's items, which may be modified (e.g. their rating)
-            it.toTrack(false)
-        }
-
-        launch {
-            DownloadService.download(nextSongs, isHighPriority = true)
-        }
     }
 
     private fun updateReplayGain(tracks: Tracks) {
