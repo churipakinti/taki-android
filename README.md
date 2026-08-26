@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/icon.png" alt="Taki logo" width="128" />
+</p>
+
 # Taki
 
 **Your music, without distractions.**
