@@ -7,6 +7,7 @@
 
 package org.moire.ultrasonic.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Configuration
@@ -31,6 +32,12 @@ class LocaleHelper(base: Context?) : ContextWrapper(base) {
             return LocaleHelper(context)
         }
 
+        // App Bundle language splitting is explicitly disabled
+        // (bundle.language.enableSplit = false in ultrasonic/build.gradle), so all language
+        // resources always stay packaged and this runtime locale switch cannot be affected by
+        // split delivery. The lint check does not recognize the nested DSL form and flags this
+        // as a false positive.
+        @SuppressLint("AppBundleLocaleChanges")
         private fun setSystemLocale(config: Configuration, locale: Locale?) {
             config.setLocale(locale)
         }
