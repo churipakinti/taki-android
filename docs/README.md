@@ -1,8 +1,8 @@
 # Taki documentation
 
-The repository [README](../README.md) is the primary introduction to Taki. This index separates current public guidance from historical planning and research retained for project context.
+The repository [README](../README.md) is the primary introduction to Taki. This index separates current project and developer documentation from historical planning and research retained for context.
 
-## Current public and developer documentation
+## Current project and developer documentation
 
 - [Contributing](CONTRIBUTING.md)
 - [Release signing](RELEASE_SIGNING.md)

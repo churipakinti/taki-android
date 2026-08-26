@@ -1,14 +1,10 @@
 # Taki
 
-**A small Android player for personal music libraries.**
+**Your music, without distractions.**
 
-Taki is a personal Android music player I built for my own Navidrome library. I wanted something simple for browsing my music, playing albums, and keeping a few things offline without bringing server administration into the player.
+Taki is a focused Android music player for [Navidrome](https://www.navidrome.org/) and other OpenSubsonic/Subsonic-compatible servers. Browse your personal library, play music, and keep albums available offline without bringing server administration into the listening experience.
 
-I’m sharing it because it may be useful to other people running their own music libraries. It is still a small personal project, and the first public beta may have rough edges.
-
-Taki works with [Navidrome](https://www.navidrome.org/) and other OpenSubsonic/Subsonic-compatible servers.
-
-> **Beta:** Taki is preparing its first public beta. There is no official public APK yet, and downloads from the original Ultrasonic project are not Taki releases.
+> **Beta:** The first Taki beta has not been released yet. Official builds will be published through this repository's GitHub Releases. Downloads from the original Ultrasonic project are not Taki releases.
 
 ## Screenshots
 
@@ -19,10 +15,6 @@ Taki works with [Navidrome](https://www.navidrome.org/) and other OpenSubsonic/S
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" alt="Taki Now Playing" width="18%" />
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_en-US.png" alt="Taki Search" width="18%" />
 </p>
-
-## Why I made it
-
-Most of the music I listen to lives on my own server. I wanted the Android side to feel like a straightforward music player rather than a server-management tool: open the app, browse the library, press play, and download a few things for offline listening.
 
 ## What it does
 
@@ -41,7 +33,7 @@ Compatibility varies between server implementations and API versions. Navidrome 
 
 ## Install / Download
 
-The first public beta has not been published yet. When it is available, official builds will be attached to this repository's [GitHub Releases](https://github.com/churipakinti/taki-android/releases). Until then, build from source if you want to test Taki.
+The first beta has not been published yet. When a release is available, official builds will be attached to [GitHub Releases](https://github.com/churipakinti/taki-android/releases). Until then, Taki can be built from source.
 
 ## Build from source
 
@@ -55,11 +47,15 @@ The APK is generated under `ultrasonic/build/outputs/apk/debug/`. The module and
 
 ## Reporting bugs
 
-If you try Taki and run into a problem, feel free to open an issue using the [issue tracker](https://github.com/churipakinti/taki-android/issues). Do not post credentials, private server URLs, or sensitive logs. Security and privacy concerns should follow [SECURITY.md](SECURITY.md).
+Use the [issue tracker](https://github.com/churipakinti/taki-android/issues) for reproducible problems. Do not post credentials, private server URLs, or sensitive logs. Security and privacy concerns should follow [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Issues and contributions are welcome. If you want to work on something larger than a small fix, opening an issue first is probably the easiest way to check whether it fits the project. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for the repository guidelines.
+Issues and contributions are welcome. For larger changes, opening an issue first helps keep the scope aligned with Taki's intentionally simple music-player experience. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for repository guidelines.
+
+## Project status
+
+Taki is independently maintained as a personal open-source project. It is not offered as a commercial service and is not a company-backed product. This describes the project itself and does not add restrictions beyond the GPLv3 license.
 
 ## Credits and License
 

@@ -1,32 +1,22 @@
 # Firma release de Taki
 
-Procedimiento y convenciones para compilar un APK release firmado. **Este documento no
-contiene, y nunca debe contener, valores reales de contraseñas, alias ni rutas absolutas de
-otros equipos.** Solo nombres de variables y pasos.
+Procedimiento y convenciones para compilar un APK release firmado. **Este documento no contiene, y nunca debe contener, valores reales de contraseñas, alias ni rutas absolutas de otros equipos.** Solo nombres de variables y pasos.
 
 ## Identidad de firma
 
-Taki usa un keystore propio, generado específicamente para este proyecto (P0.1 de
-`TAKI_BETA_COMPLETION_PLAN.md`). El archivo heredado `ultrasonic-keystore.enc`, retirado del
-árbol actual durante la preparación pública pero conservado en el historial de Ultrasonic,
-**no es y no debe convertirse en** la identidad de firma de Taki.
+Taki usa un keystore propio, generado específicamente para este proyecto. El archivo heredado `ultrasonic-keystore.enc`, retirado del árbol actual durante la preparación del release pero conservado en el historial de Ultrasonic, **no es y no debe convertirse en** la identidad de firma de Taki.
 
 - Algoritmo: RSA 4096, formato PKCS12.
 - Validez: 10.000 días desde la generación.
-- El `.jks` vive **fuera del repositorio**, en una carpeta local del equipo que compila el
-  release (p. ej. `%USERPROFILE%\TakiRelease\`). Nunca debe copiarse dentro del working tree
-  del repo, ni siquiera temporalmente.
+- El `.jks` vive **fuera del repositorio**, en una carpeta local del equipo que compila el release (p. ej. `%USERPROFILE%\TakiRelease\`). Nunca debe copiarse dentro del working tree del repo, ni siquiera temporalmente.
 
 ## Variables (`keystore.properties`)
 
-`ultrasonic/build.gradle` busca un archivo `keystore.properties` en la **raíz del repositorio**
-(ya cubierto por `.gitignore`, líneas `*.jks`, `*.keystore`, `keystore.properties` — verificar
-con `git check-ignore -v keystore.properties` si hay dudas). Si no existe, `assembleRelease`
-igual compila pero produce un APK **sin firmar** (hay un `logger.warn` en la configuración de
-Gradle que lo recuerda).
+`ultrasonic/build.gradle` busca un archivo `keystore.properties` en la **raíz del repositorio**. El archivo y los formatos de keystore están cubiertos por `.gitignore` (`*.jks`, `*.keystore`, `keystore.properties`). Verificar con `git check-ignore -v keystore.properties` si hay dudas.
 
-Claves esperadas en el archivo (formato Java `Properties`; usar `/` en las rutas de Windows
-para evitar problemas de escape):
+Si `keystore.properties` no existe, `assembleRelease` puede compilar un APK sin firmar. Ese artefacto no debe publicarse como release.
+
+Claves esperadas:
 
 ```properties
 storeFile=<ruta absoluta al .jks, con / en vez de \>
@@ -35,16 +25,11 @@ keyAlias=<alias de la clave>
 keyPassword=<contraseña de la clave>
 ```
 
-Nota PKCS12: a diferencia del formato JKS clásico, PKCS12 **no admite contraseñas distintas**
-para el store y la key — `keytool` ignora `-keypass` si difiere de `-storepass`. `storePassword`
-y `keyPassword` deben tener el mismo valor.
+Nota PKCS12: `storePassword` y `keyPassword` deben usar el mismo valor.
 
-## Regenerar el keystore (solo si se pierde o se compromete)
+## Regenerar el keystore
 
-Regenerar el keystore crea una **identidad de firma nueva**: cualquier instalación existente de
-un release firmado con la clave anterior **no podrá actualizarse** sobre esa clave nueva (Android
-exige la misma firma para actualizar in situ). Antes de regenerar, agotar toda posibilidad de
-recuperar el archivo original desde las copias de seguridad.
+Regenerar el keystore crea una **identidad de firma nueva**. Las instalaciones firmadas con la clave anterior no podrán actualizarse normalmente con una clave distinta. Solo debe considerarse después de agotar la recuperación de las copias de seguridad o si la clave se ha comprometido.
 
 ```powershell
 $keytool = "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe"
@@ -53,20 +38,19 @@ $keytool = "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe"
     -alias taki-release `
     -keyalg RSA -keysize 4096 -validity 10000 `
     -storetype PKCS12 `
-    -dname "CN=Taki Release, OU=Taki Android, O=Taki, C=US"
+    -dname "CN=Taki Release, OU=Taki Android, O=Taki"
 ```
 
 Luego escribir `keystore.properties` con las cuatro claves de arriba.
 
-## Copias de seguridad (responsabilidad del propietario, no automatizado)
+## Copias de seguridad
 
-El plan exige al menos dos copias seguras del keystore fuera de esta máquina. No lo automaticé
-porque implicaría subir un secreto a un servicio de terceros en tu nombre. Sugerido:
+Mantener al menos dos copias seguras del keystore fuera de la máquina de build. La copia del secreto no se automatiza desde el repositorio.
 
-1. Adjuntar el `.jks` a una entrada de tu gestor de contraseñas (1Password, Bitwarden, etc.),
-   junto con las cuatro variables de `keystore.properties`.
-2. Una segunda copia offline (USB cifrado, disco externo) que no dependa de la misma cuenta
-   que la copia 1.
+Opciones habituales:
+
+1. Guardar el `.jks` como adjunto protegido en un gestor de contraseñas junto con los valores necesarios de `keystore.properties`.
+2. Mantener una segunda copia offline cifrada que no dependa de la misma cuenta que la primera.
 
 ## Compilar y verificar
 
@@ -74,22 +58,25 @@ porque implicaría subir un secreto a un servicio de terceros en tu nombre. Suge
 ./gradlew :ultrasonic:assembleRelease
 ```
 
-El APK queda en `ultrasonic/build/outputs/apk/release/`. Verificar la firma:
+El APK queda en `ultrasonic/build/outputs/apk/release/`.
+
+Verificar la firma:
 
 ```bash
 apksigner verify --verbose --print-certs ultrasonic/build/outputs/apk/release/*.apk
 ```
 
-Debe imprimir `Verifies` y un `V2 Signer: certificate DN: CN=Taki Release, ...`. Calcular el
-checksum de distribución:
+Registrar el fingerprint SHA-256 del certificado y calcular el checksum del APK:
 
 ```bash
 sha256sum ultrasonic/build/outputs/apk/release/*.apk
 ```
 
-## Qué NO hacer
+El APK que se smoke-testee en el dispositivo debe ser exactamente el mismo archivo que se publique.
+
+## Qué no hacer
 
 - No commitear `keystore.properties` ni ningún `.jks`/`.keystore`.
-- No pegar contraseñas del keystore en commits, issues, PRs ni en este documento.
-- No usar `ultrasonic-keystore.enc` como fallback "por ahora" — rompe la garantía de identidad
-  propia que pide P0.1.
+- No pegar contraseñas del keystore en commits, issues, PRs ni documentación.
+- No usar `ultrasonic-keystore.enc` como fallback.
+- No publicar un APK release sin verificar su firma.
