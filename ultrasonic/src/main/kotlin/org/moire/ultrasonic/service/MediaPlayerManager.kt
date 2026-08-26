@@ -913,7 +913,7 @@ class MediaPlayerManager(
         // a several-thousand-song album, mostly not downloaded) fires onTimelineChanged once
         // per removal, each doing a full timeline walk - the exact same O(n^2) freeze as
         // withTimelinePublishSuppressed fixes for adding, except here it ran under this
-        // method's own lock and produced a real ANR (see CHANGES.md, P0.4 server-switch entry).
+        // method's own lock and produced a real ANR.
         withTimelinePublishSuppressedSync {
             for ((index, item) in list.withIndex()) {
                 val state = DownloadService.getDownloadState(item.toTrack())

@@ -12,7 +12,7 @@ Antes de aplicar cada cambio se debe comprobar:
 4. Si el texto procede de `strings.xml` y tiene traducciones equivalentes.
 5. Si el resultado conserva accesibilidad, legibilidad y eficiencia.
 
-Las modificaciones implementadas y verificadas deben registrarse en `CHANGES.md`. Esta guía no sustituye el historial técnico del proyecto.
+Las modificaciones implementadas y verificadas deben quedar documentadas en el mensaje del commit correspondiente. Esta guía no sustituye el historial técnico del proyecto.
 
 ---
 

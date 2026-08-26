@@ -178,9 +178,8 @@ class NavigationActivity : ScopeActivity() {
         // stale sub-screen instead of the tab root, and leave the wrong item highlighted
         // afterwards, which made the *next* tap silently do nothing (Home ended up marked
         // as already-selected while a Library sub-screen was still on screen, turning a
-        // later tap on Home into a no-op reselect). Found via bug report + on-device
-        // testing (2026-08-11), see CHANGES.md. Popping back to the tab's root id (already
-        // proven safe here, it's what the reselect handling below already did) is
+        // later tap on Home into a no-op reselect). Popping back to the tab's root id
+        // (already proven safe here, it's what the reselect handling below already did) is
         // deterministic: it always finds homeFragment (the graph's start destination, never
         // off the back stack) and, for any other tab, either the root already on the back
         // stack or nothing -- in which case it just navigates to it fresh.
@@ -216,11 +215,11 @@ class NavigationActivity : ScopeActivity() {
             // Library. For any destination it doesn't recognize it leaves the bottom nav's
             // selection exactly as it was, so browsing into Library's own sub-screens left
             // "Home" highlighted (whatever tab was last matched before, not where the content
-            // actually lives) - found via on-device testing (2026-08-10), see CHANGES.md.
-            // Only destinations with a single, unambiguous entry point are corrected here;
-            // trackCollectionFragment/artistDetailFragment used for album/artist/genre/playlist
-            // browsing are reachable from both Home and Library depending on how the user got
-            // there, so they're deliberately left alone rather than guessed at.
+            // actually lives). Only destinations with a single, unambiguous entry point are
+            // corrected here; trackCollectionFragment/artistDetailFragment used for
+            // album/artist/genre/playlist browsing are reachable from both Home and Library
+            // depending on how the user got there, so they're deliberately left alone rather
+            // than guessed at.
             // Downloads moved from its own bottom-nav tab into a Library row; it and the
             // downloaded-album detail screen it opens are reached only from Library now,
             // so Library stays highlighted.
