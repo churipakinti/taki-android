@@ -163,9 +163,6 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="widget.initial_text">Нажмите, чтобы выбрать музыку</string>
-    <string name="widget.sdcard_busy">SD-карта недоступна</string>
-    <string name="widget.sdcard_missing">Нет SD-карты</string>
     <string name="do_not_show_dialog_again">Больше не показывать диалог</string>
     <string name="share_set_share_options">Установить параметры общего доступа</string>
     <string name="no_expiration">Нет срока годности</string>

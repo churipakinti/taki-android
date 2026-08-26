@@ -142,9 +142,6 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="widget.initial_text">Dotknij, aby wybrać muzykę</string>
-    <string name="widget.sdcard_busy">Karta SD jest niedostępna</string>
-    <string name="widget.sdcard_missing">Brak karty SD</string>
     <string name="do_not_show_dialog_again">Nie wyświetlaj więcej tego okna</string>
     <string name="share_set_share_options">Ustaw opcje udostępniania</string>
     <string name="no_expiration">Nigdy nie wygasa</string>

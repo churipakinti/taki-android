@@ -248,9 +248,6 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="widget.initial_text">Toca para seleccionar música</string>
-    <string name="widget.sdcard_busy">Tarjeta SD no disponible</string>
-    <string name="widget.sdcard_missing">No hay tarjeta SD</string>
     <string name="do_not_show_dialog_again">No mostrar el diálogo de nuevo</string>
     <string name="share_set_share_options">Configurar las opciones de compartir</string>
     <string name="share_on_server">Crear recurso compartido en el servidor </string>

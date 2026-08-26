@@ -48,7 +48,6 @@ import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.data.CachedDataSource
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.imageloader.ArtworkBitmapLoader
-import org.moire.ultrasonic.provider.UltrasonicAppWidgetProvider
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.util.Constants
 import org.moire.ultrasonic.util.PerfMetrics
@@ -365,11 +364,6 @@ class PlaybackService :
             if (track != null) {
                 updateCustomHeartButton(track.starred)
             }
-            updateWidgetTrack(track)
-        }
-
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            updateWidgetPlayerState(isPlaying)
         }
     }
 
@@ -427,16 +421,6 @@ class PlaybackService :
         .setUsage(USAGE_MEDIA)
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .build()
-
-    private fun updateWidgetTrack(song: Track?) {
-        val context = UApp.applicationContext()
-        UltrasonicAppWidgetProvider.notifyTrackChange(context, song)
-    }
-
-    private fun updateWidgetPlayerState(isPlaying: Boolean) {
-        val context = UApp.applicationContext()
-        UltrasonicAppWidgetProvider.notifyPlayerStateChange(context, isPlaying)
-    }
 
     private inner class MediaSessionServiceListener : Listener {
 

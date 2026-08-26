@@ -140,8 +140,6 @@
     <string name="download.menu_clear_playlist">プレイリストを消去</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="widget.initial_text">タップして音楽を選択</string>
-    <string name="widget.sdcard_missing">SDカードなし</string>
     <string name="share_set_share_options">共有オプションの設定</string>
     <string name="share_on_server">サーバー上に共有を作成</string>
     <string name="no_expiration">有効期限なし</string>
@@ -252,7 +250,6 @@
     <string name="settings.max_bitrate_mobile">最高ビットレート - モバイル回線</string>
     <string name="settings.max_bitrate_wifi">最高ビットレート - Wi-Fi</string>
     <string name="settings.use_id3_offline_summary">この設定を有効にすると、Taki 4.0以降でダウンロードした音楽のみが表示されます。それ以前のバージョンでダウンロードしたファイルには、必要なメタデータが含まれていません。固定モードと保存モードを切り替えることで、不足メタデータのダウンロードができます。</string>
-    <string name="widget.sdcard_busy">SDカード利用不可</string>
     <string name="do_not_show_dialog_again">ダイアログを再度表示しない</string>
     <string name="time_span_disabled">無効</string>
     <string name="common_multiple_years">複数の年</string>

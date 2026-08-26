@@ -164,9 +164,6 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="widget.initial_text">轻触选择音乐</string>
-    <string name="widget.sdcard_busy">SD 卡不可用</string>
-    <string name="widget.sdcard_missing">没有 SD 卡</string>
     <string name="do_not_show_dialog_again">不再显示此对话框</string>
     <string name="share_set_share_options">设置分享选项</string>
     <string name="share_on_server">在服务端创建分享链接</string>

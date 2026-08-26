@@ -66,7 +66,6 @@
     <string name="settings.cache_size_7000">7 GB</string>
     <string name="select_share.empty">Ingen delinger tilgjengelig på tjeneren</string>
     <string name="share_on_server">Opprett deling på tjeneren</string>
-    <string name="widget.sdcard_missing">Ingen SD-kort</string>
     <string name="do_not_show_dialog_again">Ikke vis denne dialogen igjen</string>
     <string name="share_set_share_options">Sett delingsinnstillinger</string>
     <string name="button_bar.shares">Delinger</string>
@@ -166,8 +165,6 @@
     <string name="main.video" tools:ignore="UnusedResources">Video</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="widget.initial_text">Trykk for å velge musikk</string>
-    <string name="widget.sdcard_busy">SD-kort utilgjengelig</string>
     <string name="no_expiration">Uten utløp</string>
     <string name="share_comment">Kommentar</string>
     <string name="settings.share_expiration">Tid til utløp</string>
