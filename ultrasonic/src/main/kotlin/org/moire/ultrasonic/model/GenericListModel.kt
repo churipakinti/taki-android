@@ -50,7 +50,7 @@ open class GenericListModel(application: Application) :
 
     // Guards against a load started against a previous server (or a previous rapid refresh tap)
     // landing after a newer one and overwriting its results - same shape as the already-fixed
-    // stale-response bugs in filter/sort/pagination. See docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md.
+    // stale-response bugs in filter/sort/pagination.
     private var loadJob: Job? = null
 
     open fun showSelectFolderHeader(): Boolean = false

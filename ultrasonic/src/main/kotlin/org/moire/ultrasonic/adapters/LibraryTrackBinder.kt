@@ -54,8 +54,7 @@ class LibraryTrackBinder(
 
         // Resolved async (Storage.isPathExists() is a disk read) and cached on the holder, same
         // pattern as TrackViewHolder.cachedStatus -- read by showMenu() so Pin/Unpin/Download/
-        // Delete only show for the state they actually apply to. See
-        // TAKI_BETA_COMPLETION_PLAN.md P1.
+        // Delete only show for the state they actually apply to.
         holder.downloadState = DownloadState.UNKNOWN
         holder.scope.launch {
             holder.downloadState = DownloadService.getDownloadState(track)

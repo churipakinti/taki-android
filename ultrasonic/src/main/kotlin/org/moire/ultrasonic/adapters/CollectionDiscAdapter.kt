@@ -24,8 +24,8 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.LayoutType
 
 /**
- * A Collection/Box Set's disc rows (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md section 10):
- * position, own artwork, own track count (already on the cached [Album] row - never a reason to
+ * A Collection/Box Set's disc rows: position, own artwork, own track count (already on
+ * the cached [Album] row - never a reason to
  * fetch a disc's tracks just to show it in this list). Navigation-only - tapping a row opens the
  * disc via the existing unmodified TrackCollection (Album Detail) screen, where Play/queue
  * actions already live. Supports the same list/cover-grid toggle as AlbumRowDelegate/

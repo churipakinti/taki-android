@@ -19,8 +19,8 @@ object DailyMixSelector {
     private const val EXPLORATION_BUCKET = "exploration"
     private const val FALLBACK_BUCKET = "fallback"
 
-    // "reducir canciones reproducidas en las últimas 24-48 horas" (docs/TAKI_RADIOS_AND_DAILY_
-    // MIX.md). A soft penalty, not exclusion: recently-played tracks are pushed to the back of
+    // "reducir canciones reproducidas en las últimas 24-48 horas". A soft penalty, not
+    // exclusion: recently-played tracks are pushed to the back of
     // their bucket's shuffle order so other candidates are tried first, but they're still picked
     // if nothing else is left, same as before this signal existed.
     private const val RECENTLY_PLAYED_WINDOW_MILLIS = 48L * 60 * 60 * 1000

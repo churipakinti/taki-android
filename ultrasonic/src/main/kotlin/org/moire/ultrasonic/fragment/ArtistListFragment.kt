@@ -45,7 +45,7 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
     // navigation"): without this, every open of this screen defaults to refresh=true and
     // bypasses the Room cache backing getArtists()/getIndexes() unconditionally. This screen's
     // own nav argument already defaults refresh to false; it's this Kotlin-level default that
-    // was still forcing it on. See TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+    // was still forcing it on.
     override val refreshOnCreation: Boolean = false
 
     private val navArgs: ArtistListFragmentArgs by navArgs()
@@ -170,9 +170,9 @@ class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) 
     }
 
     // Kept deliberately small: Name, Recently Played, Recently Added, Most Played (in that
-    // order) - matches docs/TAKI_ARTISTS_SORT_SIMPLIFICATION.md. Random/Starred/By Genre are
-    // gone; Albums/Songs keep their own full option sets (getListOfSortOrders is local to this
-    // fragment, not shared). The online/offline gating mirrors what each order actually needs:
+    // order). Random/Starred/By Genre are gone; Albums/Songs keep their own full option sets
+    // (getListOfSortOrders is local to this fragment, not shared). The online/offline gating
+    // mirrors what each order actually needs:
     // RECENT/FREQUENT require a live server, NEWEST/BY_NAME can also work from an ID3-tagged
     // offline cache.
     private fun getListOfSortOrders(): List<SortOrder> {

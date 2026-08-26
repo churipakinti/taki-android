@@ -509,8 +509,8 @@ class PlayerFragment :
     }
 
     /**
-     * Sleep timer button visual state (docs/TAKI_SLEEP_TIMER_VISUAL_ADJUSTMENT.md): same neutral/
-     * accent color convention as shuffle and repeat ([playerModeColor]), driven entirely by
+     * Sleep timer button visual state: same neutral/accent color convention as shuffle and
+     * repeat ([playerModeColor]), driven entirely by
      * [RxBus.sleepTimerStateObservable] - not a fixed toggle, so it also returns to neutral by
      * itself on expiry, cancellation, or replacement, with no dedicated "reset" call needed here.
      */
@@ -635,8 +635,7 @@ class PlayerFragment :
         // infrastructure detail to every user whose account happens to have jukebox permission,
         // not just the ones who asked for it. It stays reachable as an explicit opt-in via the
         // "Jukebox by default" switch in a library's Advanced settings (EditServerFragment),
-        // which alone is enough to turn it on automatically -- see
-        // docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.4.
+        // which alone is enough to turn it on automatically.
         jukeboxOption?.isEnabled = false
         jukeboxOption?.isVisible = false
     }
@@ -1316,10 +1315,9 @@ class PlayerFragment :
 
     /**
      * Sleep timer picker: a plain single-choice MaterialAlertDialog reached from the sleep-timer
-     * icon button in the secondary controls row (docs/TAKI_SLEEP_TIMER_VISUAL_ADJUSTMENT.md), no
-     * dedicated screen. "End of current song" is omitted entirely rather than shown disabled
-     * when nothing is playing, so it's structurally impossible to arm an ambiguous end-of-track
-     * state (docs/TAKI_SLEEP_TIMER_FINAL_FEATURE.md section 3.14).
+     * icon button in the secondary controls row, no dedicated screen. "End of current song" is
+     * omitted entirely rather than shown disabled when nothing is playing, so it's structurally
+     * impossible to arm an ambiguous end-of-track state.
      */
     private fun showSleepTimerDialog() {
         val hasCurrentSong = mediaPlayerManager.currentMediaItem != null

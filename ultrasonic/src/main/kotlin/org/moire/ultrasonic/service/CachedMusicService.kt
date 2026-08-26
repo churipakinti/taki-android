@@ -117,9 +117,8 @@ class CachedMusicService(private val musicService: MusicService) :
      * cache for this exact musicFolderId to fall back to -- e.g. switching to a music folder
      * that was never fetched before must always do a full fetch, even though the server's
      * stored lastModified (saved per-server, not per-folder, since it reflects library-wide
-     * changes) might say "nothing changed" relative to some *other* folder's last check. See
-     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 3 ("invalidar correctamente después de cambios que
-     * afecten el índice").
+     * changes) might say "nothing changed" relative to some *other* folder's last check
+     * ("invalidar correctamente después de cambios que afecten el índice").
      */
     @Throws(Exception::class)
     override suspend fun getIndexes(musicFolderId: String?, refresh: Boolean): List<Index> {
@@ -278,8 +277,8 @@ class CachedMusicService(private val musicService: MusicService) :
     }
 
     /**
-     * Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md): getAlbumAsDir() is
-     * the only place that ever sees this album's tracks (whether from cache or network), and
+     * Collections/Box Sets: getAlbumAsDir() is the only place that ever sees this album's
+     * tracks (whether from cache or network), and
      * grouping only exists on the Song response, not AlbumID3 - so this is the sole opportunity
      * to discover and persist it onto the album's own cached row, with no extra network call.
      * A no-op once already set (Room UPDATE is cheap either way), and intentionally never clears
@@ -302,8 +301,7 @@ class CachedMusicService(private val musicService: MusicService) :
                     cache = musicService.getAlbum(id, name, refresh)
                 } catch (e: Exception) {
                     // Falls back to no album data (same as before); the difference is that the
-                    // failure is now on record instead of vanishing silently. See
-                    // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+                    // failure is now on record instead of vanishing silently.
                     Timber.w(e, "getAlbum failed for id=%s, falling back to cached/null", id)
                 }
 

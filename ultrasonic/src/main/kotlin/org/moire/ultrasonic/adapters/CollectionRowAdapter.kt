@@ -22,8 +22,8 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.bindStackedArtwork
 
 /**
- * Rows for the Collections/Box Sets grid (docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 2):
- * artwork-first 2-column grid using the stacked-cover effect (see [bindStackedArtwork]) instead
+ * Rows for the Collections/Box Sets grid: artwork-first 2-column grid using the
+ * stacked-cover effect (see [bindStackedArtwork]) instead
  * of a flat text row. Plain [ListAdapter] rather than the app's multitype delegates since this
  * list is always homogeneous - no need for the polymorphic machinery TrackCollectionFragment's
  * list needs.

@@ -31,8 +31,7 @@ object Utils {
         // Download/Delete only make sense for the states they actually apply to -- e.g.
         // "Delete" (removes the local downloaded copy) showed up even for a track that was
         // never downloaded. UNKNOWN (state not resolved yet, or a menu with no per-track state
-        // to give) hides both rather than guessing. See
-        // docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.3.
+        // to give) hides both rather than guessing.
         val isDownloaded = downloadState == DownloadState.DONE || downloadState == DownloadState.PINNED
         val canDownload = downloadState == DownloadState.IDLE ||
             downloadState == DownloadState.FAILED ||

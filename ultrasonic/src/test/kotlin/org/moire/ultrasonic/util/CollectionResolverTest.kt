@@ -14,9 +14,9 @@ import org.junit.Test
 import org.moire.ultrasonic.domain.Album
 
 /**
- * Locks down CollectionResolver's core contract (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md
- * section 22): metadata-only detection, stable ids, numeric disc ordering, and safe degradation
- * when position metadata is missing or inconsistent.
+ * Locks down CollectionResolver's core contract: metadata-only detection, stable ids,
+ * numeric disc ordering, and safe degradation when position metadata is missing or
+ * inconsistent.
  */
 class CollectionResolverTest {
 

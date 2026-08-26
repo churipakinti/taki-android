@@ -230,10 +230,10 @@
             android:id="@+id/albumListToTrackCollection"
             app:destination="@id/trackCollectionFragment" />
     </fragment>
-    <!-- Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Reached from
-         Library's "Box Sets" row (MainFragment); collectionDetailFragment's "grouping" argument
-         is the exact CollectionResolver-resolved MusicCollection.title, not a display-only
-         value - CollectionDetailModel re-filters by it. -->
+    <!-- Collections/Box Sets. Reached from Library's "Box Sets" row (MainFragment);
+         collectionDetailFragment's "grouping" argument is the exact CollectionResolver-resolved
+         MusicCollection.title, not a display-only value - CollectionDetailModel re-filters
+         by it. -->
     <fragment
         android:id="@+id/collectionListFragment"
         android:name="org.moire.ultrasonic.fragment.CollectionListFragment"

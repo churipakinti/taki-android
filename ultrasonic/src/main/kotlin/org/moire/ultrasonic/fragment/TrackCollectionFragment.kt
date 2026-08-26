@@ -133,8 +133,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     // album) -- only the album/folder/videos paths are actually cached (see CachedMusicService),
     // but a refresh=true default here bypassed that cache unconditionally on every navigation.
     // This mirrors the fix already applied to AlbumListFragment (commit 026aa795, "don't refresh
-    // the album list on back navigation") that was never extended to this screen. See
-    // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+    // the album list on back navigation") that was never extended to this screen.
     override val refreshOnCreation: Boolean = false
 
     private val navArgs: TrackCollectionFragmentArgs by navArgs()
@@ -398,8 +397,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     }
 
     /**
-     * Album Detail's Information action (docs/TAKI_ALBUM_INFO_MUSIC_FIRST.md). Everything shown
-     * here is already resolved by the time this can be tapped - [AlbumDetailHeaderBinder] only
+     * Album Detail's Information action. Everything shown here is already resolved by the
+     * time this can be tapped - [AlbumDetailHeaderBinder] only
      * shows the button once [AlbumHeader.notes] came back non-empty from [loadAlbumInfo], and the
      * rest (artist/year/song count/disc count/cover) is synchronous, computed when the header
      * was built. No network call happens here.
@@ -521,7 +520,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
     /**
-     * Disc header's Play button (docs/TAKI_ALBUM_DETAIL_FIX_PLAN.md problem 2). [tracks] is
+     * Disc header's Play button. [tracks] is
      * [org.moire.ultrasonic.adapters.DiscHeader.tracks], already scoped to a single disc and in
      * track-number order (falling back to path for incomplete metadata) by
      * [EntryByDiscAndTrackComparator], which [defaultObserver] already sorts the whole album
@@ -624,8 +623,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     }
 
     /*
-     * Playlist detail hero's trailing ⋮ action (docs/TAKI_PLAYLIST_UX_REDESIGN.md "Menú ⋮ para
-     * descargar, renombrar, eliminar"). Reuses ItemSelectionDialogFragment, the same shared list
+     * Playlist detail hero's trailing ⋮ action (download, rename, delete). Reuses
+     * ItemSelectionDialogFragment, the same shared list
      * dialog already used for artist/genre filter selection above, instead of a PopupMenu that
      * would need the clicked view as an anchor.
      */
@@ -741,7 +740,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
      * pure data transforms with no Android API calls, so on a large album (Bach 333, 5,517
      * tracks: measured ~60-80ms) they're moved off the main thread instead of running inline in
      * the LiveData observer, which was blocking a frame on every open -- cold *and* from cache.
-     * See TAKI_ALBUM_DETAIL_FIX_PLAN.md problem 1.
      */
     private data class ProcessedTrackList(
         val displayList: List<Identifiable>,
@@ -1034,8 +1032,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     }
 
     /*
-     * "Quitar de esta playlist" (docs/TAKI_PLAYLIST_UX_REDESIGN.md) - distinct from deleting a
-     * download or the song itself. updatePlaylist.view's songIndexesToRemove is 0-based and
+     * "Quitar de esta playlist" - distinct from deleting a download or the song itself.
+     * updatePlaylist.view's songIndexesToRemove is 0-based and
      * positional within the playlist's current order, so the index has to come from the same
      * getAllTracks() ordering used for playback, not from the track's id (playlists can contain
      * the same song more than once).

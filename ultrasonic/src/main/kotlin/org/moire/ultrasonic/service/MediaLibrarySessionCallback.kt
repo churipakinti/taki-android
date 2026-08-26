@@ -1542,7 +1542,7 @@ class MediaLibrarySessionCallback :
 
     // suspend so callers can pass a suspend lambda (needed for MusicService.search(), the only
     // suspend call among all the callWithErrorHandling { musicService.xxx(...) } call sites in
-    // this file -- see Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md). Every call site is already
+    // this file). Every call site is already
     // inside a serviceScope.future { ... } coroutine, so this doesn't change how any of them are
     // invoked; a plain non-suspend lambda still satisfies a `suspend () -> T` parameter type.
     private suspend fun <T> callWithErrorHandling(function: suspend () -> T): T? {
@@ -1656,9 +1656,9 @@ class MediaLibrarySessionCallback :
 
         // A single unchunked addMediaItems() here would reintroduce, via the Shuffle button
         // on a very large queue, the exact main-thread ANR that MediaPlayerManager.
-        // addToPlaylistLocked() already fixed for the "add tracks" path - see
-        // docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md. Mirror the same chunked+yielded pattern,
-        // and suppress the per-chunk timeline publish the same way for the same reason
+        // addToPlaylistLocked() already fixed for the "add tracks" path. Mirror the same
+        // chunked+yielded pattern, and suppress the per-chunk timeline publish the same way
+        // for the same reason
         // (see MediaPlayerManager.withTimelinePublishSuppressed).
         mainScope.launch {
             mediaPlayerManager.withTimelinePublishSuppressed {

@@ -13,10 +13,9 @@ import org.moire.ultrasonic.domain.MusicCollection
 import timber.log.Timber
 
 /**
- * Groups [Album]s that share the same `grouping` metadata value into [MusicCollection]s
- * (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Detection is entirely metadata-driven -
- * never a hardcoded name/artist/id check - so any box set works the same way Bach 333 does,
- * without code changes.
+ * Groups [Album]s that share the same `grouping` metadata value into [MusicCollection]s.
+ * Detection is entirely metadata-driven - never a hardcoded name/artist/id check - so any
+ * box set works the same way Bach 333 does, without code changes.
  *
  * Pure function over already-fetched/cached albums (see `AlbumDao.withGrouping()`): this never
  * fetches anything itself, so it's safe to call on every Library load without re-triggering

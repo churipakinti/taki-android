@@ -140,8 +140,7 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
      * getAlbumInfo() has no caching of its own in CachedMusicService (unlike the track listing
      * itself), and this ViewModel survives Fragment recreation (e.g. rotation) while the
      * Fragment's own fields don't -- without this, rotating the device re-fetched the "About"
-     * text from the network every time even though the album on screen never changed. See
-     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 3.
+     * text from the network every time even though the album on screen never changed.
      */
     suspend fun getAlbumInfo(id: String, forceRefresh: Boolean = false): AlbumInfo? {
         if (!forceRefresh && loadedAlbumInfoId == id) return loadedAlbumInfo

@@ -75,7 +75,7 @@ class PlaybackService :
 
     // Tracks which allowSelfSignedCertificate value the current local player's OkHttpClient was
     // built with, so updateBackend() can tell whether a server switch actually requires
-    // rebuilding it (see Fase 8 of TAKI_CODE_OPTIMIZATION_PLAN.md).
+    // rebuilding it.
     private var localPlayerAllowsSelfSignedCert = false
 
     private var rxBusSubscription = CompositeDisposable()
@@ -250,7 +250,7 @@ class PlaybackService :
         // active beyond this flag: stream URLs are resolved fresh per request (see `resolver`),
         // not baked into the player. Skip tearing down a perfectly good ExoPlayer/OkHttpClient
         // (which recreates the OkHttp SSLContext, a main-thread-blocking call StrictMode flags)
-        // when there is nothing to actually change. See TAKI_CODE_OPTIMIZATION_PLAN.md Fase 8.
+        // when there is nothing to actually change.
         val allowSelfSignedCert = activeServerProvider.getActiveServer().allowSelfSignedCertificate
         if (newBackend == actualBackend &&
             newBackend == MediaPlayerManager.PlayerBackend.LOCAL &&

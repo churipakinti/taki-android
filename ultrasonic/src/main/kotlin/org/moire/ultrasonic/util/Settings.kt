@@ -267,8 +267,7 @@ object Settings {
     @JvmStatic
     var homeMixTrackIds by StringSetting("home_mix_track_ids", "")
 
-    // One-time explanation shown the first time the Mix diario card appears on Home (see
-    // docs/TAKI_RADIOS_AND_DAILY_MIX.md section 14/15, "decisión pendiente de validar").
+    // One-time explanation shown the first time the Mix diario card appears on Home.
     @JvmStatic
     var homeMixIntroShown by BooleanSetting("home_mix_intro_shown", false)
 

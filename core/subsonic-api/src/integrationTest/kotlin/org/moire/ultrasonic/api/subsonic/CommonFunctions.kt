@@ -99,7 +99,7 @@ fun MockWebServerRule.assertRequestParam(
 
 /**
  * The `suspend fun` equivalent of [checkErrorCallParsed], for endpoints migrated off
- * `Call<T>`/`.execute()` (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md) - a suspend Retrofit call
+ * `Call<T>`/`.execute()` - a suspend Retrofit call
  * returns the parsed body directly, not wrapped in a [Response], so there is no HTTP-level
  * `isSuccessful` check to make here (the Subsonic API returns HTTP 200 with a `status: failed`
  * body for protocol-level errors like this one).

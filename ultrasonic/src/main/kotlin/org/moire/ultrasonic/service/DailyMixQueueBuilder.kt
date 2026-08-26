@@ -26,9 +26,7 @@ private const val DAILY_MIX_RANDOM_FETCH_SIZE = 80
 
 class DailyMixQueueBuilder(private val musicService: MusicService) {
     companion object {
-        // Exposed so callers can tell the user when the mix came back shorter than usual
-        // (docs/TAKI_RADIOS_AND_DAILY_MIX.md section 7/9: "comunicar si la cola resultante es
-        // más corta").
+        // Exposed so callers can tell the user when the mix came back shorter than usual.
         const val TARGET_SIZE = DAILY_MIX_SIZE
     }
 
@@ -142,8 +140,8 @@ class DailyMixQueueBuilder(private val musicService: MusicService) {
         return DailyMixCandidates(
             familiar = starred + frequent,
             rediscovery = random.filterNot { it.starred },
-            // "nunca escuchada" (docs/TAKI_RADIOS_AND_DAILY_MIX.md): a track with a confirmed
-            // playCount of 0 counts as never-listened even without a created date. playCount
+            // "nunca escuchada": a track with a confirmed playCount of 0 counts as
+            // never-listened even without a created date. playCount
             // null (server didn't expose it) is not treated as a signal either way.
             exploration = newest + random.filter {
                 !it.starred && (it.created != null || it.playCount == 0L)
@@ -203,8 +201,7 @@ internal fun shouldUseRestoredDailyMix(
  * Gate for build()'s restore branch: only attempt to restore a stored Mix diario when it was
  * generated today, for this same server, and the caller isn't forcing a fresh one. Extracted as
  * a free function so the per-serverId stability contract ("cambiar de servidor no debe reutilizar
- * el mix de la biblioteca anterior", docs/TAKI_RADIOS_AND_DAILY_MIX.md section 15) is directly
- * testable without a Settings/Android dependency.
+ * el mix de la biblioteca anterior") is directly testable without a Settings/Android dependency.
  */
 internal fun shouldAttemptDailyMixRestore(
     forceRefresh: Boolean,

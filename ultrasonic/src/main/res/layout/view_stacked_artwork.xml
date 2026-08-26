@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Stacked-cover composition (docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 3): up to 3 square
-    covers layered back-to-front using percent-based ConstraintLayout bias, so it scales cleanly
+    Stacked-cover composition: up to 3 square covers layered back-to-front using
+    percent-based ConstraintLayout bias, so it scales cleanly
     at any container size (small grid card or large detail header) without any code-time math.
     Callers show/hide stack_back/stack_middle depending on how many distinct covers a Collection
     actually has (docs section 4 - a single-cover Collection must show one clean cover, not 3

@@ -10,8 +10,7 @@ package org.moire.ultrasonic.model
 /**
  * Tracks which *execution* of a repeatable request (e.g. a search) is the most recent one, so a
  * caller can tell whether a response it just received is still the one the user actually wants
- * to see (see TAKI_CODE_OPTIMIZATION_PLAN.md Fase 9: "un resultado viejo nunca reemplaza uno de
- * una consulta más reciente").
+ * to see ("un resultado viejo nunca reemplaza uno de una consulta más reciente").
  *
  * Superseded the query-text-keyed version of this class: comparing by the query string alone
  * correctly rejects a stale response for a *different* query (e.g. "queen" vs "queens"), but two

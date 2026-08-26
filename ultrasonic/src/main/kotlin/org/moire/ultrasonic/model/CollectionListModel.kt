@@ -21,8 +21,8 @@ import org.moire.ultrasonic.domain.MusicCollection
 import org.moire.ultrasonic.util.CollectionResolver
 
 /**
- * Collections/Box Sets list (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Reads only
- * already-cached album rows (`AlbumDao.withGrouping()`) and resolves them client-side - never
+ * Collections/Box Sets list. Reads only already-cached album rows
+ * (`AlbumDao.withGrouping()`) and resolves them client-side - never
  * fetches from the network itself, so opening this screen is always cheap regardless of how many
  * box sets exist.
  */

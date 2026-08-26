@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Box Sets grid card (docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 2): artwork-dominant, no
-    heavy card border around the whole item - the per-cover elevation inside
+    Box Sets grid card: artwork-dominant, no heavy card border around the whole item - the
+    per-cover elevation inside
     view_stacked_artwork.xml already carries the "collection" cue, matching the minimal style of
     grid_item_album.xml.
 -->

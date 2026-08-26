@@ -7,7 +7,7 @@ import org.junit.Test
 /**
  * Integration test for [SubsonicAPIClient] for getAlbumInfo2 call.
  *
- * No test previously existed for this endpoint (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md).
+ * No test previously existed for this endpoint.
  */
 class SubsonicApiGetAlbumInfo2Test : SubsonicAPIClientTest() {
     @Test

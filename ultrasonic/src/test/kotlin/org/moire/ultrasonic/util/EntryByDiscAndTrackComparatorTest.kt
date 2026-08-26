@@ -15,7 +15,7 @@ import org.moire.ultrasonic.domain.Track
 /**
  * Locks down the disc/track ordering (and per-disc grouping) that Album Detail relies on both
  * for the main track list and for the disc header's Play button, which reuses a disc's slice of
- * this same sorted list as-is instead of re-sorting. See TAKI_ALBUM_DETAIL_FIX_PLAN.md problem 2.
+ * this same sorted list as-is instead of re-sorting.
  */
 class EntryByDiscAndTrackComparatorTest {
 

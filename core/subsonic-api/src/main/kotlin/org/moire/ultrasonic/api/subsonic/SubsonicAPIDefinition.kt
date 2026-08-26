@@ -66,9 +66,9 @@ interface SubsonicAPIDefinition {
     @GET("getLicense.view")
     fun getLicense(): Call<LicenseResponse>
 
-    // Library (artists, folder-legacy navigation) is fully migrated to suspend (Fase 7 of
-    // TAKI_CODE_OPTIMIZATION_PLAN.md), same criteria as the verticals above - every caller
-    // migrated in the same change, so there is no Call<T>-returning version left to keep.
+    // Library (artists, folder-legacy navigation) is fully migrated to suspend, same criteria
+    // as the verticals above - every caller migrated in the same change, so there is no
+    // Call<T>-returning version left to keep.
     @GET("getMusicFolders.view")
     suspend fun getMusicFoldersSuspend(): MusicFoldersResponse
 
@@ -86,9 +86,9 @@ interface SubsonicAPIDefinition {
         @Query("musicFolderId") musicFolderId: String?
     ): GetArtistsResponse
 
-    // Playlists and favorites/starred are fully migrated to suspend (Fase 7 of
-    // TAKI_CODE_OPTIMIZATION_PLAN.md), same as Search/Home/Album/Artist/Library above - no
-    // caller was left on the blocking version, so it isn't kept alongside these.
+    // Playlists and favorites/starred are fully migrated to suspend, same as
+    // Search/Home/Album/Artist/Library above - no caller was left on the blocking version,
+    // so it isn't kept alongside these.
     @GET("star.view")
     suspend fun starSuspend(
         @Query("id") id: String? = null,
@@ -106,9 +106,9 @@ interface SubsonicAPIDefinition {
     @GET("setRating.view")
     fun setRating(@Query("id") id: String, @Query("rating") rating: Int): Call<SubsonicResponse>
 
-    // Album detail and Artist detail are fully migrated to suspend (Fase 7 of
-    // TAKI_CODE_OPTIMIZATION_PLAN.md), same criteria as the verticals above - every caller
-    // migrated in the same change, so there is no Call<T>-returning version left to keep.
+    // Album detail and Artist detail are fully migrated to suspend, same criteria as the
+    // verticals above - every caller migrated in the same change, so there is no
+    // Call<T>-returning version left to keep.
     @GET("getArtist.view")
     suspend fun getArtistSuspend(@Query("id") id: String): GetArtistResponse
 
@@ -131,15 +131,15 @@ interface SubsonicAPIDefinition {
     @GET("getAlbumInfo2.view")
     suspend fun getAlbumInfo2Suspend(@Query("id") id: String): GetAlbumInfo2Response
 
-    // Added for Mix diario v1.1 (docs/TAKI_RADIOS_AND_DAILY_MIX.md): looks up a single track by
-    // id so a saved Mix diario/radio can be restored exactly instead of matching stored ids
+    // Added for Mix diario v1.1: looks up a single track by id so a saved Mix diario/radio
+    // can be restored exactly instead of matching stored ids
     // against a freshly-fetched, and possibly different, candidate pool.
     @GET("getSong.view")
     suspend fun getSongSuspend(@Query("id") id: String): GetSongResponse
 
-    // The Search vertical is fully migrated to suspend (Fase 7 of
-    // TAKI_CODE_OPTIMIZATION_PLAN.md) - unlike most other endpoints in this file, there is no
-    // Call<T>-returning version to keep alongside these: RESTMusicService.search() (their only
+    // The Search vertical is fully migrated to suspend - unlike most other endpoints in
+    // this file, there is no Call<T>-returning version to keep alongside these:
+    // RESTMusicService.search() (their only
     // caller) migrated in the same change, so there was nothing left for a blocking version to
     // serve.
     @GET("search.view")
@@ -250,9 +250,9 @@ interface SubsonicAPIDefinition {
         @Query("submission") submission: Boolean? = null
     ): Call<SubsonicResponse>
 
-    // Home, Album/Artist and Library all share these four endpoints (Fase 7 of
-    // TAKI_CODE_OPTIMIZATION_PLAN.md) - every caller migrated to suspend in the same change, so,
-    // like the Search vertical above, there is no Call<T>-returning version left to keep.
+    // Home, Album/Artist and Library all share these four endpoints - every caller migrated
+    // to suspend in the same change, so, like the Search vertical above, there is no
+    // Call<T>-returning version left to keep.
     @GET("getAlbumList.view")
     suspend fun getAlbumListSuspend(
         @Query("type") type: AlbumListType,
@@ -275,9 +275,9 @@ interface SubsonicAPIDefinition {
         @Query("musicFolderId") musicFolderId: String? = null
     ): GetAlbumList2Response
 
-    // getRandomSongs is fully migrated to suspend (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md),
-    // same criteria as the verticals above - every caller migrated in the same change, so there
-    // is no Call<T>-returning version left to keep.
+    // getRandomSongs is fully migrated to suspend, same criteria as the verticals above -
+    // every caller migrated in the same change, so there is no Call<T>-returning version
+    // left to keep.
     @GET("getRandomSongs.view")
     suspend fun getRandomSongsSuspend(
         @Query("size") size: Int? = null,

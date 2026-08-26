@@ -79,8 +79,8 @@ interface AlbumDao : GenericDao<Album> {
     fun getGenres(): List<String>
 
     /**
-     * Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Updates only the
-     * `grouping` column instead of a full upsert, since the caller (CachedMusicService.
+     * Collections/Box Sets. Updates only the `grouping` column instead of a full upsert,
+     * since the caller (CachedMusicService.
      * getAlbumAsDir) only has the album's tracks at that point, not a full Album row to upsert -
      * see CachedMusicService for why this is derived from tracks rather than a second network
      * call. No-op if the album row doesn't exist yet (e.g. its Album entity was never separately

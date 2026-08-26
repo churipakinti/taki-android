@@ -7,8 +7,8 @@ apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: "androidx.navigation.safeargs.kotlin"
 apply from: "../gradle_scripts/code_quality.gradle"
 
-// Taki's own release signing identity (TAKI_BETA_COMPLETION_PLAN.md P0.1) -- deliberately
-// NOT the legacy ultrasonic-keystore.enc, which must never become Taki's signing identity.
+// Taki's own release signing identity -- deliberately NOT the legacy
+// ultrasonic-keystore.enc, which must never become Taki's signing identity.
 // keystore.properties is gitignored and lives only on machines that build a release; see
 // docs/RELEASE_SIGNING.md for the variable names and regeneration procedure (never the values).
 def keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -27,9 +27,9 @@ android {
     compileSdkVersion versions.compileSdk
 
     defaultConfig {
-        // Taki's own installable identity (docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase
-        // 2) -- deliberately not org.moire.ultrasonic, the upstream project's id. The Kotlin
-        // namespace below intentionally stays org.moire.ultrasonic; only the installable id
+        // Taki's own installable identity -- deliberately not org.moire.ultrasonic, the
+        // upstream project's id. The Kotlin namespace below intentionally stays
+        // org.moire.ultrasonic; only the installable id
         // changes. Existing installs under the old id (including test devices) cannot update in
         // place and need a clean reinstall.
         applicationId "io.github.churipakinti.taki"

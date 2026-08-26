@@ -12,7 +12,7 @@
     <string name="library.liked_songs">Liked Songs</string>
     <!-- "Box Sets" deliberately avoids the word "Collection" - library.collection above already
          means something else (the server/library collection selector), not box sets/multi-album
-         releases (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). -->
+         releases. -->
     <string name="library.box_sets">Box Sets</string>
     <string name="collection.empty">No Box Sets found yet</string>
     <string name="collection.discover_more">Find missing discs</string>

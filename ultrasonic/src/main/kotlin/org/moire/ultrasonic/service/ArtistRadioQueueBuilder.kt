@@ -23,8 +23,7 @@ private const val ARTIST_RADIO_ALBUM_FALLBACK_COUNT = 6
 class ArtistRadioQueueBuilder(private val musicService: MusicService) {
     companion object {
         // Exposed so callers can tell the user when the generated radio came back shorter than
-        // usual (docs/TAKI_RADIOS_AND_DAILY_MIX.md section 7/9: "comunicar si la cola resultante
-        // es más corta").
+        // usual.
         const val TARGET_SIZE = ARTIST_RADIO_TARGET_SIZE
     }
 

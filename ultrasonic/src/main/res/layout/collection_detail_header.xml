@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Collection Detail hero section (docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 6): fixed, does
-    not scroll away with the disc grid below it - deliberately simpler than making it a spanning
+    Collection Detail hero section: fixed, does not scroll away with the disc grid below it -
+    deliberately simpler than making it a spanning
     first item in the grid's adapter, and it only ever loads up to 3 covers once.
 -->
 <LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"

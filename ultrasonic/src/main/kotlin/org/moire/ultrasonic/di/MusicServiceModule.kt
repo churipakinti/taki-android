@@ -83,8 +83,8 @@ val musicServiceModule = module {
     // load, ~5 album-list calls plus up to a dozen cover art fetches all competed for those same
     // 5 slots, and would keep competing with an in-progress audio stream during normal use.
     // Isolating them means a burst of cover art loading can no longer delay a stream/API request
-    // (or vice versa) by starving its connection slot. No concurrency tuning yet -- this commit
-    // is isolation only, see Fase 1 of TAKI_CODE_OPTIMIZATION_PLAN.md.
+    // (or vice versa) by starving its connection slot. No concurrency tuning yet -- this is
+    // isolation only.
     single(named("ImageOkHttpClient")) {
         OkHttpClient.Builder()
             .dispatcher(Dispatcher())

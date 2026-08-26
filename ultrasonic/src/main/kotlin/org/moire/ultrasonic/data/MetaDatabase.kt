@@ -90,8 +90,8 @@ val META_MIGRATION_2_3: Migration = object : Migration(2, 3) {
     }
 }
 
-// Adds Mix diario v1.1 history signals (docs/TAKI_RADIOS_AND_DAILY_MIX.md) - both columns are
-// nullable with no default, matching Track.playCount/lastPlayed being null (not zero) whenever
+// Adds Mix diario v1.1 history signals - both columns are nullable with no default,
+// matching Track.playCount/lastPlayed being null (not zero) whenever
 // the server didn't expose the data, so existing rows read back as null after this migration.
 val META_MIGRATION_3_4: Migration = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -100,8 +100,8 @@ val META_MIGRATION_3_4: Migration = object : Migration(3, 4) {
     }
 }
 
-// Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). `grouping` is nullable
-// with no default on both tables, same reasoning as playCount/lastPlayed above: null means "not
+// Collections/Box Sets. `grouping` is nullable with no default on both tables, same
+// reasoning as playCount/lastPlayed above: null means "not
 // yet discovered" (see MusicDirectory.Child.grouping doc), so existing rows correctly read back
 // as null - not "confirmed no collection" - after this migration.
 val META_MIGRATION_4_5: Migration = object : Migration(4, 5) {

@@ -17,9 +17,9 @@ import org.amshove.kluent.shouldBeInstanceOf
 import org.junit.Test
 
 /**
- * Locks down SleepTimerController's contract (docs/TAKI_SLEEP_TIMER_FINAL_FEATURE.md sections 6
- * and 8): deadlines computed from a monotonic clock, expire-exactly-once, cancel/replace never
- * leaving a stray Job, and end-of-track mode reacting only to reported natural completions.
+ * Locks down SleepTimerController's contract: deadlines computed from a monotonic clock,
+ * expire-exactly-once, cancel/replace never leaving a stray Job, and end-of-track mode
+ * reacting only to reported natural completions.
  *
  * Uses a [TestScope] for virtual time (no real delays) with [TestScope.currentTime] doubling as
  * the fake elapsedRealtime clock, since both are meant to represent the same monotonic timeline

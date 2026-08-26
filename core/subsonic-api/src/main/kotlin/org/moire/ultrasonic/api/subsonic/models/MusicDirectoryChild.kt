@@ -24,8 +24,7 @@ data class MusicDirectoryChild(
     val isVideo: Boolean = false,
     val playCount: Int = 0,
     // Last-played timestamp (OpenSubsonic/Navidrome expose this on <song>, vanilla Subsonic
-    // servers omit it). Used for Mix diario v1.1 history signals - see
-    // docs/TAKI_RADIOS_AND_DAILY_MIX.md "señales más finas de historial".
+    // servers omit it). Used for Mix diario v1.1 history signals.
     val played: Calendar? = null,
     val discNumber: Int = -1,
     val created: Calendar? = null,
@@ -41,8 +40,7 @@ data class MusicDirectoryChild(
     val userRating: Int? = null,
     val averageRating: Float? = null,
     // OpenSubsonic extension (Navidrome exposes it on <song>, confirmed via a live response
-    // capture 2026-08-13: "groupings":[]). Maps the ID3 "content group"/GROUPING tag. Used by
-    // docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md to detect box-set membership. Not present
-    // at all on the AlbumID3 response, only here.
+    // capture 2026-08-13: "groupings":[]). Maps the ID3 "content group"/GROUPING tag, used to
+    // detect box-set membership. Not present at all on the AlbumID3 response, only here.
     val groupings: List<String> = emptyList()
 )

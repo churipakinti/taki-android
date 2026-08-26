@@ -12,7 +12,7 @@
           see ServerSetting.kt / AppDatabase.kt). Excluded so cloud backup/restore can never
           recover server credentials. The per-server metadata caches
           (ultrasonic-database-meta-<id>, track/album/artist listings only, no credentials) are
-          NOT excluded here and remain backed up. TAKI_BETA_COMPLETION_PLAN.md P0.2.
+          NOT excluded here and remain backed up.
         -->
         <exclude domain="database" path="ultrasonic-database"/>
         <exclude domain="database" path="ultrasonic-database-wal"/>

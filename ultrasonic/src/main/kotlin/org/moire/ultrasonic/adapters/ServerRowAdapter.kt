@@ -64,8 +64,8 @@ internal class ServerRowAdapter(
         holder.name.text = setting.name
         holder.menu.isInvisible = isOffline
 
-        // Offline is a mode, not a real server (docs/TAKI_BETA_COMPLETION_PLAN.md P1 "Selector
-        // de colecciones y Offline") -- OFFLINE_DB.url is internally "http://localhost" (see
+        // Offline is a mode, not a real server -- OFFLINE_DB.url is internally
+        // "http://localhost" (see
         // SubsonicAPIClient.OFFLINE_DB_URL), which must never surface in the UI. With no second
         // line, the name is re-centered vertically against the icon instead of staying
         // top-aligned as it is for the two-line (name + url) server rows.

@@ -140,10 +140,10 @@
             app:iconGravity="textStart"
             app:iconTint="@color/taki_gray" />
 
-        <!-- Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Hidden by
-             default: only shown once at least one Box Set has actually been resolved from
-             already-cached album metadata, so it doesn't clutter Library for the common case of
-             a collection with no box sets. See MainFragment. -->
+        <!-- Collections/Box Sets. Hidden by default: only shown once at least one Box Set
+             has actually been resolved from already-cached album metadata, so it doesn't
+             clutter Library for the common case of a collection with no box sets.
+             See MainFragment. -->
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_box_sets"
             style="@style/Widget.Taki.LibraryRow"

@@ -124,7 +124,7 @@ abstract class MultiListFragment<T : Identifiable> :
         // does. None of the ViewModels backing this screen ever emit an intermediate empty
         // list while loading (each posts its final result exactly once), so there is nothing
         // to guard against here. Matches TrackCollectionFragment.defaultObserver, which never
-        // had this gate. See TAKI_CODE_OPTIMIZATION_PLAN.md bug report (2026-08-11).
+        // had this gate.
         emptyView.isVisible = it.isEmpty()
         viewAdapter.submitList(it)
     }

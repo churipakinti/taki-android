@@ -25,8 +25,8 @@ import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.CollectionListModel
 
 /**
- * Collections/Box Sets list (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md section 9-11),
- * reached from Library's "Box Sets" row (MainFragment). Deliberately its own small Fragment
+ * Collections/Box Sets list, reached from Library's "Box Sets" row (MainFragment).
+ * Deliberately its own small Fragment
  * instead of reusing EntryListFragment<Album>/AlbumListFragment: those are strictly typed to
  * Album across several screens, and MusicCollection doesn't fit that contract - forcing it in
  * would mean widening a shared generic base class for every album list screen, a much bigger and

@@ -15,9 +15,9 @@ import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 
 /**
- * Binds up to 3 albums into an inflated `view_stacked_artwork.xml`
- * (docs/TAKI_BOXSETS_VISUAL_REDESIGN.md sections 3-4). Shared by the Box Sets grid card
- * (CollectionRowAdapter) and the Collection Detail header (CollectionDetailFragment) so both
+ * Binds up to 3 albums into an inflated `view_stacked_artwork.xml`. Shared by the Box Sets
+ * grid card (CollectionRowAdapter) and the Collection Detail header (CollectionDetailFragment)
+ * so both
  * screens follow the same rule: only the covers a Collection actually has are shown - a
  * single-cover Collection shows one clean cover, never 3 copies of the same image.
  */

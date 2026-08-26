@@ -246,7 +246,6 @@ class TrackViewHolder(val view: View) :
 
         // The 1-5 star rating popup (long-press) is a Subsonic/media-server power-user concept
         // with no equivalent in mainstream streaming apps; only the tap-to-favorite heart stays.
-        // See docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.4.
         star.setOnClickListener { toggleHeart(track) }
     }
 
@@ -312,7 +311,7 @@ class TrackViewHolder(val view: View) :
 
         when (status) {
             // DONE and PINNED both just mean "downloaded" to the user -- the cache-vs-permanent
-            // distinction is kept internal (see docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md P1.3).
+            // distinction is kept internal.
             DownloadState.DONE, DownloadState.PINNED -> {
                 showStatusImage(R.drawable.ic_downloaded_circle)
             }
@@ -321,8 +320,7 @@ class TrackViewHolder(val view: View) :
                 // Icon alone left the user with no explanation and nothing to do about it. Tap
                 // shows why (kept generic on purpose -- see download.download_error); retrying
                 // is already possible via the row's own "Download" menu action once state is
-                // FAILED (Utils.kt's canDownload). See docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md
-                // Priority 4.
+                // FAILED (Utils.kt's canDownload).
                 val message = statusImage.context.getString(R.string.download_download_error)
                 showStatusImage(R.drawable.ic_baseline_error, contentDescription = message) {
                     Util.toast(message, statusImage.context)

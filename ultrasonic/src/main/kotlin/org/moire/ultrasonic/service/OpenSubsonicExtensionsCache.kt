@@ -8,8 +8,8 @@
 package org.moire.ultrasonic.service
 
 /**
- * Remembers which OpenSubsonic extensions (see TAKI_CODE_OPTIMIZATION_PLAN.md Fase 4) the
- * current server supports, so a plain-Subsonic server -- which doesn't have the extensions
+ * Remembers which OpenSubsonic extensions the current server supports, so a plain-Subsonic
+ * server -- which doesn't have the extensions
  * endpoint at all -- only gets probed once per TTL window instead of once per feature use (e.g.
  * every time the user opens a track's lyrics).
  *

@@ -24,8 +24,8 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 
 /**
- * Editorial/metadata info for Album Detail (docs/TAKI_ALBUM_INFO_MUSIC_FIRST.md), reached via the
- * header's Information action. Takes already-resolved data as arguments rather than fetching its
+ * Editorial/metadata info for Album Detail, reached via the header's Information action.
+ * Takes already-resolved data as arguments rather than fetching its
  * own copy: [TrackCollectionFragment] already fetches album notes in the background as soon as
  * the album opens (unchanged - see loadAlbumInfo()/TrackCollectionModel.getAlbumInfo(), which
  * caches by album id), purely to decide whether the Information button has anything to show. By
@@ -93,8 +93,8 @@ class AlbumInfoBottomSheetFragment : BottomSheetDialogFragment(), KoinComponent 
 
     override fun onStart() {
         super.onStart()
-        // Cap the sheet at ~85% of screen height (docs/TAKI_ALBUM_INFO_MUSIC_FIRST.md) - a short
-        // description still sizes to content since this is a ceiling, not a fixed height.
+        // Cap the sheet at ~85% of screen height - a short description still sizes to
+        // content since this is a ceiling, not a fixed height.
         val bottomSheet = dialog?.findViewById<View>(
             com.google.android.material.R.id.design_bottom_sheet
         ) ?: return

@@ -83,8 +83,8 @@ interface MusicService {
     @Throws(Exception::class)
     suspend fun getAlbum(id: String, name: String?, refresh: Boolean): Album?
 
-    // Added for Mix diario v1.1 (docs/TAKI_RADIOS_AND_DAILY_MIX.md): exact restoration by id
-    // instead of matching stored ids against a freshly-fetched candidate pool.
+    // Added for Mix diario v1.1: exact restoration by id instead of matching stored ids
+    // against a freshly-fetched candidate pool.
     @Throws(Exception::class)
     suspend fun getSong(id: String): Track?
 
@@ -109,9 +109,8 @@ interface MusicService {
     @Throws(Exception::class)
     // pub/songIndexesToRemove default to null so a caller can touch only what it needs to (e.g.
     // renaming doesn't accidentally change the public flag) - the server leaves omitted fields
-    // unchanged. songIndexesToRemove added for "Quitar de esta playlist"
-    // (docs/TAKI_PLAYLIST_UX_REDESIGN.md); indexes are 0-based positions within the playlist's
-    // current track order, matching updatePlaylist.view.
+    // unchanged. songIndexesToRemove added for "Quitar de esta playlist"; indexes are 0-based
+    // positions within the playlist's current track order, matching updatePlaylist.view.
     suspend fun updatePlaylist(
         id: String,
         name: String?,

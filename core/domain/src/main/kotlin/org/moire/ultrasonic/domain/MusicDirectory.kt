@@ -51,9 +51,9 @@ class MusicDirectory : ArrayList<MusicDirectory.Child>() {
         abstract var closeness: Int
         abstract var isVideo: Boolean
 
-        // Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Sourced from
-        // the OpenSubsonic "groupings" array on Song responses - the Subsonic AlbumID3 response
-        // has no such field, so an Album's grouping is only known once at least one of its
+        // Collections/Box Sets. Sourced from the OpenSubsonic "groupings" array on Song
+        // responses - the Subsonic AlbumID3 response has no such field, so an Album's
+        // grouping is only known once at least one of its
         // tracks has actually been fetched (see CachedMusicService.getAlbumAsDir). Null means
         // "not yet discovered", not "confirmed no collection" - see CollectionResolver.
         abstract var grouping: String?

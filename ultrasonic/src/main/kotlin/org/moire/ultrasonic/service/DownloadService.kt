@@ -187,8 +187,7 @@ class DownloadService :
         // the just-finished DownloadTask, and processNextTracks() stops the service once
         // activeDownloads and downloadQueue are both empty. Re-queueing the item first ensures
         // that check sees it, instead of stopping the service with the retry stranded in
-        // downloadQueue with nothing left to ever process it. See
-        // docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 1.
+        // downloadQueue with nothing left to ever process it.
         when (downloadState) {
             DownloadState.FAILED -> {
                 downloadQueue.remove(item)
@@ -267,7 +266,6 @@ class DownloadService :
         // download, or triggered from two screens) could both pass the "not already queued/
         // active" check before either inserted, queuing the same track twice and racing two
         // DownloadTasks writing the same file. This mutex serializes that whole sequence instead.
-        // See docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md.
         private val downloadQueueMutex = Mutex()
 
         @Synchronized
@@ -342,7 +340,7 @@ class DownloadService :
             // was treated as already downloaded and skipped, posting a false DONE/PINNED state
             // before any real download was ever attempted. Confirmed on-device: Offline mode
             // showed "No media found" while affected tracks still showed the downloaded
-            // checkmark. See docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 6 follow-up.
+            // checkmark.
             return tracks.filter { track ->
                 if (Storage.isPathExists(track.getCompleteFile())) {
                     postState(track, DownloadState.DONE)

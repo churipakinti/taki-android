@@ -214,8 +214,8 @@ open class RESTMusicService(
         return response.song.toTrackEntity(activeServerId)
     }
 
-    // Search is fully migrated to suspend (Fase 7 of TAKI_CODE_OPTIMIZATION_PLAN.md): unlike
-    // most of this class, these no longer go through a blocking .execute() call, so cancelling
+    // Search is fully migrated to suspend: unlike most of this class, these no longer go
+    // through a blocking .execute() call, so cancelling
     // the caller's coroutine (e.g. the user typed again, or left the Search screen) now actually
     // interrupts the in-flight request instead of just discarding its result once it eventually
     // finishes -- see SearchListModel.search().
@@ -397,8 +397,8 @@ open class RESTMusicService(
     }
 
     /**
-     * Probes which OpenSubsonic extensions the server supports (see
-     * TAKI_CODE_OPTIMIZATION_PLAN.md Fase 4). Only a cleanly parsed response -- successful or
+     * Probes which OpenSubsonic extensions the server supports. Only a cleanly parsed
+     * response -- successful or
      * not, empty extension list or not -- counts as [OpenSubsonicExtensionsCache.ProbeResult
      * .Success]; a plain Subsonic server confirms it that way (its own 200 OK with an empty/
      * absent extensions field, or a well-formed Subsonic protocol error). Anything that isn't a

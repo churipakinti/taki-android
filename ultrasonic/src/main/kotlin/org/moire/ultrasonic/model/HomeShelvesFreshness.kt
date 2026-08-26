@@ -12,7 +12,7 @@ package org.moire.ultrasonic.model
  * skip a reload. getAlbumList()/getAlbumList2() have no caching of their own in
  * CachedMusicService, so without this, Home re-fetched all 6 shelves from the network every
  * time its view was recreated -- which happens far more often than the underlying ViewModel,
- * e.g. just switching bottom-nav tabs and back. See TAKI_CODE_OPTIMIZATION_PLAN.md Fase 2.
+ * e.g. just switching bottom-nav tabs and back.
  */
 internal class HomeShelvesFreshness(private val ttlMs: Long) {
     private var lastLoadedAt: Long? = null

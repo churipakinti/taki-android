@@ -2,7 +2,7 @@
   Shared "nothing here" glyph for list_parts_empty_view.xml (search no-match, empty playlist,
   empty queue, etc.). Was a generic loading/brightness-burst icon left over from the original
   Ultrasonic fork, never touched by the Material3/Taki visual pass: reported as visibly "the
-  old icon" against an otherwise modernized empty state (TAKI_BETA_COMPLETION_PLAN.md P1).
+  old icon" against an otherwise modernized empty state.
   Reuses the same path as ic_menu_playlists.xml (already the app's playlist/queue glyph
   elsewhere) instead of inventing a new one, so an empty playlist/queue/song list reads as "no
   tracks" rather than an unrelated shape.

@@ -404,8 +404,7 @@ class SearchFragment :
      * Album/Library list (TrackCollectionFragment.playFromHere) -- it previously appended the
      * song to the end of the queue while still silently interrupting whatever was already
      * playing, with a toast claiming it was just queued. Queueing next/last remains available
-     * via the long-press context menu's Play Next/Play Last actions. See
-     * docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md Priority 1.
+     * via the long-press context menu's Play Next/Play Last actions.
      */
     private fun onSongSelected(song: Track) {
         mediaPlayerManager.addToPlaylist(

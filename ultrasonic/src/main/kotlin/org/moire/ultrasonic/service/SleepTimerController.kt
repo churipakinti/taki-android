@@ -14,8 +14,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Immutable Sleep Timer state (docs/TAKI_SLEEP_TIMER_FINAL_FEATURE.md section 6.4). Deliberately
- * does not carry a ticking "remaining time" field - callers recompute it on demand from
+ * Immutable Sleep Timer state. Deliberately does not carry a ticking "remaining time"
+ * field - callers recompute it on demand from
  * [Duration.deadlineElapsedRealtime] against the current clock, which is all the UI needs (the
  * menu title and the picker dialog only ever read it when opened, not continuously).
  */
@@ -36,8 +36,8 @@ sealed class SleepTimerState {
 }
 
 /**
- * Headless Sleep Timer state machine (docs/TAKI_SLEEP_TIMER_FINAL_FEATURE.md). Owned by
- * [MediaPlayerManager], which is the singleton that survives Activity/Fragment destruction,
+ * Headless Sleep Timer state machine. Owned by [MediaPlayerManager], which is the
+ * singleton that survives Activity/Fragment destruction,
  * rotation, backgrounding and screen-off - this class holds no reference to Activity, Fragment,
  * View or Context, and must not, or the timer would stop counting exactly when it matters most
  * (screen off, app backgrounded).

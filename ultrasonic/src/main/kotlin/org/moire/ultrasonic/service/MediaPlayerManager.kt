@@ -61,10 +61,9 @@ private const val PLAYBACK_CHECKPOINT_INTERVAL = 5_000L
 // A single addMediaItems() call with a huge list (e.g. a several-hundred-disc box
 // set) can block the main thread long enough to ANR, since Media3 requires
 // MediaController calls on the app's main thread. Adding in chunks and yielding
-// between them lets input dispatch keep up. See
-// docs/POSIBLES_ERRORES_Y_VERIFICACION.md item 1 for the original ANR this mirrors.
+// between them lets input dispatch keep up.
 // Internal (not private) because MediaLibrarySessionCallback.shuffleCurrentPlaylist() needs
-// the same protection for its own addMediaItems() call - see docs/AUDITORIA_FUNCIONAMIENTO_INTERNO.md.
+// the same protection for its own addMediaItems() call.
 internal const val ADD_MEDIA_ITEMS_CHUNK_SIZE = 200
 
 // Independent of ADD_MEDIA_ITEMS_CHUNK_SIZE above: chunking only protects our own listener
@@ -100,8 +99,8 @@ class MediaPlayerManager(
 
     private var mainScope = CoroutineScope(Dispatchers.Main)
 
-    // Owns the Sleep Timer's lifecycle (docs/TAKI_SLEEP_TIMER_FINAL_FEATURE.md) - reuses this
-    // same headless mainScope rather than a new executor/scope, so it keeps counting across
+    // Owns the Sleep Timer's lifecycle - reuses this same headless mainScope rather than a
+    // new executor/scope, so it keeps counting across
     // Activity/Fragment destruction, rotation, backgrounding and screen-off. onExpire runs on
     // Dispatchers.Main (mainScope), same as every other Media3 call in this class.
     private val sleepTimerController = SleepTimerController(scope = mainScope) {
@@ -224,7 +223,7 @@ class MediaPlayerManager(
             // codes, backend details stay in the log) -- previously only Jukebox errors got any
             // feedback at all, and even that passed the raw Media3 error code as if it were a
             // string resource id, which throws Resources.NotFoundException instead of showing a
-            // message. See docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md Priority 2.
+            // message.
             Timber.w(error.toString())
 
             mainScope.launch {
@@ -619,9 +618,9 @@ class MediaPlayerManager(
         startPositionMs: Int = 0
     ) {
         // Guards against a rapid repeated tap re-triggering the exact same queue rebuild
-        // before the first tap's request finished (see TAKI_CODE_OPTIMIZATION_PLAN.md Fase 1:
-        // on a large album, this was measured to double the wait before playback starts,
-        // since the second request would just discard and redo the first one's work).
+        // before the first tap's request finished. On a large album, this was measured to
+        // double the wait before playback starts, since the second request would just
+        // discard and redo the first one's work.
         val signature =
             "$insertionMode:$startIndex:$startPositionMs:${songs.size}:" +
                 "${songs.firstOrNull()?.id}:${songs.lastOrNull()?.id}"
@@ -670,8 +669,7 @@ class MediaPlayerManager(
         // there is nothing to rebuild - just move the play position. Rebuilding would mean
         // converting every Track to a MediaItem and re-inserting them all in chunks, which on
         // a large album is not free (measured: ~22s for a 5,517-song album). Shuffle is
-        // excluded because the caller is explicitly asking for a fresh shuffle order. See
-        // TAKI_CODE_OPTIMIZATION_PLAN.md Fase 1.
+        // excluded because the caller is explicitly asking for a fresh shuffle order.
         if (insertionMode == InsertionMode.CLEAR && !shuffle && queueAlreadyMatches(songs)) {
             PerfMetrics.mark("add_to_playlist:same_queue_seek:songs=${songs.size}")
             Timber.i("addToPlaylist: queue already matches, seeking instead of rebuilding")

@@ -27,8 +27,8 @@ import org.moire.ultrasonic.util.CollectionResolver
 import timber.log.Timber
 
 /**
- * A single Collection/Box Set's discs (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md section
- * 10-11). Works with lightweight already-cached Album rows only - opening a Collection with 222
+ * A single Collection/Box Set's discs. Works with lightweight already-cached Album rows
+ * only - opening a Collection with 222
  * discs never fetches or renders their ~5,500 tracks; each disc's own track list is only fetched
  * when the user actually opens or plays that specific disc (see CollectionDetailFragment).
  */
@@ -50,9 +50,9 @@ class CollectionDetailModel(application: Application) :
     }
 
     /**
-     * Explicit, user-initiated "find missing discs" (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md
-     * section 6/11 forbid loading every track automatically on open - this is deliberately never
-     * called on open, only from a button tap). Never hardcoded to any particular collection:
+     * Explicit, user-initiated "find missing discs" (loading every track automatically on
+     * open is forbidden - this is deliberately never called on open, only from a button tap).
+     * Never hardcoded to any particular collection:
      * looks at which artist(s) the discs already known to this Collection belong to, pulls the
      * rest of those artists' albums (cheap - AlbumID3 only, already cached per-artist), and only
      * fetches tracks (which is what actually reveals grouping - see CachedMusicService.

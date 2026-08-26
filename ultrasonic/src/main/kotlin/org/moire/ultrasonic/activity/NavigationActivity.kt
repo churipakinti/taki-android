@@ -101,8 +101,7 @@ class NavigationActivity : ScopeActivity() {
     // Activity's NavHostFragment) holding a listener that closes over `this`, which on repeated
     // rotation showed up as a genuine, linearly growing StrictMode InstanceCountViolation for
     // NavigationActivity (confirmed with rotations paced 3s apart, well past any GC lag: instance
-    // count climbed by exactly 1 per rotation, not just a transient blip). See
-    // TAKI_BETA_COMPLETION_PLAN.md P0.3 audit, 2026-08-12.
+    // count climbed by exactly 1 per rotation, not just a transient blip).
     private var destinationChangedListener: NavController.OnDestinationChangedListener? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         PerfMetrics.mark("nav_activity_create_start")
@@ -222,9 +221,9 @@ class NavigationActivity : ScopeActivity() {
             // trackCollectionFragment/artistDetailFragment used for album/artist/genre/playlist
             // browsing are reachable from both Home and Library depending on how the user got
             // there, so they're deliberately left alone rather than guessed at.
-            // Downloads moved from its own bottom-nav tab into a Library row (P2, see
-            // docs/TAKI_UX_SIMPLIFICATION_REVIEW_P0-P3.md); it and the downloaded-album detail
-            // screen it opens are reached only from Library now, so Library stays highlighted.
+            // Downloads moved from its own bottom-nav tab into a Library row; it and the
+            // downloaded-album detail screen it opens are reached only from Library now,
+            // so Library stays highlighted.
             val libraryOnlyDestination = isLibraryTrackCollection || destination.id in setOf(
                 R.id.playlistsFragment,
                 R.id.albumListFragment,
@@ -284,7 +283,6 @@ class NavigationActivity : ScopeActivity() {
         // removed. Mirrors exactly how the removed dialog's "Add collection" button already
         // navigated here -- Home stays underneath on the back stack so EditServerFragment's
         // own popBackStack(R.id.homeFragment, false) on a successful connect keeps working.
-        // See docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 3.
         lifecycleScope.launch {
             if (serverSettingDao.count() == 0) {
                 navController.navigate(
@@ -465,8 +463,7 @@ class NavigationActivity : ScopeActivity() {
 
             // Unlike in-app browsing actions, this is only ever reached from the "Play Random
             // Songs" launcher shortcut (see onNewIntent() above) -- there's no browsing screen
-            // behind it to stay on, so always transition to Now Playing. See
-            // docs/TAKI_FINAL_PRE_BETA_CONSOLIDATION_PLAN.md Phase 4.2.
+            // behind it to stay on, so always transition to Now Playing.
             currentFragment.findNavController().popBackStack(R.id.playerFragment, true)
             currentFragment.findNavController().navigate(R.id.playerFragment)
         }

@@ -42,9 +42,8 @@ import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.bindStackedArtwork
 
 /**
- * One Collection/Box Set's discs (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md sections 10,
- * 11, 15; visual redesign per docs/TAKI_BOXSETS_VISUAL_REDESIGN.md section 6). Only ever works
- * with lightweight Album rows already in view - opening this screen, or scrolling through 222 of
+ * One Collection/Box Set's discs. Only ever works with lightweight Album rows already in
+ * view - opening this screen, or scrolling through 222 of
  * them, never fetches a single track. Navigation-only: tapping a disc opens it via the existing,
  * unmodified TrackCollectionFragment (Album Detail), where Play/queue actions already live - this
  * screen doesn't duplicate them.

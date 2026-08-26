@@ -50,8 +50,7 @@ class MainFragment :
         )
         // The Offline pseudo-library's own name is "Offline" (see ActiveServerProvider.OFFLINE_DB),
         // matching the library selector screen -- previously this showed "Downloaded music"
-        // instead, a third term for the same state alongside "Offline"/"Offline Media". See
-        // docs/TAKI_PRE_BETA_AUDIT_FOLLOWUP.md Priority 3.1.
+        // instead, a third term for the same state alongside "Offline"/"Offline Media".
         val activeCollection = activeServerProvider.getActiveServer()
         manageButton.text = activeCollection.name
         manageButton.setOnClickListener {
@@ -92,8 +91,8 @@ class MainFragment :
     }
 
     /**
-     * Collections/Box Sets (docs/TAKI_COLLECTIONS_BOXSETS_IMPLEMENTATION.md). Hidden unless at
-     * least one Box Set has already been resolved from cached album metadata - box-set
+     * Collections/Box Sets. Hidden unless at least one Box Set has already been resolved
+     * from cached album metadata - box-set
      * membership is only discovered once its member albums have actually been opened (see
      * CachedMusicService.getAlbumAsDir), so a library with no Box Sets, or one where none of its
      * box sets have been browsed into yet, simply won't show this row. Reads only already-cached

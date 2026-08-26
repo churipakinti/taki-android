@@ -15,8 +15,7 @@ import timber.log.Timber
  * current default isn't already one of these) and never replaced or cleared afterwards -- so
  * whatever [Context] is passed in here is held for the lifetime of the process. Must be
  * [Context.getApplicationContext], not an Activity, or the very first Activity instance would
- * leak permanently (confirmed via StrictMode's InstanceCountViolation on repeated rotation:
- * TAKI_BETA_COMPLETION_PLAN.md P0.3 audit, 2026-08-12).
+ * leak permanently (confirmed via StrictMode's InstanceCountViolation on repeated rotation).
  */
 class UncaughtExceptionHandler(context: Context) : Thread.UncaughtExceptionHandler {
     private val context: Context = context.applicationContext

@@ -14,8 +14,8 @@
       see ServerSetting.kt / AppDatabase.kt). Excluded so a legacy (API <= 31) full backup/
       restore can never recover server credentials. The per-server metadata caches
       (ultrasonic-database-meta-<id>, track/album/artist listings only, no credentials) are NOT
-      excluded and remain backed up. TAKI_BETA_COMPLETION_PLAN.md P0.2. Must stay after the
-      broader database include above: later rules win for the same path.
+      excluded and remain backed up. Must stay after the broader database include above:
+      later rules win for the same path.
     -->
     <exclude domain="database" path="ultrasonic-database"/>
     <exclude domain="database" path="ultrasonic-database-wal"/>

@@ -29,11 +29,10 @@ import org.moire.ultrasonic.subsonic.ImageLoaderProvider
  * null`). Kept separate from the generic [HeaderViewBinder]/`list_header_album.xml` so
  * genre/artist-songs, which share the same [AlbumHeader] item type but don't get a hero, are
  * unaffected. The trailing action button is parameterized (download for albums, an overflow
- * menu for playlists) instead of duplicating this whole binder for playlists - see
- * docs/TAKI_PLAYLIST_UX_REDESIGN.md.
+ * menu for playlists) instead of duplicating this whole binder for playlists.
  *
- * The Information action (docs/TAKI_ALBUM_INFO_MUSIC_FIRST.md) is album-only - [onInfoAction] is
- * null for playlists, which keeps the button gone and leaves playlist behavior untouched.
+ * The Information action is album-only - [onInfoAction] is null for playlists, which keeps
+ * the button gone and leaves playlist behavior untouched.
  */
 class AlbumDetailHeaderBinder(
     context: Context,
