@@ -1,8 +1,12 @@
 # Taki
 
-**Your music, without distractions.**
+**A small Android player for personal music libraries.**
 
-Taki is a focused Android music player that makes a personal music library feel simple to use. Stream from [Navidrome](https://www.navidrome.org/) or another OpenSubsonic/Subsonic-compatible server, keep music available offline, and stay close to your collection without server-management clutter.
+Taki is a personal Android music player I built for my own Navidrome library. I wanted something simple for browsing my music, playing albums, and keeping a few things offline without bringing server administration into the player.
+
+I’m sharing it because it may be useful to other people running their own music libraries. It is still a small personal project, and the first public beta may have rough edges.
+
+Taki works with [Navidrome](https://www.navidrome.org/) and other OpenSubsonic/Subsonic-compatible servers.
 
 > **Beta:** Taki is preparing its first public beta. There is no official public APK yet, and downloads from the original Ultrasonic project are not Taki releases.
 
@@ -16,17 +20,17 @@ Taki is a focused Android music player that makes a personal music library feel 
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_en-US.png" alt="Taki Search" width="18%" />
 </p>
 
-## Why Taki?
+## Why I made it
 
-Taki keeps everyday listening direct: connect a library, find music, press play, and download what you want offline. Its interface is intentionally dark, calm, and music-first.
+Most of the music I listen to lives on my own server. I wanted the Android side to feel like a straightforward music player rather than a server-management tool: open the app, browse the library, press play, and download a few things for offline listening.
 
-## Features
+## What it does
 
 - Stream albums, artists, playlists, songs, genres, and liked music
 - Download music for offline playback
 - Search across your library and connect multiple compatible servers
 - Integrate with Android media controls and Android Auto
-- Use a focused interface without server administration features
+- Keep server administration out of the everyday listening interface
 
 ## Requirements
 
@@ -51,12 +55,12 @@ The APK is generated under `ultrasonic/build/outputs/apk/debug/`. The module and
 
 ## Reporting bugs
 
-Use the [issue tracker](https://github.com/churipakinti/taki-android/issues) and choose the bug report form. Do not post credentials, private server URLs, or sensitive logs. Security and privacy concerns should follow [SECURITY.md](SECURITY.md).
+If you try Taki and run into a problem, feel free to open an issue using the [issue tracker](https://github.com/churipakinti/taki-android/issues). Do not post credentials, private server URLs, or sensitive logs. Security and privacy concerns should follow [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Contributions are welcome when they fit Taki's focused direction. Read the [contribution guide](docs/CONTRIBUTING.md) before opening a pull request.
+Issues and contributions are welcome. If you want to work on something larger than a small fix, opening an issue first is probably the easiest way to check whether it fits the project. See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for the repository guidelines.
 
 ## Credits and License
 
-Taki is free and open-source software distributed under the [GNU General Public License v3](LICENSE). It is based on [Ultrasonic](https://gitlab.com/ultrasonic/ultrasonic); Ultrasonic contributors are credited as the original project and are not responsible for Taki-specific changes, releases, support, or defects. See [NOTICE.md](NOTICE.md) for full attribution.
+Taki started as a fork of [Ultrasonic](https://gitlab.com/ultrasonic/ultrasonic) and is free and open-source software distributed under the [GNU General Public License v3](LICENSE). Copyright in upstream portions remains with the respective Ultrasonic contributors. They are not responsible for Taki-specific changes, releases, support, or defects. See [NOTICE.md](NOTICE.md) for full attribution.
