@@ -8,7 +8,6 @@
     <string name="background_task.ssl_cert_error">HTTPS 证书错误：%1$s.</string>
     <string name="background_task.ssl_error">SSL 连接异常。请检查服务器证书。</string>
     <string name="button_bar.bookmarks">书签</string>
-    <string name="button_bar.chat">聊天</string>
     <string name="button_bar.now_playing">正在播放</string>
     <string name="buttons.play">播放</string>
     <string name="buttons.pause">暂停</string>
@@ -20,8 +19,6 @@
     <string name="podcasts.label">播客</string>
     <string name="podcasts_channels.empty">没有已注册的播客频道</string>
     <string name="button_bar.search">搜索</string>
-    <string name="chat.send_a_message">发送消息</string>
-    <string name="chat.send_button">发送</string>
     <string name="common.album">专辑</string>
     <string name="common.artist">艺术家</string>
     <string name="common.cancel">取消</string>
@@ -98,7 +95,6 @@
     <string name="menu.deleted_playlist_error">播放列表删除失败 %s</string>
     <string name="menu.downloads">下载</string>
     <string name="menu.settings">设置</string>
-    <string name="menu.refresh">刷新</string>
     <string name="music_library.label">媒体库</string>
     <string name="music_library.label_offline">离线媒体</string>
     <string name="playlist.label">播放列表</string>
@@ -245,7 +241,6 @@
     <string name="settings.use_id3_offline_summary">如果您启用此设置，它将只显示您使用 Taki 4.0 或更高版本下载的音乐。较早的下载没有下载必要的元数据。您可以在固定和保存模式之间切换，以触发缺失元数据的下载。</string>
     <string name="foreground_exception_text">如果媒体通知仍然存在，请按媒体通知中的播放按钮；否则请打开应用程序开始播放，并重新连接会话到控制器</string>
     <string name="foreground_exception_title">无法恢复播放</string>
-    <string name="chat.user_avatar">头像图片</string>
     <string name="language.zh_CN">简体中文（中国大陆）</string>
     <string name="language.zh_TW">繁体中文（中国台湾）</string>
     <string name="language.en">英语</string>

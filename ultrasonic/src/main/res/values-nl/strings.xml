@@ -8,7 +8,6 @@
     <string name="background_task.ssl_cert_error">HTTPS-certificaatfout: %1$s.</string>
     <string name="background_task.ssl_error">SSL-verbindingsuitzondering. Controleer het servercertificaat.</string>
     <string name="button_bar.bookmarks">Bladwijzers</string>
-    <string name="button_bar.chat">Chat</string>
     <string name="button_bar.now_playing">Nu aan het afspelen</string>
     <string name="buttons.play">Afspelen</string>
     <string name="buttons.pause">Pauzeren</string>
@@ -20,9 +19,6 @@
     <string name="podcasts.label">Podcast</string>
     <string name="podcasts_channels.empty">Geen podcastkanalen opgegeven</string>
     <string name="button_bar.search">Zoeken</string>
-    <string name="chat.send_a_message">Bericht versturen</string>
-    <string name="chat.send_button">Versturen</string>
-    <string name="chat.user_avatar">Profielfoto</string>
     <string name="common.album">Album</string>
     <string name="common.artist">Artiest</string>
     <string name="common.cancel">Annuleren</string>
@@ -114,7 +110,6 @@
     <string name="menu.deleted_playlist_error">Afspeellijst %s kan niet worden verwijderd</string>
     <string name="menu.downloads">Downloads</string>
     <string name="menu.settings">Instellingen</string>
-    <string name="menu.refresh">Verversen</string>
     <string name="music_library.label">Mediabibliotheek</string>
     <string name="music_library.label_offline">Offline media</string>
     <string name="playlist.label">Afspeellijsten</string>

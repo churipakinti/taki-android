@@ -8,7 +8,6 @@
     <string name="background_task.ssl_cert_error">Erreur de certificat HTTPS : %1$s.</string>
     <string name="background_task.ssl_error">Erreur de connexion SSL. Veuillez vérifier le certificat du serveur.</string>
     <string name="button_bar.bookmarks">Signets</string>
-    <string name="button_bar.chat">Salon de discussion</string>
     <string name="button_bar.now_playing">Lecture en cours</string>
     <string name="buttons.play">Lecture</string>
     <string name="buttons.pause">Pause</string>
@@ -20,8 +19,6 @@
     <string name="podcasts.label">Podcast</string>
     <string name="podcasts_channels.empty">Aucune chaîne de podcast enregistrée</string>
     <string name="button_bar.search">Recherche</string>
-    <string name="chat.send_a_message">Envoyer un message</string>
-    <string name="chat.send_button">Envoyer</string>
     <string name="common.album">Album</string>
     <string name="common.artist">Artiste</string>
     <string name="common.cancel">Annuler</string>
@@ -110,7 +107,6 @@
     <string name="menu.deleted_playlist_error">Échec de la suppression de la liste de lecture %s</string>
     <string name="menu.downloads">Téléchargements</string>
     <string name="menu.settings">Paramètres</string>
-    <string name="menu.refresh">Rafraichir</string>
     <string name="music_library.label">Bibliothèque musicale</string>
     <string name="music_library.label_offline">Musique hors-ligne</string>
     <string name="playlist.label">Listes de lecture</string>
@@ -245,7 +241,6 @@
     <string name="grid_view">Couverture</string>
     <string name="albumArt">Pochette d\'album</string>
     <string name="settings.show_confirmation_dialog_summary">Affiche une boîte de dialogue de confirmation avant de supprimer ou de déprogrammer des chansons</string>
-    <string name="chat.user_avatar">Image d\'avatar</string>
     <plurals name="n_songs_added_to_end">
         <item quantity="one">%d morceau ajouté à la file d\'attente de fin de lecture</item>
         <item quantity="many">"%d morceaux  ajoutés à la file d\'attente de fin de lecture"</item>

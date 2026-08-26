@@ -5,13 +5,11 @@
     <string name="background_task.ssl_cert_error">HTTPS証明書エラー: %1$s.</string>
     <string name="background_task.ssl_error">SSL接続が異常です。サーバーの証明書を確認してください。</string>
     <string name="button_bar.bookmarks">ブックマーク</string>
-    <string name="button_bar.chat">チャット</string>
     <string name="button_bar.now_playing">再生中</string>
     <string name="buttons.pause">一時停止</string>
     <string name="buttons.repeat">リピート</string>
     <string name="buttons.shuffle">シャッフル</string>
     <string name="buttons.stop">停止</string>
-    <string name="chat.send_a_message">メッセージ送信</string>
     <string name="common.artist">アーティスト</string>
     <string name="common.cancel">キャンセル</string>
     <string name="common.comment">コメント</string>
@@ -205,7 +203,6 @@
     <string name="jukebox">ジュークボックス</string>
     <string name="foreground_exception_title">再生を再開できません</string>
     <string name="background_task.unsupported_api">サーバーAPI v%1$s ではこの機能がサポートされていません。</string>
-    <string name="chat.send_button">送信</string>
     <string name="background_task.no_network">アプリを利用するにはネットワークアクセスが必要です。Wi-Fiかモバイル回線に接続してください。</string>
     <string name="buttons.play">再生</string>
     <string name="background_task.not_found">リソースが見つかりません。サーバーのアドレスを確認してください。</string>
@@ -213,7 +210,6 @@
     <string name="buttons.previous">前へ</string>
     <string name="podcasts.label">ポッドキャスト</string>
     <string name="podcasts_channels.empty">ポッドキャストが何も登録されていません</string>
-    <string name="chat.user_avatar">アバター画像</string>
     <string name="common.album">アルバム</string>
     <string name="button_bar.search">検索</string>
     <string name="common.various_artists">様々なアーティスト</string>
@@ -233,7 +229,6 @@
     <string name="error.label">エラー</string>
     <string name="main.albums_alphaByName">名前別</string>
     <string name="main.songs_title">曲</string>
-    <string name="menu.refresh">再読み込み</string>
     <string name="music_library.label">メディアライブラリ</string>
     <string name="music_library.label_offline">オフラインメディア</string>
     <string name="playlist.label">プレイリスト</string>

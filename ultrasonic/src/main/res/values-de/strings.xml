@@ -8,7 +8,6 @@
     <string name="background_task.ssl_cert_error">HTTPS Zertifikatsfehler: %1$s.</string>
     <string name="background_task.ssl_error">SSL Verbindungsfehler. Bitte das Serverzertifikat überprüfen.</string>
     <string name="button_bar.bookmarks">Lesezeichen</string>
-    <string name="button_bar.chat">Chat</string>
     <string name="button_bar.now_playing">Aktuelle Wiedergabe</string>
     <string name="buttons.play">Abspielen</string>
     <string name="buttons.pause">Pause</string>
@@ -20,8 +19,6 @@
     <string name="podcasts.label">Podcast</string>
     <string name="podcasts_channels.empty">Keine Podcast Kanäle registriert</string>
     <string name="button_bar.search">Suche</string>
-    <string name="chat.send_a_message">Nachricht senden</string>
-    <string name="chat.send_button">Senden</string>
     <string name="common.album">Album</string>
     <string name="common.artist">Künstler</string>
     <string name="common.cancel">Abbrechen</string>
@@ -112,7 +109,6 @@
     <string name="menu.deleted_playlist_error">Löschen der Wiedergabeliste %s ist fehlgeschlagen</string>
     <string name="menu.downloads">Downloads</string>
     <string name="menu.settings">Einstellungen</string>
-    <string name="menu.refresh">Aktualisierung</string>
     <string name="music_library.label">Medienbibliothek</string>
     <string name="music_library.label_offline">Offline Medien</string>
     <string name="playlist.label">Wiedergabelisten</string>
@@ -268,7 +264,6 @@
 \nTaki ist standardmäßig nicht konfiguriert. Wenn Sie Ihren eigenen Server eingerichtet haben, ändern Sie bitte die Serverkonfiguration so, dass er sich mit Ihrem eigenen Computer verbindet.</string>
     <string name="foreground_exception_title">Wiedergabe kann nicht fortgesetzt werden</string>
     <string name="foreground_exception_text">Drücke auf die Wiedergabetaste der Medienbenachrichtigung, wenn diese noch vorhanden ist, andernfalls öffne die App, um die Wiedergabe zu starten, und verbinde die Sitzung erneut mit dem Controller</string>
-    <string name="chat.user_avatar">Avatarbild</string>
     <string name="main.albums_by_year">Chronologisch</string>
     <string name="settings.use_id3_offline_summary">Wenn Du diese Einstellung aktivierst, wird nur die Musik angezeigt, die Du mit Taki 4.0 oder höher heruntergeladen hast. Bei früheren Downloads werden die erforderlichen Metadaten nicht heruntergeladen. Du kannst zwischen Pin- und Speichermodus umschalten, um den Download der fehlenden Metadaten auszulösen.</string>
     <string name="albumArt">Album-Artwork</string>

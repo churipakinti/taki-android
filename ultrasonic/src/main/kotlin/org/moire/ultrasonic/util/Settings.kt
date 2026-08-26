@@ -168,11 +168,6 @@ object Settings {
 
     const val SHOULD_SHOW_ARTIST_PICTURE = true
 
-    // Chat is unreachable from the UI (hidden drawer item, see HANDOFF.md); kept only so
-    // ChatFragment.kt -- deliberately not deleted, same "hide don't delete" pattern as the rest
-    // of that feature -- still compiles unchanged if ever reactivated.
-    const val CHAT_REFRESH_INTERVAL = 5000
-
     const val DIRECTORY_CACHE_TIME = 300
 
     const val SHOULD_SORT_BY_DISC = true

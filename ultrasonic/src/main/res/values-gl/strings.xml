@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">Non se entende a resposta. Por favor comproba a dirección do servidor.</string>
     <string name="background_task.ssl_cert_error">Erro do certificado HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Excepción de conexión SSL. Comproba o certificado do servidor.</string>
-    <string name="button_bar.chat">Chat</string>
     <string name="button_bar.now_playing">A reproducir</string>
     <string name="buttons.play">Reproducir</string>
     <string name="buttons.pause">Pór en pausa</string>
@@ -19,10 +18,7 @@
     <string name="podcasts.label">Podcast</string>
     <string name="podcasts_channels.empty">Non hai canles de Podcasts rexistrados</string>
     <string name="button_bar.search">Buscar</string>
-    <string name="chat.send_a_message">Enviar unha mensaxe</string>
     <string name="button_bar.bookmarks">Marcadores</string>
-    <string name="chat.send_button">Enviar</string>
-    <string name="chat.user_avatar">Imaxe do avatar</string>
     <string name="common.album">Álbum</string>
     <string name="common.comment">Comentar</string>
     <string name="common.confirm">Confirmar</string>
@@ -118,7 +114,6 @@
     <string name="menu.deleted_playlist_error">Fallou a eliminación da lista %s</string>
     <string name="menu.downloads">Descargas</string>
     <string name="menu.settings">Axustes</string>
-    <string name="menu.refresh">Actualizar</string>
     <string name="music_library.label">Biblioteca multimedia</string>
     <string name="music_library.label_offline">Multimedia sen conexión</string>
     <string name="playlist.label">Listas de reprodución</string>

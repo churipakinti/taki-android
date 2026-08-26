@@ -4,10 +4,8 @@
     <string name="settings.cache_size_10000">10 GB</string>
     <string name="settings.cache_size_15000">15 GB</string>
     <string name="buttons.pause">Pause</string>
-    <string name="button_bar.chat">Sludring</string>
     <string name="buttons.stop">Stopp</string>
     <string name="button_bar.search">Søk</string>
-    <string name="chat.send_a_message">Send en melding</string>
     <string name="buttons.play">Spill</string>
     <string name="buttons.previous">Forrige</string>
     <string name="podcasts.label">Nettradioopptak</string>
@@ -16,8 +14,6 @@
     <string name="common.artist">Artist</string>
     <string name="buttons.next">Neste</string>
     <string name="common.comment">Kommentar</string>
-    <string name="chat.send_button">Send</string>
-    <string name="chat.user_avatar">Avatar-bilde</string>
     <string name="common.cancel">Avbryt</string>
     <string name="common.confirm">Bekreft</string>
     <string name="common.download">Last ned</string>
@@ -121,7 +117,6 @@
     <string name="menu.about">Om</string>
     <string name="menu.downloads">Nedlastninger</string>
     <string name="menu.settings">Innstillinger</string>
-    <string name="menu.refresh">Gjenoppfrisk</string>
     <string name="music_library.label">Mediebibliotek</string>
     <string name="music_library.label_offline">Frakoblede medier</string>
     <string name="playlist.label">Spillelister</string>

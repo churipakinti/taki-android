@@ -8,13 +8,11 @@
     <string name="background_task.ssl_cert_error">Błąd certyfikatu HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Błąd połączenia SSL. Proszę sprawdzić certyfikat serwera.</string>
     <string name="button_bar.bookmarks">Zakładki</string>
-    <string name="button_bar.chat">Czat</string>
     <string name="button_bar.now_playing">Teraz gra</string>
     <string name="buttons.shuffle">Wymieszaj</string>
     <string name="podcasts.label">Podcasty</string>
     <string name="podcasts_channels.empty">Nie zarejestrowano żadnych kanałów podcastowych</string>
     <string name="button_bar.search">Szukaj</string>
-    <string name="chat.send_a_message">Wyślij wiadomość</string>
     <string name="common.cancel">Anuluj</string>
     <string name="common.comment">Komentarz</string>
     <string name="common.confirm">Potwierdź</string>
@@ -82,7 +80,6 @@
     <string name="menu.deleted_playlist">Usunięto playlistę %s</string>
     <string name="menu.deleted_playlist_error">Usunięcie playlisty %s nie powiodło się</string>
     <string name="menu.settings">Ustawienia</string>
-    <string name="menu.refresh">Odśwież</string>
     <string name="music_library.label">Biblioteka mediów</string>
     <string name="music_library.label_offline">Media offline</string>
     <string name="playlist.label">Playlisty</string>
@@ -207,7 +204,6 @@
     <string name="buttons.next">Następne</string>
     <string name="main.albums_by_year">Chronologicznie</string>
     <string name="language.cs">Czeski</string>
-    <string name="chat.send_button">Wyślij</string>
     <string name="share_on_server">Stwórz udostępnienie na serwerze</string>
     <string name="language.de">Niemiecki</string>
     <string name="about.report">Zgłoś błąd</string>
@@ -247,7 +243,6 @@
     <string name="language.es">Hiszpański</string>
     <string name="settings.override_language_summary">Wymagane jest ponowne uruchomienie aplikacji po zmianie języka</string>
     <string name="foreground_exception_title">Nie można wznowić odtwarzania</string>
-    <string name="chat.user_avatar">Awatar</string>
     <string name="language.zh_TW">Chiński (Tajwan)</string>
     <string name="settings.summary.force_plain_text_password">Zmusza aplikację do przesyłania hasła w postaci niezaszyfrowanej. Przydaje się, gdy serwer Subsonic nie obsługuje nowego API uwierzytelniania użytkowników.</string>
     <string name="settings.wifi_required_title">Pobieraj tylko przez Wi-Fi</string>

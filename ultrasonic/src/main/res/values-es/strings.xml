@@ -8,7 +8,6 @@
     <string name="background_task.ssl_cert_error">Error del certificado HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Excepción de conexión SSL. Compruebe el certificado del servidor.</string>
     <string name="button_bar.bookmarks">Marcadores</string>
-    <string name="button_bar.chat">Chat</string>
     <string name="button_bar.now_playing">Reproduciendo ahora</string>
     <string name="buttons.play">Reproducir</string>
     <string name="buttons.pause">Pausar</string>
@@ -21,9 +20,6 @@
     <string name="podcasts.label">Pódcast</string>
     <string name="podcasts_channels.empty">No hay canales de pódcasts registrados</string>
     <string name="button_bar.search">Buscar</string>
-    <string name="chat.send_a_message">Enviar un mensaje</string>
-    <string name="chat.send_button">Enviar</string>
-    <string name="chat.user_avatar">Imagen de avatar</string>
     <string name="common.album">Álbum</string>
     <string name="common.artist">Artista</string>
     <string name="common.cancel">Cancelar</string>
@@ -141,7 +137,6 @@
     <string name="menu.deleted_playlist_error">Fallo al eliminar la lista de reproducción %s</string>
     <string name="menu.downloads">Descargas</string>
     <string name="menu.settings">Configuración</string>
-    <string name="menu.refresh">Actualizar</string>
     <string name="music_library.label">Mediateca</string>
     <string name="music_library.label_offline">Medios sin conexión</string>
     <string name="playlist.label">Listas de reproducción</string>

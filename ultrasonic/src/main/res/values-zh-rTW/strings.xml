@@ -98,9 +98,6 @@
     <string name="download.jukebox_server_too_old">不支援遠端控制，請升級您的 Subsonic 伺服器。</string>
     <string name="podcasts.label">播客</string>
     <string name="background_task.ssl_error">SSL 連線異常。請檢查伺服器憑證。</string>
-    <string name="chat.send_button">傳送</string>
-    <string name="button_bar.chat">聊天</string>
-    <string name="chat.user_avatar">頭像</string>
     <string name="background_task.parse_error">無法理解答覆，請檢查伺服器位址。</string>
     <string name="language.nl">荷蘭語</string>
     <string name="download.jukebox_off">已關閉遠端控制，音樂將在手機上播放。</string>
@@ -112,7 +109,6 @@
     <string name="background_task.ssl_cert_error">HTTPS 憑證錯誤：%1$s.</string>
     <string name="language.pl">波蘭語</string>
     <string name="podcasts_channels.empty">沒有已註冊的播客頻道</string>
-    <string name="chat.send_a_message">傳送訊息</string>
     <string name="download.menu_screen_on">打開熒幕常亮</string>
     <string name="language.it">義大利語</string>
     <string name="language.fr">法語</string>
@@ -154,7 +150,6 @@
     <string name="download.playlist_done">已儲存播放清單。</string>
     <string name="playlist.updated_info">更新了 %s 的播放清單資訊</string>
     <string name="playlist.updated_info_error">更新 %s 的播放清單資訊失敗</string>
-    <string name="menu.refresh">刷新</string>
     <string name="music_library.label_offline">離線媒體</string>
     <string name="playlist.update_info">更新資訊</string>
     <string name="download.jukebox_not_authorized">不允許遠端控制。請在您在 Subsonic 伺服器上的 <b>使用者 &gt; 設定</b> 中啟用點唱機模式。</string>

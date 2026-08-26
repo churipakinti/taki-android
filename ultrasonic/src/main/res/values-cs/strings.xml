@@ -8,13 +8,11 @@
     <string name="background_task.ssl_cert_error">Chyba HTTPS certifikátu: %1$s.</string>
     <string name="background_task.ssl_error">Vyjímka SSL připojení. Ověřte certifikát serveru.</string>
     <string name="button_bar.bookmarks">Záložky</string>
-    <string name="button_bar.chat">Chat</string>
     <string name="button_bar.now_playing">Právě hraje</string>
     <string name="buttons.shuffle">Náhodně</string>
     <string name="podcasts.label">Podcasty</string>
     <string name="podcasts_channels.empty">Není registrován žádný podcast kanál</string>
     <string name="button_bar.search">Hledat</string>
-    <string name="chat.send_a_message">Poslat zprávu</string>
     <string name="common.cancel">Zrušit</string>
     <string name="common.comment">Komentář</string>
     <string name="common.confirm">Potvrdit</string>
@@ -82,7 +80,6 @@
     <string name="menu.deleted_playlist">Smazaný playlist %s</string>
     <string name="menu.deleted_playlist_error">Chyba smazání playlistu %s</string>
     <string name="menu.settings">Nastavení</string>
-    <string name="menu.refresh">Obnovit</string>
     <string name="music_library.label">Knihovna médií</string>
     <string name="music_library.label_offline">Offline média</string>
     <string name="playlist.label">Playlisty</string>

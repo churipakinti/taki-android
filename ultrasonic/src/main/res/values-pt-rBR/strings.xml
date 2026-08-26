@@ -8,7 +8,6 @@
     <string name="background_task.ssl_cert_error">Erro de certificado HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Exceção de conexão SSL. Verifique o certificado do servidor.</string>
     <string name="button_bar.bookmarks">Favoritos</string>
-    <string name="button_bar.chat">Chat</string>
     <string name="button_bar.now_playing">Tocando Agora</string>
     <string name="buttons.play">Tocar</string>
     <string name="buttons.pause">Pausar</string>
@@ -20,8 +19,6 @@
     <string name="podcasts.label">Podcasts</string>
     <string name="podcasts_channels.empty">Nenhum canal de podcasts registrado</string>
     <string name="button_bar.search">Pesquisa</string>
-    <string name="chat.send_a_message">Enviar uma mensagem</string>
-    <string name="chat.send_button">Enviar</string>
     <string name="common.album">Álbum</string>
     <string name="common.artist">Artista</string>
     <string name="common.cancel">Cancelar</string>
@@ -112,7 +109,6 @@
     <string name="menu.deleted_playlist_error">Falha ao excluir a playlist %s</string>
     <string name="menu.downloads">Downloads</string>
     <string name="menu.settings">Configurações</string>
-    <string name="menu.refresh">Atualizar</string>
     <string name="music_library.label">Biblioteca de Mídia</string>
     <string name="music_library.label_offline">Mídia Offline</string>
     <string name="playlist.label">Playlists</string>
@@ -287,5 +283,4 @@
         <item quantity="many">%d músicas adicionadas na fila</item>
         <item quantity="other">%d músicas adicionadas na fila</item>
     </plurals>
-    <string name="chat.user_avatar">Imagem do Avatar</string>
 </resources>

@@ -8,7 +8,6 @@
     <string name="background_task.ssl_cert_error">Ошибка сертификата HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Исключение SSL-соединения. Пожалуйста, проверьте сертификат сервера.</string>
     <string name="button_bar.bookmarks">Закладки</string>
-    <string name="button_bar.chat">Чат</string>
     <string name="button_bar.now_playing">Сейчас играет</string>
     <string name="buttons.play">Воспроизведение</string>
     <string name="buttons.pause">Пауза</string>
@@ -20,7 +19,6 @@
     <string name="podcasts.label">Подкаст</string>
     <string name="podcasts_channels.empty">Подкасты не зарегистрированы</string>
     <string name="button_bar.search">Поиск</string>
-    <string name="chat.send_a_message">Отправить сообщение</string>
     <string name="common.album">Альбом</string>
     <string name="common.artist">Артист</string>
     <string name="common.cancel">Отмена</string>
@@ -103,7 +101,6 @@
     <string name="menu.deleted_playlist_error">Не удалось удалить плейлист %s</string>
     <string name="menu.downloads">Загрузки</string>
     <string name="menu.settings">Настройки</string>
-    <string name="menu.refresh">Обновить</string>
     <string name="music_library.label">Медиа библиотека</string>
     <string name="music_library.label_offline">Медиа Оффлайн</string>
     <string name="playlist.label">Плейлисты</string>
@@ -223,8 +220,6 @@
     <string name="api.subsonic.upgrade_client">Несовместимые версии. Пожалуйста, обновите приложение Taki для Android.</string>
     <string name="api.subsonic.upgrade_server">Несовместимые версии. Пожалуйста, обновите Subsonic сервер.</string>
     <!-- Subsonic features  -->
-<string name="chat.send_button">Отправить</string>
-    <string name="chat.user_avatar">Аватар</string>
     <string name="download.playerstate_loading">Загрузка…</string>
     <string name="language.fr">Французский</string>
     <string name="settings.custom_cache_location">Использовать пользовательское расположение кэша</string>
