@@ -1,16 +1,10 @@
-# Taki v0.1.0-beta.1 — release notes draft
+# Taki v0.1.0-beta.1
 
 Taki is a focused Android music player for Navidrome and OpenSubsonic/Subsonic-compatible servers, built around simple browsing, playback, and offline listening from a personal music library.
 
-## Build identification
+Taki is intentionally music-only. Chat, social features, sharing, podcasts, and day-to-day server administration are left out so the player can stay focused on listening.
 
-- **App version:** `0.1.0-beta`
-- **versionCode:** `131`
-- **Final release commit:** added after the signed candidate is frozen
-- **Signing certificate SHA-256:** added after final signing
-- **APK SHA-256:** added after final signing
-
-Do not publish this document with placeholder build-identification fields unresolved.
+Official release artifacts and checksums are published with the corresponding [GitHub Release](https://github.com/churipakinti/taki-android/releases).
 
 ## What this beta includes
 

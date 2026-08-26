@@ -2,7 +2,7 @@
 
 Notable changes to Taki are documented here. Detailed historical development notes remain in [`CHANGES.md`](CHANGES.md).
 
-## 0.1.0-beta.1 — Unreleased
+## 0.1.0-beta.1
 
 ### Added
 

@@ -6,7 +6,7 @@ Taki is a focused Android music player for [Navidrome](https://www.navidrome.org
 
 Taki is intentionally **music-only**. It leaves out chat, social features, sharing, podcasts, and day-to-day server administration so the player can stay centered on focused listening.
 
-> **Beta:** The first Taki beta has not been released yet. Official builds will be published through this repository's GitHub Releases. Downloads from the original Ultrasonic project are not Taki releases.
+> **Beta:** Taki is currently in public beta. Official builds are available through this repository's [GitHub Releases](https://github.com/churipakinti/taki-android/releases).
 
 ## Screenshots
 
@@ -39,7 +39,7 @@ Compatibility varies between server implementations and API versions. Navidrome 
 
 ## Install / Download
 
-The first beta has not been published yet. When a release is available, official builds will be attached to [GitHub Releases](https://github.com/churipakinti/taki-android/releases). Until then, Taki can be built from source.
+Official beta builds are available from [GitHub Releases](https://github.com/churipakinti/taki-android/releases). Download the APK from the most recent Taki prerelease, or build from source using the instructions below.
 
 ## Build from source
 
