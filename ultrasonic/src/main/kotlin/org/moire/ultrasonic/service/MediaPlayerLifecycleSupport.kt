@@ -185,18 +185,13 @@ class MediaPlayerLifecycleSupport(
 
                 KeyEvent.KEYCODE_MEDIA_PAUSE -> mediaPlayerManager.pause()
 
-                KeyEvent.KEYCODE_1 -> mediaPlayerManager.legacySetRating(1)
-
-                KeyEvent.KEYCODE_2 -> mediaPlayerManager.legacySetRating(2)
-
-                KeyEvent.KEYCODE_3 -> mediaPlayerManager.legacySetRating(3)
-
-                KeyEvent.KEYCODE_4 -> mediaPlayerManager.legacySetRating(4)
-
-                KeyEvent.KEYCODE_5 -> mediaPlayerManager.legacySetRating(5)
-
-                KeyEvent.KEYCODE_STAR -> mediaPlayerManager.legacyToggleStar()
-
+                // KEYCODE_1..5 / KEYCODE_STAR (legacy star-rating keycodes) are deliberately not
+                // handled here. UltrasonicIntentReceiver (CMD_PROCESS_KEYCODE) is exported with
+                // no permission, so any app on the device could broadcast a fabricated KeyEvent
+                // and trigger an unauthenticated server-side rating mutation via
+                // mediaPlayerManager.legacySetRating()/legacyToggleStar(). Legitimate rating
+                // control (Android Auto, notification, Assistant, lock screen) goes through
+                // Media3's own MediaLibrarySessionCallback.onSetRating(), which is unaffected.
                 else -> {
                 }
             }
