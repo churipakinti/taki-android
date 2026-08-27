@@ -211,12 +211,6 @@ interface SubsonicAPIDefinition {
         @Query("id") id: String? = null
     ): Call<GetPodcastsResponse>
 
-    @GET("getPodcasts.view")
-    suspend fun getPodcastsSuspend(
-        @Query("includeEpisodes") includeEpisodes: Boolean? = null,
-        @Query("id") id: String? = null
-    ): GetPodcastsResponse
-
     @GET("getLyrics.view")
     fun getLyrics(
         @Query("artist") artist: String? = null,
@@ -339,9 +333,6 @@ interface SubsonicAPIDefinition {
     @GET("getShares.view")
     fun getShares(): Call<SharesResponse>
 
-    @GET("getShares.view")
-    suspend fun getSharesSuspend(): SharesResponse
-
     @GET("createShare.view")
     fun createShare(
         @Query("id") idsToShare: List<String>,
@@ -379,17 +370,11 @@ interface SubsonicAPIDefinition {
     @GET("getChatMessages.view")
     fun getChatMessages(@Query("since") since: Long? = null): Call<ChatMessagesResponse>
 
-    @GET("getChatMessages.view")
-    suspend fun getChatMessagesSuspend(@Query("since") since: Long? = null): ChatMessagesResponse
-
     @GET("addChatMessage.view")
     fun addChatMessage(@Query("message") message: String): Call<SubsonicResponse>
 
     @GET("getBookmarks.view")
     fun getBookmarks(): Call<BookmarksResponse>
-
-    @GET("getBookmarks.view")
-    suspend fun getBookmarksSuspend(): BookmarksResponse
 
     @GET("createBookmark.view")
     fun createBookmark(
