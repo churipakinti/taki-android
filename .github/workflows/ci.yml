@@ -43,6 +43,11 @@ jobs:
           EXPECTED_DEBUG_CERT_SHA256: "03:A1:50:8C:81:16:5B:E8:CE:88:9C:C3:BD:70:09:DC:40:B7:9F:EB:E8:62:F9:A7:0A:B9:5E:46:90:25:8E:1E"
         run: |
           set -euo pipefail
+
+          # On the hosted runner AGP resolves the default debug keystore via
+          # XDG_CONFIG_HOME (~/.config/.android), not ~/.android. Pin ANDROID_USER_HOME
+          # for every later step so the restored keystore is the one Gradle uses.
+          echo "ANDROID_USER_HOME=$HOME/.android" >> "$GITHUB_ENV"
           mkdir -p "$HOME/.android"
           KS="$HOME/.android/debug.keystore"
 
@@ -99,11 +104,9 @@ jobs:
             exit 1
           fi
 
-          STORE=$(printf '%s\n' "$STANZA" | sed -n 's/^Store: //p' | head -n1)
-          GRADLE_FP=$(printf '%s\n' "$STANZA" \
-            | sed -n -E 's/^SHA-?256:[[:space:]]*//p' \
-            | head -n1 \
-            | tr -d '[:space:]')
+          STORE=$(printf '%s\n' "$STANZA" | sed -n -E 's/^[[:space:]]*Store:[[:space:]]*//p' | head -n1)
+          # Match any SHA-256-shaped 32-byte colon-hex string, independent of the label.
+          GRADLE_FP=$(printf '%s\n' "$STANZA" | grep -ioE '([0-9A-F]{2}:){31}[0-9A-F]{2}' | head -n1 | tr 'a-f' 'A-F')
           echo "signingReport debug Store: ${STORE:-<none>}"
           echo "signingReport debug SHA-256: ${GRADLE_FP:-<none>}"
 
