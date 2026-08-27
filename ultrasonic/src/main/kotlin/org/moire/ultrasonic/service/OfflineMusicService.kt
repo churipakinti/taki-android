@@ -29,7 +29,6 @@ import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Bookmark
-import org.moire.ultrasonic.domain.ChatMessage
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -439,14 +438,6 @@ class OfflineMusicService :
     @Throws(OfflineException::class)
     override fun getStreamUrl(id: String, maxBitRate: Int?, format: String?): String =
         throw OfflineException("getStreamUrl isn't available in offline mode")
-
-    @Throws(OfflineException::class)
-    override fun getChatMessages(since: Long?): List<ChatMessage?> =
-        throw OfflineException("getChatMessages isn't available in offline mode")
-
-    @Throws(OfflineException::class)
-    override fun addChatMessage(message: String): Unit =
-        throw OfflineException("addChatMessage isn't available in offline mode")
 
     @Throws(OfflineException::class)
     override fun getBookmarks(): List<Bookmark> =

@@ -25,7 +25,6 @@ import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistInfo
 import org.moire.ultrasonic.domain.Bookmark
-import org.moire.ultrasonic.domain.ChatMessage
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -674,18 +673,6 @@ open class RESTMusicService(
         val response = API.getUser(username).execute().throwOnFailure()
 
         return response.body()!!.user.toDomainEntity()
-    }
-
-    @Throws(Exception::class)
-    override fun getChatMessages(since: Long?): List<ChatMessage> {
-        val response = API.getChatMessages(since).execute().throwOnFailure()
-
-        return response.body()!!.chatMessages.toDomainEntitiesList()
-    }
-
-    @Throws(Exception::class)
-    override fun addChatMessage(message: String) {
-        API.addChatMessage(message).execute().throwOnFailure()
     }
 
     @Throws(Exception::class)

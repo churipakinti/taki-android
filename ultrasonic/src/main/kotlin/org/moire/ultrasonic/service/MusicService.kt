@@ -13,7 +13,6 @@ import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistInfo
 import org.moire.ultrasonic.domain.Bookmark
-import org.moire.ultrasonic.domain.ChatMessage
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -199,12 +198,6 @@ interface MusicService {
 
     @Throws(Exception::class)
     fun getShares(refresh: Boolean): List<Share>
-
-    @Throws(Exception::class)
-    fun getChatMessages(since: Long?): List<ChatMessage?>?
-
-    @Throws(Exception::class)
-    fun addChatMessage(message: String)
 
     @Throws(Exception::class)
     fun getBookmarks(): List<Bookmark>

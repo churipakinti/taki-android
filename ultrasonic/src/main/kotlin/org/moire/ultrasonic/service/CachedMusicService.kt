@@ -19,7 +19,6 @@ import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistInfo
 import org.moire.ultrasonic.domain.Bookmark
-import org.moire.ultrasonic.domain.ChatMessage
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -511,15 +510,6 @@ class CachedMusicService(private val musicService: MusicService) :
 
     @Throws(Exception::class)
     override fun getShares(refresh: Boolean): List<Share> = musicService.getShares(refresh)
-
-    @Throws(Exception::class)
-    override fun getChatMessages(since: Long?): List<ChatMessage?>? =
-        musicService.getChatMessages(since)
-
-    @Throws(Exception::class)
-    override fun addChatMessage(message: String) {
-        musicService.addChatMessage(message)
-    }
 
     @Throws(Exception::class)
     override fun getBookmarks(): List<Bookmark> = musicService.getBookmarks()
