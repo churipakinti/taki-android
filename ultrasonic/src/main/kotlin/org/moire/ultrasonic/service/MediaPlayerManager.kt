@@ -654,6 +654,15 @@ class MediaPlayerManager(
         startIndex: Int?,
         startPositionMs: Int
     ) {
+        // A queue-replacing call is authoritative about shuffle: "Play" (shuffle = false) must
+        // start sequentially from the first track and must never inherit a shuffle mode left on
+        // by a previous queue/album. Clearing it here is safe on the about-to-be-replaced queue
+        // and also covers the queue-already-matches fast path below; turning shuffle *on* is
+        // still deferred until after the items are added (media3 issue #480).
+        if (insertionMode == InsertionMode.CLEAR && !shuffle && isShufflePlayEnabled) {
+            isShufflePlayEnabled = false
+        }
+
         // If the caller wants to replace the queue with the exact list that's already loaded
         // (e.g. tapping a different track within the album/list that's currently playing),
         // there is nothing to rebuild - just move the play position. Rebuilding would mean
