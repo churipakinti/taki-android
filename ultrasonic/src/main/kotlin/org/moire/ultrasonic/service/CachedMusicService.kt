@@ -28,7 +28,6 @@ import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
-import org.moire.ultrasonic.domain.Share
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.domain.UserInfo
 import org.moire.ultrasonic.util.LRUCache
@@ -491,9 +490,6 @@ class CachedMusicService(private val musicService: MusicService) :
         musicService.getSongsByGenre(genre, count, offset)
 
     @Throws(Exception::class)
-    override fun getShares(refresh: Boolean): List<Share> = musicService.getShares(refresh)
-
-    @Throws(Exception::class)
     override fun getBookmarks(): List<Bookmark> = musicService.getBookmarks()
 
     @Throws(Exception::class)
@@ -539,20 +535,6 @@ class CachedMusicService(private val musicService: MusicService) :
             cachedUserInfo.put(username, cache)
         }
         return userInfo
-    }
-
-    @Throws(Exception::class)
-    override fun createShare(ids: List<String>, description: String?, expires: Long?): List<Share> =
-        musicService.createShare(ids, description, expires)
-
-    @Throws(Exception::class)
-    override fun deleteShare(id: String) {
-        musicService.deleteShare(id)
-    }
-
-    @Throws(Exception::class)
-    override fun updateShare(id: String, description: String?, expires: Long?) {
-        musicService.updateShare(id, description, expires)
     }
 
     companion object {

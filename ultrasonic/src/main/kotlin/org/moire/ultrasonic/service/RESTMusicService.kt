@@ -34,7 +34,6 @@ import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
-import org.moire.ultrasonic.domain.Share
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.domain.UserInfo
 import org.moire.ultrasonic.domain.toArtistList
@@ -616,13 +615,6 @@ open class RESTMusicService(
     }
 
     @Throws(Exception::class)
-    override fun getShares(refresh: Boolean): List<Share> {
-        val response = API.getShares().execute().throwOnFailure()
-
-        return response.body()!!.shares.toDomainEntitiesList(activeServerId)
-    }
-
-    @Throws(Exception::class)
     override suspend fun getGenres(refresh: Boolean): List<Genre> {
         val response = API.getGenresSuspend().throwOnFailure()
 
@@ -671,28 +663,6 @@ open class RESTMusicService(
         musicDirectory.addAll(response.body()!!.videosList.toDomainEntityList(activeServerId))
 
         return musicDirectory
-    }
-
-    @Throws(Exception::class)
-    override fun createShare(ids: List<String>, description: String?, expires: Long?): List<Share> {
-        val response = API.createShare(ids, description, expires).execute().throwOnFailure()
-
-        return response.body()!!.shares.toDomainEntitiesList(activeServerId)
-    }
-
-    @Throws(Exception::class)
-    override fun deleteShare(id: String) {
-        API.deleteShare(id).execute().throwOnFailure()
-    }
-
-    @Throws(Exception::class)
-    override fun updateShare(id: String, description: String?, expires: Long?) {
-        var expiresValue: Long? = expires
-        if (expires != null && expires == 0L) {
-            expiresValue = null
-        }
-
-        API.updateShare(id, description, expiresValue).execute().throwOnFailure()
     }
 
     private val activeServerId: Int

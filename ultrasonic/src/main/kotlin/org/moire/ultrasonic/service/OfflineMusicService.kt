@@ -38,7 +38,6 @@ import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
-import org.moire.ultrasonic.domain.Share
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.domain.UserInfo
 import org.moire.ultrasonic.util.AbstractFile
@@ -405,22 +404,6 @@ class OfflineMusicService :
     @Throws(Exception::class)
     override fun getUser(username: String): UserInfo =
         throw OfflineException("Getting user info not available in offline mode")
-
-    @Throws(Exception::class)
-    override fun createShare(ids: List<String>, description: String?, expires: Long?): List<Share> =
-        throw OfflineException("Creating shares not available in offline mode")
-
-    @Throws(Exception::class)
-    override fun getShares(refresh: Boolean): List<Share> =
-        throw OfflineException("Getting shares not available in offline mode")
-
-    @Throws(Exception::class)
-    override fun deleteShare(id: String): Unit =
-        throw OfflineException("Deleting shares not available in offline mode")
-
-    @Throws(Exception::class)
-    override fun updateShare(id: String, description: String?, expires: Long?): Unit =
-        throw OfflineException("Updating shares not available in offline mode")
 
     @Throws(Exception::class)
     override suspend fun star(id: String?, albumId: String?, artistId: String?): Unit =

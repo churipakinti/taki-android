@@ -22,7 +22,6 @@ import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
-import org.moire.ultrasonic.domain.Share
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.domain.UserInfo
 
@@ -193,9 +192,6 @@ interface MusicService {
     fun setJukeboxGain(gain: Float): JukeboxStatus
 
     @Throws(Exception::class)
-    fun getShares(refresh: Boolean): List<Share>
-
-    @Throws(Exception::class)
     fun getBookmarks(): List<Bookmark>
 
     @Throws(Exception::class)
@@ -209,13 +205,4 @@ interface MusicService {
 
     @Throws(Exception::class)
     fun getUser(username: String): UserInfo
-
-    @Throws(Exception::class)
-    fun createShare(ids: List<String>, description: String?, expires: Long?): List<Share>
-
-    @Throws(Exception::class)
-    fun deleteShare(id: String)
-
-    @Throws(Exception::class)
-    fun updateShare(id: String, description: String?, expires: Long?)
 }
