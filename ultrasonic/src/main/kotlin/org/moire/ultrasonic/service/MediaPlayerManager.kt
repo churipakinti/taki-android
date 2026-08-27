@@ -112,10 +112,16 @@ class MediaPlayerManager(
     private var addToPlaylistCallCount = 0
     private val addToPlaylistDuplicateGuard = DuplicateRequestGuard()
 
-    private var sessionToken = SessionToken(
-        UApp.applicationContext(),
-        ComponentName(UApp.applicationContext(), PlaybackService::class.java)
-    )
+    // Resolved lazily rather than in the constructor: it is only ever read from
+    // createMediaController() (via onCreate()), and building it eagerly touches
+    // UApp.applicationContext() plus a PackageManager manifest lookup, which makes the class
+    // impossible to instantiate in a plain unit test. The value is identical either way.
+    private val sessionToken by lazy {
+        SessionToken(
+            UApp.applicationContext(),
+            ComponentName(UApp.applicationContext(), PlaybackService::class.java)
+        )
+    }
 
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
 
