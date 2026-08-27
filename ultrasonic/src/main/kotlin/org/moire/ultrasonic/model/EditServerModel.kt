@@ -65,22 +65,6 @@ class EditServerModel(val app: Application) :
     private fun requestFlow(type: ServerFeature, api: SubsonicAPIDefinition, userName: String) =
         flow {
             when (type) {
-                ServerFeature.CHAT -> emit(
-                    serverFunctionAvailable(type, api::getChatMessagesSuspend)
-                )
-
-                ServerFeature.BOOKMARK -> emit(
-                    serverFunctionAvailable(type, api::getBookmarksSuspend)
-                )
-
-                ServerFeature.SHARE -> emit(
-                    serverFunctionAvailable(type, api::getSharesSuspend)
-                )
-
-                ServerFeature.PODCAST -> emit(
-                    serverFunctionAvailable(type, api::getPodcastsSuspend)
-                )
-
                 ServerFeature.JUKEBOX -> emit(
                     serverFunctionAvailable(type) {
                         val response = api.getUserSuspend(userName)
@@ -140,10 +124,6 @@ class EditServerModel(val app: Application) :
 
     fun storeFeatureSupport(settings: ServerSetting, it: FeatureSupport) {
         when (it.type) {
-            ServerFeature.CHAT -> settings.chatSupport = it.supported
-            ServerFeature.BOOKMARK -> settings.bookmarkSupport = it.supported
-            ServerFeature.SHARE -> settings.shareSupport = it.supported
-            ServerFeature.PODCAST -> settings.podcastSupport = it.supported
             ServerFeature.JUKEBOX -> settings.jukeboxSupport = it.supported
             ServerFeature.VIDEO -> settings.videoSupport = it.supported
         }
@@ -151,10 +131,6 @@ class EditServerModel(val app: Application) :
 
     companion object {
         enum class ServerFeature(val named: String) {
-            CHAT("chat"),
-            BOOKMARK("bookmark"),
-            SHARE("share"),
-            PODCAST("podcast"),
             JUKEBOX("jukebox"),
             VIDEO("video")
         }

@@ -490,10 +490,6 @@ class EditServerFragment : Fragment() {
                     Timber.w("${it.type} support: ${it.supported}")
                 }
 
-                currentServerSetting!!.chatSupport = testSetting.chatSupport
-                currentServerSetting!!.bookmarkSupport = testSetting.bookmarkSupport
-                currentServerSetting!!.shareSupport = testSetting.shareSupport
-                currentServerSetting!!.podcastSupport = testSetting.podcastSupport
                 currentServerSetting!!.videoSupport = testSetting.videoSupport
                 currentServerSetting!!.jukeboxSupport = testSetting.jukeboxSupport
 
