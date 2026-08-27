@@ -321,15 +321,6 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         }
     }
 
-    suspend fun getBookmarks() {
-        withContext(Dispatchers.IO) {
-            val service = MusicServiceFactory.getMusicService()
-            val musicDirectory = Util.getSongsFromBookmarks(service.getBookmarks())
-            currentListIsSortable = false
-            updateList(musicDirectory)
-        }
-    }
-
     suspend fun getDailyMix() {
         withContext(Dispatchers.IO) {
             val tracks = DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build()

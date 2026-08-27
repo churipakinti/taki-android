@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">Antwort nicht verstanden. Bitte die Serveradresse überprüfen.</string>
     <string name="background_task.ssl_cert_error">HTTPS Zertifikatsfehler: %1$s.</string>
     <string name="background_task.ssl_error">SSL Verbindungsfehler. Bitte das Serverzertifikat überprüfen.</string>
-    <string name="button_bar.bookmarks">Lesezeichen</string>
     <string name="button_bar.now_playing">Aktuelle Wiedergabe</string>
     <string name="buttons.play">Abspielen</string>
     <string name="buttons.pause">Pause</string>

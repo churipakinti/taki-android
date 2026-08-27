@@ -68,7 +68,6 @@
     <string name="background_task.not_found">Fant ikke ressursen. Sjekk tjeneradressen.</string>
     <string name="background_task.parse_error">Forsto ikke svaret. Sjekk tjeneradressen.</string>
     <string name="background_task.ssl_cert_error">HTTPS-sertifikatsfeil: %1$s.</string>
-    <string name="button_bar.bookmarks">Bokmerker</string>
     <string name="button_bar.now_playing">Spilles nå</string>
     <string name="common.play_next">Spill neste</string>
     <string name="common.play_now">Spill nå</string>

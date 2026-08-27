@@ -71,7 +71,6 @@ private const val MEDIA_SONG_STARRED_ID = "MEDIA_SONG_STARRED_ID"
 private const val MEDIA_ARTIST_ID = "MEDIA_ARTIST_ID"
 private const val MEDIA_LIBRARY_ID = "MEDIA_LIBRARY_ID"
 private const val MEDIA_PLAYLIST_ID = "MEDIA_PLAYLIST_ID"
-private const val MEDIA_BOOKMARK_ID = "MEDIA_BOOKMARK_ID"
 private const val MEDIA_ALBUM_ITEM = "MEDIA_ALBUM_ITEM"
 private const val MEDIA_PLAYLIST_SONG_ITEM = "MEDIA_PLAYLIST_SONG_ITEM"
 private const val MEDIA_PLAYLIST_ITEM = "MEDIA_PLAYLIST_ITEM"
@@ -80,7 +79,6 @@ private const val MEDIA_ARTIST_SECTION = "MEDIA_ARTIST_SECTION"
 private const val MEDIA_ALBUM_SONG_ITEM = "MEDIA_ALBUM_SONG_ITEM"
 private const val MEDIA_SONG_STARRED_ITEM = "MEDIA_SONG_STARRED_ITEM"
 private const val MEDIA_SONG_RANDOM_ITEM = "MEDIA_SONG_RANDOM_ITEM"
-private const val MEDIA_BOOKMARK_ITEM = "MEDIA_BOOKMARK_ITEM"
 private const val MEDIA_SEARCH_SONG_ITEM = "MEDIA_SEARCH_SONG_ITEM"
 
 // Currently the display limit for long lists is 100 items
@@ -573,8 +571,6 @@ class MediaLibrarySessionCallback :
 
             MEDIA_SONG_RANDOM_ITEM -> playRandomSong(mediaIdParts[1])
 
-            MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
-
             MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
 
             else -> null
@@ -629,8 +625,6 @@ class MediaLibrarySessionCallback :
             MEDIA_SONG_RANDOM_ID -> getRandomSongs()
 
             MEDIA_SONG_STARRED_ID -> getStarredSongs()
-
-            MEDIA_BOOKMARK_ID -> getBookmarks()
 
             MEDIA_PLAYLIST_ITEM -> getPlaylist(parentIdParts[1], parentIdParts[2])
 
@@ -739,8 +733,6 @@ class MediaLibrarySessionCallback :
             MEDIA_SONG_RANDOM_ID -> playRandomSongs()
 
             MEDIA_SONG_RANDOM_ITEM -> playRandomSong(mediaIdParts[1])
-
-            MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
 
             MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
 
@@ -1146,40 +1138,6 @@ class MediaLibrarySessionCallback :
         val songs = listSongsInMusicService(id, name)
         val song = songs?.getTracks()?.firstOrNull { x -> x.id == songId }
         if (song != null) return listOf(song)
-        return null
-    }
-
-    private fun getBookmarks(): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        val mediaItems: MutableList<MediaItem> = ArrayList()
-        return mainScope.future {
-            val bookmarks = serviceScope.future {
-                callWithErrorHandling { musicService.getBookmarks() }
-            }.await()
-
-            if (bookmarks != null) {
-                val songs = Util.getSongsFromBookmarks(bookmarks)
-
-                songs.getTracks().map { song ->
-                    mediaItems.add(
-                        song.toMediaItem(
-                            listOf(MEDIA_BOOKMARK_ITEM, song.id).joinToString("|")
-                        )
-                    )
-                }
-            }
-            return@future LibraryResult.ofItemList(mediaItems, null)
-        }
-    }
-
-    private fun playBookmark(id: String): List<Track>? {
-        val bookmarks = serviceScope.future {
-            callWithErrorHandling { musicService.getBookmarks() }
-        }.get()
-        if (bookmarks != null) {
-            val songs = Util.getSongsFromBookmarks(bookmarks)
-            val song = songs.getTracks().firstOrNull { song -> song.id == id }
-            if (song != null) return listOf(song)
-        }
         return null
     }
 

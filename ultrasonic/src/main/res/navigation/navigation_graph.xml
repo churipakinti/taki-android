@@ -291,9 +291,6 @@
             app:argType="boolean" />
     </fragment>
     <fragment
-        android:id="@+id/bookmarksFragment"
-        android:name="org.moire.ultrasonic.fragment.BookmarksFragment" />
-    <fragment
         android:id="@+id/settingsFragment"
         android:name="org.moire.ultrasonic.fragment.SettingsFragment">
         <argument

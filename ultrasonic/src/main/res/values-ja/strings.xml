@@ -4,7 +4,6 @@
     <string name="background_task.parse_error">応答が確認できません。サーバーのアドレスを確認してください。</string>
     <string name="background_task.ssl_cert_error">HTTPS証明書エラー: %1$s.</string>
     <string name="background_task.ssl_error">SSL接続が異常です。サーバーの証明書を確認してください。</string>
-    <string name="button_bar.bookmarks">ブックマーク</string>
     <string name="button_bar.now_playing">再生中</string>
     <string name="buttons.pause">一時停止</string>
     <string name="buttons.repeat">リピート</string>

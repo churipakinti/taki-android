@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">未知回复内容，请检查服务器地址。</string>
     <string name="background_task.ssl_cert_error">HTTPS 证书错误：%1$s.</string>
     <string name="background_task.ssl_error">SSL 连接异常。请检查服务器证书。</string>
-    <string name="button_bar.bookmarks">书签</string>
     <string name="button_bar.now_playing">正在播放</string>
     <string name="buttons.play">播放</string>
     <string name="buttons.pause">暂停</string>

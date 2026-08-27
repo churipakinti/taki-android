@@ -29,7 +29,6 @@
     <string name="background_task.ssl_cert_error">Couldn\'t verify this library\'s security certificate. If you trust it, allow self-signed certificates when editing this library.</string>
     <string name="background_task.ssl_error">Couldn\'t securely connect to this library. Please check its address, or allow self-signed certificates when editing this library if you trust it.</string>
     <string name="background_task.unknown_error">Something went wrong. Please try again.</string>
-    <string name="button_bar.bookmarks">Bookmarks</string>
     <string name="button_bar.home">Home</string>
     <string name="home.mix_title">Daily Mix</string>
     <string name="home.mix_song_count">%1$d songs for today</string>

@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">Не понятный ответ. Пожалуйста, проверьте адрес сервера.</string>
     <string name="background_task.ssl_cert_error">Ошибка сертификата HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Исключение SSL-соединения. Пожалуйста, проверьте сертификат сервера.</string>
-    <string name="button_bar.bookmarks">Закладки</string>
     <string name="button_bar.now_playing">Сейчас играет</string>
     <string name="buttons.play">Воспроизведение</string>
     <string name="buttons.pause">Пауза</string>

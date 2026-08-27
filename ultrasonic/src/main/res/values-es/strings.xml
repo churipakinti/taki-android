@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">No se entiende la respuesta. Por favor comprueba la dirección del servidor.</string>
     <string name="background_task.ssl_cert_error">Error del certificado HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Excepción de conexión SSL. Compruebe el certificado del servidor.</string>
-    <string name="button_bar.bookmarks">Marcadores</string>
     <string name="button_bar.now_playing">Reproduciendo ahora</string>
     <string name="buttons.play">Reproducir</string>
     <string name="buttons.pause">Pausar</string>

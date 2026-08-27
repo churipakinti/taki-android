@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">Het antwoord werd niet begrepen. Controleer het serveradres.</string>
     <string name="background_task.ssl_cert_error">HTTPS-certificaatfout: %1$s.</string>
     <string name="background_task.ssl_error">SSL-verbindingsuitzondering. Controleer het servercertificaat.</string>
-    <string name="button_bar.bookmarks">Bladwijzers</string>
     <string name="button_bar.now_playing">Nu aan het afspelen</string>
     <string name="buttons.play">Afspelen</string>
     <string name="buttons.pause">Pauzeren</string>

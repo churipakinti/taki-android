@@ -168,9 +168,6 @@ object Settings {
 
     const val SHOULD_SORT_BY_DISC = true
 
-    var shouldClearBookmark
-        by BooleanSetting(getKey(R.string.setting_key_clear_bookmark), false)
-
     @JvmStatic
     var debugLogToFile by BooleanSetting(getKey(R.string.setting_key_debug_log_to_file), false)
 

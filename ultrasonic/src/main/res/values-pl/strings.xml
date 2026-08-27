@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">Brak prawidłowej odpowiedzi. Proszę sprawdzić adres serwera.</string>
     <string name="background_task.ssl_cert_error">Błąd certyfikatu HTTPS: %1$s.</string>
     <string name="background_task.ssl_error">Błąd połączenia SSL. Proszę sprawdzić certyfikat serwera.</string>
-    <string name="button_bar.bookmarks">Zakładki</string>
     <string name="button_bar.now_playing">Teraz gra</string>
     <string name="buttons.shuffle">Wymieszaj</string>
     <string name="button_bar.search">Szukaj</string>

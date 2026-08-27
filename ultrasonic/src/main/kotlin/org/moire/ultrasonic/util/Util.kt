@@ -61,7 +61,6 @@ import kotlin.math.roundToInt
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.app.UApp.Companion.applicationContext
-import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.MusicDirectory
 import org.moire.ultrasonic.domain.SearchResult
 import org.moire.ultrasonic.domain.Track
@@ -334,18 +333,6 @@ object Util {
         val musicDirectory = MusicDirectory()
         for (entry in searchResult.songs) {
             musicDirectory.add(entry)
-        }
-        return musicDirectory
-    }
-
-    @JvmStatic
-    fun getSongsFromBookmarks(bookmarks: Iterable<Bookmark>): MusicDirectory {
-        val musicDirectory = MusicDirectory()
-        var song: Track
-        for (bookmark in bookmarks) {
-            song = bookmark.track
-            song.bookmarkPosition = bookmark.position
-            musicDirectory.add(song)
         }
         return musicDirectory
     }

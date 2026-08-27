@@ -6,7 +6,6 @@
     <string name="background_task.parse_error">Risposta non comprensibile. Si prega di controllare l\'indirizzo del server.</string>
     <string name="background_task.ssl_cert_error">Errore certificato HTTPS. %1$s.</string>
     <string name="background_task.ssl_error">Anomalia connessione SSL. Si prega di controllare il certificato del server.</string>
-    <string name="button_bar.bookmarks">Segnalibri</string>
     <string name="button_bar.now_playing">In riproduzione</string>
     <string name="buttons.shuffle">Casuale</string>
     <string name="button_bar.search">Cerca</string>

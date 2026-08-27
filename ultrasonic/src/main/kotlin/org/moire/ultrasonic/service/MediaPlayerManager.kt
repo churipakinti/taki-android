@@ -186,7 +186,6 @@ class MediaPlayerManager(
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            clearBookmark()
             // TRANSITION_REASON_AUTO means that the previous track finished playing and a new one has started.
             if (reason == MEDIA_ITEM_TRANSITION_REASON_AUTO && cachedMediaItem != null) {
                 scrobbler.scrobble(cachedMediaItem?.toTrack(), true)
@@ -426,21 +425,6 @@ class MediaPlayerManager(
 
     fun addListener(listener: Player.Listener) {
         controller?.addListener(listener)
-    }
-
-    private fun clearBookmark() {
-        // This method is called just before we update the cachedMediaItem,
-        // so in fact cachedMediaItem will refer to the track that has just finished.
-        if (cachedMediaItem != null) {
-            val song = cachedMediaItem!!.toTrack()
-            if (song.bookmarkPosition > 0 && Settings.shouldClearBookmark) {
-                val musicService = getMusicService()
-                try {
-                    musicService.deleteBookmark(song.id)
-                } catch (ignored: Exception) {
-                }
-            }
-        }
     }
 
     private fun publishPlaybackState() {

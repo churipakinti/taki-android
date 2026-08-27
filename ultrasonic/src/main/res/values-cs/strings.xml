@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">Nesrozumitelná odpověď. Ověřte adresu serveru.</string>
     <string name="background_task.ssl_cert_error">Chyba HTTPS certifikátu: %1$s.</string>
     <string name="background_task.ssl_error">Vyjímka SSL připojení. Ověřte certifikát serveru.</string>
-    <string name="button_bar.bookmarks">Záložky</string>
     <string name="button_bar.now_playing">Právě hraje</string>
     <string name="buttons.shuffle">Náhodně</string>
     <string name="button_bar.search">Hledat</string>

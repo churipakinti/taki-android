@@ -7,7 +7,6 @@
     <string name="background_task.parse_error">Értelmezhetetlen válasz! Kérjük, ellenőrizze a kiszolgáló címét!</string>
     <string name="background_task.ssl_cert_error">HTTPS tanúsítványhiba: %1$s.</string>
     <string name="background_task.ssl_error">SSL kapcsolat kivétel. Kérjük, ellenőrizze a szerver tanúsítványát.</string>
-    <string name="button_bar.bookmarks">Könyvjelzők</string>
     <string name="button_bar.now_playing">Lejátszó</string>
     <string name="buttons.play">Lejátszás</string>
     <string name="buttons.pause">Szünet</string>
