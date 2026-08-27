@@ -32,7 +32,6 @@ import org.moire.ultrasonic.domain.Lyrics
 import org.moire.ultrasonic.domain.MusicDirectory
 import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
-import org.moire.ultrasonic.domain.PodcastsChannel
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
 import org.moire.ultrasonic.domain.Share
@@ -344,34 +343,6 @@ open class RESTMusicService(
     ) {
         API.updatePlaylistSuspend(id, name, comment, pub, null, songIndexesToRemove)
             .throwOnFailure()
-    }
-
-    @Throws(Exception::class)
-    override fun getPodcastsChannels(refresh: Boolean): List<PodcastsChannel> {
-        val response = API.getPodcasts(false, null).execute().throwOnFailure()
-
-        return response.body()!!.podcastChannels.toDomainEntitiesList()
-    }
-
-    @Throws(Exception::class)
-    override fun getPodcastEpisodes(podcastChannelId: String?): MusicDirectory {
-        val response = API.getPodcasts(true, podcastChannelId).execute().throwOnFailure()
-
-        val podcastEntries = response.body()!!.podcastChannels[0].episodeList
-        val musicDirectory = MusicDirectory()
-
-        for (podcastEntry in podcastEntries) {
-            if (
-                "skipped" != podcastEntry.status &&
-                "error" != podcastEntry.status
-            ) {
-                val entry = podcastEntry.toTrackEntity(activeServerId)
-                entry.track = null
-                musicDirectory.add(entry)
-            }
-        }
-
-        return musicDirectory
     }
 
     @Throws(Exception::class)

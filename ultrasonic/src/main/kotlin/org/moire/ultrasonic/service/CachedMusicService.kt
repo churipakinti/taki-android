@@ -26,7 +26,6 @@ import org.moire.ultrasonic.domain.Lyrics
 import org.moire.ultrasonic.domain.MusicDirectory
 import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
-import org.moire.ultrasonic.domain.PodcastsChannel
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
 import org.moire.ultrasonic.domain.Share
@@ -51,8 +50,6 @@ class CachedMusicService(private val musicService: MusicService) :
     private val cachedUserInfo: LRUCache<String, TimeLimitedCache<UserInfo?>>
     private val cachedLicenseValid = TimeLimitedCache<Boolean>(120, TimeUnit.SECONDS)
     private val cachedPlaylists = TimeLimitedCache<List<Playlist>?>(3600, TimeUnit.SECONDS)
-    private val cachedPodcastsChannels =
-        TimeLimitedCache<List<PodcastsChannel>?>(3600, TimeUnit.SECONDS)
     private val cachedGenres = TimeLimitedCache<List<Genre>>(10 * 3600, TimeUnit.SECONDS)
 
     // New Room Database
@@ -316,21 +313,6 @@ class CachedMusicService(private val musicService: MusicService) :
     @Throws(Exception::class)
     override suspend fun getPlaylist(id: String, name: String): MusicDirectory =
         musicService.getPlaylist(id, name)
-
-    @Throws(Exception::class)
-    override fun getPodcastsChannels(refresh: Boolean): List<PodcastsChannel> {
-        checkSettingsChanged()
-        var result = if (refresh) null else cachedPodcastsChannels.get()
-        if (result == null) {
-            result = musicService.getPodcastsChannels(refresh)
-            cachedPodcastsChannels.set(result)
-        }
-        return result
-    }
-
-    @Throws(Exception::class)
-    override fun getPodcastEpisodes(podcastChannelId: String?): MusicDirectory? =
-        musicService.getPodcastEpisodes(podcastChannelId)
 
     @Throws(Exception::class)
     override suspend fun getPlaylists(refresh: Boolean): List<Playlist> {

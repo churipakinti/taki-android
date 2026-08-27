@@ -20,7 +20,6 @@ import org.moire.ultrasonic.domain.Lyrics
 import org.moire.ultrasonic.domain.MusicDirectory
 import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
-import org.moire.ultrasonic.domain.PodcastsChannel
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
 import org.moire.ultrasonic.domain.Share
@@ -92,9 +91,6 @@ interface MusicService {
 
     @Throws(Exception::class)
     suspend fun getPlaylist(id: String, name: String): MusicDirectory
-
-    @Throws(Exception::class)
-    fun getPodcastsChannels(refresh: Boolean): List<PodcastsChannel>
 
     @Throws(Exception::class)
     suspend fun getPlaylists(refresh: Boolean): List<Playlist>
@@ -222,7 +218,4 @@ interface MusicService {
 
     @Throws(Exception::class)
     fun updateShare(id: String, description: String?, expires: Long?)
-
-    @Throws(Exception::class)
-    fun getPodcastEpisodes(podcastChannelId: String?): MusicDirectory?
 }

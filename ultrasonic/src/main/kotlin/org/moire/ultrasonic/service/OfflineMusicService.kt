@@ -36,7 +36,6 @@ import org.moire.ultrasonic.domain.Lyrics
 import org.moire.ultrasonic.domain.MusicDirectory
 import org.moire.ultrasonic.domain.MusicFolder
 import org.moire.ultrasonic.domain.Playlist
-import org.moire.ultrasonic.domain.PodcastsChannel
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.SearchResult
 import org.moire.ultrasonic.domain.Share
@@ -514,10 +513,6 @@ class OfflineMusicService :
     override suspend fun getSong(id: String): Track? = cachedTracks.get(id)
 
     @Throws(OfflineException::class)
-    override fun getPodcastEpisodes(podcastChannelId: String?): MusicDirectory =
-        throw OfflineException("getPodcastEpisodes isn't available in offline mode")
-
-    @Throws(OfflineException::class)
     override fun getDownloadInputStream(
         song: Track,
         offset: Long,
@@ -529,10 +524,6 @@ class OfflineMusicService :
     @Throws(OfflineException::class)
     override fun setRating(id: String, rating: Int): Unit =
         throw OfflineException("setRating isn't available in offline mode")
-
-    @Throws(OfflineException::class)
-    override fun getPodcastsChannels(refresh: Boolean): List<PodcastsChannel> =
-        throw OfflineException("getPodcastsChannels isn't available in offline mode")
 
     private fun getName(fileName: String, isDirectory: Boolean): String? {
         if (isDirectory) {
