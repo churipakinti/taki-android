@@ -57,8 +57,6 @@ import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Settings.id3TagsEnabledOnline
 import org.moire.ultrasonic.util.Settings.preferences
 import org.moire.ultrasonic.util.Storage
-import org.moire.ultrasonic.util.TimeSpanPreference
-import org.moire.ultrasonic.util.TimeSpanPreferenceDialogFragmentCompat
 import org.moire.ultrasonic.util.Util.formatBytes
 import org.moire.ultrasonic.util.Util.toast
 import timber.log.Timber
@@ -198,31 +196,10 @@ class SettingsFragment :
                 is EditTextPreference -> {
                     pref.summary = pref.text
                 }
-
-                is TimeSpanPreference -> {
-                    pref.summary = pref.text
-                }
             }
         } catch (ignored: Exception) {
             // If we have updated a ListPreferences possible values, and the user has now an
             // impossible value, getEntry() will throw an Exception.
-        }
-    }
-
-    override fun onDisplayPreferenceDialog(preference: Preference) {
-        if (preference is TimeSpanPreference) {
-            val dialogFragment = TimeSpanPreferenceDialogFragmentCompat()
-            val bundle = Bundle(1)
-            bundle.putString("key", preference.key)
-            dialogFragment.arguments = bundle
-            @Suppress("DEPRECATION") // Their own super class uses this call :shrug:
-            dialogFragment.setTargetFragment(this, 0)
-            dialogFragment.show(
-                this.parentFragmentManager,
-                "androidx.preference.PreferenceFragment.DIALOG"
-            )
-        } else {
-            super.onDisplayPreferenceDialog(preference)
         }
     }
 

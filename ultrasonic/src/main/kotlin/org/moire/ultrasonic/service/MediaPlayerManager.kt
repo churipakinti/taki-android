@@ -812,7 +812,6 @@ class MediaPlayerManager(
         tracks: List<Track> = listOf(),
         id: String? = null,
         name: String? = "",
-        isShare: Boolean = false,
         isDirectory: Boolean = true,
         shuffle: Boolean = false,
         isArtist: Boolean = false
@@ -821,7 +820,7 @@ class MediaPlayerManager(
             val list: List<Track> =
                 tracks.ifEmpty {
                     requireNotNull(id)
-                    DownloadUtil.getTracksFromServerAsync(isArtist, id, isDirectory, name, isShare)
+                    DownloadUtil.getTracksFromServerAsync(isArtist, id, isDirectory, name)
                 }
 
             addToPlaylistAsync(

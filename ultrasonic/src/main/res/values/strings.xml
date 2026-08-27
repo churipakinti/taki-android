@@ -80,7 +80,6 @@
     <string name="buttons.previous">Previous</string>
     <string name="buttons.queue">Queue</string>
     <string name="button_bar.search">Search</string>
-    <string name="common.album">Album</string>
     <string name="taki.appname" translatable="false">Taki</string>
     <string name="common.artist">Artist</string>
     <string name="common.cancel">Cancel</string>
@@ -359,29 +358,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Do not show dialog again</string>
-    <string name="share_set_share_options">Set Share Options</string>
-    <string name="share_on_server">Create share</string>
-    <string name="no_expiration">No Expiration</string>
     <string name="download.menu_star">Like</string>
     <string name="download.menu_clear_playlist">Clear Playlist</string>
-    <string name="button_bar.shares">Shares</string>
-    <string name="select_share.empty">No shares available</string>
-    <string name="menu_deleted_share">Deleted share %s</string>
-    <string name="menu_deleted_share_error">Failed to delete share %s</string>
-    <string name="settings.share_minutes">Minutes</string>
-    <string name="settings.share_hours">Hours</string>
-    <string name="settings.share_days">Days</string>
-    <string name="time_span_disable">Disable</string>
-    <string name="time_span_disabled">Disabled</string>
-    <string name="save_as_defaults">Save as default</string>
-    <string name="share_comment">Comment</string>
-    <string name="settings.share_expiration">Time To Expiration</string>
-    <string name="settings.share_options">Options</string>
     <string name="download_song_removed">\"%s\" was removed from playlist</string>
-    <string name="share_default_greeting">Check out this music I shared from %s</string>
-    <string name="share_via">Share songs via</string>
-    <string name="menu.share">Share</string>
     <string name="download.menu_show_artist">Go to Artist</string>
     <string name="albumArt">Album artwork</string>
     <string name="common_multiple_years">Multiple Years</string>

@@ -10,7 +10,6 @@
     <string name="buttons.next">下一首</string>
     <string name="buttons.previous">上一首</string>
     <string name="button_bar.search">搜尋</string>
-    <string name="common.album">專輯</string>
     <string name="common.artist">歌手</string>
     <string name="common.cancel">取消</string>
     <string name="common.comment">註記</string>
@@ -89,8 +88,6 @@
     <string name="settings.max_bitrate_mobile">最大位元速率 - 行動網路</string>
     <string name="settings.max_bitrate_wifi">最大位元速率 - 無線網路</string>
     <string name="settings.server_name">名稱</string>
-    <string name="time_span_disabled">已停用</string>
-    <string name="share_comment">註記</string>
     <string name="server_menu.delete">刪除</string>
     <string name="download.menu_show_album">轉至專輯</string>
     <string name="language.zh_CN">簡體中文（中國）</string>
@@ -159,18 +156,14 @@
     <string name="select_artist.all_folders">所有資料夾</string>
     <string name="select_artist.folder">選擇資料夾</string>
     <string name="select_playlist.empty">伺服器上沒有已保存的播放清單</string>
-    <string name="settings.share_minutes">分鐘</string>
     <string name="util.zero_time">0:00</string>
-    <string name="settings.share_hours">小時</string>
     <string name="server_editor.authentication">認證</string>
     <string name="settings.server_address">伺服器地址</string>
     <string name="settings.override_language">覆寫當前語言</string>
     <string name="main.video" tools:ignore="UnusedResources">影片</string>
-    <string name="time_span_disable">禁用</string>
     <string name="song_details.kbps">%d kbps</string>
     <string name="settings.server_color">伺服器顏色</string>
     <string name="settings.server_username">用戶名</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="settings.server_password">密碼</string>
-    <string name="settings.share_days">天</string>
 </resources>

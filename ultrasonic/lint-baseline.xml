@@ -1006,17 +1006,6 @@
     </issue>
 
     <issue
-        id="LabelFor"
-        message="Missing accessibility label: provide either a view with an `android:labelFor` that references this view or provide an `android:hint`"
-        errorLine1="        &lt;EditText"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="src/main/res/layout/time_span_dialog.xml"
-            line="28"
-            column="10"/>
-    </issue>
-
-    <issue
         id="SetTextI18n"
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
         errorLine1="        holder.rank.text = (adapter.items.indexOf(item) + 1).toString()"

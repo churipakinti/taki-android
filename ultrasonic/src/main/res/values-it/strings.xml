@@ -136,18 +136,7 @@
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
     <string name="download.menu_clear_playlist">Cancella la playlist</string>
-    <string name="settings.share_minutes">Minuti</string>
-    <string name="settings.share_hours">Ore</string>
-    <string name="settings.share_days">Giorni</string>
-    <string name="time_span_disable">Disabilita</string>
-    <string name="time_span_disabled">Disabilitato</string>
-    <string name="save_as_defaults">Salva come predefinito</string>
-    <string name="share_comment">Commenta</string>
     <string name="download_song_removed">«%s» è stato rimosso dalla playlist</string>
-    <string name="share_via">Condividi canzoni via</string>
     <string name="server_menu.delete">Elimina</string>
     <string name="api.subsonic.trial_period_is_over">Il periodo di prova è terminato.</string>
-    <string name="button_bar.shares">Condivisioni</string>
-    <string name="select_share.empty">Nessuna condivisione disponibile sul server</string>
-    <string name="menu_deleted_share">Condivisione eliminata %s</string>
 </resources>

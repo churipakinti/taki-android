@@ -71,11 +71,6 @@
         <item>@string/settings.quality_maximum</item>
         <item>@string/settings.quality_original</item>
     </string-array>
-    <string-array name="shareExpirationNames" translatable="false">
-        <item>@string/settings.share_minutes</item>
-        <item>@string/settings.share_hours</item>
-        <item>@string/settings.share_days</item>
-    </string-array>
     <string-array name="languageNames" translatable="false">
         <item>@string/language.default</item>
         <item>@string/language.zh_CN</item>

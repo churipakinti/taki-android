@@ -143,27 +143,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">A párbeszédablak ne jelenjen meg többé</string>
-    <string name="share_set_share_options">Megosztás beállításai</string>
-    <string name="no_expiration">Nincs lejárati idő</string>
     <string name="download.menu_star">Csillag</string>
     <string name="download.menu_clear_playlist">Clear Playlist</string>
-    <string name="button_bar.shares">Megosztás</string>
-    <string name="select_share.empty">Nincs mentett megosztás a kiszolgálón.</string>
-    <string name="menu_deleted_share">%s megosztás törölve</string>
-    <string name="menu_deleted_share_error">%s megosztás törlése sikertelen!</string>
-    <string name="settings.share_minutes">Perc</string>
-    <string name="settings.share_hours">Óra</string>
-    <string name="settings.share_days">Nap</string>
-    <string name="time_span_disable">Letiltva</string>
-    <string name="time_span_disabled">Letiltva</string>
-    <string name="save_as_defaults">Mentés alapértelmezésként</string>
-    <string name="share_comment">Megjegyzés</string>
-    <string name="settings.share_expiration">Lejárati idő</string>
     <string name="download_song_removed">\"%s\" eltávolítva a várólistáról</string>
-    <string name="share_default_greeting">Hallgasd meg ezt a zenét, megosztottam innen: %s</string>
-    <string name="share_via">Dalok megosztása ezzel</string>
-    <string name="menu.share">Megosztás</string>
     <string name="download.menu_show_artist">Ugrás az előadóhoz</string>
     <string name="common_multiple_years">Több év</string>
     <string name="settings.debug.title">Hibakeresési lehetőségek</string>
@@ -201,5 +183,4 @@
     <string name="api.subsonic.upgrade_client">Nem kompatibilis verzió. Kérjük, frissítse az Taki Android alkalmazást!</string>
     <string name="api.subsonic.upgrade_server">Nem kompatibilis verzió. Kérjük, frissítse a Subsonic kiszolgálót!</string>
     <!-- Subsonic features  -->
-    <string name="common.album">Album</string>
 </resources>

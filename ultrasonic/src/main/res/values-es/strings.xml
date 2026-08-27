@@ -18,7 +18,6 @@
     <string name="buttons.previous">Anterior</string>
     <string name="buttons.queue">Cola</string>
     <string name="button_bar.search">Buscar</string>
-    <string name="common.album">Álbum</string>
     <string name="common.artist">Artista</string>
     <string name="common.cancel">Cancelar</string>
     <string name="common.navigate_back">Volver</string>
@@ -241,28 +240,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">No mostrar el diálogo de nuevo</string>
-    <string name="share_set_share_options">Configurar las opciones de compartir</string>
-    <string name="share_on_server">Crear recurso compartido en el servidor </string>
-    <string name="no_expiration">Sin caducidad</string>
     <string name="download.menu_star">Estrella</string>
     <string name="download.menu_clear_playlist">Limpiar lista de reproducción</string>
-    <string name="button_bar.shares">Compartidos</string>
-    <string name="select_share.empty">No hay compartidos disponibles en el servidor</string>
-    <string name="menu_deleted_share">Eliminar compartido %s</string>
-    <string name="menu_deleted_share_error">Fallo al eliminar compartido %s</string>
-    <string name="settings.share_minutes">Minutos</string>
-    <string name="settings.share_hours">Horas</string>
-    <string name="settings.share_days">Días</string>
-    <string name="time_span_disable">Desactivar</string>
-    <string name="time_span_disabled">Desactivado</string>
-    <string name="save_as_defaults">Guardar como predeterminado</string>
-    <string name="share_comment">Comentario</string>
-    <string name="settings.share_expiration">Tiempo de caducidad</string>
     <string name="download_song_removed">\"%s\" fue eliminado/a de la lista de reproducción</string>
-    <string name="share_default_greeting">Echa un vistazo a esta música que te comparto desde %s</string>
-    <string name="share_via">Compartir canciones vía</string>
-    <string name="menu.share">Compartir</string>
     <string name="download.menu_show_artist">Ir al artista</string>
     <string name="albumArt">Portadas de álbumes</string>
     <string name="common_multiple_years">Múltiples años</string>
@@ -351,7 +331,6 @@
         <item quantity="many">%d de canciones añadidas a la cola de reproducción</item>
         <item quantity="other">%d canciones añadidas a la cola de reproducción</item>
     </plurals>
-    <string name="settings.share_options">Opciones</string>
     <string name="settings.replaygain_title">Modo ReplayGain</string>
     <string name="settings.replaygain_disabled">Desactivado</string>
     <string name="settings.replaygain_dynamic">Pista, a menos que se esté reproduciendo un álbum</string>

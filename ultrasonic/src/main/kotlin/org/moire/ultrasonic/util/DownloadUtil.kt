@@ -29,7 +29,6 @@ object DownloadUtil {
         fragment: Fragment,
         id: String? = null,
         name: String? = "",
-        isShare: Boolean = false,
         isDirectory: Boolean = true,
         isArtist: Boolean = false,
         tracks: List<Track>? = null
@@ -37,7 +36,7 @@ object DownloadUtil {
         // Launch the Job
         fragment.launchWithToast {
             val tracksToDownload: List<Track> = tracks
-                ?: getTracksFromServerAsync(isArtist, id!!, isDirectory, name, isShare)
+                ?: getTracksFromServerAsync(isArtist, id!!, isDirectory, name)
 
             // If we are just downloading tracks we don't need to add them to the controller.
             // "Download" always saves permanently (previously the separate "Pin" behavior) --
@@ -62,18 +61,16 @@ object DownloadUtil {
         isArtist: Boolean,
         id: String,
         isDirectory: Boolean,
-        name: String?,
-        isShare: Boolean
+        name: String?
     ): MutableList<Track> = withContext(Dispatchers.IO) {
-        getTracksFromServer(isArtist, id, isDirectory, name, isShare)
+        getTracksFromServer(isArtist, id, isDirectory, name)
     }
 
     suspend fun getTracksFromServer(
         isArtist: Boolean,
         id: String,
         isDirectory: Boolean,
-        name: String?,
-        isShare: Boolean
+        name: String?
     ): MutableList<Track> {
         val musicService = MusicServiceFactory.getMusicService()
         val songs: MutableList<Track> = LinkedList()
@@ -87,12 +84,6 @@ object DownloadUtil {
                 } else {
                     musicService.getMusicDirectory(id, name, false)
                 }
-            } else if (isShare) {
-                root = MusicDirectory()
-                val shares = musicService.getShares(true)
-                // Filter the received shares by the given id, and get their entries
-                val entries = shares.filter { it.id == id }.flatMap { it.getEntries() }
-                root.addAll(entries)
             } else {
                 root = musicService.getPlaylist(id, name!!)
             }

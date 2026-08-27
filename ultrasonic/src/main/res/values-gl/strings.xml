@@ -17,7 +17,6 @@
     <string name="buttons.previous">Anterior</string>
     <string name="button_bar.search">Buscar</string>
     <string name="button_bar.bookmarks">Marcadores</string>
-    <string name="common.album">Álbum</string>
     <string name="common.comment">Comentar</string>
     <string name="common.confirm">Confirmar</string>
     <string name="common.delete">Borrar</string>
@@ -150,9 +149,7 @@
     <string name="settings.title.force_plain_text_password">Forzar autenticación con contrasinal en texto plano</string>
     <string name="settings.summary.force_plain_text_password">Isto fai que se envíe o contrasinal sen cifrar. É útil se o servidor Subsonic non ten soporte para a nova API de autenticación para usuarias.</string>
     <string name="settings.wifi_required_summary">Permitir a descarga só con conexións non cuantificadas</string>
-    <string name="share_set_share_options">Establecer Opcións ao Compartir</string>
     <string name="download.menu_clear_playlist">Crear Lista de reprodución</string>
-    <string name="settings.share_options">Opcións</string>
     <string name="settings.show_confirmation_dialog">Mostrar diálogo de confirmación</string>
     <string name="settings.debug.title">Opcións de depuración</string>
     <string name="settings.debug.log_deleted">Eliminados os ficheiros de rexistro.</string>
@@ -176,8 +173,6 @@
     </plurals>
     <string name="settings.cache_size_25000">25 GB</string>
     <string name="download.menu_star">Estrela</string>
-    <string name="button_bar.shares">A Compartir</string>
-    <string name="share_via">Compartir cancións vía</string>
     <string name="common_multiple_years">Varios Anos</string>
     <string name="settings.debug.log_to_file">Escribir ficheiro de depuración en</string>
     <string name="settings.debug.log_summary">Hai %1$s ficheiros do rexistro que ocupan ~%2$s MB de espazo no directorio %3$s. Queres conservalos?</string>
@@ -225,20 +220,11 @@
     <string name="settings.use_id3">Navegar usando Etiquetas ID3</string>
     <string name="settings.use_id3_summary">Usar os valores das etiquetas ID3 no lugar de métodos baseados en sistemas de ficheiros</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="no_expiration">Sen caducidade</string>
-    <string name="select_share.empty">Non hai recursos compartidos no servidor</string>
-    <string name="menu_deleted_share_error">Fallou a eliminación do compartido %s</string>
-    <string name="settings.share_minutes">Minutos</string>
-    <string name="settings.share_hours">Horas</string>
-    <string name="settings.share_days">Días</string>
-    <string name="time_span_disable">Desactivar</string>
-    <string name="time_span_disabled">Desactivado</string>
     <string name="settings.debug.log_path">Os ficheiros de depuración están dispoñibles en %1$s/%2$s</string>
     <string name="server_editor.advanced">Axustes avanzados</string>
     <string name="api.subsonic.not_authorized">Non autorizado. Comproba os permisos da usuaria no servidor Subsonic.</string>
     <string name="api.subsonic.param_missing">Falta o parámetro requerido.</string>
     <string name="api.subsonic.requested_data_was_not_found">Non se atoparon os datos solicitados.</string>
-    <string name="menu_deleted_share">Non estás a compartir %s</string>
     <string name="settings.use_hw_offload_title">Usar reprodución por hardware (experimental)</string>
     <plurals name="n_songs">
         <item quantity="one">%d canción</item>
@@ -255,9 +241,6 @@
     <string name="settings.wifi_required_title">Descargar só con Wi-Fi</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Non mostrar diálogo outra vez</string>
-    <string name="share_on_server">Compartir un recurso no servidor</string>
-    <string name="settings.share_expiration">Tempo para caducar</string>
     <string name="settings.debug.log_delete">Desbotar ficheiros</string>
     <string name="notification.downloading_title">A descargar en segundo plano o multimedia…</string>
     <string name="server_editor.new_label">Engadir servidor</string>
@@ -271,11 +254,7 @@
     <string name="server_selector.label">Servidores engadidos</string>
     <string name="server_selector.delete_confirmation">Tes a certeza de querer retirar o servidor?</string>
     <string name="server_editor.label">A editar o servidor</string>
-    <string name="save_as_defaults">Establecer por defecto</string>
-    <string name="share_comment">Comentar</string>
     <string name="download_song_removed">Retirouse \"%s\" da lista de reprodución</string>
-    <string name="share_default_greeting">Mira esta canción que comparto desde %s</string>
-    <string name="menu.share">Compartir</string>
     <string name="download.menu_show_artist">Ir a Artista</string>
     <string name="albumArt">Imaxes do Álbum</string>
     <string name="settings.replaygain_title">Modo para ReplayGain</string>

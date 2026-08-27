@@ -17,7 +17,6 @@
     <string name="buttons.next">Suivant</string>
     <string name="buttons.previous">Précédent</string>
     <string name="button_bar.search">Recherche</string>
-    <string name="common.album">Album</string>
     <string name="common.artist">Artiste</string>
     <string name="common.cancel">Annuler</string>
     <string name="common.comment">Commenter</string>
@@ -171,28 +170,9 @@
     <string name="song_details.kbps">%d kbits/s</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Ne montre pas de dialogue à nouveau</string>
-    <string name="share_set_share_options">Définir les options de partage</string>
-    <string name="share_on_server">Créer un partage sur le serveur</string>
-    <string name="no_expiration">Aucune date d\'expiration</string>
     <string name="download.menu_star">Étoiler</string>
     <string name="download.menu_clear_playlist">Effacer la liste de lecture</string>
-    <string name="button_bar.shares">Partages</string>
-    <string name="select_share.empty">Pas de partages disponibles sur le serveur</string>
-    <string name="menu_deleted_share">Partage supprimé %s</string>
-    <string name="menu_deleted_share_error">Échec de la suppression du partage %s</string>
-    <string name="settings.share_minutes">Minutes</string>
-    <string name="settings.share_hours">Heures</string>
-    <string name="settings.share_days">Jours</string>
-    <string name="time_span_disable">Désactiver</string>
-    <string name="time_span_disabled">Désactivé</string>
-    <string name="save_as_defaults">Enregistrer par défaut</string>
-    <string name="share_comment">Commentaire</string>
-    <string name="settings.share_expiration">Temps d\'expiration</string>
     <string name="download_song_removed">« %s » a été supprimé de la liste de lecture</string>
-    <string name="share_default_greeting">Écoutez donc cette musique que j\'ai partagée depuis %s</string>
-    <string name="share_via">Partager des titres via</string>
-    <string name="menu.share">Partager</string>
     <string name="download.menu_show_artist">Aller à l\'artiste</string>
     <string name="common_multiple_years">Années multiples</string>
     <string name="settings.debug.title">Paramètres de debug</string>
@@ -271,7 +251,6 @@
         <item quantity="other">%d chansons insérées après la chanson en cours</item>
     </plurals>
     <string name="settings.max_bitrate_pinning">Débit binaire maximal - Lors de l\'épinglage permanent d\'une chanson</string>
-    <string name="settings.share_options">Options</string>
     <plurals name="n_songs_added_play_now">
         <item quantity="one">%d chanson ajoutée à la file de jeu</item>
         <item quantity="many">%d chansons ajoutées à la file de jeu</item>

@@ -6,7 +6,6 @@ import org.moire.ultrasonic.service.MediaPlayerLifecycleSupport
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.PlaybackStateSerializer
 import org.moire.ultrasonic.subsonic.NetworkAndStorageChecker
-import org.moire.ultrasonic.subsonic.ShareHandler
 
 /**
  * This Koin module contains the registration of classes related to the media player
@@ -17,7 +16,6 @@ val mediaPlayerModule = module {
     single { PlaybackStateSerializer() }
     single { ExternalStorageMonitor() }
     single { NetworkAndStorageChecker() }
-    single { ShareHandler() }
 
     // These MUST be singletons, for the media playback must work headless (without an activity)
     single { MediaPlayerManager(get(), get()) }

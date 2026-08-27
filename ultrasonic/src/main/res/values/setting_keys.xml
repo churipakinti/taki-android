@@ -15,11 +15,6 @@
     <string name="setting_key.id3_tags" translatable="false">useId3Tags</string>
     <string name="setting_key.id3_tags_offline" translatable="false">useId3TagsOffline</string>
     <string name="setting_key.clear_bookmark" translatable="false">clearBookmark</string>
-    <string name="setting_key.ask_for_share_details" translatable="false">sharingAlwaysAskForDetails</string>
-    <string name="setting_key.default_share_description" translatable="false">sharingDefaultDescription</string>
-    <string name="setting_key.default_share_greeting" translatable="false">sharingDefaultGreeting</string>
-    <string name="setting_key.share_on_server" translatable="false">sharingCreateOnServer</string>
-    <string name="setting_key.default_share_expiration" translatable="false">sharingDefaultExpiration</string>
     <string name="setting_key.hardware_offload" translatable="false">use_hw_offload</string>
     <string name="setting_key.first_run_executed" translatable="false">firstRunExecuted</string>
     <string name="setting_key.debug_log_to_file" translatable="false">debugLogToFile</string>

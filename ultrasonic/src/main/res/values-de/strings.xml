@@ -17,7 +17,6 @@
     <string name="buttons.next">Nächstes</string>
     <string name="buttons.previous">Vorheriges</string>
     <string name="button_bar.search">Suche</string>
-    <string name="common.album">Album</string>
     <string name="common.artist">Künstler</string>
     <string name="common.cancel">Abbrechen</string>
     <string name="common.comment">Kommentar</string>
@@ -175,28 +174,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Dialog nicht wieder anzeigen</string>
-    <string name="share_set_share_options">Freigabeoptionen</string>
-    <string name="share_on_server">Freigabe auf Server erstellen</string>
-    <string name="no_expiration">Kein Ablaufdatum</string>
     <string name="download.menu_star">Stern</string>
     <string name="download.menu_clear_playlist">Wiedergabeliste löschen</string>
-    <string name="button_bar.shares">Freigaben</string>
-    <string name="select_share.empty">Keine Freigaben auf dem Server verfügbar</string>
-    <string name="menu_deleted_share">Freigabe %s gelöscht</string>
-    <string name="menu_deleted_share_error">Löschen der Freigabe %s fehlgeschlagen</string>
-    <string name="settings.share_minutes">Minuten</string>
-    <string name="settings.share_hours">Stunden</string>
-    <string name="settings.share_days">Tage</string>
-    <string name="time_span_disable">Deaktivieren</string>
-    <string name="time_span_disabled">Deaktiviert</string>
-    <string name="save_as_defaults">Als Standard speichern</string>
-    <string name="share_comment">Kommentar</string>
-    <string name="settings.share_expiration">Ablaufzeit</string>
     <string name="download_song_removed">%s wurde von der Wiedergabeliste entfernt</string>
-    <string name="share_default_greeting">Hör dir mal die Musik an, die ich mit dir über %s geteilt habe.</string>
-    <string name="share_via">Titel teilen über</string>
-    <string name="menu.share">Freigabe</string>
     <string name="download.menu_show_artist">Künstler anzeigen</string>
     <string name="common_multiple_years">Mehrere Jahre</string>
     <string name="settings.show_confirmation_dialog">Zeige Bestätigungsdialog</string>
@@ -277,7 +257,6 @@
         <item quantity="one">Ein Titel wurde zur Wiedergabeliste hinzugefügt</item>
         <item quantity="other">%d Titel wurden zur Wiedergabeliste hinzugefügt</item>
     </plurals>
-    <string name="settings.share_options">Optionen</string>
     <string name="main.albums_byGenre">Nach Genre</string>
     <string name="settings.replaygain_title">ReplayGain-Modus</string>
     <string name="settings.replaygain_disabled">Deaktiviert</string>

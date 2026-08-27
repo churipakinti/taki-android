@@ -17,7 +17,6 @@
     <string name="buttons.next">Volgende</string>
     <string name="buttons.previous">Vorige</string>
     <string name="button_bar.search">Zoeken</string>
-    <string name="common.album">Album</string>
     <string name="common.artist">Artiest</string>
     <string name="common.cancel">Annuleren</string>
     <string name="common.comment">Reageren</string>
@@ -176,28 +175,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Niet meer tonen</string>
-    <string name="share_set_share_options">Deelopties instellen</string>
-    <string name="share_on_server">Delen op server</string>
-    <string name="no_expiration">Geen vervaldatum</string>
     <string name="download.menu_star">Toevoegen aan favorieten</string>
     <string name="download.menu_clear_playlist">Afspeellijst wissen</string>
-    <string name="button_bar.shares">Delingen</string>
-    <string name="select_share.empty">Geen delingen beschikbaar op server</string>
-    <string name="menu_deleted_share">Deling %s verwijderd</string>
-    <string name="menu_deleted_share_error">Kan deling %s niet verwijderen</string>
-    <string name="settings.share_minutes">Minuten</string>
-    <string name="settings.share_hours">Uur</string>
-    <string name="settings.share_days">Dagen</string>
-    <string name="time_span_disable">Uitschakelen</string>
-    <string name="time_span_disabled">Uitgeschakeld</string>
-    <string name="save_as_defaults">Opslaan als standaard</string>
-    <string name="share_comment">Reactie</string>
-    <string name="settings.share_expiration">Tijd tot verval</string>
     <string name="download_song_removed">\"%s\" is verwijderd uit de afspeellijst</string>
-    <string name="share_default_greeting">Hé, luister eens naar de muziek die ik heb gedeeld via %s</string>
-    <string name="share_via">Nummers delen via</string>
-    <string name="menu.share">Delen</string>
     <string name="download.menu_show_artist">Artiest tonen</string>
     <string name="albumArt">Albumhoezen</string>
     <string name="common_multiple_years">Meerdere jaren</string>

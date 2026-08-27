@@ -144,22 +144,12 @@
             app:argType="string"
             app:nullable="true" />
         <argument
-            android:name="shareId"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
             android:name="playlistId"
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
         <argument
             android:name="playlistName"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="shareName"
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
@@ -299,10 +289,6 @@
             android:name="isAlbum"
             android:defaultValue="true"
             app:argType="boolean" />
-    </fragment>
-    <fragment
-        android:id="@+id/sharesFragment"
-        android:name="org.moire.ultrasonic.fragment.legacy.SharesFragment">
     </fragment>
     <fragment
         android:id="@+id/bookmarksFragment"

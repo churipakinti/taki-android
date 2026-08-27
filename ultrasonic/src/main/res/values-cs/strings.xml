@@ -137,27 +137,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Dialog opět nezobrazovat</string>
-    <string name="share_set_share_options">Nastavit možnosti sdílení</string>
-    <string name="no_expiration">Bez vypršení</string>
     <string name="download.menu_star">Hvězdička</string>
     <string name="download.menu_clear_playlist">Vyčistit playlist</string>
-    <string name="button_bar.shares">Sdílení</string>
-    <string name="select_share.empty">Na serveru nejsou žádná sdílení</string>
-    <string name="menu_deleted_share">Smazaná sdílení %s</string>
-    <string name="menu_deleted_share_error">Chyba vymazání sdílení %s</string>
-    <string name="settings.share_minutes">Minut</string>
-    <string name="settings.share_hours">Hodin</string>
-    <string name="settings.share_days">Dní</string>
-    <string name="time_span_disable">Vypnout</string>
-    <string name="time_span_disabled">Vypnuto</string>
-    <string name="save_as_defaults">Uložit jako výchozí</string>
-    <string name="share_comment">Komentář</string>
-    <string name="settings.share_expiration">Čas vypršení</string>
     <string name="download_song_removed">\"%s\" odstraněn z playlistu</string>
-    <string name="share_default_greeting">Mrkni na hudbu sdílenou z %s</string>
-    <string name="share_via">Sdílet skladby přes</string>
-    <string name="menu.share">Sdílení</string>
     <string name="download.menu_show_artist">Zobrazit umělce</string>
     <string name="common_multiple_years">Vícenásobné roky</string>
     <string name="settings.debug.title">Možnosti ladění aplikace</string>

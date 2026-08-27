@@ -9,7 +9,6 @@
     <string name="buttons.play">Spill</string>
     <string name="buttons.previous">Forrige</string>
     <string name="buttons.repeat">Gjenta</string>
-    <string name="common.album">Album</string>
     <string name="common.artist">Artist</string>
     <string name="buttons.next">Neste</string>
     <string name="common.comment">Kommentar</string>
@@ -45,10 +44,6 @@
     <string name="download.menu_clear_playlist">Tøm spilleliste</string>
     <string name="server_menu.move_up">Flytt oppover</string>
     <string name="settings.clear_search_history">Tøm søkehistorikk</string>
-    <string name="share_via">Del spor via</string>
-    <string name="settings.share_minutes">Minutter</string>
-    <string name="settings.share_hours">Timer</string>
-    <string name="time_span_disable">Skru av</string>
     <string name="server_editor.required">Påkrevd felt</string>
     <string name="server_menu.edit">Rediger</string>
     <string name="server_menu.delete">Slett</string>
@@ -59,11 +54,6 @@
     <string name="download.jukebox_on">Fjernkontroll påskrudd. Musikk spilles på tjeneren.</string>
     <string name="download.playlist_error">Kunne ikke lagre spilleliste. Prøv igjen senere.</string>
     <string name="settings.cache_size_7000">7 GB</string>
-    <string name="select_share.empty">Ingen delinger tilgjengelig på tjeneren</string>
-    <string name="share_on_server">Opprett deling på tjeneren</string>
-    <string name="do_not_show_dialog_again">Ikke vis denne dialogen igjen</string>
-    <string name="share_set_share_options">Sett delingsinnstillinger</string>
-    <string name="button_bar.shares">Delinger</string>
     <plurals name="n_songs_added_after_current">
         <item quantity="one">%d spor lagt til etter nåværende spor</item>
         <item quantity="other">%d spor lagt til etter nåværende spor</item>
@@ -152,19 +142,12 @@
     <string name="settings.title.allow_self_signed_certificate">Tillat selvsignert HTTPS-sertifikat</string>
     <string name="settings.wifi_required_title">Kun last ned på Wi-Fi</string>
     <string name="download.menu_star">Stjernemerk</string>
-    <string name="settings.share_days">Dager</string>
-    <string name="time_span_disabled">Avskrudd</string>
-    <string name="save_as_defaults">Lagre som forvalg</string>
     <string name="main.video" tools:ignore="UnusedResources">Video</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="no_expiration">Uten utløp</string>
-    <string name="share_comment">Kommentar</string>
-    <string name="settings.share_expiration">Tid til utløp</string>
     <string name="albumArt">Albumsillustrasjoner</string>
     <string name="common_multiple_years">Flere år</string>
     <string name="download_song_removed">«%s» ble fjernet fra spillelisten</string>
-    <string name="menu.share">Del</string>
     <string name="download.menu_show_artist">Vis artist</string>
     <string name="settings.debug.log_keep">Behold filer</string>
     <string name="settings.debug.log_delete">Slett filer</string>
@@ -239,16 +222,13 @@
     <string name="settings.summary.force_plain_text_password">Dette tvinger programmet til å alltid sende passordet ukryptert. Nyttig hvis Subsonic-tjeneren ikke støtter det nye identitetbekreftelses-API-et for brukere.</string>
     <string name="settings.use_id3_summary">Bruk ID3-etikettmetoder istedenfor filsystemsbaserte metoder</string>
     <string name="settings.use_id3_offline">Bruk ID3-metode også når frakoblet</string>
-    <string name="menu_deleted_share">Slettet %s-deling</string>
     <string name="settings.use_id3_offline_summary">Viser kun musikken som er lastet ned med Taki 4.0 eller senere. Tidligere nedlastinger har ikke nødvendig metadata nedlastet. Du kan veksle mellom festingsmodus og lagringsmodus for å utløse nedlasting av manglende metadata.</string>
     <string name="song_details.kbps">%d kbps</string>
-    <string name="menu_deleted_share_error">Klarte ikke å slette «%s»-delingen</string>
     <string name="settings.debug.log_deleted">Loggfiler slettet.</string>
     <string name="settings.debug.log_path">Loggfilene er tilgjengelig i %1$s/%2$s</string>
     <string name="server_selector.delete_confirmation">Slett tjeneren\?</string>
     <string name="server_editor.label">Redigering av tjener</string>
     <string name="server_editor.authentication">Identitetsbekreftelse</string>
-    <string name="share_default_greeting">Sjekk denne musikken jeg delte fra %s</string>
     <string name="settings.show_confirmation_dialog_summary">Viser bekreftelsesdialog før sletting eller løsning av spor</string>
     <string name="server_editor.leave_confirmation">Forlat og forkast endringene dine\?</string>
     <string name="settings.debug.log_summary">Det finnes %1$s loggfiler som bruker ~%2$s MB plass i %3$s-mappen. Vil du beholde disse\?</string>

@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
-import java.util.regex.Pattern
 import kotlin.math.abs
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.app.UApp
@@ -104,9 +103,6 @@ object Settings {
         false
     )
 
-    @JvmStatic
-    var shareOnServer by BooleanSetting(getKey(R.string.setting_key_share_on_server), true)
-
     // Out-of-the-box vision: the only thing worth configuring is the server. These five used to
     // be switches under Settings > Appearance; fixed to their prior real-world default so
     // behavior doesn't change, just the ability to toggle them (see HANDOFF.md).
@@ -174,43 +170,6 @@ object Settings {
 
     var shouldClearBookmark
         by BooleanSetting(getKey(R.string.setting_key_clear_bookmark), false)
-
-    var shouldAskForShareDetails
-        by BooleanSetting(getKey(R.string.setting_key_ask_for_share_details), true)
-
-    var defaultShareDescription
-        by StringSetting(getKey(R.string.setting_key_default_share_description), "")
-
-    @JvmStatic
-    val shareGreeting: String?
-        get() {
-            val context = Util.appContext()
-            val defaultVal = String.format(
-                context.resources.getString(R.string.share_default_greeting),
-                context.resources.getString(R.string.taki_appname)
-            )
-            return preferences.getString(
-                getKey(R.string.setting_key_default_share_greeting),
-                defaultVal
-            )
-        }
-
-    var defaultShareExpiration by StringSetting(
-        getKey(R.string.setting_key_default_share_expiration),
-        "0"
-    )
-
-    val defaultShareExpirationInMillis: Long
-        get() {
-            val preference = defaultShareExpiration
-            val split = COLON_PATTERN.split(preference)
-            if (split.size == 2) {
-                val timeSpanAmount = split[0].toLong()
-                val timeSpanType = split[1]
-                return TimeSpanPicker.calculateTimeSpan(appContext, timeSpanType, timeSpanAmount)
-            }
-            return 0
-        }
 
     @JvmStatic
     var debugLogToFile by BooleanSetting(getKey(R.string.setting_key_debug_log_to_file), false)
@@ -288,6 +247,4 @@ object Settings {
 
     private val appContext: Context
         get() = UApp.applicationContext()
-
-    val COLON_PATTERN: Pattern = Pattern.compile(":")
 }

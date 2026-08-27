@@ -321,26 +321,6 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         }
     }
 
-    suspend fun getShare(shareId: String) {
-        withContext(Dispatchers.IO) {
-            val service = MusicServiceFactory.getMusicService()
-            val musicDirectory = MusicDirectory()
-
-            val shares = service.getShares(true)
-
-            for (share in shares) {
-                if (share.id == shareId) {
-                    for (entry in share.getEntries()) {
-                        musicDirectory.add(entry)
-                    }
-                    break
-                }
-            }
-            currentListIsSortable = false
-            updateList(musicDirectory)
-        }
-    }
-
     suspend fun getBookmarks() {
         withContext(Dispatchers.IO) {
             val service = MusicServiceFactory.getMusicService()

@@ -138,25 +138,8 @@
     <string name="download.menu_clear_playlist">プレイリストを消去</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="share_set_share_options">共有オプションの設定</string>
-    <string name="share_on_server">サーバー上に共有を作成</string>
-    <string name="no_expiration">有効期限なし</string>
     <string name="download.menu_star">スター</string>
-    <string name="button_bar.shares">共有</string>
-    <string name="select_share.empty">サーバー上で利用可能な共有がありません</string>
-    <string name="menu_deleted_share">共有 %s を削除しました</string>
-    <string name="menu_deleted_share_error">共有 %s を削除できません</string>
-    <string name="settings.share_minutes">分</string>
-    <string name="settings.share_hours">時間</string>
-    <string name="settings.share_days">日</string>
-    <string name="time_span_disable">無効</string>
-    <string name="save_as_defaults">デフォルトとして保存</string>
-    <string name="share_comment">コメント</string>
-    <string name="settings.share_expiration">有効期限までの時間</string>
     <string name="download_song_removed">\"%s\" をプレイリストから削除しました</string>
-    <string name="share_default_greeting">%s から共有した音楽をチェックしてみましょう</string>
-    <string name="share_via">経由で曲を共有</string>
-    <string name="menu.share">共有</string>
     <string name="download.menu_show_artist">アーティストを表示</string>
     <string name="settings.show_confirmation_dialog">確認ダイアログを表示</string>
     <string name="settings.show_confirmation_dialog_summary">曲を削除または固定解除する前、確認ダイアログを表示します</string>
@@ -208,7 +191,6 @@
     <string name="background_task.not_found">リソースが見つかりません。サーバーのアドレスを確認してください。</string>
     <string name="buttons.next">次へ</string>
     <string name="buttons.previous">前へ</string>
-    <string name="common.album">アルバム</string>
     <string name="button_bar.search">検索</string>
     <string name="common.various_artists">様々なアーティスト</string>
     <string name="download.empty">何もダウンロードしていません</string>
@@ -243,8 +225,6 @@
     <string name="settings.max_bitrate_mobile">最高ビットレート - モバイル回線</string>
     <string name="settings.max_bitrate_wifi">最高ビットレート - Wi-Fi</string>
     <string name="settings.use_id3_offline_summary">この設定を有効にすると、Taki 4.0以降でダウンロードした音楽のみが表示されます。それ以前のバージョンでダウンロードしたファイルには、必要なメタデータが含まれていません。固定モードと保存モードを切り替えることで、不足メタデータのダウンロードができます。</string>
-    <string name="do_not_show_dialog_again">ダイアログを再度表示しない</string>
-    <string name="time_span_disabled">無効</string>
     <string name="common_multiple_years">複数の年</string>
     <string name="server_selector.delete_confirmation">サーバーを削除してよろしいですか\?</string>
     <string name="settings.debug.title">デバッグ用オプション</string>

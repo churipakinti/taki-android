@@ -137,27 +137,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Não mostrar este diálogo novamente</string>
-    <string name="share_set_share_options">Configurações de Compartilhamento</string>
-    <string name="no_expiration">Não Expira</string>
     <string name="download.menu_star">Iniciar</string>
     <string name="download.menu_clear_playlist">Limpar Playlist</string>
-    <string name="button_bar.shares">Compartilhar</string>
-    <string name="select_share.empty">Nenhum compartilhamento disponível no servidor</string>
-    <string name="menu_deleted_share">Compartilhamento %s apagado</string>
-    <string name="menu_deleted_share_error">Falha ao apagar o compartilhamento %s</string>
-    <string name="settings.share_minutes">Minutos</string>
-    <string name="settings.share_hours">Horas</string>
-    <string name="settings.share_days">Dias</string>
-    <string name="time_span_disable">Desativar</string>
-    <string name="time_span_disabled">Desativado</string>
-    <string name="save_as_defaults">Salvar como padrão</string>
-    <string name="share_comment">Comentar</string>
-    <string name="settings.share_expiration">Tempo até expirar</string>
     <string name="download_song_removed">\"%s\" foi removido da playlist</string>
-    <string name="share_default_greeting">Confira esta música que compartilhei do %s</string>
-    <string name="share_via">Compartilhar músicas via</string>
-    <string name="menu.share">Compartilhar</string>
     <string name="download.menu_show_artist">Ir ao Artista</string>
     <string name="common_multiple_years">Múltiplos Anos</string>
     <string name="server_selector.label">Servidores configurados</string>
@@ -218,10 +200,8 @@
     <string name="settings.summary.force_plain_text_password">Isso força a app a enviar a palavra-passe sem criptografia. É útil se o servidor Subsonic não suporta a nova API de autenticação de utilizadores.</string>
     <string name="settings.use_id3_offline">Usar método ID3 quando offline também</string>
     <string name="settings.use_id3_offline_summary">Se ativar essa configuração, mostrará apenas a música que descarregou com o Taki 4.0 ou posterior. Descargas anteriores não têm os metadados necessários baixados. Pode alternar entre os modos Pin e Save para acionar a descarga dos metadados ausentes.</string>
-    <string name="share_on_server">Criar Compartilhamento no Servidor</string>
     <string name="albumArt">Capa do álbum</string>
     <string name="buttons.previous">Anterior</string>
-    <string name="common.album">Álbum</string>
     <string name="common.artist">Artista</string>
     <string name="common.title">Título</string>
     <string name="download.empty">Nada está a descarregar</string>
@@ -275,7 +255,6 @@
     </plurals>
     <string name="settings.use_hw_offload_title">Usar a reprodução por hardware (experimental)</string>
     <string name="settings.use_hw_offload_description">Tente reproduzir a média usando o chip de descodificador de média no seu telefone. Isso pode melhorar o uso da bateria. Alguns utilizadores relatam falhas na reprodução quando ativam esta opção!</string>
-    <string name="settings.share_options">Opções</string>
     <string name="shortcut_play_random_songs_long">Tocar músicas aleatórias</string>
     <string name="shortcut_play_random_songs_short">Músicas aleatórias</string>
     <plurals name="n_songs_added_play_now">

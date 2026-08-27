@@ -17,7 +17,6 @@
     <string name="buttons.next">Следующий</string>
     <string name="buttons.previous">Предыдущий</string>
     <string name="button_bar.search">Поиск</string>
-    <string name="common.album">Альбом</string>
     <string name="common.artist">Артист</string>
     <string name="common.cancel">Отмена</string>
     <string name="common.comment">Комментарий</string>
@@ -158,27 +157,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">Больше не показывать диалог</string>
-    <string name="share_set_share_options">Установить параметры общего доступа</string>
-    <string name="no_expiration">Нет срока годности</string>
     <string name="download.menu_star">Звезда</string>
     <string name="download.menu_clear_playlist">Очистить плейлист</string>
-    <string name="button_bar.shares">Поделиться</string>
-    <string name="select_share.empty">Нет доступных ресурсов на сервере</string>
-    <string name="menu_deleted_share">Удалить общий ресурс %s</string>
-    <string name="menu_deleted_share_error">Не удалось удалить общий ресурс %s</string>
-    <string name="settings.share_minutes">Минуты</string>
-    <string name="settings.share_hours">Часы</string>
-    <string name="settings.share_days">Дни</string>
-    <string name="time_span_disable">Отключить</string>
-    <string name="time_span_disabled">Отключить</string>
-    <string name="save_as_defaults">Сохранить по умолчанию</string>
-    <string name="share_comment">Комментарий</string>
-    <string name="settings.share_expiration">Время до истечения</string>
     <string name="download_song_removed">\"%s\" был удален из плейлиста</string>
-    <string name="share_default_greeting">Проверьте эту музыку, с которой я поделился %s</string>
-    <string name="share_via">Поделиться треками через</string>
-    <string name="menu.share">Поделиться</string>
     <string name="download.menu_show_artist">Показать исполнителей</string>
     <string name="common_multiple_years">Несколько лет</string>
     <string name="settings.debug.title">Настройки отладки</string>

@@ -71,7 +71,6 @@ private const val MEDIA_SONG_STARRED_ID = "MEDIA_SONG_STARRED_ID"
 private const val MEDIA_ARTIST_ID = "MEDIA_ARTIST_ID"
 private const val MEDIA_LIBRARY_ID = "MEDIA_LIBRARY_ID"
 private const val MEDIA_PLAYLIST_ID = "MEDIA_PLAYLIST_ID"
-private const val MEDIA_SHARE_ID = "MEDIA_SHARE_ID"
 private const val MEDIA_BOOKMARK_ID = "MEDIA_BOOKMARK_ID"
 private const val MEDIA_ALBUM_ITEM = "MEDIA_ALBUM_ITEM"
 private const val MEDIA_PLAYLIST_SONG_ITEM = "MEDIA_PLAYLIST_SONG_ITEM"
@@ -81,8 +80,6 @@ private const val MEDIA_ARTIST_SECTION = "MEDIA_ARTIST_SECTION"
 private const val MEDIA_ALBUM_SONG_ITEM = "MEDIA_ALBUM_SONG_ITEM"
 private const val MEDIA_SONG_STARRED_ITEM = "MEDIA_SONG_STARRED_ITEM"
 private const val MEDIA_SONG_RANDOM_ITEM = "MEDIA_SONG_RANDOM_ITEM"
-private const val MEDIA_SHARE_ITEM = "MEDIA_SHARE_ITEM"
-private const val MEDIA_SHARE_SONG_ITEM = "MEDIA_SHARE_SONG_ITEM"
 private const val MEDIA_BOOKMARK_ITEM = "MEDIA_BOOKMARK_ITEM"
 private const val MEDIA_SEARCH_SONG_ITEM = "MEDIA_SEARCH_SONG_ITEM"
 
@@ -576,10 +573,6 @@ class MediaLibrarySessionCallback :
 
             MEDIA_SONG_RANDOM_ITEM -> playRandomSong(mediaIdParts[1])
 
-            MEDIA_SHARE_ITEM -> playShare(mediaIdParts[1])
-
-            MEDIA_SHARE_SONG_ITEM -> playShareSong(mediaIdParts[1], mediaIdParts[2])
-
             MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
 
             MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
@@ -637,8 +630,6 @@ class MediaLibrarySessionCallback :
 
             MEDIA_SONG_STARRED_ID -> getStarredSongs()
 
-            MEDIA_SHARE_ID -> getShares()
-
             MEDIA_BOOKMARK_ID -> getBookmarks()
 
             MEDIA_PLAYLIST_ITEM -> getPlaylist(parentIdParts[1], parentIdParts[2])
@@ -649,8 +640,6 @@ class MediaLibrarySessionCallback :
             )
 
             MEDIA_ALBUM_ITEM -> getSongsForAlbum(parentIdParts[1], parentIdParts[2])
-
-            MEDIA_SHARE_ITEM -> getSongsForShare(parentIdParts[1])
 
             else -> Futures.immediateFuture(LibraryResult.ofItemList(listOf(), null))
         }
@@ -750,10 +739,6 @@ class MediaLibrarySessionCallback :
             MEDIA_SONG_RANDOM_ID -> playRandomSongs()
 
             MEDIA_SONG_RANDOM_ITEM -> playRandomSong(mediaIdParts[1])
-
-            MEDIA_SHARE_ITEM -> playShare(mediaIdParts[1])
-
-            MEDIA_SHARE_SONG_ITEM -> playShareSong(mediaIdParts[1], mediaIdParts[2])
 
             MEDIA_BOOKMARK_ITEM -> playBookmark(mediaIdParts[1])
 
@@ -1193,77 +1178,6 @@ class MediaLibrarySessionCallback :
         if (bookmarks != null) {
             val songs = Util.getSongsFromBookmarks(bookmarks)
             val song = songs.getTracks().firstOrNull { song -> song.id == id }
-            if (song != null) return listOf(song)
-        }
-        return null
-    }
-
-    private fun getShares(): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        val mediaItems: MutableList<MediaItem> = ArrayList()
-
-        return mainScope.future {
-            val shares = serviceScope.future {
-                callWithErrorHandling { musicService.getShares(false) }
-            }.await()
-
-            shares?.map { share ->
-                mediaItems.add(
-                    share.name ?: "",
-                    listOf(MEDIA_SHARE_ITEM, share.id)
-                        .joinToString("|"),
-                    mediaType = MEDIA_TYPE_FOLDER_MIXED
-                )
-            }
-            return@future LibraryResult.ofItemList(mediaItems, null)
-        }
-    }
-
-    private fun getSongsForShare(
-        id: String
-    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        val mediaItems: MutableList<MediaItem> = ArrayList()
-
-        return mainScope.future {
-            val shares = serviceScope.future {
-                callWithErrorHandling { musicService.getShares(false) }
-            }.await()
-
-            val selectedShare = shares?.firstOrNull { share -> share.id == id }
-            if (selectedShare != null) {
-                if (selectedShare.getEntries().count() > 1) {
-                    mediaItems.addPlayAllItem(listOf(MEDIA_SHARE_ITEM, id).joinToString("|"))
-                }
-
-                selectedShare.getEntries().map { song ->
-                    mediaItems.add(
-                        song.toMediaItem(
-                            listOf(MEDIA_SHARE_SONG_ITEM, id, song.id).joinToString("|")
-                        )
-                    )
-                }
-            }
-            return@future LibraryResult.ofItemList(mediaItems, null)
-        }
-    }
-
-    private fun playShare(id: String): List<Track>? {
-        val shares = serviceScope.future {
-            callWithErrorHandling { musicService.getShares(false) }
-        }.get()
-        val selectedShare = shares?.firstOrNull { share -> share.id == id }
-        if (selectedShare != null) {
-            return selectedShare.getEntries()
-        }
-        return null
-    }
-
-    private fun playShareSong(id: String, songId: String): List<Track>? {
-        val shares = serviceScope.future {
-            callWithErrorHandling { musicService.getShares(false) }
-        }.get()
-        val selectedShare = shares?.firstOrNull { share -> share.id == id }
-        if (selectedShare != null) {
-            val song = selectedShare.getEntries().firstOrNull { x -> x.id == songId }
             if (song != null) return listOf(song)
         }
         return null

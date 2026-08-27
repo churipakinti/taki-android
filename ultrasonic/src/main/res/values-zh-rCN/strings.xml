@@ -17,7 +17,6 @@
     <string name="buttons.next">下一首</string>
     <string name="buttons.previous">上一首</string>
     <string name="button_bar.search">搜索</string>
-    <string name="common.album">专辑</string>
     <string name="common.artist">艺术家</string>
     <string name="common.cancel">取消</string>
     <string name="common.comment">评论</string>
@@ -158,28 +157,9 @@
     <string name="song_details.kbps">%d kbps</string>
     <string name="util.no_time" tools:ignore="TypographyDashes">‒:‒‒</string>
     <string name="util.zero_time">0:00</string>
-    <string name="do_not_show_dialog_again">不再显示此对话框</string>
-    <string name="share_set_share_options">设置分享选项</string>
-    <string name="share_on_server">在服务端创建分享链接</string>
-    <string name="no_expiration">无期限</string>
     <string name="download.menu_star">收藏</string>
     <string name="download.menu_clear_playlist">清空播放列表</string>
-    <string name="button_bar.shares">分享</string>
-    <string name="select_share.empty">服务器上没有可用的共享</string>
-    <string name="menu_deleted_share">删除分享 %s</string>
-    <string name="menu_deleted_share_error">删除分享失败 %s</string>
-    <string name="settings.share_minutes">分钟</string>
-    <string name="settings.share_hours">小时</string>
-    <string name="settings.share_days">天</string>
-    <string name="time_span_disable">禁用</string>
-    <string name="time_span_disabled">已禁用</string>
-    <string name="save_as_defaults">保存为默认</string>
-    <string name="share_comment">评论</string>
-    <string name="settings.share_expiration">有效期</string>
     <string name="download_song_removed">%s 已从播放列表中移除</string>
-    <string name="share_default_greeting">看看我从 %s 分享的这首音乐</string>
-    <string name="share_via">分享歌曲通过</string>
-    <string name="menu.share">分享</string>
     <string name="download.menu_show_artist">转到艺术家</string>
     <string name="common_multiple_years">数年</string>
     <string name="settings.debug.title">调试选项</string>
