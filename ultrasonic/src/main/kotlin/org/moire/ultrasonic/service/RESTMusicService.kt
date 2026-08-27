@@ -24,7 +24,6 @@ import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistInfo
-import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -636,23 +635,6 @@ open class RESTMusicService(
         val response = API.getUser(username).execute().throwOnFailure()
 
         return response.body()!!.user.toDomainEntity()
-    }
-
-    @Throws(Exception::class)
-    override fun getBookmarks(): List<Bookmark> {
-        val response = API.getBookmarks().execute().throwOnFailure()
-
-        return response.body()!!.bookmarkList.toDomainEntitiesList(activeServerId)
-    }
-
-    @Throws(Exception::class)
-    override fun createBookmark(id: String, position: Int) {
-        API.createBookmark(id, position.toLong(), null).execute().throwOnFailure()
-    }
-
-    @Throws(Exception::class)
-    override fun deleteBookmark(id: String) {
-        API.deleteBookmark(id).execute().throwOnFailure()
     }
 
     @Throws(Exception::class)

@@ -12,7 +12,6 @@ import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistInfo
-import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -190,15 +189,6 @@ interface MusicService {
 
     @Throws(Exception::class)
     fun setJukeboxGain(gain: Float): JukeboxStatus
-
-    @Throws(Exception::class)
-    fun getBookmarks(): List<Bookmark>
-
-    @Throws(Exception::class)
-    fun deleteBookmark(id: String)
-
-    @Throws(Exception::class)
-    fun createBookmark(id: String, position: Int)
 
     @Throws(Exception::class)
     fun getVideos(refresh: Boolean): MusicDirectory?

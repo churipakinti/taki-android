@@ -28,7 +28,6 @@ import org.moire.ultrasonic.data.MetaDatabase
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistOrIndex
-import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -420,18 +419,6 @@ class OfflineMusicService :
     @Throws(OfflineException::class)
     override fun getStreamUrl(id: String, maxBitRate: Int?, format: String?): String =
         throw OfflineException("getStreamUrl isn't available in offline mode")
-
-    @Throws(OfflineException::class)
-    override fun getBookmarks(): List<Bookmark> =
-        throw OfflineException("getBookmarks isn't available in offline mode")
-
-    @Throws(OfflineException::class)
-    override fun deleteBookmark(id: String): Unit =
-        throw OfflineException("deleteBookmark isn't available in offline mode")
-
-    @Throws(OfflineException::class)
-    override fun createBookmark(id: String, position: Int): Unit =
-        throw OfflineException("createBookmark isn't available in offline mode")
 
     @Throws(OfflineException::class)
     override fun getVideos(refresh: Boolean): MusicDirectory =

@@ -18,7 +18,6 @@ import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.ArtistInfo
-import org.moire.ultrasonic.domain.Bookmark
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.Index
 import org.moire.ultrasonic.domain.JukeboxStatus
@@ -488,19 +487,6 @@ class CachedMusicService(private val musicService: MusicService) :
     @Throws(Exception::class)
     override suspend fun getSongsByGenre(genre: String, count: Int, offset: Int): MusicDirectory =
         musicService.getSongsByGenre(genre, count, offset)
-
-    @Throws(Exception::class)
-    override fun getBookmarks(): List<Bookmark> = musicService.getBookmarks()
-
-    @Throws(Exception::class)
-    override fun deleteBookmark(id: String) {
-        musicService.deleteBookmark(id)
-    }
-
-    @Throws(Exception::class)
-    override fun createBookmark(id: String, position: Int) {
-        musicService.createBookmark(id, position)
-    }
 
     @Throws(Exception::class)
     override fun getVideos(refresh: Boolean): MusicDirectory? {
