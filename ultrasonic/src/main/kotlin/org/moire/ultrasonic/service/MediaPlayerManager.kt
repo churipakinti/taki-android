@@ -712,8 +712,22 @@ class MediaPlayerManager(
         }
 
         // There is a bug in media3 ( https://github.com/androidx/media/issues/480 ),
-        // so we must first add the tracks, and then enable shuffle
-        if (shuffle) isShufflePlayEnabled = true
+        // so we must first add the tracks, and then enable shuffle.
+        //
+        // A queue-replacing shuffle (Album / collection "Shuffle") asks PlaybackService for a
+        // full reshuffle so the first played window is genuinely random rather than pinned to
+        // track 0; APPEND / AFTER_CURRENT keep the current-track-pinned behavior. startPlaybackAt()
+        // then starts at currentTimeline.getFirstWindowIndex(shuffle) - the shuffled order's
+        // first window - it is not forced to index 0.
+        if (shuffle) {
+            RxBus.shufflePlayPublisher.onNext(
+                RxBus.ShufflePlay(
+                    enabled = true,
+                    reshuffleAll = insertionMode == InsertionMode.CLEAR
+                )
+            )
+            controller?.shuffleModeEnabled = true
+        }
 
         prepare()
 
@@ -854,7 +868,10 @@ class MediaPlayerManager(
         get() = controller?.shuffleModeEnabled == true
         set(enabled) {
             Timber.i("Shuffle is now enabled: %s", enabled)
-            RxBus.shufflePlayPublisher.onNext(enabled)
+            // reshuffleAll = false: keep the current track pinned (Now Playing toggle, restore,
+            // the deterministic Album-Play clear). A whole-queue shuffle goes through
+            // addToPlaylistLocked() instead, which requests reshuffleAll = true.
+            RxBus.shufflePlayPublisher.onNext(RxBus.ShufflePlay(enabled))
             controller?.shuffleModeEnabled = enabled
         }
 

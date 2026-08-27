@@ -201,7 +201,7 @@ class PlaybackService :
         }
 
         // Set a listener to reset the ShuffleOrder
-        rxBusSubscription += RxBus.shufflePlayObservable.subscribe { shuffle ->
+        rxBusSubscription += RxBus.shufflePlayObservable.subscribe { event ->
             // This only applies for local playback
             val exo = if (player is ExoPlayer) {
                 player as ExoPlayer
@@ -210,21 +210,27 @@ class PlaybackService :
             }
             val len = player.currentTimeline.windowCount
 
-            Timber.i("Resetting shuffle order, isShuffled: %s", shuffle)
+            Timber.i(
+                "Resetting shuffle order, isShuffled: %s, reshuffleAll: %s",
+                event.enabled,
+                event.reshuffleAll
+            )
 
             // If disabling Shuffle return early
-            if (!shuffle) {
+            if (!event.enabled) {
                 return@subscribe exo.setShuffleOrder(
                     ShuffleOrder.UnshuffledShuffleOrder(len)
                 )
             }
 
-            // Get the position of the current track in the unshuffled order
-            val cur = player.currentMediaItemIndex
+            // A whole-queue shuffle (Album / collection "Shuffle") uses anchor = -1 so every
+            // position is shuffled and the first window is random. Otherwise keep everything up
+            // to and including the current track in place and only shuffle what comes after it.
+            val anchor = if (event.reshuffleAll) -1 else player.currentMediaItemIndex
             val seed = System.currentTimeMillis()
             val random = Random(seed)
 
-            val list = createShuffleListFromCurrentIndex(cur, len, random)
+            val list = createShuffleListFromAnchor(anchor, len, random)
             Timber.i("New Shuffle order: %s", list.joinToString { it.toString() })
             exo.shuffleOrder = ShuffleOrder.DefaultShuffleOrder(list, seed)
         }
@@ -331,24 +337,6 @@ class PlaybackService :
                     )
                     .build()
             ).build()
-    }
-
-    private fun createShuffleListFromCurrentIndex(
-        currentIndex: Int,
-        length: Int,
-        random: Random
-    ): IntArray {
-        val list = IntArray(length) { it }
-
-        // Shuffle the remaining items using a swapping algorithm
-        for (i in currentIndex + 1 until length) {
-            val swapIndex = (currentIndex + 1) + random.nextInt(i - currentIndex)
-            val swapItem = list[i]
-            list[i] = list[swapIndex]
-            list[swapIndex] = swapItem
-        }
-
-        return list
     }
 
     private val listener: Player.Listener = object : Player.Listener {
@@ -489,4 +477,30 @@ class PlaybackService :
             "org.moire.ultrasonic.REPEAT_MODE"
         private const val NOTIFICATION_ID = 3009
     }
+}
+
+/**
+ * Builds a Media3 [ShuffleOrder] index array by Fisher-Yates-swapping the entries **after**
+ * [anchorIndex] and leaving `0..anchorIndex` in natural order.
+ *
+ * - `anchorIndex = currentMediaItemIndex` keeps the current track (and everything before it) put
+ *   and only shuffles what comes next - the Now Playing shuffle toggle / session restore.
+ * - `anchorIndex = -1` shuffles every position, so `result[0]` (the first window Media3 will
+ *   play) is random - a fresh Album / collection "Shuffle".
+ *
+ * The result is always a permutation of `0 until length`.
+ */
+internal fun createShuffleListFromAnchor(
+    anchorIndex: Int,
+    length: Int,
+    random: Random
+): IntArray {
+    val list = IntArray(length) { it }
+    for (i in anchorIndex + 1 until length) {
+        val swapIndex = (anchorIndex + 1) + random.nextInt(i - anchorIndex)
+        val swapItem = list[i]
+        list[i] = list[swapIndex]
+        list[swapIndex] = swapItem
+    }
+    return list
 }

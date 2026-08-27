@@ -22,9 +22,9 @@ class RxBus {
 
         fun mainThread(): Scheduler = AndroidSchedulers.mainThread()
 
-        val shufflePlayPublisher: PublishSubject<Boolean> =
+        val shufflePlayPublisher: PublishSubject<ShufflePlay> =
             PublishSubject.create()
-        val shufflePlayObservable: Observable<Boolean> =
+        val shufflePlayObservable: Observable<ShufflePlay> =
             shufflePlayPublisher
 
         var activeServerChangingPublisher: PublishSubject<Int> =
@@ -135,6 +135,16 @@ class RxBus {
     )
 
     data class TrackDownloadState(val id: String, val state: DownloadState, val progress: Int?)
+
+    /**
+     * Shuffle-mode change request.
+     *
+     * [reshuffleAll] distinguishes a whole-queue shuffle (a fresh Album / collection "Shuffle",
+     * where the first played track must be random) from every other way shuffle gets enabled
+     * (Now Playing toggle, session restore), which keep the current track pinned and only
+     * shuffle what comes after it. See PlaybackService's shuffle-order reset.
+     */
+    data class ShufflePlay(val enabled: Boolean, val reshuffleAll: Boolean = false)
 
     data class Folder(val id: String?)
 }

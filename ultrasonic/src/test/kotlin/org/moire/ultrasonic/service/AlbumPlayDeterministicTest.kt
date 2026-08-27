@@ -9,9 +9,13 @@ package org.moire.ultrasonic.service
 
 import android.os.Looper
 import androidx.media3.common.util.UnstableApi
+import io.reactivex.rxjava3.disposables.Disposable
+import java.util.Collections
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -25,19 +29,24 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
 /**
- * "Album > Play" must be deterministic: it replaces the queue with the album, starts at track 0
- * with shuffle OFF, and plays -- regardless of any shuffle mode a previously played queue left
- * enabled. "Album > Shuffle" is the only album action that enables shuffle.
- *
- * Root cause this guards: [MediaPlayerManager.addToPlaylistLocked] only ever turned shuffle *on*
- * (`if (shuffle) isShufflePlayEnabled = true`) and never off, so a queue-replacing Play inherited
- * shuffle from the previous queue and `startPlaybackAt()` then started at a random shuffled
- * window instead of index 0.
- *
- * These drive [MediaPlayerManager.addToPlaylist] with exactly the arguments
- * `TrackCollectionFragment.playAll()` uses for the album hero's Play / Shuffle buttons
- * (`InsertionMode.CLEAR`, `autoPlay = true`, `shuffle = false | true`), against a
+ * Contract for the album hero's Play / Shuffle buttons, driven through
+ * [MediaPlayerManager.addToPlaylist] with exactly the arguments `TrackCollectionFragment.playAll()`
+ * uses (`InsertionMode.CLEAR`, `autoPlay = true`, `shuffle = false | true`), against a
  * [FakeMedia3Player] with a real timeline.
+ *
+ * ```
+ * Album Play    = album queue + shuffle OFF + start at index 0
+ * Album Shuffle = album queue + shuffle ON  + start at the shuffled order's first window
+ *                 (random), NOT forced to index 0
+ * ```
+ *
+ * Two root causes are guarded here:
+ *  - `addToPlaylistLocked()` only ever turned shuffle *on* and never off, so a queue-replacing
+ *    Play inherited shuffle from the previous queue (fixed: [MediaPlayerManager] clears it).
+ *  - a queue-replacing Shuffle enabled shuffle with `RxBus.ShufflePlay(reshuffleAll = false)`,
+ *    so PlaybackService pinned the fresh queue's track 0 as the shuffle order's first window and
+ *    playback always started at track 1 (fixed: [MediaPlayerManager] sends `reshuffleAll = true`
+ *    for `InsertionMode.CLEAR`). The order maths itself is covered by [ShuffleOrderTest].
  */
 @UnstableApi
 @RunWith(RobolectricTestRunner::class)
@@ -45,6 +54,8 @@ class AlbumPlayDeterministicTest {
 
     private lateinit var manager: MediaPlayerManager
     private lateinit var player: FakeMedia3Player
+    private lateinit var shuffleEvents: MutableList<RxBus.ShufflePlay>
+    private lateinit var shuffleSubscription: Disposable
 
     private val album = (1..4).map { n ->
         Track(id = "t$n", title = "Song $n", artist = "Artist", album = "Album", isDirectory = false)
@@ -63,6 +74,9 @@ class AlbumPlayDeterministicTest {
             )
         }
 
+        shuffleEvents = Collections.synchronizedList(mutableListOf())
+        shuffleSubscription = RxBus.shufflePlayObservable.subscribe { shuffleEvents.add(it) }
+
         manager = MediaPlayerManager(mock(), mock())
         player = FakeMedia3Player(Looper.getMainLooper())
         manager.setPrivateField("controller", player)
@@ -70,6 +84,7 @@ class AlbumPlayDeterministicTest {
 
     @After
     fun tearDown() {
+        shuffleSubscription.dispose()
         MediaItemConverter.mediaItemCache.clear()
         MediaItemConverter.trackCache.clear()
     }
@@ -94,10 +109,18 @@ class AlbumPlayDeterministicTest {
         )
     }
 
+    private fun deferredPlay(): Any? = manager.getPrivateField("deferredPlay")
+
+    private fun shuffleEventsSnapshot(): List<RxBus.ShufflePlay> =
+        synchronized(shuffleEvents) { shuffleEvents.toList() }
+
+    // --- A. Album Play with previous shuffle ON -------------------------------------------------
+
     @Test
     fun `shuffle previously ON then Album Play turns shuffle OFF and starts at index 0`() {
         manager.isShufflePlayEnabled = true
         assertTrue("precondition: shuffle inherited from a previous queue", manager.isShufflePlayEnabled)
+        synchronized(shuffleEvents) { shuffleEvents.clear() }
 
         albumPlay(shuffle = false)
         pumpUntil { player.mediaItemCount == album.size && player.playWhenReady }
@@ -106,6 +129,11 @@ class AlbumPlayDeterministicTest {
         assertFalse("Media3 player shuffle must be off", player.shuffleModeEnabled)
         assertEquals("playback must start at track 0", 0, player.currentMediaItemIndex)
         assertTrue("playback must have started", player.playWhenReady)
+        assertNull("Album Play must not arm a deferred shuffle start", deferredPlay())
+        assertTrue(
+            "Album Play must not request a reshuffle, saw ${shuffleEventsSnapshot()}",
+            shuffleEventsSnapshot().none { it.reshuffleAll }
+        )
     }
 
     @Test
@@ -119,10 +147,13 @@ class AlbumPlayDeterministicTest {
         assertEquals(0, player.currentMediaItemIndex)
         assertEquals("queue is the album", album.map { it.id }, playerIds())
         assertTrue(player.playWhenReady)
+        assertNull(deferredPlay())
     }
 
+    // --- B. Album Shuffle --------------------------------------------------------------------------
+
     @Test
-    fun `explicit Album Shuffle enables shuffle over the album queue`() {
+    fun `Album Shuffle enables shuffle and starts from the shuffled order, not index 0`() {
         assertFalse(manager.isShufflePlayEnabled)
 
         albumPlay(shuffle = true)
@@ -131,23 +162,71 @@ class AlbumPlayDeterministicTest {
         assertTrue("Album Shuffle must enable shuffle", manager.isShufflePlayEnabled)
         assertTrue(player.shuffleModeEnabled)
         assertEquals("queue is the album", album.map { it.id }, playerIds())
+
+        // Start is deferred to currentTimeline.getFirstWindowIndex(shuffle) - the shuffled
+        // order's first window - rather than the `else { play(0) }` branch.
+        assertNotNull("Album Shuffle must arm the shuffled-order start", deferredPlay())
+        assertFalse("playback must not be force-started at index 0", player.playWhenReady)
+
+        val last = shuffleEventsSnapshot().last()
+        assertEquals(
+            "Album Shuffle must ask PlaybackService for a full reshuffle",
+            RxBus.ShufflePlay(enabled = true, reshuffleAll = true),
+            last
+        )
     }
 
+    // --- C. Replaying an already-loaded album with Album Shuffle --------------------------------
+
     @Test
-    fun `re-Play of the already-loaded album still clears a shuffle enabled from Now Playing`() {
-        // Load the album once (sequential), then the user enables shuffle from Now Playing.
+    fun `re-Shuffle of an already-loaded album uses shuffle semantics, not the sequential fast path`() {
         albumPlay(shuffle = false)
         pumpUntil { player.mediaItemCount == album.size && player.playWhenReady }
-        manager.isShufflePlayEnabled = true
+        player.seekTo(1, 0L)
+        player.pause()
+        synchronized(shuffleEvents) { shuffleEvents.clear() }
+
+        // Same track list already loaded: the `!shuffle && queueAlreadyMatches` fast path (which
+        // would just seek within the sequential queue) must NOT be taken, because shuffle = true.
+        albumPlay(shuffle = true)
+        pumpUntil { manager.isShufflePlayEnabled && deferredPlay() != null }
+
+        assertTrue(manager.isShufflePlayEnabled)
+        assertTrue(player.shuffleModeEnabled)
+        assertNotNull("re-Shuffle must arm the shuffled-order start, not seek sequentially", deferredPlay())
+        assertEquals(
+            "re-Shuffle must request a full reshuffle",
+            RxBus.ShufflePlay(enabled = true, reshuffleAll = true),
+            shuffleEventsSnapshot().last()
+        )
+    }
+
+    // --- D. Now Playing shuffle toggle is unchanged -------------------------------------------------
+
+    @Test
+    fun `Now Playing shuffle toggle keeps the current track pinned - reshuffleAll stays false`() {
+        albumPlay(shuffle = false)
+        pumpUntil { player.mediaItemCount == album.size && player.playWhenReady }
+        player.seekTo(2, 0L)
+        synchronized(shuffleEvents) { shuffleEvents.clear() }
+
+        val enabled = manager.toggleShuffle()
+        assertTrue("toggle enables shuffle", enabled)
         assertTrue(manager.isShufflePlayEnabled)
 
-        // Pressing Play on the same album again takes addToPlaylistLocked's "queue already
-        // matches" fast path (no rebuild); the shuffle-clearing guard must still apply there.
-        albumPlay(shuffle = false)
-        pumpUntil { !manager.isShufflePlayEnabled }
+        manager.toggleShuffle()
+        assertFalse(manager.isShufflePlayEnabled)
 
-        assertFalse("fast-path Album Play must also clear shuffle", manager.isShufflePlayEnabled)
-        assertFalse(player.shuffleModeEnabled)
+        assertEquals(
+            "toggle must emit exactly on/off, both with reshuffleAll = false",
+            listOf(
+                RxBus.ShufflePlay(enabled = true, reshuffleAll = false),
+                RxBus.ShufflePlay(enabled = false, reshuffleAll = false)
+            ),
+            shuffleEventsSnapshot()
+        )
+        // A mid-playback toggle never re-seeks the player.
+        assertEquals(2, player.currentMediaItemIndex)
     }
 
     private fun playerIds(): List<String> =
