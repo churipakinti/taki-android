@@ -672,7 +672,12 @@ class MediaPlayerManager(
         if (insertionMode == InsertionMode.CLEAR && !shuffle && queueAlreadyMatches(songs)) {
             PerfMetrics.mark("add_to_playlist:same_queue_seek:songs=${songs.size}")
             Timber.i("addToPlaylist: queue already matches, seeking instead of rebuilding")
-            startPlaybackAt(startIndex, startPositionMs, autoPlay)
+            // "Play" with no explicit startIndex is a command: land at index 0 and start, even
+            // if this exact queue is already loaded and playing (e.g. Album Play pressed after
+            // Album Shuffle). startPlaybackAt(null, ...) would no-op while already playing, so
+            // resolve the implicit "from the top" to index 0 here.
+            val resolvedStartIndex = startIndex ?: if (autoPlay) 0 else null
+            startPlaybackAt(resolvedStartIndex, startPositionMs, autoPlay)
             return
         }
 

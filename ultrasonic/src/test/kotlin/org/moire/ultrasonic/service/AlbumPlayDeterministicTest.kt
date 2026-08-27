@@ -229,6 +229,63 @@ class AlbumPlayDeterministicTest {
         assertEquals(2, player.currentMediaItemIndex)
     }
 
+    // --- Album Play on the *same* album is still an explicit command, never a no-op -----------
+
+    @Test
+    fun `Album Play after Album Shuffle on the same album returns to index 0 and keeps playing`() {
+        // Start the album shuffled, then get it into "playing, shuffle ON, at a later track".
+        albumPlay(shuffle = true)
+        pumpUntil { player.mediaItemCount == album.size && manager.isShufflePlayEnabled }
+        player.seekTo(2, 0L)
+        player.play()
+        pumpUntil { player.isPlaying }
+        assertTrue("precondition: playing", player.isPlaying)
+        assertTrue("precondition: shuffle ON", manager.isShufflePlayEnabled)
+        assertEquals("precondition: not at index 0", 2, player.currentMediaItemIndex)
+
+        // Album Play on the SAME, already-loaded album.
+        albumPlay(shuffle = false)
+        pumpUntil { player.currentMediaItemIndex == 0 && !manager.isShufflePlayEnabled }
+
+        assertFalse("Album Play must clear shuffle", manager.isShufflePlayEnabled)
+        assertFalse(player.shuffleModeEnabled)
+        assertEquals("Album Play must move to index 0", 0, player.currentMediaItemIndex)
+        assertTrue("Album Play must keep playback running", player.isPlaying)
+    }
+
+    @Test
+    fun `Album Play on the same album already playing at a later track returns to index 0`() {
+        albumPlay(shuffle = false)
+        pumpUntil { player.mediaItemCount == album.size && player.playWhenReady }
+        player.seekTo(2, 0L)
+        assertTrue("precondition: playing", player.isPlaying)
+        assertEquals(2, player.currentMediaItemIndex)
+
+        albumPlay(shuffle = false)
+        pumpUntil { player.currentMediaItemIndex == 0 }
+
+        assertEquals("Album Play must return to index 0", 0, player.currentMediaItemIndex)
+        assertTrue("playback continues", player.isPlaying)
+        assertFalse(manager.isShufflePlayEnabled)
+    }
+
+    @Test
+    fun `Album Play on the same album paused at a later track returns to index 0 and starts`() {
+        albumPlay(shuffle = false)
+        pumpUntil { player.mediaItemCount == album.size && player.playWhenReady }
+        player.seekTo(3, 0L)
+        player.pause()
+        assertFalse("precondition: paused", player.isPlaying)
+        assertEquals(3, player.currentMediaItemIndex)
+
+        albumPlay(shuffle = false)
+        pumpUntil { player.currentMediaItemIndex == 0 && player.playWhenReady }
+
+        assertEquals("Album Play must return to index 0", 0, player.currentMediaItemIndex)
+        assertTrue("Album Play must start playback", player.isPlaying)
+        assertFalse(manager.isShufflePlayEnabled)
+    }
+
     private fun playerIds(): List<String> =
         (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }
 }
