@@ -36,6 +36,14 @@ jobs:
         with:
           cache-provider: basic
 
+      - name: Restore debug signing keystore
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          mkdir -p "$HOME/.android"
+          echo "$DEBUG_KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
+
       - name: Test, lint, and build
         run: ./gradlew testDebugUnitTest lint assembleDebug assembleRelease --no-daemon
 
