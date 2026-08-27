@@ -36,13 +36,87 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Restore debug signing keystore
+      - name: Restore and validate debug signing keystore
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         env:
           DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+          EXPECTED_DEBUG_CERT_SHA256: "03:A1:50:8C:81:16:5B:E8:CE:88:9C:C3:BD:70:09:DC:40:B7:9F:EB:E8:62:F9:A7:0A:B9:5E:46:90:25:8E:1E"
         run: |
+          set -euo pipefail
           mkdir -p "$HOME/.android"
-          echo "$DEBUG_KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
+          KS="$HOME/.android/debug.keystore"
+
+          # Decode the secret. base64 without --ignore-garbage fails loudly on a
+          # malformed value instead of writing a file AGP would silently replace.
+          printf '%s' "$DEBUG_KEYSTORE_B64" | base64 -d > "$KS"
+
+          # 1. non-empty
+          if [ ! -s "$KS" ]; then
+            echo "::error::Decoded debug keystore is missing or empty"
+            exit 1
+          fi
+
+          # 2. byte size
+          SIZE=$(wc -c < "$KS" | tr -d '[:space:]')
+          echo "Decoded debug keystore size: ${SIZE} bytes"
+
+          # 3. read the entry (output captured, never printed)
+          if ! KEYTOOL_OUT=$(keytool -list -v \
+              -keystore "$KS" \
+              -alias androiddebugkey \
+              -storepass android 2>&1); then
+            echo "::error::keytool could not read the decoded debug keystore with alias 'androiddebugkey'"
+            exit 1
+          fi
+
+          # 4. extract only the certificate SHA-256 fingerprint
+          FP=$(printf '%s\n' "$KEYTOOL_OUT" \
+            | grep -E 'SHA-?256:' \
+            | head -n1 \
+            | sed -E 's/.*SHA-?256:[[:space:]]*//' \
+            | tr -d '[:space:]')
+          echo "keytool certificate SHA-256: ${FP:-<none>}"
+
+          # 5. fail unless it matches the known local debug keystore
+          if [ "$FP" != "$EXPECTED_DEBUG_CERT_SHA256" ]; then
+            echo "::error::Debug keystore certificate does not match the expected fingerprint"
+            exit 1
+          fi
+          echo "keytool check passed"
+
+      - name: Verify debug signing via Gradle signingReport
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        env:
+          EXPECTED_DEBUG_CERT_SHA256: "03:A1:50:8C:81:16:5B:E8:CE:88:9C:C3:BD:70:09:DC:40:B7:9F:EB:E8:62:F9:A7:0A:B9:5E:46:90:25:8E:1E"
+        run: |
+          set -euo pipefail
+          ./gradlew :ultrasonic:signingReport --no-daemon > signing-report.txt
+
+          # Isolate the 'debug' variant stanza (exact match, not debugAndroidTest etc.)
+          STANZA=$(sed -n '/^Variant: debug$/,/^$/p' signing-report.txt)
+          if [ -z "$STANZA" ]; then
+            echo "::error::signingReport produced no 'debug' variant stanza"
+            exit 1
+          fi
+
+          STORE=$(printf '%s\n' "$STANZA" | sed -n 's/^Store: //p' | head -n1)
+          GRADLE_FP=$(printf '%s\n' "$STANZA" \
+            | sed -n -E 's/^SHA-?256:[[:space:]]*//p' \
+            | head -n1 \
+            | tr -d '[:space:]')
+          echo "signingReport debug Store: ${STORE:-<none>}"
+          echo "signingReport debug SHA-256: ${GRADLE_FP:-<none>}"
+
+          if [ "$STORE" != "$HOME/.android/debug.keystore" ]; then
+            echo "::error::debug variant does not point at $HOME/.android/debug.keystore"
+            exit 1
+          fi
+          if [ "$GRADLE_FP" != "$EXPECTED_DEBUG_CERT_SHA256" ]; then
+            echo "::error::signingReport debug fingerprint does not match the expected value"
+            exit 1
+          fi
+          rm -f signing-report.txt
+          echo "signingReport check passed"
 
       - name: Test, lint, and build
         run: ./gradlew testDebugUnitTest lint assembleDebug assembleRelease --no-daemon
