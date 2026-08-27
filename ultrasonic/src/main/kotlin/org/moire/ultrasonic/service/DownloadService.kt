@@ -439,6 +439,25 @@ class DownloadService :
                 Storage.delete(track.getPartialFile())
                 Storage.delete(track.getCompleteFile())
                 Storage.delete(track.getPinnedFile())
+
+                // If a persisted media file could not actually be removed from disk, we must not
+                // then wipe its offline/database record: "row gone, file still present" is
+                // exactly the orphaned-download inconsistency this path exists to avoid. A file
+                // that is already absent counts as removed, so an already-missing download is
+                // still cleaned up idempotently. A leftover .partial is transient cache scratch
+                // (swept separately by CacheCleaner), not persisted media, so it does not block
+                // cleanup here.
+                if (Storage.isPathExists(track.getCompleteFile()) ||
+                    Storage.isPathExists(track.getPinnedFile())
+                ) {
+                    Timber.w(
+                        "Could not delete downloaded media for %s; keeping its offline state",
+                        track.id
+                    )
+                    postState(track, getDownloadState(track))
+                    return@withContext
+                }
+
                 postState(track, DownloadState.IDLE)
                 val cacheCleaner: CacheCleaner by inject(CacheCleaner::class.java)
                 cacheCleaner.cleanDatabaseSelective(track)
