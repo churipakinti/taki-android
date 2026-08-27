@@ -38,3 +38,13 @@ jobs:
 
       - name: Test, lint, and build
         run: ./gradlew testDebugUnitTest lint assembleDebug assembleRelease --no-daemon
+
+      - name: Upload debug APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        uses: actions/upload-artifact@v4
+        with:
+          name: taki-debug-${{ github.sha }}
+          path: ultrasonic/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
