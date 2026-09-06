@@ -639,15 +639,31 @@ forma de portada (`ShapeAppearanceOverlay.Taki.Small`, 8 dp), **sin sombras** en
 | `layout/disc_header_item.xml` | Etiqueta a `Taki.SectionHeader`; botones de play/descarga por disco a `touch_target_min` + `icon_size_sm`; espaciado a tokens. |
 | `layout/view_stacked_artwork.xml` | Radio de las 3 portadas apiladas `6 dp` → `@dimen/radius_sm` (se conserva la escala de elevación 1/2/4 dp: es la señal de "pila" de la colección). |
 
-### 18.3 Pendiente en #5 / #7 / #11
+### 18.3 Acciones secundarias como iconos consistentes (#5)
+
+La pantalla de detalle de artista (`artist_detail.xml`) alineada con el patrón de acciones
+establecido en `album_detail_header_item.xml` (#4), para que las utilidades no compitan
+visualmente con la portada, la información y la reproducción:
+
+| Archivo | Qué se migró |
+| --- | --- |
+| `layout/artist_detail.xml` | **Play primario**: FAB a opacidad completa, relleno `colorOnSurface` con icono `colorSurface`, `touch_target_min`, icono `icon_size_md` (antes `alpha 0.85` + `colorSurfaceContainerHighest`, 38 dp — peso idéntico a los icon buttons). Descarga / radio retroceden a `colorOnSurfaceVariant` + `icon_size_sm` + `touch_target_min`. Encabezados de sección (Popular / Albums / About / Similar) de `Material3.TitleLarge` a `TextAppearance.Taki.SectionHeader` (sentence case, `onSurfaceVariant`, no compiten). Héroe a `Taki.Title` / `.Caption`. Biografía a `Taki.Body` + color atenuado; el toggle "Show more" **sigue siendo texto** (un icono sería ambiguo) pero con objetivo táctil `touch_target_min`. Espaciado / gutters a tokens. |
+
+El resto de "About/info" ya usa icono: `album_detail_info` (`ic_info_outline`, visible solo cuando
+hay notas) abre la hoja de información del álbum; el "About" de la app vive en el popup del hub de
+biblioteca. La acción "Play all" de la barra del detalle de pista/carpeta se mantiene con texto a
+propósito (es la acción **primaria** de esa pantalla) y ya se oculta en álbum/playlist, que tienen
+su propio botón de reproducción en el héroe.
+
+### 18.4 Pendiente en #7 / #11
 
 - Filas de pista (`list_item_track*`, `list_item_queue_track`, `list_item_track_details`) y los
   icon buttons sub-48 dp que quedan.
 - Mini reproductor y Now Playing (`now_playing`, `player_media_info`, `player_slider`,
   `media_buttons`, `player_secondary_controls`, `player_dimensions.xml`).
 - Encabezados y gutters de Library y Search (extender el trato de `home_fragment.xml`).
-- Cabeceras de artista (`artist_detail.xml`) y tarjetas de playlist/artista
-  (`grid_item_playlist`, `list_item_playlist`, `grid_item_artist`, `list_item_artist`).
+- Tarjetas de playlist/artista (`grid_item_playlist`, `list_item_playlist`, `grid_item_artist`,
+  `list_item_artist`).
 
 ---
 
