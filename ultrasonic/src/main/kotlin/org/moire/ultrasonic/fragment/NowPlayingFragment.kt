@@ -98,9 +98,9 @@ class NowPlayingFragment : ScopeFragment() {
     private fun update() {
         try {
             if (mediaPlayerManager.isPlaying) {
-                playButton!!.setIconResource(R.drawable.media_pause_shadow)
+                playButton!!.setIconResource(R.drawable.media_pause)
             } else {
-                playButton!!.setIconResource(R.drawable.media_start_shadow)
+                playButton!!.setIconResource(R.drawable.media_start)
             }
             restartProgressUpdates()
 

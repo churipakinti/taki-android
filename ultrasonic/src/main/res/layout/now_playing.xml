@@ -5,7 +5,7 @@
     a:id="@+id/now_playing"
     a:layout_width="fill_parent"
     a:layout_height="wrap_content"
-    a:layout_margin="8dp"
+    a:layout_margin="@dimen/space_sm"
     a:background="@drawable/bg_now_playing"
     a:clipToOutline="true"
     tools:ignore="Overdraw">
@@ -17,13 +17,13 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         a:id="@+id/now_playing_image"
-        a:layout_width="60dp"
-        a:layout_height="60dp"
-        a:layout_margin="8dp"
+        a:layout_width="@dimen/artwork_thumb"
+        a:layout_height="@dimen/artwork_thumb"
+        a:layout_margin="@dimen/space_sm"
         a:focusable="true"
         a:scaleType="centerCrop"
         a:importantForAccessibility="no"
-        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent" />
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Taki.Small" />
 
     <LinearLayout
         a:layout_width="0.0dp"
@@ -31,11 +31,10 @@
         a:layout_gravity="center_vertical"
         a:layout_weight="1.0"
         a:orientation="vertical"
-        a:paddingStart="6dip">
+        a:paddingStart="@dimen/space_sm">
 
         <TextView
             a:id="@+id/now_playing_title"
-            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:layout_gravity="start"
@@ -43,12 +42,11 @@
             a:marqueeRepeatLimit="marquee_forever"
             a:scrollHorizontally="true"
             a:singleLine="true"
-            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            a:textAppearance="@style/TextAppearance.Taki.Title"
             tools:text="Title" />
 
         <TextView
             a:id="@+id/now_playing_artist"
-            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_gravity="start"
@@ -56,50 +54,49 @@
             a:scrollHorizontally="true"
             a:singleLine="true"
             tools:text="Artist"
-            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            a:textColor="?attr/colorOnSurfaceVariant" />
+            a:textAppearance="@style/TextAppearance.Taki.Caption" />
     </LinearLayout>
 
     <Button
         a:id="@+id/now_playing_control_previous"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="40dp"
-        a:layout_height="40dp"
+        a:layout_width="@dimen/touch_target_min"
+        a:layout_height="@dimen/touch_target_min"
         a:layout_gravity="center"
         a:layout_weight="0.0"
         a:contentDescription="@string/buttons.previous"
         a:focusable="false"
         a:scaleType="fitCenter"
-        app:icon="@drawable/media_backward_shadow"
+        app:icon="@drawable/media_backward"
         app:iconGravity="textEnd"
         app:iconSize="24dp" />
 
     <Button
         a:id="@+id/now_playing_control_play"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="48dp"
-        a:layout_height="48dp"
+        a:layout_width="@dimen/touch_target_min"
+        a:layout_height="@dimen/touch_target_min"
         a:layout_gravity="center"
         a:layout_weight="0.0"
         a:contentDescription="@string/buttons.play"
         a:focusable="false"
         a:scaleType="fitCenter"
-        app:icon="@drawable/media_pause_shadow"
+        app:icon="@drawable/media_pause"
         app:iconGravity="textEnd"
         app:iconSize="34dp" />
 
     <Button
         a:id="@+id/now_playing_control_next"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="40dp"
-        a:layout_height="40dp"
+        a:layout_width="@dimen/touch_target_min"
+        a:layout_height="@dimen/touch_target_min"
         a:layout_gravity="center"
-        a:layout_marginEnd="8dip"
+        a:layout_marginEnd="@dimen/space_sm"
         a:layout_weight="0.0"
         a:contentDescription="@string/buttons.next"
         a:focusable="false"
         a:scaleType="fitCenter"
-        app:icon="@drawable/media_forward_shadow"
+        app:icon="@drawable/media_forward"
         app:iconGravity="textEnd"
         app:iconSize="24dp" />
 

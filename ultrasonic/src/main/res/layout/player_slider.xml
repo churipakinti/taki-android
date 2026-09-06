@@ -5,7 +5,7 @@
     a:layout_height="wrap_content"
     a:orientation="vertical"
     a:layout_marginTop="@dimen/player_section_spacing_large" >
-    
+
     <SeekBar
         a:id="@+id/current_playing_progress_bar"
         a:layout_width="fill_parent"
@@ -22,25 +22,21 @@
 
         <TextView
             a:id="@+id/current_playing_position"
-            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_alignParentLeft="true"
-            a:layout_marginStart="12dp"
+            a:layout_marginStart="@dimen/space_md"
             a:text="@string/util.no_time"
-            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            a:textColor="?attr/colorOnSurfaceVariant" />
+            a:textAppearance="@style/TextAppearance.Taki.Caption" />
 
         <TextView
             a:id="@+id/current_playing_duration"
-            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="wrap_content"
             a:layout_height="wrap_content"
             a:layout_alignParentRight="true"
-            a:layout_marginEnd="12dp"
+            a:layout_marginEnd="@dimen/space_md"
             a:text="@string/util.no_time"
-            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            a:textColor="?attr/colorOnSurfaceVariant"
+            a:textAppearance="@style/TextAppearance.Taki.Caption"
             tools:ignore="RelativeOverlap" />
 
     </RelativeLayout>

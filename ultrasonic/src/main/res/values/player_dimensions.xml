@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Player-surface dimensions. Values that have an exact match in the shared Taki scale
+    (res/values/dimens.xml, visual guide section 17) are aliased to it so the two don't
+    drift; the rest are genuinely player-specific (transport button height, skip-icon
+    size, the two large section gaps).
+-->
 <resources>
-    <dimen name="player_panel_corner_radius">28dp</dimen>
-    <dimen name="player_panel_horizontal_padding">24dp</dimen>
+    <dimen name="player_panel_corner_radius">@dimen/radius_lg</dimen>
+    <dimen name="player_panel_horizontal_padding">@dimen/space_xl</dimen>
     <dimen name="player_panel_top_padding">28dp</dimen>
     <dimen name="player_panel_bottom_padding">28dp</dimen>
-    <dimen name="player_panel_outer_margin">8dp</dimen>
-    <dimen name="player_info_artist_spacing">6dp</dimen>
-    <dimen name="player_info_favorite_target">48dp</dimen>
+    <dimen name="player_panel_outer_margin">@dimen/space_sm</dimen>
+    <dimen name="player_info_artist_spacing">@dimen/space_xs</dimen>
+    <dimen name="player_info_favorite_target">@dimen/touch_target_min</dimen>
     <dimen name="player_section_spacing_large">28dp</dimen>
-    <dimen name="player_section_spacing">24dp</dimen>
-    <dimen name="player_time_spacing">8dp</dimen>
+    <dimen name="player_section_spacing">@dimen/space_xl</dimen>
+    <dimen name="player_time_spacing">@dimen/space_sm</dimen>
     <dimen name="player_transport_height">64dp</dimen>
-    <dimen name="player_transport_icon">32dp</dimen>
+    <dimen name="player_transport_icon">@dimen/icon_size_lg</dimen>
     <dimen name="player_skip_icon">30dp</dimen>
-    <dimen name="player_mode_icon">24dp</dimen>
-    <dimen name="player_secondary_target">48dp</dimen>
+    <dimen name="player_mode_icon">@dimen/icon_size_md</dimen>
+    <dimen name="player_secondary_target">@dimen/touch_target_min</dimen>
     <dimen name="player_secondary_icon">20dp</dimen>
-    <dimen name="player_secondary_spacing">10dp</dimen>
+    <dimen name="player_secondary_spacing">@dimen/space_sm</dimen>
 </resources>

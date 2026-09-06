@@ -542,8 +542,8 @@ Alias semánticos (mantener sincronizados con las pantallas):
 | `@dimen/radius_md` | 12 dp | Tarjetas, hojas, paneles. Forma: `@style/ShapeAppearanceOverlay.Taki.Medium`. |
 | `@dimen/radius_lg` | 20 dp | Paneles grandes / hero. |
 
-El panel del reproductor (`@dimen/player_panel_corner_radius`, 28 dp) queda fuera de esta escala
-por ahora; #7 lo revisará. Círculos completos: `@style/ShapeAppearanceOverlay.Ultrasonic.Circle`.
+El panel del reproductor (`@dimen/player_panel_corner_radius`) ya apunta a `@dimen/radius_lg`
+(20 dp) desde #7 (§18.4). Círculos completos: `@style/ShapeAppearanceOverlay.Ultrasonic.Circle`.
 
 ### 17.4 Jerarquía tipográfica
 
@@ -655,12 +655,28 @@ biblioteca. La acción "Play all" de la barra del detalle de pista/carpeta se ma
 propósito (es la acción **primaria** de esa pantalla) y ya se oculta en álbum/playlist, que tienen
 su propio botón de reproducción en el héroe.
 
-### 18.4 Pendiente en #7 / #11
+### 18.4 Mini reproductor y Now Playing (#7)
+
+Las dos superficies de reproducción alineadas al mismo lenguaje visual, sin tocar el
+comportamiento de Media3/sesión:
+
+| Archivo | Qué se migró |
+| --- | --- |
+| `layout/now_playing.xml` | Portada `60 dp` → `artwork_thumb` (56) con `ShapeAppearanceOverlay.Taki.Small` (una sola forma de portada, como #4); título/artista a `Taki.Title` / `Taki.Caption`; botones prev/next `40 dp` → `touch_target_min`; iconos de transporte a las variantes planas (`media_backward` / `media_pause` / `media_forward`, sin la capa de sombra); espaciado a tokens. |
+| `layout/player_media_info.xml` | Título de Now Playing `Material3.TitleLarge` → `TextAppearance.Taki.Hero` (rol pensado para esto, §17.4); artista → `Taki.Caption`; el corazón de "me gusta" deja de estar oculto a accesibilidad (`focusable=false` + `importantForAccessibility=no` → `focusable=true`, conserva su `contentDescription`); márgenes a tokens. |
+| `layout/player_slider.xml` | Posición / duración → `Taki.Caption`; márgenes a `space_md`. |
+| `layout/media_buttons.xml` | Iconos de transporte a las variantes planas (`media_start` / `media_pause` / `media_backward` / `media_forward`). El botón play/pausa sigue siendo el primario relleno de alto contraste; shuffle/repeat ya se colorean con el verde (`playerModeColor` → `colorPrimary`) sólo cuando están activos — sin cambios. |
+| `values/player_dimensions.xml` | Los valores con equivalente exacto en la escala compartida se aliasan a ella (`player_panel_corner_radius` → `radius_lg`, `player_*_target` → `touch_target_min`, `player_transport_icon` → `icon_size_lg`, `player_mode_icon` → `icon_size_md`, márgenes → `space_*`); el resto (altura de botón de transporte 64, skip-icon 30, los dos huecos de sección grandes) es genuinamente específico del reproductor. |
+| `drawable/bg_player_panel.xml`, `drawable/bg_now_playing.xml` | Menos "tarjeta": tono de superficie más bajo (`colorSurfaceContainer` en vez de `…High`) para que el panel agrupe los controles sin leerse como tarjeta elevada; radios al esquema de tokens (`radius_lg` / `radius_md`). |
+| `layout/current_playing.xml` | Portada del reproductor `ShapeAppearance.Material3.MediumComponent` → `ShapeAppearanceOverlay.Taki.Medium`; márgenes a tokens. |
+
+Se eliminaron los 4 drawables `media_*_shadow` (layer-list de sombra desplazada 1 dp) al quedar
+sin uso; `NowPlayingFragment.update()` ahora referencia los iconos planos.
+
+### 18.5 Pendiente en #11
 
 - Filas de pista (`list_item_track*`, `list_item_queue_track`, `list_item_track_details`) y los
   icon buttons sub-48 dp que quedan.
-- Mini reproductor y Now Playing (`now_playing`, `player_media_info`, `player_slider`,
-  `media_buttons`, `player_secondary_controls`, `player_dimensions.xml`).
 - Encabezados y gutters de Library y Search (extender el trato de `home_fragment.xml`).
 - Tarjetas de playlist/artista (`grid_item_playlist`, `list_item_playlist`, `grid_item_artist`,
   `list_item_artist`).

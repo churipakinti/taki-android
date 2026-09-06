@@ -12,7 +12,7 @@
         a:layout_height="56dp"
         a:gravity="center_vertical"
         a:orientation="horizontal"
-        a:paddingHorizontal="8dp">
+        a:paddingHorizontal="@dimen/space_sm">
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/player_back"
@@ -70,10 +70,10 @@
                 a:id="@+id/current_playing_album_art_image"
                 a:layout_width="0dp"
                 a:layout_height="0dp"
-                a:layout_marginStart="28dp"
-                a:layout_marginTop="12dp"
-                a:layout_marginEnd="28dp"
-                a:layout_marginBottom="16dp"
+                a:layout_marginStart="@dimen/player_panel_horizontal_padding"
+                a:layout_marginTop="@dimen/space_md"
+                a:layout_marginEnd="@dimen/player_panel_horizontal_padding"
+                a:layout_marginBottom="@dimen/space_lg"
                 a:scaleType="centerCrop"
                 a:contentDescription="@string/albumArt"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -82,7 +82,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.42"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent" />
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Taki.Medium" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
