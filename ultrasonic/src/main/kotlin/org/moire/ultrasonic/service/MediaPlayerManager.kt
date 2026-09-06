@@ -1102,22 +1102,31 @@ class MediaPlayerManager(
     @Synchronized
     fun removeIncompleteTracksFromPlaylist() {
         val list = playlist.toList()
-        var removed = 0
-        // Switching away from a server calls this to drop songs the new server/Offline can't
-        // play. Without suppression, removing each item one by one from a large queue (e.g.
-        // a several-thousand-song album, mostly not downloaded) fires onTimelineChanged once
-        // per removal, each doing a full timeline walk - the exact same O(n^2) freeze as
-        // withTimelinePublishSuppressed fixes for adding, except here it ran under this
-        // method's own lock and produced a real ANR.
-        withTimelinePublishSuppressedSync {
-            for ((index, item) in list.withIndex()) {
-                val state = DownloadService.getDownloadState(item.toTrack())
 
-                // The track is not downloaded, remove it
-                if (state != DownloadState.DONE && state != DownloadState.PINNED) {
-                    removeFromPlaylist(index - removed)
-                    removed++
-                }
+        // Switching away from a server drops songs the new server / Offline can't play. The one
+        // item Media3 is actively playing is kept even when it isn't a finished download: its
+        // data source and buffer are already open and must keep playing until they run dry
+        // (issue #2). Every other non-downloaded item still goes, so nothing new can be streamed
+        // after the switch - the next track plays only if it is genuinely available offline.
+        val toRemove = incompleteTrackIndicesToRemove(
+            downloaded = list.map { item ->
+                val state = DownloadService.getDownloadState(item.toTrack())
+                state == DownloadState.DONE || state == DownloadState.PINNED
+            },
+            currentIndex = currentMediaItemIndex
+        )
+        if (toRemove.isEmpty()) return
+
+        var removed = 0
+        // Without suppression, removing each item one by one from a large queue (e.g. a
+        // several-thousand-song album, mostly not downloaded) fires onTimelineChanged once per
+        // removal, each doing a full timeline walk - the exact same O(n^2) freeze as
+        // withTimelinePublishSuppressed fixes for adding, except here it ran under this method's
+        // own lock and produced a real ANR.
+        withTimelinePublishSuppressedSync {
+            for (index in toRemove) {
+                removeFromPlaylist(index - removed)
+                removed++
             }
         }
     }
@@ -1477,4 +1486,21 @@ class MediaPlayerManager(
     }
 
     enum class PlayerBackend { JUKEBOX, LOCAL }
+}
+
+/**
+ * Positions in the queue to drop when leaving a server (see
+ * [MediaPlayerManager.removeIncompleteTracksFromPlaylist]): every item whose [downloaded] flag
+ * is `false`, **except** the one at [currentIndex] - that item is already playing from an open
+ * Media3 source/buffer and must not be interrupted by the mode switch (issue #2). A
+ * [currentIndex] of -1 (nothing playing) or one out of range keeps nothing back.
+ *
+ * The returned indices are ascending, so a caller removing them in order only has to offset by
+ * the count already removed.
+ */
+internal fun incompleteTrackIndicesToRemove(
+    downloaded: List<Boolean>,
+    currentIndex: Int
+): List<Int> = downloaded.indices.filter { index ->
+    index != currentIndex && !downloaded[index]
 }
