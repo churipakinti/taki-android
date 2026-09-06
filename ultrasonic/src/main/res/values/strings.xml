@@ -125,6 +125,7 @@
     <string name="download.menu_favorite">Like</string>
     <string name="download.playerstate_loading">Buffering …</string>
     <string name="download.play_error">Couldn\'t play this song.</string>
+    <string name="download.play_error_track_unavailable">Couldn\'t play this track. It may have moved on the server — refresh the album.</string>
     <string name="download.download_error">Couldn\'t download this song. Try again.</string>
     <string name="download.playerstate_playing_shuffle">Playing shuffle</string>
     <string name="download.playlist_done">Playlist saved.</string>

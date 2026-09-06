@@ -231,8 +231,22 @@ class MediaPlayerManager(
             // message.
             Timber.w(error.toString())
 
+            // A track whose id no longer resolves on the server (file renamed/moved, library not
+            // rescanned) surfaces here as an invalid content type (the stream data source rejects
+            // the Subsonic error envelope), a 404, or an unrecognised container. Point the user at
+            // the fix -- refreshing the album re-fetches the current ids -- rather than the generic
+            // "couldn't play" message.
+            val messageId = when (error.errorCode) {
+                PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE,
+                PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
+                PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
+                PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED ->
+                    R.string.download_play_error_track_unavailable
+                else -> R.string.download_play_error
+            }
+
             mainScope.launch {
-                toast(R.string.download_play_error, false, UApp.applicationContext())
+                toast(messageId, false, UApp.applicationContext())
             }
 
             if (isJukeboxEnabled) {

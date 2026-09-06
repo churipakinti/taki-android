@@ -30,6 +30,7 @@ import androidx.media3.exoplayer.source.ShuffleOrder
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
+import com.google.common.base.Predicate
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.Random
 import kotlinx.coroutines.CoroutineScope
@@ -131,6 +132,19 @@ class PlaybackService :
 
     private var resolveCallCount = 0
     private val resolvedTrackIds = HashSet<String>()
+
+    /**
+     * Rejects stream responses whose body is a Subsonic error envelope (or a proxy error page)
+     * rather than audio. Navidrome answers HTTP 200 with an `<subsonic-response status="failed">`
+     * XML body when a track id no longer resolves to a file (renamed on disk, library not
+     * rescanned); without this check Media3 hands the XML to its extractors and fails with an
+     * opaque "Source error" / UnrecognizedInputFormatException. A non-audio content type instead
+     * raises ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE, which is diagnosable and actionable.
+     */
+    private val audioStreamContentTypePredicate = Predicate<String> { contentType ->
+        val normalized = contentType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
+        normalized.isEmpty() || normalized !in NON_AUDIO_STREAM_CONTENT_TYPES
+    }
 
     private val resolver: ResolvingDataSource.Resolver = ResolvingDataSource.Resolver {
         val callIndex = ++resolveCallCount
@@ -302,6 +316,7 @@ class PlaybackService :
         // it will forward to ResolvingDataSource, which will create a URL through the resolver
         // and pass it onto the OkHttpDataSource.
         val okHttpDataSource = OkHttpDataSource.Factory(client)
+            .setContentTypePredicate(audioStreamContentTypePredicate)
         val resolvingDataSource = ResolvingDataSource.Factory(okHttpDataSource, resolver)
         val cacheDataSourceFactory: DataSource.Factory =
             CachedDataSource.Factory(resolvingDataSource)
@@ -476,6 +491,18 @@ class PlaybackService :
         const val CUSTOM_COMMAND_REPEAT_MODE =
             "org.moire.ultrasonic.REPEAT_MODE"
         private const val NOTIFICATION_ID = 3009
+
+        /**
+         * Content types a Subsonic-family server (or a reverse proxy in front of it) returns
+         * *instead of* audio when a stream request fails. Compared case-insensitively against the
+         * response content type with any `;charset=` parameter stripped.
+         */
+        private val NON_AUDIO_STREAM_CONTENT_TYPES = setOf(
+            "application/xml",
+            "text/xml",
+            "application/json",
+            "text/html",
+        )
     }
 }
 
