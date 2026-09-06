@@ -929,7 +929,9 @@ Preserve behavior and data contracts, but Compose layouts should follow the cano
 
 # 22. Canonical visual references
 
-The image `TAKI_VISUAL_NORTH_STAR.png` is a **directional reference**, not a pixel-perfect implementation contract.
+The image [`TAKI_VISUAL_NORTH_STAR.png`](../assets/TAKI_VISUAL_NORTH_STAR.png) (repository path
+`docs/assets/TAKI_VISUAL_NORTH_STAR.png`) is a **directional reference**, not a pixel-perfect
+implementation contract.
 
 Extract from it:
 
