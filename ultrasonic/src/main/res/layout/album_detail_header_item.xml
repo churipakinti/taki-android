@@ -71,6 +71,18 @@
         a:paddingBottom="@dimen/space_sm">
 
         <com.google.android.material.button.MaterialButton
+            a:id="@+id/album_detail_star"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
+            a:contentDescription="@string/album.star_description"
+            a:visibility="gone"
+            app:icon="@drawable/rating_heart_hollow"
+            app:iconSize="@dimen/icon_size_sm"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            tools:visibility="visible" />
+
+        <com.google.android.material.button.MaterialButton
             a:id="@+id/album_detail_download"
             style="@style/Widget.Material3.Button.IconButton"
             a:layout_width="@dimen/touch_target_min"

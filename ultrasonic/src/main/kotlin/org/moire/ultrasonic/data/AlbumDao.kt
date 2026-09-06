@@ -91,6 +91,15 @@ interface AlbumDao : GenericDao<Album> {
     fun updateGrouping(albumId: String, grouping: String)
 
     /**
+     * Keep a cached album row's favourite flag in step with a star/unstar the user just made
+     * (issue #15), so a later read from cache - e.g. Liked Albums, or reopening the album -
+     * doesn't show a stale heart. No-op if the album row was never separately cached; the
+     * server remains the source of truth and the next network fetch corrects it anyway.
+     */
+    @Query("UPDATE albums SET starred = :starred WHERE id = :albumId")
+    fun setStarred(albumId: String, starred: Boolean)
+
+    /**
      * Albums with a known, non-blank grouping - the input to [org.moire.ultrasonic.util.
      * CollectionResolver]. Room can't express "not null and not empty" with a single null check
      * since grouping is TEXT, hence the explicit `!= ''`.

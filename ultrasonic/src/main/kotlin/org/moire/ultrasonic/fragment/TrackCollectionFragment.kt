@@ -119,6 +119,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private var albumHasMultipleArtists = false
     private var albumHasMultipleDiscs = false
     private var albumNotes: String? = null
+    private var albumStarred = false
     private var selectionModeActive = false
     private var pendingAddToPlaylistTracks: List<Track>? = null
     private var availablePlaylists: List<Playlist> = emptyList()
@@ -222,7 +223,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     trailingActionIcon = R.drawable.ic_menu_download,
                     trailingActionDescription = R.string.album_download_description,
                     onTrailingAction = { downloadSelectedOrAllTracks() },
-                    onInfoAction = ::showAlbumInfo
+                    onInfoAction = ::showAlbumInfo,
+                    onToggleStar = ::toggleAlbumStar
                 )
             )
         } else if (navArgs.playlistId != null) {
@@ -312,6 +314,17 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             triggerButtonUpdate(selectedSongs)
         }
 
+        // Album Detail heart (issue #15): if the server rejected the star/unstar, put the
+        // optimistic icon back to what the server still has and tell the user.
+        rxBusSubscription += RxBus.ratingPublishedObservable.subscribe { update ->
+            if (!update.isAlbum || update.id != navArgs.id || update.success != false) {
+                return@subscribe
+            }
+            albumStarred = !albumStarred
+            refreshHeader()
+            toast(R.string.album_star_failed)
+        }
+
         triggerButtonUpdate()
 
         // Update the buttons when the selection has changed
@@ -368,6 +381,25 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
+    /**
+     * Album Detail heart (issue #15). The binder has already flipped its own icon; here we
+     * remember the new state so a header rebuild keeps it, then submit it through the same
+     * RxBus rating pipeline tracks use. A failed server call is reconciled back in the
+     * [RxBus.ratingPublishedObservable] subscription set up in [onViewCreated].
+     */
+    private fun toggleAlbumStar(starred: Boolean) {
+        val albumId = navArgs.id ?: return
+        albumStarred = starred
+        RxBus.ratingSubmitter.onNext(RatingUpdate(albumId, HeartRating(starred), isAlbum = true))
+    }
+
+    private fun loadAlbumStarred(albumId: String, forceRefresh: Boolean) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            albumStarred = listModel.getAlbumStarred(albumId, forceRefresh) ?: albumStarred
+            refreshHeader()
+        }
+    }
+
     private fun albumShowArtist(@Suppress("UNUSED_PARAMETER") track: Track): Boolean =
         albumHasMultipleArtists
 
@@ -383,16 +415,22 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     HtmlCompat.fromHtml(it, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
                 }
                 ?.takeIf { it.isNotEmpty() }
-            refreshHeaderNotes()
+            refreshHeader()
         }
     }
 
-    private fun refreshHeaderNotes() {
+    // Rebuilds the Album Detail header so a value that arrived after first render (notes,
+    // starred) actually shows. A fresh AlbumHeader instance is required: DiffUtil compares it
+    // by reference (no equals()/hashCode()).
+    private fun refreshHeader() {
         val current = viewAdapter.getCurrentList()
         val header = current.firstOrNull() as? AlbumHeader ?: return
-        if (header.notes == albumNotes) return
+        if (header.notes == albumNotes && header.starred == albumStarred) return
 
-        val updatedHeader = AlbumHeader(header.entries, header.name).apply { notes = albumNotes }
+        val updatedHeader = AlbumHeader(header.entries, header.name).apply {
+            notes = albumNotes
+            starred = albumStarred
+        }
         viewAdapter.submitList(listOf(updatedHeader) + current.drop(1))
     }
 
@@ -784,6 +822,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     .mapNotNull { track -> track.discNumber }
                     .toSet().size > 1
                 albumHeader.notes = albumNotes
+                albumHeader.starred = albumStarred
             }
 
             val mixedList: MutableList<Identifiable> = mutableListOf(albumHeader)
@@ -965,7 +1004,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     listModel.getMusicDirectory(refresh2, id, name)
                 }
 
-                if (isAlbum) loadAlbumInfo(id, refresh2)
+                if (isAlbum) {
+                    loadAlbumInfo(id, refresh2)
+                    loadAlbumStarred(id, refresh2)
+                }
             }
 
             swipeRefresh?.isRefreshing = false

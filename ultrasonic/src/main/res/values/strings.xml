@@ -9,6 +9,7 @@
     <string name="library.your_music">Your music</string>
     <string name="library.collection">Collection</string>
     <string name="library.liked_songs">Liked Songs</string>
+    <string name="library.liked_albums">Liked Albums</string>
     <!-- "Box Sets" deliberately avoids the word "Collection" - library.collection above already
          means something else (the server/library collection selector), not box sets/multi-album
          releases. -->
@@ -64,6 +65,9 @@
     <string name="album.download_description">Download this album</string>
     <string name="album.info_description">Album information</string>
     <string name="album.info_title">About this album</string>
+    <string name="album.star_description">Like this album</string>
+    <string name="album.unstar_description">Unlike this album</string>
+    <string name="album.star_failed">Couldn\'t update the like on the server</string>
     <string name="album.disc_header">Disc %1$d</string>
     <string name="album.download_disc_description">Download this disc</string>
     <string name="album.play_disc_description">Play this disc</string>

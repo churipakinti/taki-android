@@ -12,6 +12,11 @@ class AlbumHeader(var entries: List<MusicDirectory.Child>, var name: String?) : 
     // separate, slower network call than the entries the header is built from.
     var notes: String? = null
 
+    // Album Detail only: the album's server-side favourite state (issue #15). Set after
+    // construction - like [notes] it comes from a separate call than the track entries, and
+    // is flipped optimistically by the heart action before the server round-trip confirms.
+    var starred: Boolean = false
+
     var isAllVideo: Boolean
         private set
 

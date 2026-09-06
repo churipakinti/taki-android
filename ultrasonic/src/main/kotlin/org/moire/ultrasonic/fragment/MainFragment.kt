@@ -59,6 +59,14 @@ class MainFragment :
                 )
             )
         }
+        view.findViewById<View>(R.id.library_liked_albums).setOnClickListener {
+            findNavController().navigate(
+                NavigationGraphDirections.toAlbumList(
+                    type = AlbumListType.STARRED,
+                    title = getString(R.string.library_liked_albums)
+                )
+            )
+        }
         view.findViewById<View>(R.id.library_playlists).setOnClickListener {
             findNavController().navigate(R.id.playlistsFragment)
         }

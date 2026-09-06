@@ -159,6 +159,23 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
         return info
     }
 
+    /**
+     * The album's server-side favourite state for the Album Detail heart (issue #15). Reads
+     * the album row (cache first, then network, via CachedMusicService.getAlbum). Returns null
+     * if it can't be resolved - e.g. offline with nothing cached, or an ID3-less server - and
+     * the caller keeps whatever state it already had rather than forcing the heart off.
+     */
+    suspend fun getAlbumStarred(id: String, forceRefresh: Boolean = false): Boolean? =
+        withContext(Dispatchers.IO) {
+            try {
+                MusicServiceFactory.getMusicService().getAlbum(id, null, forceRefresh)?.starred
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                null
+            }
+        }
+
     suspend fun getSongsForGenre(genre: String, count: Int, offset: Int, append: Boolean) {
         if (genreSongsLoading || (append && !canLoadMoreGenreSongs)) return
         genreSongsLoading = true

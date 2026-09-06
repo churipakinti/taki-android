@@ -37,22 +37,28 @@ class RatingManager : CoroutineScope by CoroutineScope(Dispatchers.Default) {
 
     internal fun submitRating(update: RatingUpdate) {
         // Don't submit the same rating twice
-        if (update.id == lastUpdate?.id && update.rating == lastUpdate?.rating) return
+        if (update.id == lastUpdate?.id &&
+            update.rating == lastUpdate?.rating &&
+            update.isAlbum == lastUpdate?.isAlbum
+        ) {
+            return
+        }
 
         val service = getMusicService()
         val id = update.id
 
-        Timber.i("Submitting rating to server: ${update.rating} for $id")
+        Timber.i("Submitting rating to server: ${update.rating} for $id (isAlbum=${update.isAlbum})")
 
         if (update.rating is HeartRating) {
+            val target = starTargetFor(update)
             launch {
                 var success = false
                 withContext(Dispatchers.IO) {
                     try {
                         if (update.rating.isHeart) {
-                            service.star(id)
+                            service.star(target.trackId, albumId = target.albumId)
                         } else {
-                            service.unstar(id)
+                            service.unstar(target.trackId, albumId = target.albumId)
                         }
                         success = true
                     } catch (all: Exception) {
@@ -86,5 +92,19 @@ class RatingManager : CoroutineScope by CoroutineScope(Dispatchers.Default) {
         val instance: RatingManager by lazy {
             RatingManager()
         }
+
+        /**
+         * Which parameter of the OpenSubsonic/Navidrome `star`/`unstar` call the id goes in.
+         * An album id sent in the plain `id` slot makes the server look for a *song* with that
+         * id, so the album/track split has to be explicit (issue #15).
+         */
+        internal fun starTargetFor(update: RatingUpdate): StarTarget =
+            if (update.isAlbum) {
+                StarTarget(trackId = null, albumId = update.id)
+            } else {
+                StarTarget(trackId = update.id, albumId = null)
+            }
     }
+
+    internal data class StarTarget(val trackId: String?, val albumId: String?)
 }

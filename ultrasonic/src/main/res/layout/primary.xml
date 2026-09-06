@@ -60,6 +60,17 @@
             app:iconGravity="textStart" />
 
         <com.google.android.material.button.MaterialButton
+            a:id="@+id/library_liked_albums"
+            style="@style/Widget.Taki.LibraryRow"
+            a:layout_width="match_parent"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_sm"
+            a:gravity="start|center_vertical"
+            a:text="@string/library.liked_albums"
+            app:icon="@drawable/rating_heart_full"
+            app:iconGravity="textStart" />
+
+        <com.google.android.material.button.MaterialButton
             a:id="@+id/library_playlists"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"

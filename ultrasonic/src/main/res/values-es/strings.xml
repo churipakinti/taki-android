@@ -39,6 +39,10 @@
     <string name="delete_playlist">Quieres eliminar %1$s</string>
     <string name="download.empty">No se está descargando nada</string>
     <string name="album.remove_download_description">Eliminar álbum descargado</string>
+    <string name="album.star_description">Marcar álbum como me gusta</string>
+    <string name="album.unstar_description">Quitar me gusta del álbum</string>
+    <string name="album.star_failed">No se pudo actualizar el me gusta en el servidor</string>
+    <string name="library.liked_albums">Álbumes que me gustan</string>
     <string name="playlist.empty">La lista de reproducción está vacía</string>
     <string name="playlist.move">Reordenar canción</string>
     <string name="download.jukebox_not_authorized">El control remoto no está activado. Activa el modo gramola (jukebox) en <b>Usuarios &gt; Configuración</b> en tu servidor Subsonic.</string>

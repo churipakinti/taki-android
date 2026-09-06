@@ -8,6 +8,7 @@
 package org.moire.ultrasonic.adapters
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +23,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
+import org.moire.ultrasonic.util.Util.themeColor
 
 /**
  * Binds an [AlbumHeader] into the Spotify-style hero used by the Album and Playlist detail
@@ -41,7 +43,11 @@ class AlbumDetailHeaderBinder(
     private val trailingActionIcon: Int,
     private val trailingActionDescription: Int,
     private val onTrailingAction: () -> Unit,
-    private val onInfoAction: ((AlbumHeader) -> Unit)? = null
+    private val onInfoAction: ((AlbumHeader) -> Unit)? = null,
+    // Album-only (issue #15). Null for playlists, which keeps the heart gone and leaves
+    // playlist behavior untouched, exactly like [onInfoAction]. Called with the new intended
+    // state after the icon has already been flipped optimistically.
+    private val onToggleStar: ((Boolean) -> Unit)? = null
 ) : ItemViewBinder<AlbumHeader, AlbumDetailHeaderBinder.ViewHolder>(),
     KoinComponent {
 
@@ -59,6 +65,7 @@ class AlbumDetailHeaderBinder(
         val shuffle: View = itemView.findViewById(R.id.album_detail_shuffle)
         val download: MaterialButton = itemView.findViewById(R.id.album_detail_download)
         val info: MaterialButton = itemView.findViewById(R.id.album_detail_info)
+        val star: MaterialButton = itemView.findViewById(R.id.album_detail_star)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, item: AlbumHeader) {
@@ -94,10 +101,46 @@ class AlbumDetailHeaderBinder(
         holder.shuffle.setOnClickListener { onShuffle() }
         holder.download.setOnClickListener { onTrailingAction() }
 
+        bindStar(holder, item, context)
+
         // Only shown once album notes have actually been fetched and turned out non-empty -
         // see loadAlbumInfo()/updateInfoButtonVisibility() in TrackCollectionFragment. Playlists
         // never pass onInfoAction, so this stays gone there regardless of item.notes.
         holder.info.isVisible = onInfoAction != null && !item.notes.isNullOrEmpty()
         holder.info.setOnClickListener { onInfoAction?.invoke(item) }
+    }
+
+    private fun bindStar(holder: ViewHolder, item: AlbumHeader, context: Context) {
+        val toggle = onToggleStar
+        holder.star.isVisible = toggle != null
+        if (toggle == null) return
+
+        renderStar(holder, item, context)
+        holder.star.setOnClickListener {
+            val newState = !item.starred
+            item.starred = newState
+            renderStar(holder, item, context)
+            toggle(newState)
+        }
+    }
+
+    private fun renderStar(holder: ViewHolder, item: AlbumHeader, context: Context) {
+        holder.star.setIconResource(
+            if (item.starred) R.drawable.rating_heart_full else R.drawable.rating_heart_hollow
+        )
+        // Green only carries the "favourite" meaning here (visual guide section 2); neutral
+        // otherwise so the row of icon actions stays calm.
+        holder.star.iconTint = ColorStateList.valueOf(
+            context.themeColor(
+                if (item.starred) {
+                    androidx.appcompat.R.attr.colorPrimary
+                } else {
+                    com.google.android.material.R.attr.colorOnSurfaceVariant
+                }
+            )
+        )
+        holder.star.contentDescription = context.getString(
+            if (item.starred) R.string.album_unstar_description else R.string.album_star_description
+        )
     }
 }
