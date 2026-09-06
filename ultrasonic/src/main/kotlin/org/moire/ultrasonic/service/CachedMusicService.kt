@@ -9,6 +9,8 @@ package org.moire.ultrasonic.service
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
 import kotlin.Pair
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
@@ -303,6 +305,22 @@ class CachedMusicService(private val musicService: MusicService) :
             }
             cache
         }
+
+    /**
+     * A cached album whose tracks 404 on stream is stale: the server reassigned the ids (e.g.
+     * Navidrome derives them from the file path and the files were moved/renamed) but Taki never
+     * re-queried. Drop both the track listing and the album row so the next fetch re-resolves;
+     * getAlbum() / getAlbumAsDir() both treat an empty cache as "go to the network".
+     */
+    @Throws(Exception::class)
+    override suspend fun invalidateAlbumCache(albumId: String) {
+        withContext(Dispatchers.IO) {
+            checkSettingsChanged()
+            Timber.i("Invalidating stale metadata cache for album id=%s", albumId)
+            cachedTracks.clearByAlbum(albumId)
+            cachedAlbums.delete(albumId)
+        }
+    }
 
     @Throws(Exception::class)
     override suspend fun search(criteria: SearchCriteria): SearchResult? =

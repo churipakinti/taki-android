@@ -29,10 +29,12 @@ import com.google.common.util.concurrent.MoreExecutors
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
 import org.koin.core.component.KoinComponent
 import org.moire.ultrasonic.R
@@ -57,6 +59,17 @@ import timber.log.Timber
 private const val CONTROLLER_SWITCH_DELAY = 500L
 private const val VOLUME_DELTA = 0.05f
 private const val PLAYBACK_CHECKPOINT_INTERVAL = 5_000L
+
+// After a playback error tears the PlaybackService/session down, the Media3 MediaController can
+// be left permanently disconnected - every later transport call is silently dropped with
+// "The controller is not connected. Ignoring ...". We detect that and rebuild the controller.
+// How long a suspend caller (queue update) waits for the rebuilt controller to reconnect before
+// giving up on this attempt.
+private const val CONTROLLER_REBUILD_TIMEOUT_MS = 5_000L
+
+// Minimum gap between rebuild attempts, so a session that dies immediately on every connect
+// can't spin us into a tight rebuild/battery-drain loop.
+private const val CONTROLLER_REBUILD_MIN_INTERVAL_MS = 2_000L
 
 // A single addMediaItems() call with a huge list (e.g. a several-hundred-disc box
 // set) can block the main thread long enough to ANR, since Media3 requires
@@ -126,6 +139,27 @@ class MediaPlayerManager(
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
 
     private var controller: Player? = null
+
+    // Guards against overlapping rebuilds and against rebuilding during our own intentional
+    // teardown (releaseController() calls controller.release(), which also fires onDisconnected).
+    private var isRebuildingController = false
+    private var isReleasingController = false
+    private var lastControllerRebuildAt = 0L
+
+    // Fired by Media3 when the controller loses its session (service torn down after an error,
+    // session released). Without a rebuild the controller reference stays but every command is
+    // dropped - see issue #18. Not called after our own release() because isReleasingController
+    // is set first.
+    private val mediaControllerListener = object : MediaController.Listener {
+        override fun onDisconnected(controller: MediaController) {
+            if (isReleasingController || !created) {
+                Timber.i("MediaController disconnected during teardown; not rebuilding")
+                return
+            }
+            Timber.w("MediaController disconnected from session; rebuilding")
+            rebuildController()
+        }
+    }
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -236,17 +270,38 @@ class MediaPlayerManager(
             // the Subsonic error envelope), a 404, or an unrecognised container. Point the user at
             // the fix -- refreshing the album re-fetches the current ids -- rather than the generic
             // "couldn't play" message.
-            val messageId = when (error.errorCode) {
+            val trackUnavailable = when (error.errorCode) {
                 PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE,
                 PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
                 PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
-                PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED ->
-                    R.string.download_play_error_track_unavailable
-                else -> R.string.download_play_error
+                PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED -> true
+                else -> false
             }
+            val messageId =
+                if (trackUnavailable) {
+                    R.string.download_play_error_track_unavailable
+                } else {
+                    R.string.download_play_error
+                }
 
             mainScope.launch {
                 toast(messageId, false, UApp.applicationContext())
+            }
+
+            // The id no longer resolves server-side (file moved/renamed, library not rescanned).
+            // Drop the stale cached album/track rows so the next fetch re-resolves to the current
+            // ids instead of replaying the same failing request (issue #18, Problem 2).
+            if (trackUnavailable) {
+                val albumId = controller?.currentMediaItem?.toTrack()?.albumId
+                if (albumId != null) {
+                    mainScope.launch {
+                        try {
+                            getMusicService().invalidateAlbumCache(albumId)
+                        } catch (e: Exception) {
+                            Timber.w(e, "Failed to invalidate stale album cache for %s", albumId)
+                        }
+                    }
+                }
             }
 
             if (isJukeboxEnabled) {
@@ -406,12 +461,16 @@ class MediaPlayerManager(
     }
 
     private fun createMediaController(onCreated: () -> Unit) {
+        // Clear any teardown flag left over from a previous lifecycle so disconnects in this one
+        // are still recovered.
+        isReleasingController = false
         mediaControllerFuture = MediaController.Builder(
             UApp.applicationContext(),
             sessionToken
         )
             // Specify mainThread explicitly
             .setApplicationLooper(Looper.getMainLooper())
+            .setListener(mediaControllerListener)
             .buildAsync()
 
         mediaControllerFuture?.addListener({
@@ -419,11 +478,77 @@ class MediaPlayerManager(
 
             Timber.i("MediaController Instance received")
             controller?.addListener(listeners)
+            isRebuildingController = false
             mainHandler.removeCallbacks(playbackCheckpoint)
             mainHandler.postDelayed(playbackCheckpoint, PLAYBACK_CHECKPOINT_INTERVAL)
             onCreated()
             Timber.i("MediaPlayerController creation complete")
         }, MoreExecutors.directExecutor())
+    }
+
+    /**
+     * Tears down the (dead) [controller] and builds a fresh one bound to the session. Rebuilding
+     * via [MediaController.Builder] also restarts the [PlaybackService] if it was stopped, so a
+     * single track error can't leave playback permanently wedged (issue #18). Safe to call from
+     * any transport path; a rebuild already in flight, or one less than
+     * [CONTROLLER_REBUILD_MIN_INTERVAL_MS] ago, is a no-op.
+     */
+    private fun rebuildController() {
+        if (isRebuildingController) return
+        val now = System.currentTimeMillis()
+        if (now - lastControllerRebuildAt < CONTROLLER_REBUILD_MIN_INTERVAL_MS) {
+            Timber.w("Skipping MediaController rebuild - last attempt was too recent")
+            return
+        }
+        isRebuildingController = true
+        lastControllerRebuildAt = now
+        Timber.i("Rebuilding MediaController after disconnect")
+
+        val dead = controller
+        controller = null
+        (dead as? MediaController)?.let {
+            it.removeListener(listeners)
+            it.release()
+        }
+        mediaControllerFuture?.let { MediaController.releaseFuture(it) }
+        mediaControllerFuture = null
+
+        createMediaController {}
+    }
+
+    /**
+     * Suspend guard for the queue-update path: if the controller is disconnected, rebuild it and
+     * wait for the new one to connect so the in-flight Play actually reaches a live session
+     * instead of being dropped. Returns false if no usable controller is available.
+     */
+    private suspend fun ensureControllerConnected(): Boolean {
+        val current = controller
+        if (current == null) return false
+        if (current !is MediaController || current.isConnected) return true
+
+        Timber.w("MediaController disconnected; rebuilding before queue update")
+        rebuildController()
+        val future = mediaControllerFuture ?: return false
+        val rebuilt = try {
+            withTimeoutOrNull(CONTROLLER_REBUILD_TIMEOUT_MS) { future.await() }
+        } catch (e: Exception) {
+            Timber.w(e, "Rebuilt MediaController failed to connect")
+            null
+        }
+        return rebuilt?.isConnected == true
+    }
+
+    /**
+     * Sync counterpart of [ensureControllerConnected] for the fire-and-forget transport methods:
+     * kicks off a rebuild if the controller is disconnected. The current call is still dropped,
+     * but the next one lands on a live session instead of wedging forever.
+     */
+    private fun rebuildControllerIfDisconnected() {
+        val current = controller
+        if (current is MediaController && !current.isConnected) {
+            Timber.w("MediaController disconnected; rebuilding")
+            rebuildController()
+        }
     }
 
     private fun playerStateChangedHandler() {
@@ -519,6 +644,7 @@ class MediaPlayerManager(
 
     @Synchronized
     fun play(index: Int) {
+        rebuildControllerIfDisconnected()
         controller?.seekTo(index, 0L)
         controller?.prepare()
         controller?.play()
@@ -526,6 +652,7 @@ class MediaPlayerManager(
 
     @Synchronized
     fun play() {
+        rebuildControllerIfDisconnected()
         controller?.prepare()
         controller?.play()
     }
@@ -537,11 +664,13 @@ class MediaPlayerManager(
 
     @Synchronized
     fun resumeOrPlay() {
+        rebuildControllerIfDisconnected()
         controller?.play()
     }
 
     @Synchronized
     fun togglePlayPause() {
+        rebuildControllerIfDisconnected()
         if (playbackState == Player.STATE_IDLE) autoPlayStart = true
         if (controller?.isPlaying == true) {
             controller?.pause()
@@ -668,6 +797,14 @@ class MediaPlayerManager(
         startIndex: Int?,
         startPositionMs: Int
     ) {
+        // The controller can be left disconnected after a playback error tore the session down
+        // (issue #18); rebuild and wait for it here so this Play reaches a live session instead
+        // of every command being dropped with "The controller is not connected".
+        if (!ensureControllerConnected()) {
+            Timber.w("No connected MediaController available; aborting queue update")
+            return
+        }
+
         // A queue-replacing call is authoritative about shuffle: "Play" (shuffle = false) must
         // start sequentially from the first track and must never inherit a shuffle mode left on
         // by a previous queue/album. Clearing it here is safe on the about-to-be-replaced queue
@@ -1088,6 +1225,8 @@ class MediaPlayerManager(
     }
 
     private fun releaseController() {
+        // Set before release() so the resulting onDisconnected callback doesn't trigger a rebuild.
+        isReleasingController = true
         controller?.removeListener(listeners)
         controller?.release()
         if (mediaControllerFuture != null) MediaController.releaseFuture(mediaControllerFuture!!)

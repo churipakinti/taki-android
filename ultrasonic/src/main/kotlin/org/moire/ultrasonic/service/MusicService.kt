@@ -79,6 +79,15 @@ interface MusicService {
     @Throws(Exception::class)
     suspend fun getAlbum(id: String, name: String?, refresh: Boolean): Album?
 
+    /**
+     * Drops any cached album row and track listing for [albumId] so the next [getAlbum] /
+     * [getAlbumAsDir] re-resolves against the server. Called when a stream request fails because
+     * the cached track ids no longer exist server-side (file renamed/moved, library not
+     * rescanned). No-op for backends without a metadata cache.
+     */
+    @Throws(Exception::class)
+    suspend fun invalidateAlbumCache(albumId: String) = Unit
+
     // Added for Mix diario v1.1: exact restoration by id instead of matching stored ids
     // against a freshly-fetched candidate pool.
     @Throws(Exception::class)
