@@ -468,11 +468,21 @@ class CachedMusicService(private val musicService: MusicService) :
     @Throws(Exception::class)
     override suspend fun star(id: String?, albumId: String?, artistId: String?) {
         musicService.star(id, albumId, artistId)
+        // Keep the local metadata cache in step with the server, so a queue later rebuilt from
+        // cache still shows the like (issue #1). Only runs once the network call above has
+        // succeeded; server behavior is unchanged.
+        if (id != null) writeStarredThrough(id, true)
     }
 
     @Throws(Exception::class)
     override suspend fun unstar(id: String?, albumId: String?, artistId: String?) {
         musicService.unstar(id, albumId, artistId)
+        if (id != null) writeStarredThrough(id, false)
+    }
+
+    private fun writeStarredThrough(trackId: String, starred: Boolean) {
+        checkSettingsChanged()
+        cachedTracks.setStarred(trackId, starred)
     }
 
     @Throws(Exception::class)

@@ -220,7 +220,7 @@ fun MediaItem.toTrack(cacheResult: Boolean = true): Track {
         },
         mediaMetadata.extras?.getString("path"),
         mediaMetadata.extras?.getBoolean("isVideo") ?: false,
-        mediaMetadata.extras?.getBoolean("starred", false) ?: false,
+        resolveStarred(mediaMetadata),
         mediaMetadata.discNumber,
         mediaMetadata.extras?.getString("type"),
         createdDate,
@@ -230,10 +230,6 @@ fun MediaItem.toTrack(cacheResult: Boolean = true): Track {
         mediaMetadata.extras?.getFloat("averageRating", 0F) ?: 0F,
         mediaMetadata.extras?.getString("name")
     )
-    if (mediaMetadata.userRating is HeartRating) {
-        track.starred = (mediaMetadata.userRating as HeartRating).isHeart
-    }
-
     if (cacheResult) {
         // Add MediaItem and Track to the cache
         MediaItemConverter.addToCache(mediaId, track)
@@ -241,6 +237,25 @@ fun MediaItem.toTrack(cacheResult: Boolean = true): Track {
     }
 
     return track
+}
+
+/**
+ * Resolves the liked/starred state of a track [MediaItem].
+ *
+ * The `"starred"` extra is authoritative: `Track.toMediaItem()` writes it together with
+ * [buildMediaItem]'s [HeartRating] from the same value, and [MediaItem.setStarred] (the like
+ * toggle) can only patch that mutable extras [android.os.Bundle] afterwards - a
+ * [MediaMetadata], and its `userRating`, is immutable. Reading `userRating` instead would keep
+ * resetting a just-liked track to its pre-like state on every player surface (issue #1).
+ *
+ * MediaItems built straight through [buildMediaItem] (folder / root browse nodes) carry no
+ * `"starred"` extra; there the `userRating` [HeartRating] is the only signal.
+ */
+private fun resolveStarred(metadata: MediaMetadata): Boolean {
+    val extras = metadata.extras
+    if (extras?.containsKey("starred") == true) return extras.getBoolean("starred", false)
+    val heartRating = metadata.userRating
+    return heartRating is HeartRating && heartRating.isHeart
 }
 
 private fun safeParseDate(created: String?): Date? = if (created != null) {

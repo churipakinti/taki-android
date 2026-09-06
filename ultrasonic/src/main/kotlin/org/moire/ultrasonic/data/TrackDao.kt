@@ -27,6 +27,13 @@ interface TrackDao : GenericDao<Track> {
     fun get(id: String): Track?
 
     /**
+     * Update just the starred flag of a cached track so a like/unlike survives into a queue
+     * later rebuilt from cache, without re-fetching the album. No-op if the track isn't cached.
+     */
+    @Query("UPDATE tracks SET starred = :starred WHERE id = :id")
+    fun setStarred(id: String, starred: Boolean)
+
+    /**
      * Get tracks by album, in disc/track order
      */
     @Query("SELECT * FROM tracks WHERE albumId LIKE :id ORDER BY discNumber, track")

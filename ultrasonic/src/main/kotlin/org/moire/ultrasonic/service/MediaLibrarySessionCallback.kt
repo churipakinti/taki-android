@@ -54,6 +54,7 @@ import org.moire.ultrasonic.domain.SearchResult
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.util.buildMediaItem
+import org.moire.ultrasonic.util.setStarred
 import org.moire.ultrasonic.util.toMediaItem
 import org.moire.ultrasonic.util.toTrack
 import timber.log.Timber
@@ -460,7 +461,11 @@ class MediaLibrarySessionCallback :
 
         if (mediaItem != null) {
             if (rating is HeartRating) {
-                mediaItem.toTrack().starred = rating.isHeart
+                // setStarred() patches the MediaItem's own "starred" extra (and drops the stale
+                // converter-cache entries), so a like/unlike from the notification or Android
+                // Auto survives the next MediaItem.toTrack() readback - not just until the
+                // converter cache expires, which mutating the derived Track would (issue #1).
+                mediaItem.setStarred(rating.isHeart)
             } else if (rating is StarRating) {
                 mediaItem.toTrack().userRating = rating.starRating.toInt()
             }
