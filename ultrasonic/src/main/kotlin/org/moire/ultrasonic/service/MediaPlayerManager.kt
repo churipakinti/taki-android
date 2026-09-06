@@ -89,6 +89,42 @@ internal const val ADD_MEDIA_ITEMS_CHUNK_SIZE = 200
 // safe for PlaybackStateSerializer's session-restore window - see MAX_QUEUE_SIZE usage there.
 internal const val MAX_QUEUE_SIZE = 100
 
+// Issue #19: in-place recovery from a transient network error. These are the Media3 IO error
+// codes a Wi-Fi<->mobile handoff or a brief connectivity drop raises once Media3's own load
+// retries are exhausted; a permanently missing track surfaces as a different code (see
+// trackUnavailable in onPlayerError) and must not be retried.
+private val NETWORK_TRANSIENT_ERROR_CODES = intArrayOf(
+    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+)
+private const val MAX_NETWORK_ERROR_RETRIES = 3
+
+// Backoff between re-prepare() attempts: 2s, then 4s, then 8s (NETWORK_ERROR_RETRY_BASE_DELAY_MS
+// shifted left by the number of attempts already made). Long enough for a real handoff to
+// settle, short enough that a recoverable drop doesn't leave a long silence.
+private const val NETWORK_ERROR_RETRY_BASE_DELAY_MS = 2_000L
+
+/**
+ * Issue #19 decision, pulled out of [onPlayerError] so it can be unit tested directly. Returns
+ * the delay before the next in-place `prepare()` attempt, or null when this error should not be
+ * retried (a permanently unavailable track, a non-network error, the user not wanting playback,
+ * or the retry budget spent - in which case the caller surfaces the normal error).
+ *
+ * @param attemptsSoFar how many recovery attempts have already been scheduled for this stall
+ */
+internal fun networkRecoveryDelayMs(
+    errorCode: Int,
+    trackUnavailable: Boolean,
+    playWhenReady: Boolean,
+    attemptsSoFar: Int
+): Long? {
+    if (trackUnavailable) return null
+    if (errorCode !in NETWORK_TRANSIENT_ERROR_CODES) return null
+    if (!playWhenReady) return null
+    if (attemptsSoFar >= MAX_NETWORK_ERROR_RETRIES) return null
+    return NETWORK_ERROR_RETRY_BASE_DELAY_MS shl attemptsSoFar
+}
+
 /**
  * The Media Player Manager can forward commands to the Media3 controller as
  * well as switch between different player interfaces (local, remote, cast etc).
@@ -167,6 +203,27 @@ class MediaPlayerManager(
     // existing checkpoint tick below.
     private val stallWatchdog = PlaybackStallWatchdog()
 
+    // Issue #19: bounded in-place recovery from a transient network error (a Wi-Fi<->mobile
+    // handoff or a brief connectivity drop that outlasts Media3's own load retries). prepare()
+    // resumes from the saved position; the controller, queue and session are left intact.
+    // Cleared the moment playback actually resumes.
+    private var networkErrorRetryCount = 0
+    private val networkErrorRetryRunnable = Runnable {
+        val c = controller ?: return@Runnable
+        Timber.i(
+            "Network-error recovery: re-preparing (attempt %d/%d)",
+            networkErrorRetryCount,
+            MAX_NETWORK_ERROR_RETRIES
+        )
+        c.prepare()
+    }
+
+    private fun cancelNetworkErrorRecovery() {
+        if (networkErrorRetryCount == 0) return
+        networkErrorRetryCount = 0
+        mainHandler.removeCallbacks(networkErrorRetryRunnable)
+    }
+
     // Set right before the watchdog's own recovery seek so onPositionDiscontinuity doesn't treat
     // that seek as a user seek and wipe the freshly-set baseline.
     private var ignoreNextSeekDiscontinuityForWatchdog = false
@@ -231,7 +288,12 @@ class MediaPlayerManager(
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (isPlaying) PerfMetrics.mark("playback_started")
+            if (isPlaying) {
+                PerfMetrics.mark("playback_started")
+                // Playback resumed on its own (or the user resumed it): drop any pending
+                // network-error recovery so a fresh, unrelated error later starts from zero.
+                cancelNetworkErrorRecovery()
+            }
             playerStateChangedHandler()
             publishPlaybackState()
         }
@@ -251,8 +313,10 @@ class MediaPlayerManager(
                 sleepTimerController.onTrackFinishedNaturally()
             }
             cachedMediaItem = mediaItem
-            // New track -> the stall watchdog's position baseline is meaningless now.
+            // New track -> the stall watchdog's position baseline is meaningless now, and any
+            // network-error recovery was aimed at the previous item.
             stallWatchdog.reset()
+            cancelNetworkErrorRecovery()
             publishPlaybackState()
         }
 
@@ -300,6 +364,36 @@ class MediaPlayerManager(
                 PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED -> true
                 else -> false
             }
+
+            // Issue #19: a transient network error (Wi-Fi<->mobile handoff, brief drop) that
+            // outlasted Media3's own load retries. As long as the user still wants playback,
+            // re-prepare() in place on a short backoff instead of surfacing an error and
+            // wedging - no controller / queue / session rebuild. onIsPlayingChanged clears the
+            // counter once playback actually comes back; the budget stops a dead network from
+            // retrying forever.
+            val recoveryDelayMs = networkRecoveryDelayMs(
+                errorCode = error.errorCode,
+                trackUnavailable = trackUnavailable,
+                playWhenReady = controller?.playWhenReady == true,
+                attemptsSoFar = networkErrorRetryCount
+            )
+            if (recoveryDelayMs != null) {
+                networkErrorRetryCount++
+                Timber.w(
+                    "Transient network error (%s); recovery attempt %d/%d in %d ms",
+                    error.errorCodeName,
+                    networkErrorRetryCount,
+                    MAX_NETWORK_ERROR_RETRIES,
+                    recoveryDelayMs
+                )
+                mainHandler.removeCallbacks(networkErrorRetryRunnable)
+                mainHandler.postDelayed(networkErrorRetryRunnable, recoveryDelayMs)
+                return
+            }
+            // A network error that used up its retry budget falls through to the message below;
+            // reset so a later, unrelated error starts fresh.
+            if (error.errorCode in NETWORK_TRANSIENT_ERROR_CODES) cancelNetworkErrorRecovery()
+
             val messageId =
                 if (trackUnavailable) {
                     R.string.download_play_error_track_unavailable
@@ -612,6 +706,7 @@ class MediaPlayerManager(
         // First stop listening to events
         rxBusSubscription.dispose()
         mainHandler.removeCallbacks(playbackCheckpoint)
+        mainHandler.removeCallbacks(networkErrorRetryRunnable)
         stallWatchdog.reset()
         // Covers swipe-away/force-stop/service shutdown (this is reached via
         // shutdownCommandObservable/stopServiceCommandObservable) - cancel(), not expire(), so
