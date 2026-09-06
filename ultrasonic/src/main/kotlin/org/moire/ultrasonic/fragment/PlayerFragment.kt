@@ -74,6 +74,7 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeFragment
 import org.koin.core.component.KoinScopeComponent
+import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.adapters.BaseAdapter
 import org.moire.ultrasonic.adapters.TrackViewBinder
@@ -327,6 +328,14 @@ class PlayerFragment :
 
         songTitleTextView.setOnClickListener {
             menuItemSelected(R.id.menu_show_album, currentSong)
+        }
+
+        // Issue #16: the artist name is now a direct navigation target (the song title
+        // already opens the album). Reuses the existing menu handler, so the playback session
+        // and queue are untouched. The artwork stays non-clickable: it is the target area for
+        // the player's swipe gestures (next/prev, seek).
+        artistTextView.setOnClickListener {
+            menuItemSelected(R.id.menu_show_artist, currentSong)
         }
 
         previousButton.setOnClickListener {
@@ -688,7 +697,18 @@ class PlayerFragment :
             R.id.menu_show_artist -> {
                 if (track == null) return false
 
-                if (Settings.id3TagsEnabledOnline) {
+                // Issue #16: open the dedicated Artist Detail screen. Needs an ID3 artist id;
+                // fall back to the artist-scoped album list when the server only has folders.
+                val artistId = track.artistId?.takeIf { it.isNotBlank() }
+                if (Settings.id3TagsEnabledOnline && artistId != null) {
+                    findNavController().navigate(
+                        NavigationGraphDirections.toArtistDetail(
+                            artistId = artistId,
+                            artistName = track.artist.orEmpty(),
+                            artistCoverArt = null
+                        )
+                    )
+                } else if (Settings.id3TagsEnabledOnline) {
                     val action = PlayerFragmentDirections.playerToAlbumsList(
                         type = AlbumListType.SORTED_BY_NAME,
                         byArtist = true,
@@ -1202,7 +1222,10 @@ class PlayerFragment :
         }
     }
 
-    override fun onDown(me: MotionEvent): Boolean = false
+    // Must be true: an OnTouchListener that returns false for ACTION_DOWN stops receiving the
+    // MOVE/UP stream, so onFling() would never be reached and the artwork swipe gestures
+    // (next/prev, seek) silently do nothing. Taps still propagate - onSingleTapUp returns false.
+    override fun onDown(me: MotionEvent): Boolean = true
 
     @Suppress("ReturnCount")
     override fun onFling(

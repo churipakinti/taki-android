@@ -15,6 +15,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.PopupMenu
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.text.HtmlCompat
@@ -224,7 +225,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     trailingActionDescription = R.string.album_download_description,
                     onTrailingAction = { downloadSelectedOrAllTracks() },
                     onInfoAction = ::showAlbumInfo,
-                    onToggleStar = ::toggleAlbumStar
+                    onToggleStar = ::toggleAlbumStar,
+                    onArtistClick = ::openArtistDetail,
+                    onMoreClick = ::showAlbumOverflow
                 )
             )
         } else if (navArgs.playlistId != null) {
@@ -398,6 +401,53 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             albumStarred = listModel.getAlbumStarred(albumId, forceRefresh) ?: albumStarred
             refreshHeader()
         }
+    }
+
+    /** Issue #16: open a real Artist Detail screen from a tapped artist name / overflow item. */
+    private fun openArtistDetail(artistId: String, artistName: String) {
+        findNavController().navigate(
+            NavigationGraphDirections.toArtistDetail(
+                artistId = artistId,
+                artistName = artistName,
+                artistCoverArt = null
+            )
+        )
+    }
+
+    /**
+     * Issue #16: Album Detail's contextual overflow. "Go to artist" reuses [openArtistDetail];
+     * the queue / radio items are delegated to the shared track context-menu handler with the
+     * album's own track list, so no playback logic is duplicated here.
+     */
+    private fun showAlbumOverflow(anchor: View) {
+        val header = viewAdapter.getCurrentList().firstOrNull() as? AlbumHeader
+        val artistId = header?.entries?.filterIsInstance<Track>()
+            ?.mapNotNull { it.artistId?.takeIf { id -> id.isNotBlank() } }
+            ?.distinct()
+            ?.singleOrNull()
+        val artistName = header?.artists?.singleOrNull()
+
+        val popup = PopupMenu(anchor.context, anchor)
+        popup.menuInflater.inflate(R.menu.album_detail_overflow, popup.menu)
+        popup.menu.findItem(R.id.album_overflow_go_to_artist)?.isVisible =
+            artistId != null && artistName != null
+        popup.menu.findItem(R.id.song_menu_start_radio)?.isVisible = !isOffline()
+        popup.setOnMenuItemClickListener { menuItem ->
+            if (menuItem.itemId == R.id.album_overflow_go_to_artist) {
+                if (artistId != null && artistName != null) {
+                    openArtistDetail(artistId, artistName)
+                }
+                true
+            } else {
+                ContextMenuUtil.handleContextMenuTracks(
+                    menuItem,
+                    getAllTracks(),
+                    mediaPlayerManager,
+                    this
+                )
+            }
+        }
+        popup.show()
     }
 
     private fun albumShowArtist(@Suppress("UNUSED_PARAMETER") track: Track): Boolean =

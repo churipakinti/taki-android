@@ -36,6 +36,13 @@ class ArtistDetailModel :
     val artistInfo: MutableLiveData<ArtistInfo?> = MutableLiveData(null)
     val loaded: MutableLiveData<Boolean> = MutableLiveData(false)
 
+    /**
+     * The artist's own cover-art id, resolved for callers that navigated here without one
+     * (e.g. from a tapped artist name on album detail / Now Playing - issue #16). Stays null
+     * when the caller already supplied it, or when the artist list can't be reached.
+     */
+    val artistCoverArt: MutableLiveData<String?> = MutableLiveData(null)
+
     private var loadedArtistId: String? = null
 
     /**
@@ -44,11 +51,30 @@ class ArtistDetailModel :
      * don't -- without this, rotating the device re-fetched all three (including the two
      * uncached calls) even though the artist on screen never changed.
      */
-    suspend fun load(artistId: String, artistName: String, refresh: Boolean) = coroutineScope {
+    suspend fun load(
+        artistId: String,
+        artistName: String,
+        refresh: Boolean,
+        knownCoverArt: String? = null
+    ) = coroutineScope {
         if (!refresh && loadedArtistId == artistId && loaded.value == true) return@coroutineScope
 
         loaded.value = false
         val service = MusicServiceFactory.getMusicService()
+
+        artistCoverArt.value = knownCoverArt?.takeIf { it.isNotBlank() }
+        val coverArtRequest = async(Dispatchers.IO) {
+            if (!knownCoverArt.isNullOrBlank()) {
+                null
+            } else {
+                runCatching {
+                    service.getArtists(refresh = false)
+                        .firstOrNull { it.id == artistId }
+                        ?.coverArt
+                }.getOrNull()
+            }
+        }
+
         val albumsRequest = async(Dispatchers.IO) {
             service.getAlbumsOfArtist(artistId, artistName, refresh)
         }
@@ -81,6 +107,7 @@ class ArtistDetailModel :
         albums.value = artistAlbums
         tracks.value = artistTracks
         artistInfo.value = artistInfoRequest.await()
+        coverArtRequest.await()?.takeIf { it.isNotBlank() }?.let { artistCoverArt.value = it }
         loadedArtistId = artistId
         loaded.value = true
     }

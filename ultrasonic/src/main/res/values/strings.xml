@@ -68,6 +68,8 @@
     <string name="album.star_description">Like this album</string>
     <string name="album.unstar_description">Unlike this album</string>
     <string name="album.star_failed">Couldn\'t update the like on the server</string>
+    <string name="album.more_description">More actions</string>
+    <string name="album.go_to_artist">Go to artist</string>
     <string name="album.disc_header">Disc %1$d</string>
     <string name="album.download_disc_description">Download this disc</string>
     <string name="album.play_disc_description">Play this disc</string>

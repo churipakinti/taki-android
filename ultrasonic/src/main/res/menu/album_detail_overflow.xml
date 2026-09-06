@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Album Detail's contextual overflow (issue #16). Secondary actions only - the primary
+    playback actions (Play, Shuffle) and the two visible utilities (Star, Download) stay as
+    icons in the hero. "Go to artist" is also reachable by tapping the artist name inline;
+    it is kept here as well so the relationship is discoverable from the overflow too.
+
+    The queue / radio items reuse the ids the shared track context menu already handles
+    (ContextMenuUtil.handleContextMenuTracks), so no new playback code.
+-->
+<menu xmlns:a="http://schemas.android.com/apk/res/android">
+
+    <item
+        a:id="@+id/album_overflow_go_to_artist"
+        a:title="@string/album.go_to_artist" />
+    <item
+        a:id="@+id/song_menu_play_next"
+        a:title="@string/common.play_next" />
+    <item
+        a:id="@+id/song_menu_play_last"
+        a:title="@string/common.play_last" />
+    <item
+        a:id="@+id/song_menu_start_radio"
+        a:title="@string/song.start_radio" />
+
+</menu>

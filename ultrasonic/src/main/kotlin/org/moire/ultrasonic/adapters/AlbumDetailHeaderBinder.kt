@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
 import org.moire.ultrasonic.util.Util.themeColor
 
@@ -47,7 +48,12 @@ class AlbumDetailHeaderBinder(
     // Album-only (issue #15). Null for playlists, which keeps the heart gone and leaves
     // playlist behavior untouched, exactly like [onInfoAction]. Called with the new intended
     // state after the icon has already been flipped optimistically.
-    private val onToggleStar: ((Boolean) -> Unit)? = null
+    private val onToggleStar: ((Boolean) -> Unit)? = null,
+    // Album-only (issue #16). [onArtistClick] makes the hero's artist line a direct
+    // navigation target when the album has exactly one artist with a known id; [onMoreClick]
+    // shows the contextual overflow, anchored on the view it is passed.
+    private val onArtistClick: ((artistId: String, artistName: String) -> Unit)? = null,
+    private val onMoreClick: ((anchor: View) -> Unit)? = null
 ) : ItemViewBinder<AlbumHeader, AlbumDetailHeaderBinder.ViewHolder>(),
     KoinComponent {
 
@@ -60,12 +66,14 @@ class AlbumDetailHeaderBinder(
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val art: ImageView = itemView.findViewById(R.id.album_detail_art)
         val title: TextView = itemView.findViewById(R.id.album_detail_title)
+        val artist: TextView = itemView.findViewById(R.id.album_detail_artist)
         val subtitle: TextView = itemView.findViewById(R.id.album_detail_subtitle)
         val play: View = itemView.findViewById(R.id.album_detail_play)
         val shuffle: View = itemView.findViewById(R.id.album_detail_shuffle)
         val download: MaterialButton = itemView.findViewById(R.id.album_detail_download)
         val info: MaterialButton = itemView.findViewById(R.id.album_detail_info)
         val star: MaterialButton = itemView.findViewById(R.id.album_detail_star)
+        val more: MaterialButton = itemView.findViewById(R.id.album_detail_more)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, item: AlbumHeader) {
@@ -84,23 +92,25 @@ class AlbumDetailHeaderBinder(
         holder.title.isVisible = item.name != null
         holder.title.text = item.name.orEmpty()
 
-        val artist = when {
-            item.artists.size == 1 -> item.artists.iterator().next()
-            item.grandParents.size == 1 -> item.grandParents.iterator().next()
-            else -> context.resources.getString(R.string.common_various_artists)
-        }
+        val singleArtist = item.artists.singleOrNull() ?: item.grandParents.singleOrNull()
+        val artistLabel = singleArtist ?: context.resources.getString(
+            R.string.common_various_artists
+        )
         val year = item.years.singleOrNull()?.toString()
         val songs = context.resources.getQuantityString(
             R.plurals.n_songs,
             item.childCount,
             item.childCount
         )
-        holder.subtitle.text = listOfNotNull(artist, year, songs).joinToString(" · ")
+        holder.artist.text = artistLabel
+        holder.subtitle.text = listOfNotNull(year, songs).joinToString(" · ")
 
         holder.play.setOnClickListener { onPlay() }
         holder.shuffle.setOnClickListener { onShuffle() }
         holder.download.setOnClickListener { onTrailingAction() }
 
+        bindArtistNavigation(holder, item, singleArtist)
+        bindMore(holder)
         bindStar(holder, item, context)
 
         // Only shown once album notes have actually been fetched and turned out non-empty -
@@ -108,6 +118,43 @@ class AlbumDetailHeaderBinder(
         // never pass onInfoAction, so this stays gone there regardless of item.notes.
         holder.info.isVisible = onInfoAction != null && !item.notes.isNullOrEmpty()
         holder.info.setOnClickListener { onInfoAction?.invoke(item) }
+    }
+
+    private fun bindArtistNavigation(
+        holder: ViewHolder,
+        item: AlbumHeader,
+        singleArtistName: String?
+    ) {
+        // One artist, one id: a real destination. A various-artists album, or a server that
+        // didn't give the tracks an artistId, stays plain non-interactive text.
+        val artistId = item.entries.filterIsInstance<Track>()
+            .mapNotNull { it.artistId?.takeIf { id -> id.isNotBlank() } }
+            .distinct()
+            .singleOrNull()
+        val navigable = onArtistClick != null && artistId != null && singleArtistName != null
+
+        holder.artist.isClickable = navigable
+        holder.artist.isFocusable = navigable
+        holder.artist.background = if (navigable) {
+            val a = holder.artist.context.obtainStyledAttributes(
+                intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
+            )
+            a.getDrawable(0).also { a.recycle() }
+        } else {
+            null
+        }
+        holder.artist.setOnClickListener(
+            if (navigable) {
+                View.OnClickListener { onArtistClick?.invoke(artistId!!, singleArtistName!!) }
+            } else {
+                null
+            }
+        )
+    }
+
+    private fun bindMore(holder: ViewHolder) {
+        holder.more.isVisible = onMoreClick != null
+        holder.more.setOnClickListener { onMoreClick?.invoke(holder.more) }
     }
 
     private fun bindStar(holder: ViewHolder, item: AlbumHeader, context: Context) {

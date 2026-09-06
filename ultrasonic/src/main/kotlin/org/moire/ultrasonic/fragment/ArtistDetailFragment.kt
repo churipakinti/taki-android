@@ -97,20 +97,25 @@ class ArtistDetailFragment :
     }
 
     private fun setupArtistArt(view: View) {
+        loadArtistHero(view, navArgs.artistCoverArt)
+    }
+
+    /**
+     * Loads the hero image for [coverArt]. Called once with the nav-arg value (which is null
+     * when reached from a tapped artist name - issue #16), then again if the model resolves a
+     * real cover-art id from the artist list.
+     */
+    private fun loadArtistHero(view: View, coverArt: String?) {
+        if (coverArt.isNullOrBlank()) return
         val art = view.findViewById<ImageView>(R.id.artist_detail_art)
-        val artist = Artist(
-            id = navArgs.artistId,
-            name = navArgs.artistName,
-            coverArt = navArgs.artistCoverArt
-        )
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val key = FileUtil.getArtistArtKey(artist.name, true)
+            val key = FileUtil.getArtistArtKey(navArgs.artistName, true)
             withContext(Dispatchers.Main) {
                 imageLoaderProvider.executeOn {
                     it.loadImage(
                         view = art,
-                        id = artist.coverArt,
+                        id = coverArt,
                         key = key,
                         large = true,
                         size = 0,
@@ -206,6 +211,11 @@ class ArtistDetailFragment :
         model.loaded.observe(viewLifecycleOwner) {
             updateEmptyState(view)
         }
+        model.artistCoverArt.observe(viewLifecycleOwner) { coverArt ->
+            // Only fills the gap - if we arrived here with a cover-art id already, that load
+            // stands and this is a no-op.
+            if (navArgs.artistCoverArt.isNullOrBlank()) loadArtistHero(view, coverArt)
+        }
         model.artistInfo.observe(viewLifecycleOwner) { artistInfo ->
             val biography = HtmlCompat.fromHtml(
                 artistInfo?.biography.orEmpty(),
@@ -234,7 +244,12 @@ class ArtistDetailFragment :
         loadJob = model.viewModelScope.launch(toastingExceptionHandler()) {
             swipeRefresh?.isRefreshing = true
             try {
-                model.load(navArgs.artistId, navArgs.artistName, refresh)
+                model.load(
+                    navArgs.artistId,
+                    navArgs.artistName,
+                    refresh,
+                    knownCoverArt = navArgs.artistCoverArt
+                )
             } finally {
                 swipeRefresh?.isRefreshing = false
             }
