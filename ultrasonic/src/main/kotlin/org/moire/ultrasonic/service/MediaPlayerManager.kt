@@ -163,6 +163,14 @@ class MediaPlayerManager(
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    // Detects a silent decoder stall (issue #17) - see PlaybackStallWatchdog. Driven off the
+    // existing checkpoint tick below.
+    private val stallWatchdog = PlaybackStallWatchdog()
+
+    // Set right before the watchdog's own recovery seek so onPositionDiscontinuity doesn't treat
+    // that seek as a user seek and wipe the freshly-set baseline.
+    private var ignoreNextSeekDiscontinuityForWatchdog = false
+
     /**
      * Position changes do not emit regular Media3 state events. Checkpoint while playing so an
      * abrupt process death restores close to the last audible position.
@@ -170,6 +178,9 @@ class MediaPlayerManager(
     private val playbackCheckpoint = object : Runnable {
         override fun run() {
             if (isPlaying) serializeCurrentPositionCheckpoint()
+            // Runs every tick regardless of isPlaying: a stall makes isPlaying flap, but
+            // playWhenReady (checked inside) stays true, so the watchdog still sees it.
+            checkForPlaybackStall()
             mainHandler.postDelayed(this, PLAYBACK_CHECKPOINT_INTERVAL)
         }
     }
@@ -240,6 +251,8 @@ class MediaPlayerManager(
                 sleepTimerController.onTrackFinishedNaturally()
             }
             cachedMediaItem = mediaItem
+            // New track -> the stall watchdog's position baseline is meaningless now.
+            stallWatchdog.reset()
             publishPlaybackState()
         }
 
@@ -253,6 +266,16 @@ class MediaPlayerManager(
             newPosition: Player.PositionInfo,
             reason: Int
         ) {
+            // A user seek moves the play head, so the watchdog baseline has to be dropped or the
+            // jump reads as a stall on the next tick. Our own recovery seek is exempt - it sets
+            // its own baseline and must be allowed to escalate if it didn't help.
+            if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                if (ignoreNextSeekDiscontinuityForWatchdog) {
+                    ignoreNextSeekDiscontinuityForWatchdog = false
+                } else {
+                    stallWatchdog.reset()
+                }
+            }
             playerStateChangedHandler()
             publishPlaybackState()
         }
@@ -589,6 +612,7 @@ class MediaPlayerManager(
         // First stop listening to events
         rxBusSubscription.dispose()
         mainHandler.removeCallbacks(playbackCheckpoint)
+        stallWatchdog.reset()
         // Covers swipe-away/force-stop/service shutdown (this is reached via
         // shutdownCommandObservable/stopServiceCommandObservable) - cancel(), not expire(), so
         // no late pause() call races the teardown already in progress.
@@ -1126,6 +1150,66 @@ class MediaPlayerManager(
             shufflePlay = isShufflePlayEnabled,
             repeatMode = repeatMode
         )
+    }
+
+    /**
+     * Issue #17, FIX B - defensive backstop for a silent decoder stall (hi-res FLAC on the
+     * platform FLAC decoder stops emitting samples with no onPlayerError). Feeds a snapshot of
+     * the player to [stallWatchdog] once per checkpoint tick and runs whatever it asks for:
+     * one in-place recovery seek on first detection, then an actionable toast + skip/stop if the
+     * next tick is still frozen. Healthy playback never produces an action, so normal behavior
+     * is unchanged.
+     */
+    @Synchronized
+    private fun checkForPlaybackStall() {
+        val c = controller ?: return
+        val state = c.playbackState
+        val duration = c.duration.takeIf { it != C.TIME_UNSET }
+
+        val action = stallWatchdog.onTick(
+            positionMs = c.currentPosition,
+            playWhenReady = c.playWhenReady,
+            isReadyOrBuffering = state == Player.STATE_READY || state == Player.STATE_BUFFERING,
+            bufferedPositionMs = c.bufferedPosition,
+            durationMs = duration
+        )
+
+        when (action) {
+            is StallAction.None -> Unit
+
+            is StallAction.Recover -> {
+                val track = c.currentMediaItem?.toTrack()
+                Timber.w(
+                    "Playback stall detected at %d ms (track '%s', %d ms buffered ahead); " +
+                        "nudging to %d ms and re-preparing",
+                    c.currentPosition,
+                    track?.title ?: track?.id ?: "?",
+                    c.bufferedPosition - c.currentPosition,
+                    action.seekTargetMs
+                )
+                ignoreNextSeekDiscontinuityForWatchdog = true
+                c.seekTo(action.seekTargetMs)
+                c.prepare()
+            }
+
+            is StallAction.Escalate -> {
+                val hasNext = c.hasNextMediaItem()
+                Timber.e(
+                    "Playback still stalled at %d ms after recovery attempt; %s",
+                    c.currentPosition,
+                    if (hasNext) "skipping to next track" else "stopping"
+                )
+                val messageId = if (hasNext) {
+                    R.string.download_play_error_stalled_skipped
+                } else {
+                    R.string.download_play_error_stalled_stopped
+                }
+                mainScope.launch {
+                    toast(messageId, false, UApp.applicationContext())
+                }
+                if (hasNext) c.seekToNext() else c.stop()
+            }
+        }
     }
 
     @Synchronized

@@ -126,6 +126,8 @@
     <string name="download.playerstate_loading">Buffering …</string>
     <string name="download.play_error">Couldn\'t play this song.</string>
     <string name="download.play_error_track_unavailable">Couldn\'t play this track. It may have moved on the server — refresh the album.</string>
+    <string name="download.play_error_stalled_skipped">Playback stalled and couldn\'t recover — skipping to the next track.</string>
+    <string name="download.play_error_stalled_stopped">Playback stalled and couldn\'t recover — playback stopped.</string>
     <string name="download.download_error">Couldn\'t download this song. Try again.</string>
     <string name="download.playerstate_playing_shuffle">Playing shuffle</string>
     <string name="download.playlist_done">Playlist saved.</string>
