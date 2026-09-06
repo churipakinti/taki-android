@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Taki design tokens — dimensions.
+
+  The single source of truth for spacing, corner radii, icon sizes and touch/row
+  targets. Layouts and drawables should reference these instead of inventing raw dp
+  values. See docs/technical/TAKI_GUIA_VISUAL_Y_LENGUAJE.md section 18 for the rationale
+  and how each token maps to the audited screens.
+
+  tools:ignore="UnusedResources": this is a shared foundation consumed incrementally by
+  the UI passes (#4/#5/#7/#11); some steps of a scale are intentionally in place before
+  their first caller so the scale stays complete and gap-free.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
+
+    <!-- Spacing scale. 4dp base; every gutter, padding and gap picks one of these. -->
+    <dimen name="space_xxs">2dp</dimen>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_sm">8dp</dimen>
+    <dimen name="space_md">12dp</dimen>
+    <dimen name="space_lg">16dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+    <dimen name="space_2xl">32dp</dimen>
+
+    <!-- Semantic spacing aliases (keep these two in lockstep with the screens). -->
+    <!-- The one screen edge gutter for primary content. -->
+    <dimen name="space_screen_horizontal">@dimen/space_lg</dimen>
+    <!-- Vertical gap between Home / Library shelves and detail sections. -->
+    <dimen name="space_section_gap">@dimen/space_xl</dimen>
+    <!-- Gap between a title and its immediate subtitle / metadata line. -->
+    <dimen name="space_text_tight">@dimen/space_xxs</dimen>
+
+    <!-- Corner radius scale. Artwork and small cards stay tight; panels a little softer. -->
+    <dimen name="radius_xs">4dp</dimen>
+    <dimen name="radius_sm">8dp</dimen>
+    <dimen name="radius_md">12dp</dimen>
+    <dimen name="radius_lg">20dp</dimen>
+
+    <!-- Icon sizes for action / control glyphs (not artwork). -->
+    <dimen name="icon_size_sm">18dp</dimen>
+    <dimen name="icon_size_md">24dp</dimen>
+    <dimen name="icon_size_lg">32dp</dimen>
+
+    <!-- Touch targets. 48dp is the floor for anything tappable. -->
+    <dimen name="touch_target_min">48dp</dimen>
+
+    <!-- List / content row heights. -->
+    <dimen name="row_height_sm">56dp</dimen>
+    <dimen name="row_height_md">64dp</dimen>
+    <dimen name="row_height_lg">72dp</dimen>
+
+    <!-- Artwork footprints. Artwork is the primary carrier of colour on music screens. -->
+    <dimen name="artwork_thumb">56dp</dimen>
+    <dimen name="artwork_card">140dp</dimen>
+
+    <!-- Elevation / borders. Depth is tonal by default; these are the rare exceptions. -->
+    <dimen name="elevation_raised">3dp</dimen>
+    <dimen name="border_thin">1dp</dimen>
+
+</resources>

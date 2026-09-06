@@ -20,9 +20,9 @@
             <LinearLayout
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_marginHorizontal="16dp"
+                a:layout_marginHorizontal="@dimen/space_screen_horizontal"
                 a:layout_marginTop="20dp"
-                a:layout_marginBottom="8dp"
+                a:layout_marginBottom="@dimen/space_sm"
                 a:gravity="center_vertical"
                 a:orientation="horizontal">
 
@@ -31,7 +31,7 @@
                     a:layout_width="0dp"
                     a:layout_height="wrap_content"
                     a:layout_weight="1"
-                    a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                    a:textAppearance="@style/TextAppearance.Taki.Hero"
                     tools:text="@string/home.greeting_morning" />
 
                 <com.google.android.material.button.MaterialButton
@@ -102,11 +102,11 @@
                 <TextView
                     a:layout_width="wrap_content"
                     a:layout_height="wrap_content"
-                    a:layout_marginHorizontal="16dp"
-                    a:layout_marginTop="20dp"
-                    a:layout_marginBottom="8dp"
+                    a:layout_marginHorizontal="@dimen/space_screen_horizontal"
+                    a:layout_marginTop="@dimen/space_section_gap"
+                    a:layout_marginBottom="@dimen/space_sm"
                     a:text="@string/main.albums_recent"
-                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                    a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     a:id="@+id/home_shortcuts_list"
@@ -122,8 +122,8 @@
                 a:id="@+id/home_mix_shelf"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_marginHorizontal="16dp"
-                a:layout_marginTop="24dp"
+                a:layout_marginHorizontal="@dimen/space_screen_horizontal"
+                a:layout_marginTop="@dimen/space_section_gap"
                 a:background="@drawable/bg_home_shortcut_item"
                 a:clickable="true"
                 a:focusable="true"
@@ -150,23 +150,20 @@
 
                     <TextView
                         a:id="@+id/home_mix_title"
-                        style="@style/Ultrasonic.PrimaryText"
                         a:layout_width="match_parent"
                         a:layout_height="wrap_content"
                         a:ellipsize="end"
                         a:singleLine="true"
-                        a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        a:textAppearance="@style/TextAppearance.Taki.Title"
                         tools:text="Mix: Reggae" />
 
                     <TextView
                         a:id="@+id/home_mix_subtitle"
-                        style="@style/Ultrasonic.SecondaryText"
                         a:layout_width="match_parent"
                         a:layout_height="wrap_content"
                         a:ellipsize="end"
                         a:singleLine="true"
-                        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                        a:textColor="?attr/colorOnSurfaceVariant"
+                        a:textAppearance="@style/TextAppearance.Taki.Caption"
                         tools:text="25 songs" />
 
                 </LinearLayout>
@@ -202,11 +199,11 @@
                 <TextView
                     a:layout_width="wrap_content"
                     a:layout_height="wrap_content"
-                    a:layout_marginHorizontal="16dp"
-                    a:layout_marginTop="24dp"
-                    a:layout_marginBottom="8dp"
+                    a:layout_marginHorizontal="@dimen/space_screen_horizontal"
+                    a:layout_marginTop="@dimen/space_section_gap"
+                    a:layout_marginBottom="@dimen/space_sm"
                     a:text="@string/main.albums_starred"
-                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                    a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     a:id="@+id/home_favorites_list"
@@ -228,11 +225,11 @@
                 <TextView
                     a:layout_width="wrap_content"
                     a:layout_height="wrap_content"
-                    a:layout_marginHorizontal="16dp"
-                    a:layout_marginTop="24dp"
-                    a:layout_marginBottom="8dp"
+                    a:layout_marginHorizontal="@dimen/space_screen_horizontal"
+                    a:layout_marginTop="@dimen/space_section_gap"
+                    a:layout_marginBottom="@dimen/space_sm"
                     a:text="@string/main.albums_newest"
-                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                    a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     a:id="@+id/home_newest_list"
@@ -254,11 +251,11 @@
                 <TextView
                     a:layout_width="wrap_content"
                     a:layout_height="wrap_content"
-                    a:layout_marginHorizontal="16dp"
-                    a:layout_marginTop="24dp"
-                    a:layout_marginBottom="8dp"
+                    a:layout_marginHorizontal="@dimen/space_screen_horizontal"
+                    a:layout_marginTop="@dimen/space_section_gap"
+                    a:layout_marginBottom="@dimen/space_sm"
                     a:text="@string/home.discover_title"
-                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                    a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     a:id="@+id/home_random_list"
@@ -280,11 +277,11 @@
                 <TextView
                     a:layout_width="wrap_content"
                     a:layout_height="wrap_content"
-                    a:layout_marginHorizontal="16dp"
-                    a:layout_marginTop="24dp"
-                    a:layout_marginBottom="8dp"
+                    a:layout_marginHorizontal="@dimen/space_screen_horizontal"
+                    a:layout_marginTop="@dimen/space_section_gap"
+                    a:layout_marginBottom="@dimen/space_sm"
                     a:text="@string/main.albums_frequent"
-                    a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                    a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     a:id="@+id/home_frequent_list"

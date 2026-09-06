@@ -5,8 +5,14 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <!-- Taki radius tokens as shape overlays, for ShapeableImageView / MaterialCardView.
+         Keep the sizes in lockstep with @dimen/radius_sm and @dimen/radius_md. -->
+    <style name="ShapeAppearanceOverlay.Taki.Small" parent="">
+        <item name="cornerSize">@dimen/radius_sm</item>
+    </style>
+
     <style name="ShapeAppearanceOverlay.Taki.Medium" parent="">
-        <item name="cornerSize">12dp</item>
+        <item name="cornerSize">@dimen/radius_md</item>
     </style>
 
     <style name="Ultrasonic.SecondaryText" parent="">

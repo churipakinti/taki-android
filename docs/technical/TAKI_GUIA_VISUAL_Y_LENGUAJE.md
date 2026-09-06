@@ -459,6 +459,8 @@ No se debe prometer que el diagnóstico identifica automáticamente Tailscale, H
 ## 15. Orden recomendado de implementación
 
 1. Centralizar los tokens de color y eliminar colores directos.
+1b. Centralizar los tokens de dimensión, tipografía e iconografía (sección 17) y migrar a ellos
+    pantalla por pantalla en lugar de repetir valores `dp`/`sp`.
 2. Neutralizar la navegación inferior.
 3. Corregir filas y encabezados de Library.
 4. Mostrar el nombre configurado de la colección.
@@ -490,7 +492,141 @@ El pase se considera completo cuando:
 
 ---
 
-## 17. Referencias
+## 17. Tokens compartidos (dimensiones, tipografía, iconos)
+
+Los roles de **color** ya están centralizados en `colors.xml` / `themes.xml` (secciones 3–4).
+Esta sección añade la capa que faltaba: **espaciado, radios, jerarquía tipográfica, tamaños de
+icono y objetivos táctiles** como recursos únicos. El objetivo es que una pantalla **elija un
+token**, no que invente un valor `dp`/`sp`.
+
+### 17.1 Archivos
+
+| Recurso | Contenido |
+| --- | --- |
+| `res/values/dimens.xml` | Escalas de espaciado, radios, iconos, objetivos táctiles, alturas de fila, huellas de portada, elevación/borde. |
+| `res/values/type.xml` | Seis apariencias `TextAppearance.Taki.*` (jerarquía tipográfica). |
+| `res/values/styles.xml` | `ShapeAppearanceOverlay.Taki.Small` / `.Medium` (radios como forma, para `ShapeableImageView` y `MaterialCardView`). |
+
+`dimens.xml` y `type.xml` llevan `tools:ignore="UnusedResources"` a propósito: son una base
+compartida que las tareas de UI (#4/#5/#7/#11) consumen de forma incremental; la escala se
+define completa desde el principio para que no tenga huecos.
+
+### 17.2 Espaciado
+
+Base 4 dp. Todo margen, relleno o hueco toma uno de estos:
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `@dimen/space_xxs` | 2 dp | Separación título ↔ subtítulo. |
+| `@dimen/space_xs` | 4 dp | Huecos mínimos internos. |
+| `@dimen/space_sm` | 8 dp | Huecos entre elementos, márgenes de chip. |
+| `@dimen/space_md` | 12 dp | Relleno de fila, separación portada ↔ texto. |
+| `@dimen/space_lg` | 16 dp | Margen de borde de pantalla estándar. |
+| `@dimen/space_xl` | 24 dp | Separación entre secciones / estanterías. |
+| `@dimen/space_2xl` | 32 dp | Bloques grandes, estados vacíos. |
+
+Alias semánticos (mantener sincronizados con las pantallas):
+
+| Alias | Apunta a | Uso |
+| --- | --- | --- |
+| `@dimen/space_screen_horizontal` | `space_lg` (16 dp) | El único margen lateral del contenido principal. |
+| `@dimen/space_section_gap` | `space_xl` (24 dp) | Hueco vertical entre estanterías de Home / secciones de detalle. |
+| `@dimen/space_text_tight` | `space_xxs` (2 dp) | Hueco entre un título y su línea de metadatos inmediata. |
+
+### 17.3 Radios de esquina
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `@dimen/radius_xs` | 4 dp | Chips y elementos en línea muy pequeños. |
+| `@dimen/radius_sm` | 8 dp | Miniaturas de portada, tarjetas pequeñas. También como forma: `@style/ShapeAppearanceOverlay.Taki.Small`. |
+| `@dimen/radius_md` | 12 dp | Tarjetas, hojas, paneles. Forma: `@style/ShapeAppearanceOverlay.Taki.Medium`. |
+| `@dimen/radius_lg` | 20 dp | Paneles grandes / hero. |
+
+El panel del reproductor (`@dimen/player_panel_corner_radius`, 28 dp) queda fuera de esta escala
+por ahora; #7 lo revisará. Círculos completos: `@style/ShapeAppearanceOverlay.Ultrasonic.Circle`.
+
+### 17.4 Jerarquía tipográfica
+
+Seis roles, cada uno una capa fina sobre una apariencia de Material 3 (se **hereda** la escala y
+las métricas, no se duplican). Cada rol fija el peso y el color de énfasis
+primario/secundario. Preferirlos a `TextAppearance.Material3.*` directo y a los estilos
+heredados `Ultrasonic.PrimaryText` / `Ultrasonic.SecondaryText` (solo tipografía).
+
+| Rol | Padre M3 | Color | Uso |
+| --- | --- | --- | --- |
+| `TextAppearance.Taki.Hero` | HeadlineSmall | `onSurface` | Título de Now Playing, encabezados de detalle prominentes, saludo de Home. |
+| `TextAppearance.Taki.Title` | TitleMedium | `onSurface` | Título de fila / encabezado (álbum, pista, playlist). |
+| `TextAppearance.Taki.TitleSmall` | TitleSmall | `onSurface` | Título compacto en tarjetas de rejilla / carrusel. |
+| `TextAppearance.Taki.Body` | BodyMedium | `onSurface` | Texto de cuerpo primario. |
+| `TextAppearance.Taki.Caption` | BodySmall | `onSurfaceVariant` | Línea de artista, metadatos, duraciones. Peso ligero (absorbe `Ultrasonic.SecondaryText`). |
+| `TextAppearance.Taki.SectionHeader` | TitleSmall | `onSurfaceVariant` | Encabezados de estantería/grupo. Sentence case, nunca verde. Sustituye a `Ultrasonic.AllCapsLabel`. |
+
+### 17.5 Iconos
+
+Solo para glifos de acción/control (no para portadas).
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `@dimen/icon_size_sm` | 18 dp | Icono en línea denso (overflow en filas ajustadas). |
+| `@dimen/icon_size_md` | 24 dp | Icono de acción estándar (por defecto de Material; coincide con casi todos los vectores). |
+| `@dimen/icon_size_lg` | 32 dp | Transporte secundario. |
+
+El botón de play principal (transporte) puede seguir usando dimensiones propias del reproductor.
+
+### 17.6 Objetivos táctiles y alturas de fila
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `@dimen/touch_target_min` | 48 dp | Suelo de cualquier elemento pulsable (icon buttons de fila/cabecera). |
+| `@dimen/row_height_sm` | 56 dp | Fila de lista compacta. |
+| `@dimen/row_height_md` | 64 dp | Fila de pista estándar. |
+| `@dimen/row_height_lg` | 72 dp | Fila con miniatura de portada. |
+
+### 17.7 Portada y profundidad
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `@dimen/artwork_thumb` | 56 dp | Miniatura de portada en fila de lista. |
+| `@dimen/artwork_card` | 140 dp | Portada de tarjeta de carrusel. |
+| `@dimen/elevation_raised` | 3 dp | Única excepción a la profundidad tonal (elemento realmente flotante). |
+| `@dimen/border_thin` | 1 dp | Grosor de borde/stroke. |
+
+La profundidad se expresa por diferencia tonal de superficie (sección 4), no por sombras. No
+introducir sombras nuevas, bordes gruesos ni tarjetas sobredimensionadas.
+
+### 17.8 Cómo usarlos
+
+- Una pantalla nueva **no** define valores `dp`/`sp` propios para espaciado, radio, icono,
+  objetivo táctil o tipografía: referencia un token.
+- Si falta un valor en la escala, se discute antes de añadirlo; se prefiere reutilizar el paso
+  más cercano a crear un token nuevo.
+- El color sigue las reglas de las secciones 2–4 (el verde solo con significado semántico).
+
+---
+
+## 18. Estado de aplicación de los tokens
+
+Introducidos y aplicados como prueba de concepto en componentes compartidos de bajo riesgo (sin
+rediseñar pantallas completas):
+
+| Archivo | Qué se migró |
+| --- | --- |
+| `res/values/dimens.xml` | Nuevo: todas las escalas de la sección 17. |
+| `res/values/type.xml` | Nuevo: los seis roles `TextAppearance.Taki.*`. |
+| `res/values/styles.xml` | Nuevo `ShapeAppearanceOverlay.Taki.Small`; `.Medium` ahora referencia `@dimen/radius_md`. |
+| `layout/list_item_library_track.xml` | Alto de fila, inset, miniatura + forma, jerarquía de texto (`Taki.Title` / `.Caption`), objetivos táctiles y relleno de los icon buttons. |
+| `layout/home_carousel_item.xml` | Huella de portada, radio, márgenes y jerarquía de texto (`Taki.TitleSmall` / `.Caption`). |
+| `layout/home_fragment.xml` | Encabezados de estantería a `Taki.SectionHeader`; margen lateral, hueco de sección y margen inferior a tokens; saludo a `Taki.Hero`; tarjeta de mezcla a `Taki.Title` / `.Caption`. |
+
+Pendiente en #4/#5/#7/#11: migrar el resto de tarjetas de álbum/colección y cabeceras
+(`grid_item_album`, `list_item_album`, `list_header_album`, `album_detail_header_item`,
+`collection_detail_header`), las filas de pista (`list_item_track*`), el mini reproductor y Now
+Playing (`now_playing`, `player_media_info`, `player_dimensions.xml`), y unificar los radios de
+`MaterialCardView` de portada (hoy `0dp`/`3dp`/`4dp`) a `@dimen/radius_sm`.
+
+---
+
+## 19. Referencias
 
 - Material Design 3, Navigation bar: https://m3.material.io/components/navigation-bar
 - Material Design 3, Color roles: https://m3.material.io/styles/color/roles

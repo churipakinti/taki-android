@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Taki design tokens — typography hierarchy.
+
+  Five roles, each a thin overlay on a Material 3 text appearance so the type scale and
+  metrics stay inherited (not duplicated). They bake in Taki's weight and the
+  primary/secondary emphasis colour so a layout picks a role, not a size + a colour + a
+  font family. Prefer these over raw TextAppearance.Material3.* and over the legacy
+  Ultrasonic.PrimaryText / Ultrasonic.SecondaryText font-only styles.
+
+  See docs/technical/TAKI_GUIA_VISUAL_Y_LENGUAJE.md section 18.
+
+  tools:ignore="UnusedResources": consumed incrementally by the UI passes; the full set
+  is defined up front so future screens reference roles instead of inventing styling.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
+
+    <!-- Large hero title: Now Playing, prominent detail headers. Primary emphasis. -->
+    <style name="TextAppearance.Taki.Hero" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Row / header title (album, track, playlist name). Primary emphasis. -->
+    <style name="TextAppearance.Taki.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Compact title for dense grid / carousel cards where a full Title would crowd. -->
+    <style name="TextAppearance.Taki.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Primary body copy. -->
+    <style name="TextAppearance.Taki.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Artist line, metadata, durations, any supporting text. Secondary emphasis:
+         muted colour + lighter weight (folds in the legacy Ultrasonic.SecondaryText). -->
+    <style name="TextAppearance.Taki.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Shelf / group headers ("Recently played"). Sentence case, secondary emphasis,
+         never green. Replaces ad-hoc TitleMedium headers and Ultrasonic.AllCapsLabel. -->
+    <style name="TextAppearance.Taki.SectionHeader" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+</resources>
