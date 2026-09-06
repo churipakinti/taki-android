@@ -606,8 +606,9 @@ introducir sombras nuevas, bordes gruesos ni tarjetas sobredimensionadas.
 
 ## 18. Estado de aplicación de los tokens
 
-Introducidos y aplicados como prueba de concepto en componentes compartidos de bajo riesgo (sin
-rediseñar pantallas completas):
+### 18.1 Base (#3)
+
+Introducidos y aplicados como prueba de concepto en componentes compartidos de bajo riesgo:
 
 | Archivo | Qué se migró |
 | --- | --- |
@@ -618,11 +619,35 @@ rediseñar pantallas completas):
 | `layout/home_carousel_item.xml` | Huella de portada, radio, márgenes y jerarquía de texto (`Taki.TitleSmall` / `.Caption`). |
 | `layout/home_fragment.xml` | Encabezados de estantería a `Taki.SectionHeader`; margen lateral, hueco de sección y margen inferior a tokens; saludo a `Taki.Hero`; tarjeta de mezcla a `Taki.Title` / `.Caption`. |
 
-Pendiente en #4/#5/#7/#11: migrar el resto de tarjetas de álbum/colección y cabeceras
-(`grid_item_album`, `list_item_album`, `list_header_album`, `album_detail_header_item`,
-`collection_detail_header`), las filas de pista (`list_item_track*`), el mini reproductor y Now
-Playing (`now_playing`, `player_media_info`, `player_dimensions.xml`), y unificar los radios de
-`MaterialCardView` de portada (hoy `0dp`/`3dp`/`4dp`) a `@dimen/radius_sm`.
+### 18.2 Superficies de álbum y colección artwork-first (#4)
+
+La familia de tarjetas/cabeceras de álbum y colección migrada a los tokens, con **una sola**
+forma de portada (`ShapeAppearanceOverlay.Taki.Small`, 8 dp), **sin sombras** en las portadas
+(la profundidad es tonal), márgenes de rejilla unificados y densidad de texto reducida:
+
+| Archivo | Qué se migró |
+| --- | --- |
+| `layout/grid_item_album.xml` | Portada a `ShapeableImageView` + `Taki.Small` (antes 0 dp cuadrada); `Taki.TitleSmall` / `.Caption`; márgenes y relleno a tokens. |
+| `layout/list_item_album.xml` | Se elimina el `MaterialCardView` con sombra `3 dp` alrededor de la portada; `ShapeableImageView` + `Taki.Small`, portada `artwork_thumb` (56 dp); `Taki.Title` / `.Caption`; bloque de texto a `wrap_content` con `minHeight = row_height_lg`. |
+| `layout/list_item_collection_disc.xml` | Igual que la fila de álbum: sin `MaterialCardView`/sombra, portada `artwork_thumb`, `Taki.Title` / `.Caption`, tokens. |
+| `layout/grid_item_collection_disc.xml` | Portada `ShapeableImageView` + `Taki.Small`; `Taki.Caption` / `Taki.TitleSmall` / `Taki.Caption`; tokens. |
+| `layout/list_item_collection.xml` | `Taki.TitleSmall` / `.Caption`; márgenes de rejilla a `space_sm`. |
+| `layout/list_item_downloaded_album.xml` | Portada movida a la izquierda (coherente con el resto de filas), `ShapeableImageView` + `Taki.Small`; sombra de la tarjeta a `0`; `Taki.Title` / `.Caption` (se corrige `LabelSmall` 11 sp); botón de eliminar descarga a `touch_target_min`. |
+| `layout/list_header_album.xml` | Sin `MaterialCardView`/sombra en la portada; `Taki.Title` / `.Caption`; espaciado a tokens. |
+| `layout/collection_detail_header.xml` | `Taki.Hero` / `.Caption`; espaciado a tokens. |
+| `layout/album_detail_header_item.xml` | **Play primario**: FAB a opacidad completa, relleno `colorOnSurface` con icono `colorSurface`, `touch_target_min`, icono `icon_size_md`. Descarga / info / shuffle pasan a `colorOnSurfaceVariant` + `icon_size_sm` + `touch_target_min` (retroceden). Héroe: `Taki.Title` / `.Caption`, espaciado a tokens. |
+| `layout/disc_header_item.xml` | Etiqueta a `Taki.SectionHeader`; botones de play/descarga por disco a `touch_target_min` + `icon_size_sm`; espaciado a tokens. |
+| `layout/view_stacked_artwork.xml` | Radio de las 3 portadas apiladas `6 dp` → `@dimen/radius_sm` (se conserva la escala de elevación 1/2/4 dp: es la señal de "pila" de la colección). |
+
+### 18.3 Pendiente en #5 / #7 / #11
+
+- Filas de pista (`list_item_track*`, `list_item_queue_track`, `list_item_track_details`) y los
+  icon buttons sub-48 dp que quedan.
+- Mini reproductor y Now Playing (`now_playing`, `player_media_info`, `player_slider`,
+  `media_buttons`, `player_secondary_controls`, `player_dimensions.xml`).
+- Encabezados y gutters de Library y Search (extender el trato de `home_fragment.xml`).
+- Cabeceras de artista (`artist_detail.xml`) y tarjetas de playlist/artista
+  (`grid_item_playlist`, `list_item_playlist`, `grid_item_artist`, `list_item_artist`).
 
 ---
 

@@ -3,111 +3,91 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     a:layout_width="match_parent"
-    a:layout_height="96dp"
-    a:layout_marginHorizontal="10dp"
-    a:layout_marginVertical="5dp"
+    a:layout_height="wrap_content"
+    a:layout_marginHorizontal="@dimen/space_sm"
+    a:layout_marginVertical="@dimen/space_xs"
     a:clickable="true"
     a:focusable="true"
     a:foreground="?android:attr/selectableItemBackground"
+    a:minHeight="@dimen/row_height_lg"
     app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
-    app:cardCornerRadius="4dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="@dimen/radius_md"
+    app:cardElevation="0dp"
     app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         a:layout_width="match_parent"
-        a:layout_height="match_parent">
+        a:layout_height="wrap_content"
+        a:paddingVertical="@dimen/space_sm">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            a:id="@+id/cover_art"
+            a:layout_width="@dimen/artwork_thumb"
+            a:layout_height="@dimen/artwork_thumb"
+            a:layout_marginStart="@dimen/space_md"
+            a:contentDescription="@string/albumArt"
+            a:scaleType="centerCrop"
+            a:src="@drawable/unknown_album"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Taki.Small" />
 
         <LinearLayout
             a:layout_width="0dp"
             a:layout_height="wrap_content"
-            a:layout_marginStart="14dp"
-            a:layout_marginEnd="6dp"
+            a:layout_marginStart="@dimen/space_md"
+            a:layout_marginEnd="@dimen/space_sm"
             a:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/album_action_container"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/album_remove_download"
+            app:layout_constraintStart_toEndOf="@id/cover_art"
             app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 a:id="@+id/album_title"
-                style="@style/Ultrasonic.PrimaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                a:textAppearance="@style/TextAppearance.Taki.Title"
                 tools:text="A Night at the Opera" />
 
             <TextView
                 a:id="@+id/album_artist"
-                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_marginTop="2dp"
+                a:layout_marginTop="@dimen/space_text_tight"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                a:textColor="?attr/colorOnSurfaceVariant"
+                a:textAppearance="@style/TextAppearance.Taki.Caption"
                 tools:text="Queen" />
 
             <TextView
                 a:id="@+id/album_track_count"
-                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                a:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="12 canciones" />
+                a:textAppearance="@style/TextAppearance.Taki.Caption"
+                tools:text="12 songs" />
 
         </LinearLayout>
 
-        <FrameLayout
-            a:id="@+id/album_action_container"
-            a:layout_width="42dp"
-            a:layout_height="42dp"
-            a:layout_marginEnd="5dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/cover_art_container"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.button.MaterialButton
-                a:id="@+id/album_remove_download"
-                style="@style/Widget.Material3.Button.IconButton"
-                a:layout_width="match_parent"
-                a:layout_height="match_parent"
-                a:focusable="false"
-                a:contentDescription="@string/album.remove_download_description"
-                app:icon="@drawable/ic_menu_remove_all"
-                app:iconSize="20dp"
-                app:iconTint="?attr/colorOnSurfaceVariant" />
-
-        </FrameLayout>
-
-        <com.google.android.material.card.MaterialCardView
-            a:id="@+id/cover_art_container"
-            a:layout_width="76dp"
-            a:layout_height="76dp"
-            a:layout_marginEnd="10dp"
-            app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
-            app:cardCornerRadius="4dp"
-            app:cardElevation="1dp"
+        <com.google.android.material.button.MaterialButton
+            a:id="@+id/album_remove_download"
+            style="@style/Widget.Material3.Button.IconButton"
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
+            a:layout_marginEnd="@dimen/space_xs"
+            a:contentDescription="@string/album.remove_download_description"
+            a:focusable="false"
+            app:icon="@drawable/ic_menu_remove_all"
+            app:iconSize="@dimen/icon_size_sm"
+            app:iconTint="?attr/colorOnSurfaceVariant"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:strokeWidth="0dp">
-
-            <ImageView
-                a:id="@+id/cover_art"
-                a:layout_width="match_parent"
-                a:layout_height="match_parent"
-                a:contentDescription="@string/albumArt"
-                a:scaleType="centerCrop"
-                a:src="@drawable/unknown_album" />
-
-        </com.google.android.material.card.MaterialCardView>
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

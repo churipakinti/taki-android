@@ -6,47 +6,44 @@
     a:layout_height="wrap_content"
     a:gravity="center_vertical"
     a:orientation="horizontal"
-    a:paddingStart="24dp"
-    a:paddingTop="20dp"
-    a:paddingEnd="16dp"
-    a:paddingBottom="10dp">
+    a:paddingStart="@dimen/space_screen_horizontal"
+    a:paddingTop="@dimen/space_md"
+    a:paddingEnd="@dimen/space_md"
+    a:paddingBottom="@dimen/space_xs">
 
     <TextView
         a:id="@+id/disc_header_label"
-        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="wrap_content"
         a:layout_height="wrap_content"
-        a:layout_marginEnd="12dp"
-        a:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-        a:textColor="?attr/colorOnSurfaceVariant"
+        a:layout_marginEnd="@dimen/space_md"
+        a:textAppearance="@style/TextAppearance.Taki.SectionHeader"
         tools:text="Disc 2" />
 
     <View
         a:layout_width="0dp"
-        a:layout_height="1dp"
+        a:layout_height="@dimen/border_thin"
         a:layout_weight="1"
         a:background="?attr/colorOutlineVariant" />
 
     <com.google.android.material.button.MaterialButton
         a:id="@+id/disc_header_play"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="32dp"
-        a:layout_height="32dp"
-        a:layout_marginStart="12dp"
+        a:layout_width="@dimen/touch_target_min"
+        a:layout_height="@dimen/touch_target_min"
+        a:layout_marginStart="@dimen/space_sm"
         a:contentDescription="@string/album.play_disc_description"
         app:icon="@drawable/media_start"
-        app:iconSize="16dp"
+        app:iconSize="@dimen/icon_size_sm"
         app:iconTint="?attr/colorOnSurfaceVariant" />
 
     <com.google.android.material.button.MaterialButton
         a:id="@+id/disc_header_download"
         style="@style/Widget.Material3.Button.IconButton"
-        a:layout_width="32dp"
-        a:layout_height="32dp"
-        a:layout_marginStart="4dp"
+        a:layout_width="@dimen/touch_target_min"
+        a:layout_height="@dimen/touch_target_min"
         a:contentDescription="@string/album.download_disc_description"
         app:icon="@drawable/ic_menu_download"
-        app:iconSize="16dp"
+        app:iconSize="@dimen/icon_size_sm"
         app:iconTint="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

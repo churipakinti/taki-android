@@ -6,66 +6,52 @@
     a:layout_height="wrap_content"
     a:gravity="center_vertical"
     a:orientation="horizontal"
-    a:paddingHorizontal="16dp"
-    a:paddingVertical="16dp">
+    a:paddingHorizontal="@dimen/space_screen_horizontal"
+    a:paddingVertical="@dimen/space_lg">
 
-    <com.google.android.material.card.MaterialCardView
+    <com.google.android.material.imageview.ShapeableImageView
+        a:id="@+id/select_album_art"
         a:layout_width="96dp"
         a:layout_height="96dp"
-        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
-        app:cardCornerRadius="4dp"
-        app:cardElevation="3dp"
-        app:strokeWidth="0dp">
-
-        <ImageView
-            a:id="@+id/select_album_art"
-            a:layout_width="match_parent"
-            a:layout_height="match_parent"
-            a:contentDescription="@null"
-            a:scaleType="centerCrop"
-            a:src="@drawable/unknown_album" />
-
-    </com.google.android.material.card.MaterialCardView>
+        a:contentDescription="@null"
+        a:scaleType="centerCrop"
+        a:src="@drawable/unknown_album"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Taki.Small" />
 
     <LinearLayout
         a:layout_width="0dp"
         a:layout_height="wrap_content"
-        a:layout_marginStart="16dp"
+        a:layout_marginStart="@dimen/space_lg"
         a:layout_weight="1"
         a:orientation="vertical">
 
         <TextView
             a:id="@+id/select_album_title"
-            style="@style/Ultrasonic.PrimaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:ellipsize="end"
             a:maxLines="2"
-            a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            a:textAppearance="@style/TextAppearance.Taki.Title"
             tools:text="Playlist name" />
 
         <TextView
             a:id="@+id/select_album_artist"
-            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
-            a:layout_marginTop="4dp"
+            a:layout_marginTop="@dimen/space_xs"
             a:ellipsize="end"
             a:singleLine="true"
-            a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            a:textColor="?attr/colorOnSurfaceVariant"
+            a:textAppearance="@style/TextAppearance.Taki.Caption"
             tools:text="Artist name" />
 
         <TextView
             a:id="@+id/select_album_meta"
-            style="@style/Ultrasonic.SecondaryText"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
-            a:layout_marginTop="2dp"
+            a:layout_marginTop="@dimen/space_text_tight"
             a:ellipsize="end"
             a:singleLine="true"
-            a:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            a:textColor="?attr/colorOnSurfaceVariant"
+            a:textAppearance="@style/TextAppearance.Taki.Caption"
             tools:text="Rock · 1990 · 10 songs · 42:10" />
 
     </LinearLayout>

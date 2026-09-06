@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Box Sets grid card: artwork-dominant, no heavy card border around the whole item - the
-    per-cover elevation inside
-    view_stacked_artwork.xml already carries the "collection" cue, matching the minimal style of
-    grid_item_album.xml.
+    per-cover elevation inside view_stacked_artwork.xml already carries the "collection" cue,
+    matching the minimal style of grid_item_album.xml.
 -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:a="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     a:layout_width="match_parent"
     a:layout_height="wrap_content"
-    a:layout_marginHorizontal="10dp"
-    a:layout_marginVertical="10dp"
+    a:layout_marginHorizontal="@dimen/space_sm"
+    a:layout_marginVertical="@dimen/space_sm"
     a:background="?android:attr/selectableItemBackground"
     a:clickable="true"
     a:focusable="true">
@@ -33,13 +32,12 @@
 
     <TextView
         a:id="@+id/collection_title"
-        style="@style/Ultrasonic.PrimaryText"
         a:layout_width="0dp"
         a:layout_height="wrap_content"
-        a:layout_marginTop="10dp"
+        a:layout_marginTop="@dimen/space_sm"
         a:ellipsize="end"
         a:singleLine="true"
-        a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+        a:textAppearance="@style/TextAppearance.Taki.TitleSmall"
         app:layout_constraintEnd_toEndOf="@id/stacked_artwork_container"
         app:layout_constraintStart_toStartOf="@id/stacked_artwork_container"
         app:layout_constraintTop_toBottomOf="@id/stacked_artwork_container"
@@ -47,14 +45,13 @@
 
     <TextView
         a:id="@+id/collection_subtitle"
-        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="0dp"
         a:layout_height="wrap_content"
-        a:layout_marginBottom="4dp"
+        a:layout_marginTop="@dimen/space_text_tight"
+        a:layout_marginBottom="@dimen/space_xs"
         a:ellipsize="end"
         a:singleLine="true"
-        a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        a:textColor="?attr/colorOnSurfaceVariant"
+        a:textAppearance="@style/TextAppearance.Taki.Caption"
         app:layout_constraintEnd_toEndOf="@id/stacked_artwork_container"
         app:layout_constraintStart_toStartOf="@id/stacked_artwork_container"
         app:layout_constraintTop_toBottomOf="@id/collection_title"

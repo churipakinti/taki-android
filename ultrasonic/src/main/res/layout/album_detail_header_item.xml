@@ -30,13 +30,12 @@
             a:layout_height="wrap_content"
             a:layout_gravity="bottom"
             a:orientation="vertical"
-            a:paddingStart="20dp"
-            a:paddingEnd="20dp"
-            a:paddingBottom="16dp">
+            a:paddingStart="@dimen/space_lg"
+            a:paddingEnd="@dimen/space_lg"
+            a:paddingBottom="@dimen/space_lg">
 
             <TextView
                 a:id="@+id/album_detail_title"
-                style="@style/Ultrasonic.PrimaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:maxLines="2"
@@ -44,20 +43,17 @@
                 a:shadowDx="0"
                 a:shadowDy="1"
                 a:shadowRadius="3"
-                a:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                a:textColor="?attr/colorOnSurface"
+                a:textAppearance="@style/TextAppearance.Taki.Title"
                 tools:text="El Duelo" />
 
             <TextView
                 a:id="@+id/album_detail_subtitle"
-                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_marginTop="4dp"
+                a:layout_marginTop="@dimen/space_xs"
                 a:ellipsize="end"
                 a:singleLine="true"
-                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                a:textColor="?attr/colorOnSurfaceVariant"
+                a:textAppearance="@style/TextAppearance.Taki.Caption"
                 tools:text="Héroes del Silencio · 1990 · 10 songs" />
 
         </LinearLayout>
@@ -69,60 +65,57 @@
         a:layout_height="wrap_content"
         a:gravity="center_vertical|end"
         a:orientation="horizontal"
-        a:paddingStart="16dp"
-        a:paddingTop="10dp"
-        a:paddingEnd="16dp"
-        a:paddingBottom="6dp">
+        a:paddingStart="@dimen/space_screen_horizontal"
+        a:paddingTop="@dimen/space_sm"
+        a:paddingEnd="@dimen/space_screen_horizontal"
+        a:paddingBottom="@dimen/space_sm">
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/album_detail_download"
             style="@style/Widget.Material3.Button.IconButton"
-            a:layout_width="38dp"
-            a:layout_height="38dp"
-            a:layout_marginEnd="4dp"
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
             a:contentDescription="@string/album.download_description"
             app:icon="@drawable/ic_menu_download"
-            app:iconSize="18dp"
-            app:iconTint="?attr/colorOnSurface" />
+            app:iconSize="@dimen/icon_size_sm"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/album_detail_info"
             style="@style/Widget.Material3.Button.IconButton"
-            a:layout_width="38dp"
-            a:layout_height="38dp"
-            a:layout_marginEnd="4dp"
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
             a:contentDescription="@string/album.info_description"
             a:visibility="gone"
             app:icon="@drawable/ic_info_outline"
-            app:iconSize="18dp"
-            app:iconTint="?attr/colorOnSurface"
+            app:iconSize="@dimen/icon_size_sm"
+            app:iconTint="?attr/colorOnSurfaceVariant"
             tools:visibility="visible" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/album_detail_shuffle"
             style="@style/Widget.Material3.Button.IconButton"
-            a:layout_width="38dp"
-            a:layout_height="38dp"
-            a:layout_marginEnd="8dp"
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
+            a:layout_marginEnd="@dimen/space_xs"
             a:contentDescription="@string/album.shuffle_description"
             app:icon="@drawable/media_shuffle"
-            app:iconSize="16dp"
-            app:iconTint="?attr/colorOnSurface" />
+            app:iconSize="@dimen/icon_size_sm"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             a:id="@+id/album_detail_play"
-            a:layout_width="38dp"
-            a:layout_height="38dp"
-            a:alpha="0.85"
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
             a:contentDescription="@string/album.play_description"
             a:src="@drawable/media_start"
-            app:backgroundTint="?attr/colorSurfaceContainerHighest"
+            app:backgroundTint="?attr/colorOnSurface"
             app:borderWidth="0dp"
             app:elevation="0dp"
-            app:fabCustomSize="38dp"
-            app:maxImageSize="16dp"
+            app:fabCustomSize="@dimen/touch_target_min"
+            app:maxImageSize="@dimen/icon_size_md"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ultrasonic.Circle"
-            app:tint="?attr/colorOnSurface" />
+            app:tint="?attr/colorSurface" />
 
     </LinearLayout>
 
