@@ -7,9 +7,9 @@
     a:clickable="true"
     a:focusable="true"
     a:orientation="vertical"
-    a:paddingHorizontal="12dp"
-    a:paddingTop="10dp"
-    a:paddingBottom="10dp">
+    a:paddingHorizontal="@dimen/space_md"
+    a:paddingTop="@dimen/space_sm"
+    a:paddingBottom="@dimen/space_sm">
 
     <org.moire.ultrasonic.view.SquareFrameLayout
         a:layout_width="match_parent"
@@ -20,8 +20,8 @@
             a:layout_width="match_parent"
             a:layout_height="match_parent"
             app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
-            app:cardCornerRadius="4dp"
-            app:cardElevation="1dp"
+            app:cardCornerRadius="@dimen/radius_sm"
+            app:cardElevation="0dp"
             app:strokeWidth="0dp">
 
             <include layout="@layout/playlist_cover_collage" />
@@ -33,7 +33,7 @@
     <LinearLayout
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
-        a:layout_marginTop="7dp"
+        a:layout_marginTop="@dimen/space_sm"
         a:gravity="center_vertical"
         a:orientation="horizontal">
 
@@ -45,44 +45,39 @@
 
             <TextView
                 a:id="@+id/playlist_name"
-                style="@style/Ultrasonic.PrimaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
                 a:maxLines="2"
-                a:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                a:textAppearance="@style/TextAppearance.Taki.TitleSmall"
                 tools:text="Random Mix" />
 
             <TextView
                 a:id="@+id/playlist_song_count"
-                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_marginTop="2dp"
+                a:layout_marginTop="@dimen/space_text_tight"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                a:textColor="?attr/colorOnSurfaceVariant"
+                a:textAppearance="@style/TextAppearance.Taki.Caption"
                 tools:text="24 songs" />
 
             <TextView
                 a:id="@+id/playlist_download_status"
-                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                a:textColor="?attr/colorOnSurfaceVariant"
+                a:textAppearance="@style/TextAppearance.Taki.Caption"
                 tools:text="Downloaded" />
 
         </LinearLayout>
 
         <FrameLayout
             a:id="@+id/playlist_action_container"
-            a:layout_width="42dp"
-            a:layout_height="42dp"
-            a:layout_marginStart="4dp">
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
+            a:layout_marginStart="@dimen/space_xs">
 
             <com.google.android.material.button.MaterialButton
                 a:id="@+id/playlist_menu"

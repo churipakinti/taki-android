@@ -15,7 +15,7 @@
     a:background="?android:attr/selectableItemBackground"
     a:clickable="true"
     a:focusable="true"
-    a:minHeight="72dp">
+    a:minHeight="@dimen/row_height_lg">
 
     <TextView
         a:id="@+id/row_section"
@@ -24,21 +24,20 @@
         a:gravity="center_horizontal|center_vertical"
         a:minWidth="56dip"
         a:minHeight="56dip"
-        a:paddingStart="8dip"
-        a:paddingEnd="8dip"
-        a:textAppearance="?android:attr/textAppearanceLarge"
-        a:textColor="?attr/colorOnSurfaceVariant"
+        a:paddingStart="@dimen/space_sm"
+        a:paddingEnd="@dimen/space_sm"
+        a:textAppearance="@style/TextAppearance.Taki.SectionHeader"
         tools:text="A" />
 
     <com.google.android.material.imageview.ShapeableImageView
         a:id="@+id/cover_art"
-        a:layout_width="56dp"
-        a:layout_height="56dp"
+        a:layout_width="@dimen/artwork_thumb"
+        a:layout_height="@dimen/artwork_thumb"
         a:layout_gravity="center_horizontal|center_vertical"
-        a:layout_marginStart="8dp"
-        a:layout_marginTop="8dp"
-        a:layout_marginEnd="12dp"
-        a:layout_marginBottom="8dp"
+        a:layout_marginStart="@dimen/space_sm"
+        a:layout_marginTop="@dimen/space_sm"
+        a:layout_marginEnd="@dimen/space_md"
+        a:layout_marginBottom="@dimen/space_sm"
         a:layout_toEndOf="@+id/row_section"
         a:scaleType="centerCrop"
         a:src="@drawable/artist_placeholder"
@@ -46,16 +45,13 @@
 
     <TextView
         a:id="@+id/row_artist_name"
-        style="@style/Ultrasonic.SecondaryText"
         a:layout_width="fill_parent"
         a:layout_height="wrap_content"
-        a:layout_marginEnd="12dp"
+        a:layout_marginEnd="@dimen/space_md"
         a:layout_toEndOf="@+id/cover_art"
-        a:drawablePadding="6dip"
+        a:drawablePadding="@dimen/space_xs"
         a:gravity="center_vertical"
-        a:minHeight="72dp"
-        a:paddingStart="3dip"
-        a:paddingEnd="3dip"
-        a:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+        a:minHeight="@dimen/row_height_lg"
+        a:textAppearance="@style/TextAppearance.Taki.Title" />
 
 </RelativeLayout>

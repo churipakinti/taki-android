@@ -45,15 +45,10 @@ class MainFragment :
     ): View = inflater.inflate(R.layout.primary, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val manageButton = view.findViewById<com.google.android.material.button.MaterialButton>(
-            R.id.library_manage_button
-        )
-        // The Offline pseudo-library's own name is "Offline" (see ActiveServerProvider.OFFLINE_DB),
-        // matching the library selector screen -- previously this showed "Downloaded music"
-        // instead, a third term for the same state alongside "Offline"/"Offline Media".
-        val activeCollection = activeServerProvider.getActiveServer()
-        manageButton.text = activeCollection.name
-        manageButton.setOnClickListener {
+        // Library's header overflow mirrors Home's: one entry point to the library hub
+        // (switch collection / add / settings / about), so both top-level surfaces share the
+        // same header pattern instead of Library also carrying a collection-name button.
+        view.findViewById<View>(R.id.library_overflow).setOnClickListener {
             (activity as? NavigationActivity)?.showLibraryHub(it)
         }
         view.findViewById<View>(R.id.library_liked_songs).setOnClickListener {
@@ -104,9 +99,14 @@ class MainFragment :
             findNavController().navigate(R.id.collectionListFragment)
         }
 
+        // Resolve the lazy Koin inject on the main thread before the IO block: first access
+        // creates this ScopeFragment's Koin scope, which registers a Lifecycle observer and
+        // must not happen off the main thread.
+        val serverProvider = activeServerProvider
+
         viewLifecycleOwner.lifecycleScope.launch {
             val hasCollections = withContext(Dispatchers.IO) {
-                val albums = activeServerProvider.getActiveMetaDatabase().albumDao().withGrouping()
+                val albums = serverProvider.getActiveMetaDatabase().albumDao().withGrouping()
                 CollectionResolver.resolve(albums).isNotEmpty()
             }
             row.isVisible = hasCollections

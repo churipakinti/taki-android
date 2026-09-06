@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     a:layout_width="match_parent"
     a:layout_height="96dp"
-    a:layout_marginHorizontal="10dp"
-    a:layout_marginVertical="5dp"
+    a:layout_marginHorizontal="@dimen/space_sm"
+    a:layout_marginVertical="@dimen/space_xs"
     a:clickable="true"
     a:focusable="true"
     a:foreground="?android:attr/selectableItemBackground"
-    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
-    app:cardCornerRadius="4dp"
-    app:cardElevation="2dp"
+    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+    app:cardCornerRadius="@dimen/radius_sm"
+    app:cardElevation="0dp"
     app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -21,8 +21,8 @@
         <LinearLayout
             a:layout_width="0dp"
             a:layout_height="wrap_content"
-            a:layout_marginStart="14dp"
-            a:layout_marginEnd="6dp"
+            a:layout_marginStart="@dimen/space_md"
+            a:layout_marginEnd="@dimen/space_sm"
             a:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/playlist_action_container"
@@ -31,44 +31,39 @@
 
             <TextView
                 a:id="@+id/playlist_name"
-                style="@style/Ultrasonic.PrimaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                a:textAppearance="@style/TextAppearance.Taki.Title"
                 tools:text="Daily Mix" />
 
             <TextView
                 a:id="@+id/playlist_song_count"
-                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
-                a:layout_marginTop="2dp"
+                a:layout_marginTop="@dimen/space_text_tight"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                a:textColor="?attr/colorOnSurfaceVariant"
+                a:textAppearance="@style/TextAppearance.Taki.Caption"
                 tools:text="24 songs" />
 
             <TextView
                 a:id="@+id/playlist_download_status"
-                style="@style/Ultrasonic.SecondaryText"
                 a:layout_width="match_parent"
                 a:layout_height="wrap_content"
                 a:ellipsize="end"
                 a:maxLines="1"
-                a:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                a:textColor="?attr/colorOnSurfaceVariant"
+                a:textAppearance="@style/TextAppearance.Taki.Caption"
                 tools:text="Downloaded" />
 
         </LinearLayout>
 
         <FrameLayout
             a:id="@+id/playlist_action_container"
-            a:layout_width="42dp"
-            a:layout_height="42dp"
-            a:layout_marginEnd="5dp"
+            a:layout_width="@dimen/touch_target_min"
+            a:layout_height="@dimen/touch_target_min"
+            a:layout_marginEnd="@dimen/space_xs"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/playlist_cover_container"
             app:layout_constraintTop_toTopOf="parent">
@@ -99,12 +94,10 @@
             a:id="@+id/playlist_cover_container"
             a:layout_width="76dp"
             a:layout_height="76dp"
-            a:layout_marginEnd="8dp"
-            a:rotation="6"
-            a:translationX="5dp"
+            a:layout_marginEnd="@dimen/space_sm"
             app:cardBackgroundColor="?attr/colorSurfaceContainerHighest"
-            app:cardCornerRadius="4dp"
-            app:cardElevation="3dp"
+            app:cardCornerRadius="@dimen/radius_sm"
+            app:cardElevation="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

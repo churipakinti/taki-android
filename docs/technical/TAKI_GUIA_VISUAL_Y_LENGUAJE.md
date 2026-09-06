@@ -673,13 +673,31 @@ comportamiento de Media3/sesión:
 Se eliminaron los 4 drawables `media_*_shadow` (layer-list de sombra desplazada 1 dp) al quedar
 sin uso; `NowPlayingFragment.update()` ahora referencia los iconos planos.
 
-### 18.5 Pendiente en #11
+### 18.5 Home / Library / Search como experiencia coherente (#11)
+
+Estructura ya en su sitio antes de esta pasada: barra inferior sólo `Home · Library · Search`;
+mini reproductor montado en `NavigationActivity` (un `FragmentContainerView` global) →
+consistente en las tres; lenguaje ya sin jerga ("Your music", "Your library", "Switch
+collection", "Daily Mix", "Discover"); Descargas como fila dentro de Library y nombre de
+"Offline" reconciliado (#6). Esta pasada cierra la coherencia visual:
+
+| Archivo | Qué se migró |
+| --- | --- |
+| `layout/primary.xml` | Cabecera de Library **igualada a la de Home**: título `Taki.Hero` + overflow `⋮` (`library_overflow`) al mismo hub; se elimina el botón de texto con el nombre de la colección (`library_manage_button`) — una tap en el `⋮` y la barra ya etiqueta la pestaña. Encabezados de sección `Ultrasonic.AllCapsLabel` → `TextAppearance.Taki.SectionHeader` (sentence case). Filas a `row_height_sm`; los `iconTint` por fila (`@color/taki_gray` / mezcla) se quitan y hereda el `colorOnSurfaceVariant` del estilo `Widget.Taki.LibraryRow`. Espaciado a tokens. |
+| `fragment/MainFragment.kt` | Ya no fija `manageButton.text = activeServer.name`; `library_overflow` abre `showLibraryHub()` igual que Home. |
+| `layout/search.xml` | Título `HeadlineSmall` → `Taki.Hero`; "Recent searches" `TitleMedium` → `Taki.SectionHeader`; tarjeta de búsqueda radio `16dp` → `radius_md`, tono `colorSurfaceContainer`, borde `border_thin`; espaciado a tokens. |
+| `layout/home_fragment.xml` | Literales sueltos (`20/12/10/4dp`, botones de mezcla `44dp`) → tokens; portada de la mezcla `ShapeAppearance.Material3.SmallComponent` → `ShapeAppearanceOverlay.Taki.Small`; vista vacía → `Taki.Body`; overflow a `touch_target_min` + `icon_size_md`. |
+| `layout/grid_item_artist.xml`, `layout/list_item_artist.xml` | `Ultrasonic.SecondaryText` + apariencias ad-hoc → `Taki.TitleSmall` (rejilla) / `Taki.Title` (fila); fila a `row_height_lg`, portada circular a `artwork_thumb`; índice A-Z → `Taki.SectionHeader`; espaciado a tokens. |
+| `layout/grid_item_playlist.xml`, `layout/list_item_playlist.xml` | Se quita la sombra (`cardElevation` → `0`) y la **portada rotada** (`rotation="6"` + `translationX`) de la fila; radio `4dp` → `radius_sm`; tono de la tarjeta de fila → `colorSurfaceContainer`; texto → `Taki.TitleSmall` / `.Title` / `.Caption` (se corrige el estado de descarga `LabelSmall` 11 sp); contenedor de acción a `touch_target_min`; espaciado a tokens. Estructura `MaterialCardView` + `playlist_cover_collage` intacta (los adaptadores la referencian). |
+
+Se eliminó `library_hub.switch_collection` (duplicado exacto de `library_hub.switch`, ya sin uso
+tras quitar `library_manage_button`), en `values/` y `values-es/`.
+
+### 18.6 Pendiente
 
 - Filas de pista (`list_item_track*`, `list_item_queue_track`, `list_item_track_details`) y los
-  icon buttons sub-48 dp que quedan.
-- Encabezados y gutters de Library y Search (extender el trato de `home_fragment.xml`).
-- Tarjetas de playlist/artista (`grid_item_playlist`, `list_item_playlist`, `grid_item_artist`,
-  `list_item_artist`).
+  icon buttons sub-48 dp que quedan (aparecen sobre todo en pantallas de detalle, no en las tres
+  destinaciones de nivel superior).
 
 ---
 

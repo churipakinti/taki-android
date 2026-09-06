@@ -10,135 +10,127 @@
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
         a:orientation="vertical"
-        a:paddingStart="16dp"
-        a:paddingTop="12dp"
-        a:paddingEnd="16dp"
-        a:paddingBottom="24dp">
+        a:paddingStart="@dimen/space_screen_horizontal"
+        a:paddingTop="@dimen/space_md"
+        a:paddingEnd="@dimen/space_screen_horizontal"
+        a:paddingBottom="@dimen/space_xl">
 
         <LinearLayout
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:gravity="center_vertical"
             a:orientation="horizontal"
-            a:paddingBottom="12dp">
+            a:paddingBottom="@dimen/space_sm">
 
             <TextView
                 a:layout_width="0dp"
                 a:layout_height="wrap_content"
                 a:layout_weight="1"
                 a:text="@string/library_hub.bottom_label"
-                a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+                a:textAppearance="@style/TextAppearance.Taki.Hero" />
 
             <com.google.android.material.button.MaterialButton
-                a:id="@+id/library_manage_button"
-                style="@style/Widget.Material3.Button.TextButton"
-                a:layout_width="wrap_content"
-                a:layout_height="wrap_content"
-                a:contentDescription="@string/library_hub.switch_collection"
-                a:text="@string/library_hub.title"
-                a:textColor="?attr/colorOnSurfaceVariant"
-                app:icon="@drawable/ic_library"
+                a:id="@+id/library_overflow"
+                style="@style/Widget.Material3.Button.IconButton"
+                a:layout_width="@dimen/touch_target_min"
+                a:layout_height="@dimen/touch_target_min"
+                a:contentDescription="@string/library_hub.title"
+                app:icon="@drawable/ic_more_vert"
+                app:iconSize="@dimen/icon_size_md"
                 app:iconTint="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
 
         <TextView
-            style="@style/Ultrasonic.AllCapsLabel"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
-            a:layout_marginBottom="8dp"
-            a:text="@string/library.your_music" />
+            a:layout_marginBottom="@dimen/space_sm"
+            a:text="@string/library.your_music"
+            a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_liked_songs"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
-            a:layout_marginBottom="8dp"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_sm"
             a:gravity="start|center_vertical"
             a:text="@string/library.liked_songs"
             app:icon="@drawable/rating_heart_full"
-            app:iconGravity="textStart"
-            app:iconTint="?attr/colorOnSurfaceVariant" />
+            app:iconGravity="textStart" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_playlists"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
-            a:layout_marginBottom="8dp"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_sm"
             a:gravity="start|center_vertical"
             a:text="@string/playlist.label"
             app:icon="@drawable/ic_menu_playlists"
-            app:iconGravity="textStart"
-            app:iconTint="@color/taki_gray" />
+            app:iconGravity="textStart" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_downloads"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
-            a:layout_marginBottom="20dp"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_lg"
             a:gravity="start|center_vertical"
             a:text="@string/menu.downloads"
             app:icon="@drawable/ic_menu_download"
-            app:iconGravity="textStart"
-            app:iconTint="@color/taki_gray" />
+            app:iconGravity="textStart" />
 
         <TextView
-            style="@style/Ultrasonic.AllCapsLabel"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
-            a:layout_marginBottom="8dp"
-            a:text="@string/library.collection" />
+            a:layout_marginBottom="@dimen/space_sm"
+            a:text="@string/library.collection"
+            a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_albums"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
-            a:layout_marginBottom="8dp"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_sm"
             a:gravity="start|center_vertical"
             a:text="@string/main.albums_title"
             app:icon="@drawable/ic_menu_browse"
-            app:iconGravity="textStart"
-            app:iconTint="@color/taki_gray" />
+            app:iconGravity="textStart" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_artists"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
-            a:layout_marginBottom="8dp"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_sm"
             a:gravity="start|center_vertical"
             a:text="@string/main.artists_title"
             app:icon="@drawable/ic_artist"
-            app:iconGravity="textStart"
-            app:iconTint="@color/taki_gray" />
+            app:iconGravity="textStart" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_songs"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
-            a:layout_marginBottom="8dp"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_sm"
             a:gravity="start|center_vertical"
             a:text="@string/main.songs_title"
             app:icon="@drawable/ic_library"
-            app:iconGravity="textStart"
-            app:iconTint="@color/taki_gray" />
+            app:iconGravity="textStart" />
 
         <com.google.android.material.button.MaterialButton
             a:id="@+id/library_genres"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
-            a:layout_marginBottom="8dp"
+            a:layout_height="@dimen/row_height_sm"
+            a:layout_marginBottom="@dimen/space_sm"
             a:gravity="start|center_vertical"
             a:text="@string/main.genres_title"
             app:icon="@drawable/genre_placeholder_icon"
-            app:iconGravity="textStart"
-            app:iconTint="@color/taki_gray" />
+            app:iconGravity="textStart" />
 
         <!-- Collections/Box Sets. Hidden by default: only shown once at least one Box Set
              has actually been resolved from already-cached album metadata, so it doesn't
@@ -148,13 +140,12 @@
             a:id="@+id/library_box_sets"
             style="@style/Widget.Taki.LibraryRow"
             a:layout_width="match_parent"
-            a:layout_height="52dp"
+            a:layout_height="@dimen/row_height_sm"
             a:gravity="start|center_vertical"
             a:text="@string/library.box_sets"
             a:visibility="gone"
             app:icon="@drawable/ic_layers"
-            app:iconGravity="textStart"
-            app:iconTint="@color/taki_gray" />
+            app:iconGravity="textStart" />
 
     </LinearLayout>
 

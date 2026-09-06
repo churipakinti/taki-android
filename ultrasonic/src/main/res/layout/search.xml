@@ -8,23 +8,23 @@
     <TextView
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
-        a:paddingStart="16dp"
-        a:paddingTop="16dp"
-        a:paddingEnd="16dp"
-        a:paddingBottom="8dp"
+        a:paddingStart="@dimen/space_screen_horizontal"
+        a:paddingTop="@dimen/space_lg"
+        a:paddingEnd="@dimen/space_screen_horizontal"
+        a:paddingBottom="@dimen/space_sm"
         a:text="@string/search.title"
-        a:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+        a:textAppearance="@style/TextAppearance.Taki.Hero" />
 
     <com.google.android.material.card.MaterialCardView
         a:layout_width="match_parent"
-        a:layout_height="52dp"
-        a:layout_marginHorizontal="16dp"
-        a:layout_marginBottom="12dp"
+        a:layout_height="@dimen/row_height_sm"
+        a:layout_marginHorizontal="@dimen/space_screen_horizontal"
+        a:layout_marginBottom="@dimen/space_md"
         app:cardBackgroundColor="?attr/colorSurfaceContainer"
-        app:cardCornerRadius="16dp"
+        app:cardCornerRadius="@dimen/radius_md"
         app:cardElevation="0dp"
         app:strokeColor="?attr/colorOutlineVariant"
-        app:strokeWidth="1dp">
+        app:strokeWidth="@dimen/border_thin">
 
         <androidx.appcompat.widget.SearchView
             a:id="@+id/search_field"
@@ -41,12 +41,12 @@
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
         a:orientation="vertical"
-        a:paddingHorizontal="16dp"
+        a:paddingHorizontal="@dimen/space_screen_horizontal"
         a:visibility="gone">
 
         <LinearLayout
             a:layout_width="match_parent"
-            a:layout_height="48dp"
+            a:layout_height="@dimen/touch_target_min"
             a:gravity="center_vertical"
             a:orientation="horizontal">
 
@@ -55,14 +55,15 @@
                 a:layout_height="wrap_content"
                 a:layout_weight="1"
                 a:text="@string/search.recent"
-                a:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                a:textAppearance="@style/TextAppearance.Taki.SectionHeader" />
 
             <com.google.android.material.button.MaterialButton
                 a:id="@+id/recent_searches_clear"
                 style="@style/Widget.Material3.Button.TextButton"
                 a:layout_width="wrap_content"
-                a:layout_height="48dp"
-                a:text="@string/search.clear_all" />
+                a:layout_height="@dimen/touch_target_min"
+                a:text="@string/search.clear_all"
+                a:textColor="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
 
