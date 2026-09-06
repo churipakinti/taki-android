@@ -24,6 +24,13 @@ viewModelKtx           = "2.11.0"
 swipeRefresh           = "1.2.0"
 documentfile           = "1.1.0"
 
+# Jetpack Compose foundation (issue #9). The Compose compiler is the Kotlin-bundled
+# plugin (version.ref = kotlin). composeBom pins the UI/runtime/material3 versions.
+composeBom             = "2026.08.00"
+# Compose-flavoured lifecycle artifacts; tracks the same train as viewModelKtx (2.11.0).
+lifecycleCompose       = "2.11.0"
+kotlinxCollectionsImmutable = "0.4.0"
+
 retrofit               = "3.0.0"
 jackson                = "2.22.1"
 okhttp                 = "5.4.0"
@@ -37,6 +44,8 @@ mockitoKotlin          = "6.3.0"
 kluent                 = "1.73"
 apacheCodecs           = "1.22.1"
 robolectric            = "4.16.1"
+turbine                = "1.2.1"
+roborazzi              = "1.73.0"
 timber                 = "5.0.1"
 fastScroll             = "2.0.1"
 colorPicker            = "2.4.0"
@@ -95,6 +104,21 @@ rxJava                  = { module = "io.reactivex.rxjava3:rxjava", version.ref 
 rxAndroid               = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxAndroid" }
 multiType               = { module = "com.drakeet.multitype:multitype", version.ref = "multiType" }
 
+# Jetpack Compose (issue #9). Versions come from composeBom except where noted.
+composeBom               = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+composeUi                = { module = "androidx.compose.ui:ui" }
+composeUiGraphics        = { module = "androidx.compose.ui:ui-graphics" }
+composeFoundation        = { module = "androidx.compose.foundation:foundation" }
+composeMaterial3         = { module = "androidx.compose.material3:material3" }
+composeUiToolingPreview  = { module = "androidx.compose.ui:ui-tooling-preview" }
+composeUiTooling         = { module = "androidx.compose.ui:ui-tooling" }
+composeUiTestJunit4      = { module = "androidx.compose.ui:ui-test-junit4" }
+composeUiTestManifest    = { module = "androidx.compose.ui:ui-test-manifest" }
+lifecycleRuntimeCompose  = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleCompose" }
+lifecycleViewModelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleCompose" }
+coilCompose              = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+kotlinxCollectionsImmutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
+
 junit                   = { module = "junit:junit", version.ref = "junit4" }
 junitVintage            = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "junit" }
 junitPlatformLauncher   = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
@@ -105,6 +129,12 @@ kluent                  = { module = "org.amshove.kluent:kluent", version.ref = 
 mockWebServer           = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
 apacheCodecs            = { module = "commons-codec:commons-codec", version.ref = "apacheCodecs" }
 robolectric             = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+turbine                 = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+navigationTesting       = { module = "androidx.navigation:navigation-testing", version.ref = "navigation" }
+roborazzi               = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazziCompose        = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
+roborazziJunitRule      = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
 
 [plugins]
 ksp                     = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+composeCompiler         = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

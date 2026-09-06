@@ -1,5 +1,6 @@
 plugins {
     alias libs.plugins.ksp
+    alias libs.plugins.composeCompiler
 }
 
 apply plugin: 'com.android.application'
@@ -106,6 +107,16 @@ android {
         dataBinding = true
         buildConfig = true
         resValues = true
+        compose = true
+    }
+
+    // Compose UI tests and Roborazzi screenshot tests run on the JVM through Robolectric
+    // (issue #9). They need the merged Android resources on the unit-test classpath; the
+    // rest of the existing resource-less unit tests are unaffected by having them present.
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
     }
 
     ksp {
@@ -143,11 +154,39 @@ androidComponents {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+
+    // Roborazzi (issue #9). Default is verify-against-golden; pass -Proborazzi.test.record=true
+    // to (re)generate goldens intentionally. See ultrasonic/src/test/screenshots/README.md.
+    //   ./gradlew :ultrasonic:testDebugUnitTest                               # verify
+    //   ./gradlew :ultrasonic:testDebugUnitTest -Proborazzi.test.record=true  # record
+    ['roborazzi.test.record', 'roborazzi.test.verify', 'roborazzi.test.compare'].each { key ->
+        if (project.hasProperty(key)) {
+            systemProperty key, project.property(key)
+        }
+    }
+    if (!project.hasProperty('roborazzi.test.record') &&
+            !project.hasProperty('roborazzi.test.verify')) {
+        systemProperty 'roborazzi.test.verify', 'true'
+    }
 }
 
 dependencies {
     implementation project(':core:domain')
     implementation project(':core:subsonic-api')
+
+    // Jetpack Compose (issue #9). BOM pins UI/runtime/material3; see gradle/libs.versions.toml.
+    def composeBom = platform(libs.composeBom)
+    implementation composeBom
+    implementation libs.composeUi
+    implementation libs.composeUiGraphics
+    implementation libs.composeFoundation
+    implementation libs.composeMaterial3
+    implementation libs.composeUiToolingPreview
+    debugImplementation libs.composeUiTooling
+    implementation libs.lifecycleRuntimeCompose
+    implementation libs.lifecycleViewModelCompose
+    implementation libs.coilCompose
+    implementation libs.kotlinxCollectionsImmutable
 
     implementation libs.car
     implementation libs.core
@@ -200,6 +239,17 @@ dependencies {
     testImplementation libs.kotlinxCoroutinesTest
     testImplementation libs.koinTest
     testImplementation libs.testCore
+
+    // Compose foundation test harness (issue #9): Compose UI tests, Roborazzi screenshot
+    // tests, Turbine flow assertions, and the JVM TestNavHostController navigation check.
+    testImplementation composeBom
+    testImplementation libs.composeUiTestJunit4
+    debugImplementation libs.composeUiTestManifest
+    testImplementation libs.turbine
+    testImplementation libs.navigationTesting
+    testImplementation libs.roborazzi
+    testImplementation libs.roborazziCompose
+    testImplementation libs.roborazziJunitRule
 
     implementation libs.timber
 }

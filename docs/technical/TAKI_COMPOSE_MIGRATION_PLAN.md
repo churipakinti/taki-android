@@ -600,6 +600,37 @@ A migrated screen's PR must satisfy **all** of:
 10. **Old Fragment + layout + screen-only adapters/menus/drawables deleted in the same PR**
     (§7) — no live duplicate left behind.
 
+### 6.6 Unit-test environment changes (landed in #9)
+
+Enabling the Compose / Roborazzi / navigation-graph tests forced two module-wide test-env
+changes. Both are additive and were validated by **re-running the entire pre-existing unit
+suite (271 tests, 0 failures) after the change** — no existing test regressed.
+
+**`ultrasonic/build.gradle` — `testOptions.unitTests.includeAndroidResources = true`.**
+The Compose UI tests (`createComposeRule`), Roborazzi (`captureRoboImage`), and the
+`TestNavHostController` graph inflation all need the merged Android resources on the JVM test
+classpath. Before #9 the module ran resource-less (AGP's default), which is why
+`RobolectricUAppContext` exists.
+
+**`ultrasonic/src/test/resources/robolectric.properties` (new).** Turning resources on made
+Robolectric read the real merged manifest, which broke two prior assumptions:
+
+- `sdk=35` — the app compiles/targets SDK 37; Robolectric 4.16.1 rejects that as unsupported
+  the moment it can read `targetSdkVersion` from the merged manifest. Pinning to a supported,
+  deterministic platform (35) applies to **every** Robolectric test in the module, old and new.
+- `application=android.app.Application` — with the manifest now visible, Robolectric would
+  instantiate the real `UApp`, whose constructor starts Koin and calls a `StrictMode` method
+  Robolectric does not implement; across a multi-test run this throws
+  `KoinApplicationAlreadyStartedException`. Forcing a plain test `Application` restores the
+  pre-#9 behaviour (`UApp` was simply never the test app). Tests that need
+  `UApp.applicationContext()` still install a stand-in via `RobolectricUAppContext`.
+
+**Roborazzi record/verify.** `ultrasonic/build.gradle` forwards `-Proborazzi.test.record` /
+`-Proborazzi.test.verify` / `-Proborazzi.test.compare` to the test JVM and **defaults to
+verify**. Goldens live in `ultrasonic/src/test/screenshots/` and are committed. Regenerate
+intentionally with `./gradlew :ultrasonic:testDebugUnitTest -Proborazzi.test.record=true`; see
+that folder's `README.md`.
+
 ---
 
 ## 7. Legacy-code deletion criteria
@@ -654,28 +685,43 @@ milestone — never leave two implementations reachable indefinitely.
 
 ### Step 0 — Issue #9: Compose foundation + tooling (no screen swapped)
 
-- Enable Compose: apply `org.jetbrains.kotlin.plugin.compose` (version = Kotlin version,
-  bundled), `buildFeatures.compose = true`; add the Compose BOM + `ui`, `foundation`,
-  `material3`, `ui-tooling-preview` (+ `ui-tooling` debug), `lifecycle-runtime-compose`,
-  `lifecycle-viewmodel-compose`, `coil-compose` (Coil 3 already present),
-  `kotlinx-collections-immutable`. Test-only: `ui-test-junit4`, `ui-test-manifest`,
-  `roborazzi` / `roborazzi-compose` / `roborazzi-junit-rule`, `app.cash.turbine`
-  (`testImplementation` only). Record the OneDrive `build/`-wipe step in `HANDOFF.md` if it
-  recurs.
-- **No blanket Compose `stabilityConfiguration` file** (§2.4). Stability is handled per screen
-  via explicit immutable `XxxUiState` / row models.
-- Build `TakiTheme` + all token objects, transcribed 1:1 per §5.2. Unit test:
-  "Compose tokens equal XML values".
-- Build the `PlaybackUiStateHolder` (§2.3) as a **read projection only** + its mapper unit
-  test. **No UI consumes it yet.**
-- Stand up Roborazzi + Compose-UI-test harness; prove it on the first leaf component.
-- Add the JVM `TestNavHostController` nav-check harness (§6.4). **No `androidTest` source set,
-  no emulator CI job** — revisit at issue #10 step 2.
-- Add the lint / detekt / Konsist guards (§5.4).
-- Verification for #9: `./gradlew :ultrasonic:testDebugUnitTest` (incl. Roborazzi + Compose
-  UI tests) + `:ultrasonic:lintDebug` + `detekt`, plus a manual Pixel 7 sanity run
-  (app builds, launches, existing XML screens unaffected).
-- **User-visible change: none.**
+**Status: DONE (issue #9, on `develop`).** What landed:
+
+- Compose enabled: `org.jetbrains.kotlin.plugin.compose` (`version.ref = kotlin`, 2.4.10),
+  `buildFeatures.compose = true`; **Compose BOM `2026.08.00`** + `ui`, `ui-graphics`,
+  `foundation`, `material3`, `ui-tooling-preview` (+ `ui-tooling` debug),
+  `lifecycle-runtime-compose` / `lifecycle-viewmodel-compose` (`2.11.0`), `coil-compose`
+  (`version.ref = coil`), `kotlinx-collections-immutable` (`0.4.0`). Test-only:
+  `ui-test-junit4`, `ui-test-manifest` (`debugImplementation`), `turbine` (`1.2.1`),
+  `navigation-testing` (`version.ref = navigation`), `roborazzi` / `roborazzi-compose` /
+  `roborazzi-junit-rule` (`1.73.0`).
+- **No blanket Compose `stabilityConfiguration` file** (§2.4). Stability is per screen.
+- `TakiTheme` + `TakiColors` / `TakiSpacing` / `TakiShapes` / `TakiDimensions` /
+  `TakiTypography` / `TakiIcons` / `TakiMotion` under `org.moire.ultrasonic.ui.theme`,
+  transcribed 1:1 per §5.2. `TakiTokensTest` reads `colors.xml` / `dimens.xml` and fails on
+  drift; `TakiTypographyTest` locks the six role values.
+- `PlaybackUiStateHolder` + `PlayerUiState` / `PlaybackPhase` / `PlaybackProgress` under
+  `org.moire.ultrasonic.ui.playback`, read projection only (§2.3.1), registered
+  `single { PlaybackUiStateHolder(get()) }` in `mediaPlayerModule`. No edits to
+  `MediaPlayerManager` / `PlaybackService` / `RxBus`. Turbine tests cover mapping + command
+  forwarding + "no interaction on construction". Consumes the non-throttled
+  `RxBus.playerStateObservable` for now (deliberate — synchronous, testable).
+- Leaf primitives (§8 step 1 first set): `TakiArtwork`, `TakiIconButton`,
+  `TakiSectionHeader`, `LibraryBrowseRow` under `org.moire.ultrasonic.ui.components`.
+- Roborazzi + Compose-UI-test harness proven on the primitives; 4 goldens committed under
+  `ultrasonic/src/test/screenshots/`. `TakiIconButtonComposeTest` proves `createComposeRule`.
+- JVM `TestNavHostController` nav-check: `ComposeNavHostHarnessTest` inflates the real
+  `navigation_graph.xml`. **No `androidTest` source set, no emulator CI.**
+- Architecture guards: `ArchitectureGuardTest` (source-text scan) — no `androidx.media3.*`
+  under `ui`, no `MaterialTheme` import outside `ui/theme`, no raw `Color(0x…)` / `.dp` / `.sp`
+  outside `ui/theme` (escape hatch: line ends `// taki-raw-ok`). Simple by design; no Konsist.
+- Test-environment changes (§6.6): `includeAndroidResources = true` +
+  `robolectric.properties` (`sdk=35`, `application=android.app.Application`). Full pre-existing
+  suite (271 tests) re-run green.
+- Verified: `:ultrasonic:compileDebugKotlin`, `:ultrasonic:testDebugUnitTest`,
+  `:ultrasonic:assembleDebug`, `:ultrasonic:lintDebug` ("no new issues"), Roborazzi
+  record + verify, `-Pqc` ktlint (main clean) / detekt (`ui/**` clean). No Pixel run — no
+  user-visible screen.
 
 Justification: every downstream step depends on the theme, the playback-state seam and the test
 harness. De-risking here is free because nothing ships.
@@ -871,10 +917,24 @@ These were the open questions at first draft; all are now decided:
 7. **North-star reference path corrected** in `TAKI_DESIGN_SYSTEM_V2.md` to
    `docs/assets/TAKI_VISUAL_NORTH_STAR.png`. The file was not moved.
 
-### Still genuinely open (for #9 kickoff, not blocking)
+### Resolved during #9
 
-- Exact Compose BOM / library versions to pin in `libs.versions.toml` (pick latest stable at
-  #9 start; must be compatible with Kotlin 2.4.10's bundled Compose compiler).
-- Whether the JVM mixed-graph back-stack check in §6.4 is best expressed with
-  `TestNavHostController` alone or `FragmentScenario` + Robolectric — an implementation choice
-  for #9, not an architecture decision.
+- **Compose BOM = `2026.08.00`** (Compose UI / foundation 1.12.0, material3 1.4.0), pinned in
+  `gradle/libs.versions.toml` alongside `lifecycleCompose = 2.11.0`,
+  `kotlinxCollectionsImmutable = 0.4.0`, `turbine = 1.2.1`, `roborazzi = 1.73.0`, and the
+  `composeCompiler` plugin (`version.ref = kotlin`, 2.4.10). Compatible with the Kotlin-bundled
+  Compose compiler.
+- **The JVM mixed-graph back-stack check uses `TestNavHostController` alone** (no
+  `FragmentScenario` needed) — `ComposeNavHostHarnessTest` inflates the real
+  `navigation_graph.xml` and drives navigate / `popBackStack` / tab-root pop. It relies on
+  `androidx.navigation:navigation-testing` (test-only, same version as `navigation`), which #8
+  had not listed but the harness requires.
+- **Test-environment changes** landed with #9 — see §6.6 (`includeAndroidResources`,
+  `robolectric.properties` with `sdk=35` + `application=android.app.Application`). Full existing
+  suite re-run green.
+
+### Still genuinely open
+
+- Nothing blocking #10. Throttling policy for `PlaybackUiStateHolder` (it currently consumes
+  the non-throttled `RxBus.playerStateObservable`) is revisited when the mini-player is
+  migrated (§8 step 6) — a per-consumer decision, not an architecture one.

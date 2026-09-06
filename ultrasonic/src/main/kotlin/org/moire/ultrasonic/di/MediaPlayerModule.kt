@@ -6,6 +6,7 @@ import org.moire.ultrasonic.service.MediaPlayerLifecycleSupport
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.PlaybackStateSerializer
 import org.moire.ultrasonic.subsonic.NetworkAndStorageChecker
+import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
 
 /**
  * This Koin module contains the registration of classes related to the media player
@@ -20,4 +21,8 @@ val mediaPlayerModule = module {
     // These MUST be singletons, for the media playback must work headless (without an activity)
     single { MediaPlayerManager(get(), get()) }
     single { MediaPlayerLifecycleSupport(get(), get(), get(), get()) }
+
+    // Read-only, additive Compose projection of playback state (issue #9). One instance,
+    // created lazily by its first Compose consumer; see PlaybackUiStateHolder.
+    single { PlaybackUiStateHolder(get()) }
 }

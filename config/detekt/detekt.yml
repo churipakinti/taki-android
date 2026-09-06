@@ -41,6 +41,12 @@ complexity:
   LongParameterList:
     ignoreDefaultParameters: true
 
+naming:
+  active: true
+  FunctionNaming:
+    # @Composable functions that emit UI are PascalCase by Compose convention.
+    ignoreAnnotated: ['Composable']
+
 style:
   active: true
   NewLineAtEndOfFile:
