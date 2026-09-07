@@ -880,11 +880,55 @@ What landed:
 
 ### Step 4 — Search
 
-One text input + result lists. No `RxBus`, no queue. Slightly trickier: IME handling and the
-Activity's "hide bottom-nav + mini-player while search IME is up" logic — that logic is
-**Activity-side and destination-id + `imeVisible` based**, so it keeps working; the Compose
-screen just needs a normal `TextField` + `WindowInsets.ime` awareness. Recent-search
-suggestions and `ACTION_SEARCH` intent routing unchanged.
+**Status: DONE (issue #10 phase 3).** Pixel 7 validated against the real library; automated
+checks green.
+
+- `SearchFragment` is now a thin `ComposeView` host (`DisposeOnViewTreeLifecycleDestroyed`,
+  `TakiTheme`, `NavController` + `MediaPlayerManager` behind `SearchActions`). It drops
+  `MultiListFragment`; the legacy `setupImeBackHandling` `OnBackPressedCallback` is ported
+  verbatim (a visible IME swallows the first Back). No `navigation-compose`.
+- `SearchViewModel` (`AndroidViewModel`, `by viewModels()`) owns query + result state as one
+  `StateFlow<SearchUiState>` (`@Immutable`). A 1:1 port of the old semantics:
+  `LIVE_SEARCH_DEBOUNCE_MS` = 300, `LIVE_SEARCH_MIN_QUERY_LENGTH` = 2, no-repeat-of-last-live
+  query, per-request `cancel()` + `LatestRequestTracker` (latest wins even if a slow older
+  response lands after), `SearchCriteria(query, Settings.MAX_*)` via
+  `MusicServiceFactory.getMusicService().search`, `Settings.DEFAULT_*` display slice with
+  per-group "Show more" (expands one group to full, no re-fetch), video songs filtered, a
+  search in flight never blanks on-screen results. Recent searches read/write the existing
+  `RecentSearches` + mirror to `SearchRecentSuggestions` (now `runCatching`-guarded - the
+  system suggestions provider is best-effort). A `searchService` test seam replaces the
+  network call. Voice/`ACTION_SEARCH` still flows Activity → `navArgs.query` →
+  `setInitialQuery` (+ autoplay: first non-video song / first album), Activity's
+  `handleSearchIntent` untouched.
+- `SearchScreen` = a fixed `Taki.Hero` header + `TakiSearchField` (new primitive: full-width,
+  `search_field_height` 52dp, `shapes.md`, quiet `surfaceLow`, leading magnifier, ivory
+  input, trailing clear only when non-empty, `ImeAction.Search` → `onSubmit` + `clearFocus`;
+  does not auto-focus, matching the legacy) + a reserved 2dp progress strip, then a
+  `LazyColumn`: recent searches (or the `search_prompt` landing) when the query is blank;
+  otherwise three **differentiated** groups - Artists as a compact glyph+name row, Albums and
+  Songs as `TakiArtwork` + title/subtitle rows - each with a `TakiSectionHeader` and a quiet
+  "Show More"; `EmptyState` for no-matches. Consumes `NavigationActivity.contentBottomInset`
+  via `bottomContentInset: Dp`; while the IME is up the Activity hides the chrome so that
+  reserve shrinks and results scroll under the keyboard (legacy behaviour).
+- Navigation preserved: `searchToTrackCollection` (folder-style `Index` artist / album /
+  autoplay album) and `searchToAlbumsList` (id3 artist, `byArtist`, size 1000) with the same
+  args; song tap = `addToPlaylist(CLEAR)`, no navigation. No new destination ids.
+- Deleted: `res/layout/search.xml`, `recent_search_row.xml`, and the now-orphan
+  `DividerBinder` / `MoreButtonBinder` adapters + `list_item_divider.xml` /
+  `list_item_more_button.xml` (Search was their only consumer). `ic_history.xml` fill changed
+  from `?attr/colorOnSurfaceVariant` to `#FFF` so Compose `Icon(tint = ...)` can recolour it.
+  Added `search_field_height` (52dp) token + `TakiTokensTest` assertion; `search.field_hint` /
+  `search.clear_field` strings.
+- 44 new tests (7 state / 14 VM / 6 navigation / 11 Compose-UI / 6 Roborazzi goldens:
+  `search_empty` / `search_recent` / `search_results` / `search_no_results` /
+  `search_compact_360` / `search_font_1_30`). `TakiTokensTest.colorHex` now tolerates
+  attributes on a `<color>` tag.
+- Known parity gaps (deliberate, consistent with Compose Home/Library): result rows have no
+  long-press context menu (Play Next / Play Last stay on the still-View screens); artist rows
+  use a person glyph, not the setting-gated avatar; the "no matches" copy keeps the legacy
+  string. The hardware `KEYCODE_SEARCH` key now falls through to the OS global-search dialog
+  (the legacy `SearchView.setSearchableInfo` wiring is gone) - no modern device has that key
+  and `ACTION_SEARCH` intents are unaffected.
 
 ### Step 5 — Album / collection / artist detail
 

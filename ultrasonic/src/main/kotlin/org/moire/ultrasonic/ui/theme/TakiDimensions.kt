@@ -55,6 +55,8 @@ data class TakiDimensions(
     val featuredCardArtwork: Dp = 124.dp,
     /** `library_card_height` - Library "Your music" 2-column primary card (V2 section 11.3). */
     val libraryCardHeight: Dp = 80.dp,
+    /** `search_field_height` - the Search screen's tonal input container (V2 section 11). */
+    val searchFieldHeight: Dp = 52.dp,
     /** `mini_player_height` - the floating mini-player band (V2 section 13). */
     val miniPlayerHeight: Dp = 64.dp,
     /**

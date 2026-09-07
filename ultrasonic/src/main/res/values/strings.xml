@@ -261,6 +261,8 @@
     <string name="search.clear_all">Clear all</string>
     <string name="search.remove_recent">Remove from recent searches</string>
     <string name="search.history_cleared">Search history cleared</string>
+    <string name="search.field_hint">Search your music</string>
+    <string name="search.clear_field">Clear search</string>
     <string name="select_album.empty">No media found</string>
     <string name="select_album.no_network">Warning: No usable network available.\n If you are using mobile data, you may need to allow downloads on metered connections in the settings.</string>
     <string name="select_album.no_sdcard">Error: No SD card available.</string>

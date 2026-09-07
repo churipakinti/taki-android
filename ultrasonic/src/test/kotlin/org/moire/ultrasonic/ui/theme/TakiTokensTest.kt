@@ -122,6 +122,7 @@ class TakiTokensTest {
         assertEquals(dimenDp("featured_card_height").dp, dimensions.featuredCardHeight)
         assertEquals(dimenDp("featured_card_artwork").dp, dimensions.featuredCardArtwork)
         assertEquals(dimenDp("library_card_height").dp, dimensions.libraryCardHeight)
+        assertEquals(dimenDp("search_field_height").dp, dimensions.searchFieldHeight)
         assertEquals(dimenDp("mini_player_height").dp, dimensions.miniPlayerHeight)
         assertEquals(dimenDp("mini_player_edge_margin").dp, dimensions.miniPlayerEdgeMargin)
         assertEquals(dimenDp("content_inset_floating_chrome").dp, dimensions.contentInsetFloatingChrome)
