@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bottom navigation background: a persistent translucent layer over real screen content, not
+    a flat opaque footer (V2 section 14). A `surfaceLow` tone at ~0.93 opacity
+    (taki_surface_low_floating) with a 1px tonal top hairline (taki_divider, ~5% white) for
+    separation from the content scrolling behind it - no border, no shadow, no elevation, no
+    backdrop blur. Alpha matches TakiAtmosphere.FLOATING_SURFACE_ALPHA. The nav host renders
+    behind this (see navigation_activity.xml), so the translucency actually reads.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/taki_divider" />
+        </shape>
+    </item>
+
+    <item android:top="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/taki_surface_low_floating" />
+        </shape>
+    </item>
+
+</layer-list>

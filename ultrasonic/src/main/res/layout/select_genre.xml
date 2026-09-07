@@ -27,6 +27,7 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:padding="10dp"
+            android:paddingBottom="@dimen/content_inset_floating_chrome"
             tools:listitem="@layout/genre_card_item" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -55,6 +55,12 @@ data class TakiColors(
     val outline: Color = Color(0x1FFFFFFF),
     /** `taki_divider` - divider (~5% white). */
     val divider: Color = Color(0x0DFFFFFF),
+    /** `taki_surface_floating` - `surface` at the mini-player's opacity (see TakiAtmosphere). */
+    val surfaceFloating: Color = Color(0xDE171A16),
+    /** `taki_surface_low_floating` - `surfaceLow` at the bottom-nav opacity. */
+    val surfaceLowFloating: Color = Color(0xED111410),
+    /** `taki_edge_highlight` - a 1dp tonal edge on a floating surface (~7% ivory). */
+    val edgeHighlight: Color = Color(0x12F1F2ED),
     /** `taki_error` - error. */
     val error: Color = Color(0xFFFFB4AB),
     /** `taki_on_error_container` - error-container content. */

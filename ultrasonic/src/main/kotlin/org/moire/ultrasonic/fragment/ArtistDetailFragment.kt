@@ -36,6 +36,7 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.adapters.ArtistPopularTrackDelegate
 import org.moire.ultrasonic.adapters.BaseAdapter
 import org.moire.ultrasonic.adapters.HomeAlbumDelegate
@@ -94,6 +95,12 @@ class ArtistDetailFragment :
         swipeRefresh = view.findViewById(R.id.swipe_refresh_view)
         swipeRefresh?.setOnRefreshListener { load(refresh = true) }
         load(refresh = false)
+
+        // Scrolls behind the translucent bottom nav / mini-player - keep the bottom padding
+        // tracking the visible chrome so the last section clears it.
+        view.findViewById<View>(R.id.artist_detail_content)?.let { content ->
+            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, content)
+        }
     }
 
     private fun setupArtistArt(view: View) {

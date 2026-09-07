@@ -45,6 +45,12 @@ class MainFragment :
     ): View = inflater.inflate(R.layout.primary, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // Library scrolls behind the translucent bottom nav / mini-player; keep its bottom
+        // padding tracking whatever chrome is visible so the last row always clears it.
+        view.findViewById<View>(R.id.library_content)?.let { content ->
+            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, content)
+        }
+
         // Library's header overflow mirrors Home's: one entry point to the library hub
         // (switch collection / add / settings / about), so both top-level surfaces share the
         // same header pattern instead of Library also carrying a collection-name button.

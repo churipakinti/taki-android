@@ -10,9 +10,13 @@ package org.moire.ultrasonic.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -103,4 +107,24 @@ class ComposePrimitivesScreenshotTest {
             onClick = {}
         )
     }
+
+    @Test
+    fun takiFloatingSurface() = capture("taki_floating_surface") {
+        TakiFloatingSurface(
+            modifier = Modifier.fillMaxWidth().height(64.dp),
+            topEdge = true,
+        ) {
+            Text(
+                text = "Floating chrome",
+                style = TakiTheme.type.titleSmall,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+
+    // The atmospheric wash on the featured card ([TakiAtmosphericSurface]) depends on Coil
+    // resolving an image plus a RenderEffect blur - neither is deterministic under Robolectric,
+    // so there is no JVM golden for it. Its behaviour is covered by
+    // HomeScreenComposeTest#`the featured card still works with the atmospheric wash enabled`
+    // and by the Pixel 7 review.
 }

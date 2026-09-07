@@ -25,6 +25,7 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.adapters.BaseAdapter
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.domain.Identifiable
@@ -164,6 +165,13 @@ abstract class MultiListFragment<T : Identifiable> :
             setHasFixedSize(true)
             layoutManager = viewManager
             adapter = viewAdapter
+        }
+
+        // The bottom nav and mini-player overlay this list; keep the bottom padding tracking
+        // whatever chrome is visible so the last row always clears it (the list still scrolls
+        // behind them - clipToPadding="false" in list_parts_recycler / search.xml).
+        listView?.let { list ->
+            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, list)
         }
     }
 

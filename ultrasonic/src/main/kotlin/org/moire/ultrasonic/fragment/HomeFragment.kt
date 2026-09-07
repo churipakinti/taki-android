@@ -8,268 +8,208 @@
 package org.moire.ultrasonic.fragment
 
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.core.view.isVisible
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.FrameLayout
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import java.util.Calendar
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
-import org.moire.ultrasonic.adapters.BaseAdapter
-import org.moire.ultrasonic.adapters.HomeAlbumDelegate
-import org.moire.ultrasonic.adapters.HomeShortcutDelegate
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
-import org.moire.ultrasonic.domain.Album
-import org.moire.ultrasonic.domain.Identifiable
 import org.moire.ultrasonic.model.HomeViewModel
 import org.moire.ultrasonic.service.DailyMixQueueBuilder
 import org.moire.ultrasonic.service.MediaPlayerManager
-import org.moire.ultrasonic.subsonic.ImageLoaderProvider
-import org.moire.ultrasonic.util.RefreshableFragment
+import org.moire.ultrasonic.ui.home.HomeActions
+import org.moire.ultrasonic.ui.home.HomeAlbumUi
+import org.moire.ultrasonic.ui.home.HomeScreen
+import org.moire.ultrasonic.ui.home.HomeUiState
+import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 
-private const val SHORTCUT_GRID_COLUMNS = 2
-private const val MORNING_ENDS_AT_HOUR = 12
-private const val AFTERNOON_ENDS_AT_HOUR = 18
-
 /**
- * A Spotify-style "Home" screen showing recently played shortcuts and
- * horizontal shelves of albums. Built entirely from data the server
- * already exposes (recent, starred, newest, random, most played, plus
- * a stable daily mix from library signals) - there is no recommendation
- * engine behind this.
+ * Thin Compose host for the Home screen. Owns nothing of the UI: it collects
+ * [HomeViewModel.uiState], renders [HomeScreen] under [TakiTheme], and forwards navigation
+ * (via `NavController`) and playback (via [MediaPlayerManager]) commands - the boundary
+ * fixed in issue #8. The `homeFragment` navigation destination, id, arguments, back stack,
+ * Activity chrome, mini-player and bottom navigation are unchanged.
  */
-class HomeFragment :
-    Fragment(),
-    RefreshableFragment {
+class HomeFragment : Fragment() {
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val mediaPlayerManager: MediaPlayerManager by inject()
-    private val imageLoaderProvider: ImageLoaderProvider by inject()
 
-    override var swipeRefresh: SwipeRefreshLayout? = null
+    // Fallback for the brief window before the Activity has computed its first inset (and for
+    // the impossible case of a non-NavigationActivity host).
+    private val fallbackChromeInset = MutableStateFlow(0)
+
+    // A zero-width strip pinned top-end, purely so the library-hub PopupMenu has a small
+    // anchor near the Compose header's overflow glyph (a full-size ComposeView anchor drops
+    // the menu in the wrong place).
+    private var overflowAnchor: View? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View = inflater.inflate(R.layout.home_fragment, container, false)
+        savedInstanceState: Bundle?,
+    ): View {
+        val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
+            ?: fallbackChromeInset
+        val composeView = ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by homeViewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    HomeScreen(
+                        state = state,
+                        actions = homeActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
+        val anchor = View(requireContext())
+        overflowAnchor = anchor
+        return FrameLayout(requireContext()).apply {
+            addView(
+                composeView,
+                FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT),
+            )
+            val anchorHeightPx = (OVERFLOW_ANCHOR_HEIGHT_DP * resources.displayMetrics.density)
+                .toInt()
+            addView(anchor, FrameLayout.LayoutParams(1, anchorHeightPx))
+            anchor.updateLayoutParams<FrameLayout.LayoutParams> {
+                gravity = Gravity.TOP or Gravity.END
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        overflowAnchor = null
+        super.onDestroyView()
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setGreeting(view)
-        view.findViewById<View>(R.id.home_overflow).setOnClickListener {
-            (activity as? NavigationActivity)?.showLibraryHub(it)
-        }
-        setupQuickAccessButtons(view)
-        setupMixRow(view)
-
-        val shortcutsAdapter = setupShortcutsGrid(view.findViewById(R.id.home_shortcuts_list))
-        val favoritesAdapter = setupCarousel(view.findViewById(R.id.home_favorites_list))
-        val newestAdapter = setupCarousel(view.findViewById(R.id.home_newest_list))
-        val randomAdapter = setupCarousel(view.findViewById(R.id.home_random_list))
-        val frequentAdapter = setupCarousel(view.findViewById(R.id.home_frequent_list))
-
-        val shortcutsShelf = view.findViewById<View>(R.id.home_shortcuts_shelf)
-        val favoritesShelf = view.findViewById<View>(R.id.home_favorites_shelf)
-        val newestShelf = view.findViewById<View>(R.id.home_newest_shelf)
-        val randomShelf = view.findViewById<View>(R.id.home_random_shelf)
-        val frequentShelf = view.findViewById<View>(R.id.home_frequent_shelf)
-
-        homeViewModel.shortcutAlbums.observe(viewLifecycleOwner) {
-            shortcutsAdapter.submitList(it)
-            shortcutsShelf.isVisible = it.isNotEmpty()
-        }
-        homeViewModel.favoriteAlbums.observe(viewLifecycleOwner) {
-            favoritesAdapter.submitList(it)
-            favoritesShelf.isVisible = it.isNotEmpty()
-        }
-        homeViewModel.newestAlbums.observe(viewLifecycleOwner) {
-            newestAdapter.submitList(it)
-            newestShelf.isVisible = it.isNotEmpty()
-        }
-        homeViewModel.randomAlbums.observe(viewLifecycleOwner) {
-            randomAdapter.submitList(it)
-            randomShelf.isVisible = it.isNotEmpty()
-        }
-        homeViewModel.frequentAlbums.observe(viewLifecycleOwner) {
-            frequentAdapter.submitList(it)
-            frequentShelf.isVisible = it.isNotEmpty()
+        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+            homeViewModel.loadHomeScreen()
         }
 
-        swipeRefresh = view.findViewById(R.id.swipe_refresh_view)
-        swipeRefresh?.setOnRefreshListener { load(forceRefresh = true) }
-
-        load()
-    }
-
-    private fun setGreeting(view: View) {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val greetingRes = when {
-            hour < MORNING_ENDS_AT_HOUR -> R.string.home_greeting_morning
-            hour < AFTERNOON_ENDS_AT_HOUR -> R.string.home_greeting_afternoon
-            else -> R.string.home_greeting_evening
-        }
-        view.findViewById<TextView>(R.id.home_greeting).setText(greetingRes)
-    }
-
-    private fun setupQuickAccessButtons(view: View) {
-        view.findViewById<View>(R.id.home_quick_playlists).setOnClickListener {
-            findNavController().navigate(R.id.playlistsFragment)
-        }
-        view.findViewById<View>(R.id.home_quick_albums).setOnClickListener {
-            findNavController().navigate(
-                NavigationGraphDirections.toAlbumList(
-                    type = AlbumListType.NEWEST
-                )
-            )
-        }
-        view.findViewById<View>(R.id.home_quick_artists).setOnClickListener {
-            findNavController().navigate(NavigationGraphDirections.toArtistList())
-        }
-        view.findViewById<View>(R.id.home_quick_songs).setOnClickListener {
-            findNavController().navigate(
-                NavigationGraphDirections.toTrackCollection(libraryRoot = true)
-            )
+        // One-time "what is the Daily Mix" toast, kept from the View implementation.
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.uiState.collect(::maybeShowMixIntro)
+            }
         }
     }
 
-    /**
-     * The Mix is shown as a single playlist-style row (cover of the first track, title,
-     * song count) instead of a scrollable carousel.
-     */
-    private fun setupMixRow(view: View) {
-        val mixShelf = view.findViewById<View>(R.id.home_mix_shelf)
-        val mixCover = view.findViewById<ImageView>(R.id.home_mix_cover)
-        val mixTitle = view.findViewById<TextView>(R.id.home_mix_title)
-        val mixSubtitle = view.findViewById<TextView>(R.id.home_mix_subtitle)
-        val mixPlay = view.findViewById<View>(R.id.home_mix_play)
-        val mixShuffle = view.findViewById<View>(R.id.home_mix_shuffle)
-
-        mixShelf.setOnClickListener { openMixDetail() }
-        mixPlay.setOnClickListener { playMix() }
-        mixShuffle.setOnClickListener { regenerateMix() }
-
-        mixTitle.setText(R.string.home_mix_title)
-        homeViewModel.mixTracks.observe(viewLifecycleOwner) { tracks ->
-            mixShelf.isVisible = tracks.isNotEmpty()
-            mixSubtitle.text = getString(R.string.home_mix_song_count, tracks.size)
-
-            val firstTrack = tracks.firstOrNull()
-            if (firstTrack != null) {
-                imageLoaderProvider.executeOn {
-                    it.loadImage(mixCover, firstTrack, false, 0, R.drawable.unknown_album)
+    private val homeActions: HomeActions by lazy {
+        HomeActions(
+            onRefresh = {
+                viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+                    homeViewModel.loadHomeScreen(forceRefresh = true)
                 }
-            }
+            },
+            onOverflow = {
+                (activity as? NavigationActivity)?.showLibraryHub(overflowAnchor ?: requireView())
+            },
+            onAlbumClick = ::openAlbum,
+            onOpenPlaylists = { findNavController().navigate(R.id.playlistsFragment) },
+            onOpenAlbums = {
+                findNavController().navigate(
+                    NavigationGraphDirections.toAlbumList(type = AlbumListType.NEWEST),
+                )
+            },
+            onOpenArtists = {
+                findNavController().navigate(NavigationGraphDirections.toArtistList())
+            },
+            onOpenSongs = {
+                findNavController().navigate(
+                    NavigationGraphDirections.toTrackCollection(libraryRoot = true),
+                )
+            },
+            onPlayMix = ::playMix,
+            onOpenMix = ::openMixDetail,
+            onRegenerateMix = ::regenerateMix,
+        )
+    }
 
-            if (tracks.isNotEmpty() && !Settings.homeMixIntroShown) {
-                Settings.homeMixIntroShown = true
-                toast(getString(R.string.home_mix_intro), shortDuration = false)
-            }
-        }
+    private fun openAlbum(album: HomeAlbumUi) {
+        findNavController().navigate(
+            NavigationGraphDirections.toTrackCollection(
+                album.id,
+                isAlbum = album.isDirectory,
+                name = album.title,
+                parentId = album.parentId,
+            ),
+        )
     }
 
     private fun playMix() {
-        val tracks = homeViewModel.mixTracks.value
-        if (tracks.isNullOrEmpty()) return
-
+        val tracks = homeViewModel.mixTracks
+        if (tracks.isEmpty()) return
         mediaPlayerManager.addToPlaylist(
             songs = tracks,
             autoPlay = true,
             shuffle = false,
             insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
-            startIndex = 0
+            startIndex = 0,
         )
     }
 
     private fun openMixDetail() {
-        if (homeViewModel.mixTracks.value.isNullOrEmpty()) return
-
+        if (homeViewModel.uiState.value.featuredMix == null) return
         findNavController().navigate(
             NavigationGraphDirections.toTrackCollection(
                 dailyMix = true,
-                name = getString(R.string.home_mix_title)
-            )
+                name = getString(R.string.home_mix_title),
+            ),
         )
     }
 
     private fun regenerateMix() {
         viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
-            swipeRefresh?.isRefreshing = true
             homeViewModel.regenerateDailyMix()
-            swipeRefresh?.isRefreshing = false
-            updateEmptyState()
-
-            val size = homeViewModel.mixTracks.value?.size ?: 0
+            val size = homeViewModel.uiState.value.featuredMix?.trackCount ?: 0
             if (size in 1 until DailyMixQueueBuilder.TARGET_SIZE) {
                 toast(getString(R.string.home_mix_short, size))
             }
         }
     }
 
-    private fun load(forceRefresh: Boolean = false) {
-        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
-            swipeRefresh?.isRefreshing = true
-            homeViewModel.loadHomeScreen(forceRefresh)
-            swipeRefresh?.isRefreshing = false
-            updateEmptyState()
+    private fun maybeShowMixIntro(state: HomeUiState) {
+        if (state.featuredMix != null && !Settings.homeMixIntroShown) {
+            Settings.homeMixIntroShown = true
+            toast(getString(R.string.home_mix_intro), shortDuration = false)
         }
     }
 
-    private fun updateEmptyState() {
-        val allEmpty = homeViewModel.shortcutAlbums.value.isNullOrEmpty() &&
-            homeViewModel.mixTracks.value.isNullOrEmpty() &&
-            homeViewModel.favoriteAlbums.value.isNullOrEmpty() &&
-            homeViewModel.newestAlbums.value.isNullOrEmpty() &&
-            homeViewModel.randomAlbums.value.isNullOrEmpty() &&
-            homeViewModel.frequentAlbums.value.isNullOrEmpty()
-        requireView().findViewById<View>(R.id.home_empty_view).isVisible = allEmpty
-    }
-
-    private fun setupCarousel(recyclerView: RecyclerView): BaseAdapter<Identifiable> {
-        val adapter = BaseAdapter<Identifiable>()
-        adapter.register(HomeAlbumDelegate(::onAlbumClick))
-
-        recyclerView.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        recyclerView.adapter = adapter
-
-        return adapter
-    }
-
-    private fun setupShortcutsGrid(recyclerView: RecyclerView): BaseAdapter<Identifiable> {
-        val adapter = BaseAdapter<Identifiable>()
-        adapter.register(HomeShortcutDelegate(::onAlbumClick))
-
-        recyclerView.layoutManager = GridLayoutManager(context, SHORTCUT_GRID_COLUMNS)
-        recyclerView.adapter = adapter
-
-        return adapter
-    }
-
-    private fun onAlbumClick(album: Album) {
-        val action = NavigationGraphDirections.toTrackCollection(
-            album.id,
-            isAlbum = album.isDirectory,
-            name = album.title,
-            parentId = album.parent
-        )
-        findNavController().navigate(action)
+    private companion object {
+        private const val OVERFLOW_ANCHOR_HEIGHT_DP = 48f
     }
 }

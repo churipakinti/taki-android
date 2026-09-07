@@ -51,7 +51,28 @@
 
     <!-- Artwork footprints. Artwork is the primary carrier of colour on music screens. -->
     <dimen name="artwork_thumb">56dp</dimen>
+    <dimen name="artwork_mini">48dp</dimen>
+    <dimen name="artwork_shelf_compact">104dp</dimen>
     <dimen name="artwork_card">140dp</dimen>
+
+    <!-- Home featured ("mix") card. TAKI_DESIGN_SYSTEM_V2.md section 10.1. -->
+    <dimen name="featured_card_height">156dp</dimen>
+    <dimen name="featured_card_artwork">124dp</dimen>
+
+    <!-- Floating shell (V2 sections 13-14). Both the bottom nav and the mini-player overlay
+         scrollable content; nothing is a reserved row. mini_player_edge_margin doubles as the
+         mini-player's screen-edge inset and the equal 16dp gap it leaves above the bottom nav,
+         so it rests optically centred in that band. bottom_nav_height is a pre-layout estimate
+         of the Material 3 labelled bottom-nav content height (once laid out the real measured
+         height is used instead; its background also fills the system nav-bar inset behind it).
+         content_inset_floating_chrome is the *mini-player band only* - 16 (gap above
+         content) + 64 (mini_player_height) + 16 (gap above the bottom nav) - and is the static
+         fallback for XML scroll views; NavigationActivity.getContentBottomInset() adds the live
+         system nav-bar + bottom_nav_height on top per whatever chrome is actually visible. -->
+    <dimen name="mini_player_height">64dp</dimen>
+    <dimen name="mini_player_edge_margin">16dp</dimen>
+    <dimen name="bottom_nav_height">80dp</dimen>
+    <dimen name="content_inset_floating_chrome">96dp</dimen>
 
     <!-- Elevation / borders. Depth is tonal by default; these are the rare exceptions. -->
     <dimen name="elevation_raised">3dp</dimen>

@@ -50,6 +50,9 @@ class TakiTokensTest {
         "taki_selected_neutral" to takiColors.selectedNeutral,
         "taki_outline" to takiColors.outline,
         "taki_divider" to takiColors.divider,
+        "taki_surface_floating" to takiColors.surfaceFloating,
+        "taki_surface_low_floating" to takiColors.surfaceLowFloating,
+        "taki_edge_highlight" to takiColors.edgeHighlight,
         "taki_error" to takiColors.error,
         "taki_on_error_container" to takiColors.onErrorContainer
     )
@@ -112,9 +115,35 @@ class TakiTokensTest {
         assertEquals(dimenDp("row_height_md").dp, dimensions.rowMd)
         assertEquals(dimenDp("row_height_lg").dp, dimensions.rowLg)
         assertEquals(dimenDp("artwork_thumb").dp, dimensions.artworkThumb)
+        assertEquals(dimenDp("artwork_mini").dp, dimensions.artworkMini)
+        assertEquals(dimenDp("artwork_shelf_compact").dp, dimensions.artworkShelfCompact)
         assertEquals(dimenDp("artwork_card").dp, dimensions.artworkCard)
+        assertEquals(dimenDp("featured_card_height").dp, dimensions.featuredCardHeight)
+        assertEquals(dimenDp("featured_card_artwork").dp, dimensions.featuredCardArtwork)
+        assertEquals(dimenDp("mini_player_height").dp, dimensions.miniPlayerHeight)
+        assertEquals(dimenDp("mini_player_edge_margin").dp, dimensions.miniPlayerEdgeMargin)
+        assertEquals(dimenDp("content_inset_floating_chrome").dp, dimensions.contentInsetFloatingChrome)
         assertEquals(dimenDp("elevation_raised").dp, dimensions.elevationRaised)
         assertEquals(dimenDp("border_thin").dp, dimensions.borderThin)
+    }
+
+    @Test
+    fun `floating chrome colours encode the TakiAtmosphere alphas over the base surfaces`() {
+        val miniPlayerAlpha = Math.round(TakiAtmosphere.MINI_PLAYER_SURFACE_ALPHA * ALPHA_MAX)
+        val bottomNavAlpha = Math.round(TakiAtmosphere.FLOATING_SURFACE_ALPHA * ALPHA_MAX)
+        val edgeAlpha = Math.round(TakiAtmosphere.EDGE_HIGHLIGHT_ALPHA * ALPHA_MAX)
+
+        // surface_floating = surface RGB @ MINI_PLAYER_SURFACE_ALPHA
+        assertEquals(takiColors.surface.red, takiColors.surfaceFloating.red, 0f)
+        assertEquals(takiColors.surface.green, takiColors.surfaceFloating.green, 0f)
+        assertEquals(takiColors.surface.blue, takiColors.surfaceFloating.blue, 0f)
+        assertEquals(miniPlayerAlpha, Math.round(takiColors.surfaceFloating.alpha * ALPHA_MAX))
+        // surface_low_floating = surfaceLow RGB @ FLOATING_SURFACE_ALPHA
+        assertEquals(takiColors.surfaceLow.red, takiColors.surfaceLowFloating.red, 0f)
+        assertEquals(bottomNavAlpha, Math.round(takiColors.surfaceLowFloating.alpha * ALPHA_MAX))
+        // edge_highlight = ivory RGB @ EDGE_HIGHLIGHT_ALPHA
+        assertEquals(takiColors.ivory.red, takiColors.edgeHighlight.red, 0f)
+        assertEquals(edgeAlpha, Math.round(takiColors.edgeHighlight.alpha * ALPHA_MAX))
     }
 
     private fun colorHex(name: String): String =
@@ -148,5 +177,6 @@ class TakiTokensTest {
         const val RGB_HEX_LENGTH = 6
         const val ARGB_HEX_LENGTH = 8
         const val HEX_RADIX = 16
+        const val ALPHA_MAX = 255
     }
 }

@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
  * 1:1 transcription of the non-spacing, non-radius dimensions in
  * `ultrasonic/src/main/res/values/dimens.xml`. `TakiTokensTest` cross-checks the values.
  *
- * Artwork sizes that only exist in TAKI_DESIGN_SYSTEM_V2.md section 7 (104 / 124 / 156 /
- * 184 / 96 / 364 dp) are intentionally NOT added here yet - they arrive with the screen
- * that needs them (issue #10), added to `dimens.xml` and this class in lockstep.
+ * Sizes from TAKI_DESIGN_SYSTEM_V2.md section 7/10 are added here and to `dimens.xml` in
+ * lockstep as the screen that needs them lands (issue #10). Present so far: the Home
+ * compact-shelf artwork and the Home featured card. Still absent: 184 / 96 / 364 dp.
  *
  * See docs/design/TAKI_DESIGN_SYSTEM_V2.md sections 6-8.
  */
@@ -43,8 +43,28 @@ data class TakiDimensions(
     val rowLg: Dp = 72.dp,
     /** `artwork_thumb` - compact row thumbnail. */
     val artworkThumb: Dp = 56.dp,
-    /** `artwork_card` - standard larger card artwork. */
+    /** `artwork_mini` - mini-player artwork (V2 section 13). */
+    val artworkMini: Dp = 48.dp,
+    /** `artwork_shelf_compact` - Home "Recently played" shelf artwork (V2 section 10.1). */
+    val artworkShelfCompact: Dp = 104.dp,
+    /** `artwork_card` - standard larger card / album shelf artwork. */
     val artworkCard: Dp = 140.dp,
+    /** `featured_card_height` - Home featured ("mix") card (V2 section 10.1). */
+    val featuredCardHeight: Dp = 156.dp,
+    /** `featured_card_artwork` - artwork inside the Home featured card. */
+    val featuredCardArtwork: Dp = 124.dp,
+    /** `mini_player_height` - the floating mini-player band (V2 section 13). */
+    val miniPlayerHeight: Dp = 64.dp,
+    /**
+     * `mini_player_edge_margin` - the floating mini-player's inset from the screen edges,
+     * and the equal gap it leaves above the bottom nav, so it rests optically centred.
+     */
+    val miniPlayerEdgeMargin: Dp = 16.dp,
+    /**
+     * `content_inset_floating_chrome` - bottom `contentPadding` a scrollable screen adds so its
+     * last item can clear the floating mini-player overlay. Screens still render *behind* it.
+     */
+    val contentInsetFloatingChrome: Dp = 96.dp,
     /** `elevation_raised` - reserved for a genuinely floating element (mini-player, sheet). */
     val elevationRaised: Dp = 3.dp,
     /** `border_thin` - the 1dp border used only when a border is unavoidable. */

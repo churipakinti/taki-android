@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Floating mini-player (V2 section 13). It overlays the scrollable content of whatever screen
+    is showing (see navigation_activity.xml) rather than sitting in its own reserved row, so the
+    background is the translucent taki_surface_floating (~0.87) via @drawable/bg_now_playing.
+    Its screen-edge inset and the equal gap above the bottom nav are set by NavigationActivity
+    (mini_player_edge_margin = 16dp each side), so it rests optically centred in the band above
+    the nav; the height is mini_player_height. Transport controls recede to neutral tones -
+    green is reserved for the progress line.
+-->
 <FrameLayout xmlns:a="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     a:id="@+id/now_playing"
-    a:layout_width="fill_parent"
+    a:layout_width="match_parent"
     a:layout_height="wrap_content"
-    a:layout_margin="@dimen/space_sm"
+    a:minHeight="@dimen/mini_player_height"
     a:background="@drawable/bg_now_playing"
     a:clipToOutline="true"
     tools:ignore="Overdraw">
@@ -13,13 +22,15 @@
     <LinearLayout
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
-        a:gravity="center_vertical">
+        a:minHeight="@dimen/mini_player_height"
+        a:baselineAligned="false"
+        a:gravity="center_vertical"
+        a:paddingHorizontal="@dimen/space_md">
 
     <com.google.android.material.imageview.ShapeableImageView
         a:id="@+id/now_playing_image"
-        a:layout_width="@dimen/artwork_thumb"
-        a:layout_height="@dimen/artwork_thumb"
-        a:layout_margin="@dimen/space_sm"
+        a:layout_width="@dimen/artwork_mini"
+        a:layout_height="@dimen/artwork_mini"
         a:focusable="true"
         a:scaleType="centerCrop"
         a:importantForAccessibility="no"
@@ -31,7 +42,7 @@
         a:layout_gravity="center_vertical"
         a:layout_weight="1.0"
         a:orientation="vertical"
-        a:paddingStart="@dimen/space_sm">
+        a:paddingStart="@dimen/space_md">
 
         <TextView
             a:id="@+id/now_playing_title"
@@ -69,7 +80,8 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_backward"
         app:iconGravity="textEnd"
-        app:iconSize="24dp" />
+        app:iconSize="24dp"
+        app:iconTint="?attr/colorOnSurfaceVariant" />
 
     <Button
         a:id="@+id/now_playing_control_play"
@@ -83,7 +95,8 @@
         a:scaleType="fitCenter"
         app:icon="@drawable/media_pause"
         app:iconGravity="textEnd"
-        app:iconSize="34dp" />
+        app:iconSize="32dp"
+        app:iconTint="?attr/colorOnSurface" />
 
     <Button
         a:id="@+id/now_playing_control_next"
@@ -91,14 +104,14 @@
         a:layout_width="@dimen/touch_target_min"
         a:layout_height="@dimen/touch_target_min"
         a:layout_gravity="center"
-        a:layout_marginEnd="@dimen/space_sm"
         a:layout_weight="0.0"
         a:contentDescription="@string/buttons.next"
         a:focusable="false"
         a:scaleType="fitCenter"
         app:icon="@drawable/media_forward"
         app:iconGravity="textEnd"
-        app:iconSize="24dp" />
+        app:iconSize="24dp"
+        app:iconTint="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>
 

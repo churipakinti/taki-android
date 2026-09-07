@@ -10,114 +10,148 @@ package org.moire.ultrasonic.model
 import android.app.Application
 import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
+import java.util.Calendar
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.DailyMixQueueBuilder
 import org.moire.ultrasonic.service.MusicServiceFactory
+import org.moire.ultrasonic.ui.home.FeaturedMixUi
+import org.moire.ultrasonic.ui.home.HomeAlbumUi
+import org.moire.ultrasonic.ui.home.HomeShelfKind
+import org.moire.ultrasonic.ui.home.HomeShelfUi
+import org.moire.ultrasonic.ui.home.HomeUiState
+import org.moire.ultrasonic.ui.home.greetingForHour
+import org.moire.ultrasonic.ui.home.mixToFeaturedUi
+import org.moire.ultrasonic.ui.home.toHomeAlbumUi
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 
 /**
- * Provides the album shelves ("carousels") shown on the Home screen.
+ * Provides [HomeUiState] for the Compose Home screen: the daily-mix featured card, the
+ * "Recently played" shelf and the album shelves (Liked / Recently added / Discover /
+ * Most played).
+ *
+ * Built entirely from data the server already exposes (recent, starred, newest, random,
+ * most played, plus a stable daily mix from library signals) - there is no recommendation
+ * engine behind this. The same per-server freshness window and per-shelf error swallowing
+ * as the old View implementation are kept.
  */
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    val shortcutAlbums: MutableLiveData<List<Album>> = MutableLiveData()
-    val favoriteAlbums: MutableLiveData<List<Album>> = MutableLiveData()
-    val newestAlbums: MutableLiveData<List<Album>> = MutableLiveData()
-    val randomAlbums: MutableLiveData<List<Album>> = MutableLiveData()
-    val frequentAlbums: MutableLiveData<List<Album>> = MutableLiveData()
-    val mixTracks: MutableLiveData<List<Track>> = MutableLiveData()
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    /**
+     * The raw tracks of the current daily mix. Consumed by the host Fragment to issue the
+     * playback command (`MediaPlayerManager.addToPlaylist`); never rendered by a composable.
+     */
+    @Volatile
+    var mixTracks: List<Track> = emptyList()
+        private set
 
     private val shelvesFreshness =
         HomeShelvesFreshness(Settings.DIRECTORY_CACHE_TIME * MILLIS_PER_SECOND)
 
     suspend fun loadHomeScreen(forceRefresh: Boolean = false) = coroutineScope {
+        _uiState.update { it.copy(greeting = greetingForHour(currentHour())) }
+
         val currentServerId = ActiveServerProvider.getActiveServerId()
         val now = SystemClock.elapsedRealtime()
 
-        if (!forceRefresh && shelvesFreshness.isFresh(now, currentServerId)) {
+        if (!forceRefresh && shelvesFreshness.isFresh(now, currentServerId) && uiState.value.hasContent) {
+            _uiState.update { it.copy(isLoading = false) }
             return@coroutineScope
         }
 
+        _uiState.update { it.copy(isRefreshing = true) }
         val perfToken = PerfMetrics.start("home_load")
-        val shortcuts = async { fetch(AlbumListType.RECENT, SHORTCUTS_SIZE) }
-        val favorites = async { fetch(AlbumListType.STARRED) }
-        val newest = async { fetch(AlbumListType.NEWEST) }
-        val random = async { fetch(AlbumListType.RANDOM) }
-        val frequent = async { fetch(AlbumListType.FREQUENT) }
-        val mix = async { fetchOrRestoreMix() }
+        try {
+            val recent = async { fetchAlbums(AlbumListType.RECENT, SHORTCUTS_SIZE) }
+            val liked = async { fetchAlbums(AlbumListType.STARRED) }
+            val newest = async { fetchAlbums(AlbumListType.NEWEST) }
+            val random = async { fetchAlbums(AlbumListType.RANDOM) }
+            val frequent = async { fetchAlbums(AlbumListType.FREQUENT) }
+            val mix = async { fetchMixUi(forceRefresh = false) }
 
-        // Using .value (not postValue) is safe and correct here: loadHomeScreen() is always
-        // called from the main thread, and postValue's async post would otherwise race with
-        // code that reads .value right after this suspend function returns (e.g. an empty-state
-        // check), potentially reading stale values.
-        shortcutAlbums.value = shortcuts.await()
-        favoriteAlbums.value = favorites.await()
-        newestAlbums.value = newest.await()
-        randomAlbums.value = random.await()
-        frequentAlbums.value = frequent.await()
-
-        val mixResult = mix.await()
-        mixTracks.value = mixResult.tracks
-
-        shelvesFreshness.markLoaded(SystemClock.elapsedRealtime(), currentServerId)
-
-        PerfMetrics.end("home_load", perfToken)
+            val shelves = persistentListOf(
+                HomeShelfUi(HomeShelfKind.LIKED, liked.await()),
+                HomeShelfUi(HomeShelfKind.NEWEST, newest.await()),
+                HomeShelfUi(HomeShelfKind.DISCOVER, random.await()),
+                HomeShelfUi(HomeShelfKind.FREQUENT, frequent.await()),
+            )
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    featuredMix = mix.await(),
+                    recentlyPlayed = recent.await(),
+                    shelves = shelves,
+                )
+            }
+            shelvesFreshness.markLoaded(SystemClock.elapsedRealtime(), currentServerId)
+        } finally {
+            _uiState.update { it.copy(isRefreshing = false, isLoading = false) }
+            PerfMetrics.end("home_load", perfToken)
+        }
     }
 
     suspend fun regenerateDailyMix() {
-        mixTracks.value = fetchMix(forceRefresh = true).tracks
+        _uiState.update { it.copy(isRefreshing = true) }
+        try {
+            val mix = fetchMixUi(forceRefresh = true)
+            _uiState.update { it.copy(featuredMix = mix) }
+        } finally {
+            _uiState.update { it.copy(isRefreshing = false) }
+        }
     }
 
-    private suspend fun fetch(type: AlbumListType, size: Int = SIZE): List<Album> =
-        withContext(Dispatchers.IO) {
-            // A failure here (e.g. offline folder-based browsing, a transient network error)
-            // must not cancel the sibling async fetches in loadHomeScreen()'s coroutineScope.
-            try {
-                val service = MusicServiceFactory.getMusicService()
-
-                if (ActiveServerProvider.shouldUseId3Tags()) {
-                    service.getAlbumList2(type, size, 0, null, null)
-                } else {
-                    service.getAlbumList(type, size, 0, null)
-                }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (error: Exception) {
-                emptyList()
-            }
-        }
-
-    /**
-     * Mix diario is regenerated at most once per day and server. It stores the selected IDs, then
-     * tries to restore them from the same stable sources before building a fresh selection.
-     */
-    private suspend fun fetchOrRestoreMix(): DailyMix = fetchMix(forceRefresh = false)
-
-    private suspend fun fetchMix(forceRefresh: Boolean): DailyMix = withContext(Dispatchers.IO) {
-        // Same reasoning as fetch(): a failure here must not cancel the sibling shelf
-        // fetches in loadHomeScreen()'s coroutineScope.
+    private suspend fun fetchAlbums(
+        type: AlbumListType,
+        size: Int = SIZE,
+    ): ImmutableList<HomeAlbumUi> = withContext(Dispatchers.IO) {
+        // A failure here (offline folder browsing, a transient network error) must not cancel
+        // the sibling fetches in loadHomeScreen()'s coroutineScope.
         try {
-            DailyMix(
-                DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build(forceRefresh)
-            )
+            val service = MusicServiceFactory.getMusicService()
+            val albums = if (ActiveServerProvider.shouldUseId3Tags()) {
+                service.getAlbumList2(type, size, 0, null, null)
+            } else {
+                service.getAlbumList(type, size, 0, null)
+            }
+            albums.map { it.toHomeAlbumUi() }.toImmutableList()
         } catch (cancelled: CancellationException) {
             throw cancelled
-        } catch (error: Exception) {
-            DailyMix(emptyList())
+        } catch (expected: Exception) {
+            persistentListOf()
         }
     }
 
-    private data class DailyMix(val tracks: List<Track>)
+    private suspend fun fetchMixUi(forceRefresh: Boolean): FeaturedMixUi? = withContext(Dispatchers.IO) {
+        try {
+            val tracks = DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build(forceRefresh)
+            mixTracks = tracks
+            mixToFeaturedUi(tracks)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (expected: Exception) {
+            mixTracks = emptyList()
+            null
+        }
+    }
+
+    private fun currentHour(): Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
     companion object {
         private const val SIZE = 12

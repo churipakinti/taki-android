@@ -15,6 +15,15 @@
     <color name="taki_gray">#A7AAA2</color>
     <color name="taki_outline">#1FFFFFFF</color>
     <color name="taki_divider">#0DFFFFFF</color>
+    <!-- Floating chrome. Both layers overlay scrollable content. The mini-player is the top,
+         more translucent layer (~0.87, taki_surface_floating); the bottom nav is the lower,
+         more grounded layer (~0.93, taki_surface_low_floating) so its small labels stay legible
+         over artwork scrolling behind it. Each is its base surface tone at that alpha, plus a
+         1dp tonal edge / top hairline. Alphas match
+         TakiAtmosphere.MINI_PLAYER_SURFACE_ALPHA / FLOATING_SURFACE_ALPHA / EDGE_HIGHLIGHT_ALPHA. -->
+    <color name="taki_surface_floating">#DE171A16</color>
+    <color name="taki_surface_low_floating">#ED111410</color>
+    <color name="taki_edge_highlight">#12F1F2ED</color>
     <color name="taki_error">#FFB4AB</color>
     <color name="taki_on_error_container">#FFDAD6</color>
     <color name="selected_menu_dark">@color/taki_ivory</color>

@@ -87,7 +87,9 @@
             a:id="@+id/recycler_view"
             a:layout_width="match_parent"
             a:layout_height="0dip"
-            a:layout_weight="1.0" />
+            a:layout_weight="1.0"
+            a:clipToPadding="false"
+            a:paddingBottom="@dimen/content_inset_floating_chrome" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

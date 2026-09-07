@@ -62,7 +62,7 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ) = ComposeView(requireContext()).apply {
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewLifecycleDestroyed)
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
             TakiTheme {
                 HomeScreen(
@@ -83,7 +83,7 @@ class HomeFragment : Fragment() {
   via `AndroidView`. A screen is either fully XML or fully Compose. (The **single sanctioned
   exception** is Now Playing — see §8 step 7 — where the still-XML `PlayerFragment` shell may
   host sub-section `ComposeView`s during its own staged migration.)
-- `ViewCompositionStrategy.DisposeOnViewLifecycleDestroyed` on every `ComposeView`, so the
+- `ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed` on every `ComposeView`, so the
   composition's lifecycle is the Fragment **view** lifecycle — matching how the current
   fragments dispose view bindings and RxBus subscriptions in `onDestroyView`.
 - The host Fragment obtains its `ViewModel` exactly as today (`by viewModels()`), and **passes
@@ -119,7 +119,7 @@ class HomeFragment : Fragment() {
 |---|---|
 | Screen data | Lives in the `ViewModel` only. The composable renders it; it does **not** copy it into `remember`/`mutableStateOf`. |
 | Ephemeral view state (scroll offset, expanded row, unsent text) | `rememberSaveable` inside the composable. Never in the Fragment, never in the ViewModel. |
-| Composition lifecycle | Bound to the Fragment **view** lifecycle via `DisposeOnViewLifecycleDestroyed`. One composition per `ComposeView`. |
+| Composition lifecycle | Bound to the Fragment **view** lifecycle via `DisposeOnViewTreeLifecycleDestroyed`. One composition per `ComposeView`. |
 | Collection of flows | `collectAsStateWithLifecycle()` (needs `lifecycle-runtime-compose`) so collection stops in `STOPPED`, matching current `observe(viewLifecycleOwner)` semantics. |
 | Playback state | Read **only** through the shared mapper of §2.3. A screen never subscribes to `RxBus` directly and never holds a `MediaController`. |
 | Koin-scoped objects | Still injected into the Fragment (or the ViewModel), passed inward as parameters. |
@@ -738,13 +738,91 @@ screen swapped.** Low risk: pure rendering, no state, no navigation, no playback
 
 ### Step 2 — Home (first full screen)
 
-Why first: read-mostly (shelves of `Album`, one mix row). Playback interaction is limited to
-`addToPlaylist` / `play` calls **already funnelled through `MediaPlayerManager`**. No transport
-UI, no queue mutation, no per-row download badges. `HomeViewModel` already exposes clean list
-`LiveData` → light refactor to `StateFlow<HomeUiState>` (folds in the scattered
-`updateEmptyState()` logic). Highest visibility, lowest runtime risk — proves the end-to-end
-pattern (host fragment + `ComposeView` + `TakiTheme` + ViewModel `StateFlow` + nav events +
-`rememberSaveable` scroll + screenshot suite).
+**Status: DONE (issue #10 phase 1, committed to `develop`).** Home is migrated and the
+floating playback/navigation shell (mini-player + bottom nav as translucent overlays with
+dynamic bottom insets) landed with it. Pixel 7 validated end to end; automated checks green.
+What landed:
+
+- `HomeFragment` is now a thin `ComposeView` host (`DisposeOnViewTreeLifecycleDestroyed`,
+  `TakiTheme`), owning only the `NavController` and `MediaPlayerManager` command callbacks
+  (`HomeActions`). The `homeFragment` id / args / actions / back stack / Activity chrome are
+  unchanged.
+- `HomeViewModel` refactored from 6 `MutableLiveData` to one
+  `StateFlow<HomeUiState>` (`@Immutable`, `ImmutableList` fields, `HomeAlbumUi` /
+  `FeaturedMixUi` UI models mapped off-main). Freshness window and per-shelf error swallowing
+  kept verbatim. Raw mix tracks stay a `@Volatile var` for the Fragment's playback command,
+  not in UI state.
+- New primitives: `TakiScaffold`, `TakiFilterChip`, `AlbumShelfItem`, `FeaturedMixCard`,
+  `EmptyState`. New: `imageloader/ComposeArtwork.kt` (`Album`/`Track` → `CoverArtRequest` for
+  Coil `AsyncImage`). Tokens `artwork_shelf_compact` (104), `featured_card_height` (156),
+  `featured_card_artwork` (124) added to `dimens.xml` + `TakiDimensions` in lockstep.
+- Canonical V2 §10 composition: header → featured daily-mix card → quiet quick-access chips →
+  Recently Played (104 shelf) → Liked / Recently Added / Discover / Most Played (140 shelves).
+  Pull-to-refresh preserved via `PullToRefreshBox`; cold-load skeleton; centred `EmptyState`.
+- 34 new tests (state / mapping / VM / Compose-UI / 5 Roborazzi goldens / nav). Deleted
+  `home_fragment.xml`, `home_shortcut_item.xml`, `HomeShortcutDelegate`,
+  `bg_home_shortcut_item.xml`, `Widget.Taki.NeutralChip`. `HomeAlbumDelegate` +
+  `home_carousel_item.xml` kept - still used by `ArtistDetailFragment` (deletable at step 5).
+- Pixel 7 on-device review passed (real library, real artwork via Coil, scroll / album nav +
+  scroll restore / mix play / overflow / tab switch / pull-to-refresh; no jank). One fix
+  during review: the `showLibraryHub` popup anchor (`HomeFragment` FrameLayout + top-end
+  anchor view; `PopupMenu` gravity END).
+- **Polish pass (V2 sections 7.3 / 13 / 14):** artwork-derived atmospheric wash behind the
+  Daily-mix card (`TakiAtmosphericSurface`: ~96px Coil decode + 1.15x saturation + 28dp blur +
+  a continuous 0.78 -> 0.50 -> 0.24 horizontal dark scrim, foreground artwork stays sharp);
+  mini-player and bottom nav given translucent floating-surface tone + a 1dp tonal edge
+  (`TakiFloatingSurface` in Compose for step 6; baked `taki_surface_floating` /
+  `taki_surface_low_floating` / `taki_edge_highlight` for the current View chrome). New
+  `TakiAtmosphere` token object. Shelves, cards and rows stay flat.
+- **Floating mini-player (shell change):** the mini-player moved from a reserved LinearLayout
+  row into an overlay inside `nav_host_container` (bottom-gravity, `mini_player_edge_margin`
+  inset, `NavigationActivity` manages its bottom margin / nav-bar inset). The nav host now
+  fills the space above the (still-persistent) bottom nav, so content scrolls *behind* the
+  mini-player. It rests optically centred in the band above the nav: `mini_player_edge_margin`
+  = 16dp is the screen-edge inset *and* the gap above the bottom nav, and
+  `content_inset_floating_chrome` (96dp = 16 + 64 + 16) is the bottom padding a scrollable
+  screen adds so its last item clears the overlay with the same 16dp gap (Compose
+  `HomeScreen` contentPadding; the shared
+  `list_parts_recycler` + `primary`/`artist_detail`/`search`/`select_genre` layouts; View
+  fragments that ask get it from `getContentBottomInset()`). Transport icons recede to
+  neutral (prev/next gray, play ivory); green stays only on the 2dp progress line.
+  Transport row uses `baselineAligned="false"` + `paddingHorizontal=space_md` (12dp) so
+  artwork, the title/artist block and all three controls share the pill's centre line.
+  `navigation-compose` not added; nav ids / back stack / Fragment-Compose coexistence
+  unchanged. Pixel 7 verified (uiautomator bounds): 16dp L/R margin symmetric, 16dp above
+  the bottom nav, 16dp below content, every internal element centred on y-mid; content
+  visibly scrolls behind the translucent surface, last item clears the overlay on every
+  list checked, tab/back transitions clean, overflow popup still anchors top-end, controls
+  + tap-to-open-Now-Playing intact. Frame stats unchanged by the re-centre: realistic Home
+  scroll ~3.4% janky (95th 26ms). GPU 95th 5ms even under aggressive flinging, so the
+  floating surface adds no compositing cost (no backdrop blur). One art-less-track path
+  not reproducible on this library (size-only edit, unchanged behaviour).
+- **Floating bottom nav (shell change):** the bottom nav moved from a LinearLayout row into
+  the same `nav_host_container` overlay (bottom-gravity, below the mini-player in z-order),
+  so the nav host fills the whole screen and content scrolls *behind the nav too*. Its
+  translucency now actually reads. Surface bumped to ~0.93 (`taki_surface_low_floating`
+  `0xED`, `FLOATING_SURFACE_ALPHA`) so its small labels stay legible over artwork - the
+  lower, more grounded floating layer vs the mini-player's 0.87; 1px `taki_divider` (~5%)
+  top hairline; no shadow/border/blur. M3 sizes the nav itself (80dp labelled here), so the
+  insets read its *measured* height (`bottomNavFootprintPx`, re-applied on an
+  `OnLayoutChangeListener`) rather than a constant. `getContentBottomInset()` /
+  `computeContentBottomInset()` now return the live stack below the content -
+  `bottomNavFootprint + 96` (nav + mini), `+ 16` (nav only), `navBar + 96` (mini only),
+  `navBar` (neither) - exposed as `contentBottomInset: StateFlow<Int>`. Scrollable screens
+  self-inset off it: `bindFloatingChromeInset(owner, scrollView)` (a lifecycle-scoped
+  `updatePadding` collector) in `MultiListFragment` (covers album/artist/track/downloads/
+  collection-detail/search), `MainFragment`, `ArtistDetailFragment`, `SelectGenreFragment`,
+  `CollectionListFragment`, `CreatePlaylistFragment` (whole root - it has a fixed bottom
+  bar); Compose `HomeScreen` takes a `bottomContentInset` param fed from the same flow;
+  `PlaylistsFragment` already consumed `getContentBottomInset()`. The `content_inset_
+  floating_chrome` dimen stays 96 as the XML pre-layout fallback. Pixel 7 verified
+  (uiautomator bounds): nav [0,2063]-[1080,2400] = 80dp content + 48dp nav-bar, mini-player
+  bottom at 2021 = exactly 16dp above the nav (no overlap), nav host fills to 2400; Home/
+  Library/Search artwork visibly scrolls behind the nav with labels still legible, last item
+  clears in both nav-only and nav+mini states, inset shrinks when playback stops, secondary
+  (nav-hidden) + Settings-while-playing paths unaffected, popup anchoring / tab / back
+  intact. Realistic Home scroll 3.0% janky (95th 23ms, 4 missed vsync / 972), tab switching
+  0.9%; translucent nav over content adds no measurable cost.
 
 ### Step 3 — Library (`MainFragment` + browse rows)
 
@@ -836,7 +914,7 @@ architectural lessons.
 
 - **Compose-in-Fragment.** Every screen stays a `Fragment` node in the existing flat
   `navigation_graph.xml` (unchanged ids / arguments / actions); a migrated screen's whole view
-  is one root `ComposeView` with `DisposeOnViewLifecycleDestroyed`. No `navigation-compose`, no
+  is one root `ComposeView` with `DisposeOnViewTreeLifecycleDestroyed`. No `navigation-compose`, no
   Compose `NavHost`, no Activity rewrite, no new Gradle module.
 - **Three-tier state.** Tier 1 runtime/playback (`MediaPlayerManager` + `service.*` +
   `RxBus`) is untouched and Media3 stays out of UI code. Tier 2 screen state is the existing

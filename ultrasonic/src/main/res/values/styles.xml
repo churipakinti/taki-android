@@ -53,11 +53,5 @@
         <item name="rippleColor">@color/taki_selected_neutral</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Material3.SmallComponent</item>
     </style>
-
-    <style name="Widget.Taki.NeutralChip" parent="Widget.Material3.Button.TonalButton">
-        <item name="android:textColor">?attr/colorOnSurface</item>
-        <item name="backgroundTint">@color/taki_surface</item>
-        <item name="rippleColor">@color/taki_selected_neutral</item>
-    </style>
 </resources>
 

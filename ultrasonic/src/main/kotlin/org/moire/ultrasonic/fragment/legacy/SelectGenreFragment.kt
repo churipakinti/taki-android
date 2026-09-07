@@ -25,6 +25,7 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
@@ -78,6 +79,9 @@ class SelectGenreFragment :
         )
         genreListView?.layoutManager = GridLayoutManager(requireContext(), GENRE_COLUMNS)
         genreListView?.adapter = genreAdapter
+        genreListView?.let { list ->
+            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, list)
+        }
 
         emptyView = view.findViewById(R.id.select_genre_empty)
         setTitle(this, R.string.main_genres_title)

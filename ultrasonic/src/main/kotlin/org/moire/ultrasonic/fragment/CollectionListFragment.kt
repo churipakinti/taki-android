@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.adapters.CollectionRowAdapter
 import org.moire.ultrasonic.domain.MusicCollection
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
@@ -56,6 +57,7 @@ class CollectionListFragment : Fragment() {
         view.findViewById<RecyclerView>(R.id.recycler_view).apply {
             layoutManager = GridLayoutManager(context, GRID_SPAN_COUNT)
             this.adapter = adapter
+            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, this)
         }
 
         swipeRefresh = view.findViewById(R.id.swipe_refresh_view)

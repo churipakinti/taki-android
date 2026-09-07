@@ -31,6 +31,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.adapters.BaseAdapter
 import org.moire.ultrasonic.adapters.PlaylistTrackPickerBinder
 import org.moire.ultrasonic.domain.ArtistOrIndex
@@ -81,6 +82,12 @@ class CreatePlaylistFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setTitle(this, navArgs.playlistName)
+
+        // This screen has a fixed bottom action bar, not just a scrolling list, so keep the
+        // whole form above the translucent bottom nav / mini-player rather than behind it.
+        view.findViewById<View>(R.id.create_playlist_root)?.let { root ->
+            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, root)
+        }
 
         progress = view.findViewById(R.id.playlist_song_progress)
         emptyText = view.findViewById(R.id.playlist_song_empty)

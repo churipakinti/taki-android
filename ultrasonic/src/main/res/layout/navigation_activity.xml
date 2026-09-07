@@ -40,6 +40,16 @@
 
     </LinearLayout>
 
+    <!-- One full-height container for all bottom-anchored shell layers. Draw order (bottom to
+         top): the nav host fills it edge to edge, so screen content renders *behind* both the
+         bottom nav and the mini-player; the bottom navigation is a translucent persistent
+         layer docked to the bottom; the mini-player floats above the bottom nav with a gap.
+         Nothing here is a reserved row - scrollable screens add the live floating-chrome inset
+         (NavigationActivity.getContentBottomInset / bindFloatingChromeInset, mirrored by the
+         Compose contentInsetFloatingChrome) to their own bottom padding so the last item
+         clears whatever chrome is visible. NavigationActivity also sets the bottom nav's
+         bottom padding (system nav-bar inset) and the mini-player's bottom margin (above the
+         bottom nav, or above the system nav bar when the bottom nav is hidden). -->
     <FrameLayout
         a:id="@+id/nav_host_container"
         a:layout_width="match_parent"
@@ -54,22 +64,26 @@
             app:defaultNavHost="true"
             app:navGraph="@navigation/navigation_graph" />
 
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            a:id="@+id/bottom_navigation"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_gravity="bottom"
+            a:background="@drawable/bg_bottom_navigation"
+            app:itemIconTint="@color/bottom_navigation_item"
+            app:itemTextColor="@color/bottom_navigation_item"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_navigation" />
+
+        <androidx.fragment.app.FragmentContainerView
+            a:id="@+id/now_playing_fragment"
+            a:name="org.moire.ultrasonic.fragment.NowPlayingFragment"
+            a:layout_width="match_parent"
+            a:layout_height="wrap_content"
+            a:layout_gravity="bottom"
+            a:layout_marginHorizontal="@dimen/mini_player_edge_margin"
+            a:layout_marginBottom="@dimen/mini_player_edge_margin" />
+
     </FrameLayout>
-
-    <androidx.fragment.app.FragmentContainerView
-        a:id="@+id/now_playing_fragment"
-        a:name="org.moire.ultrasonic.fragment.NowPlayingFragment"
-        a:layout_width="match_parent"
-        a:layout_height="wrap_content" />
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        a:id="@+id/bottom_navigation"
-        a:layout_width="match_parent"
-        a:layout_height="wrap_content"
-        a:background="?attr/colorSurfaceContainerHigh"
-        app:itemIconTint="@color/bottom_navigation_item"
-        app:itemTextColor="@color/bottom_navigation_item"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_navigation" />
 
 </LinearLayout>

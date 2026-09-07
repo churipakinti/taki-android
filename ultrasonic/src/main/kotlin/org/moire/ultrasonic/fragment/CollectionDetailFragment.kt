@@ -31,6 +31,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.adapters.CollectionDiscAdapter
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.MusicCollection
@@ -112,6 +113,9 @@ class CollectionDetailFragment : Fragment(), KoinComponent {
         adapter = CollectionDiscAdapter(onOpen = ::openDisc)
         recyclerView = view.findViewById<RecyclerView>(R.id.recycler_view).apply {
             adapter = this@CollectionDetailFragment.adapter
+        }
+        recyclerView?.let { list ->
+            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, list)
         }
         setLayoutType(layoutType)
 

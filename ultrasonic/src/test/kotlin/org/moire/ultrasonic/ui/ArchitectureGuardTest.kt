@@ -23,7 +23,8 @@ import org.junit.Test
  *     theme through `TakiTheme`;
  *  3. no raw `Color(0x...)` literal outside `ui/theme`;
  *  4. no raw `<number>.dp` / `<number>.sp` literal outside `ui/theme` - use a Taki token.
- *     A deliberate one-off (platform / inset maths) may end the line with `// taki-raw-ok`.
+ *     A deliberate one-off (platform / inset maths, a placeholder box) may carry a
+ *     `// taki-raw-ok` comment on the line (optionally followed by a short reason).
  *
  * See docs/technical/TAKI_COMPOSE_MIGRATION_PLAN.md sections 5.4 and 7.
  */
@@ -88,7 +89,7 @@ class ArchitectureGuardTest {
         val hits = violations { path, line ->
             !path.contains("/ui/theme/") &&
                 rawDimen.containsMatchIn(line) &&
-                !line.trimEnd().endsWith("// taki-raw-ok")
+                !line.contains("// taki-raw-ok")
         }
         assertTrue(
             "Use a Taki spacing/dimension token instead of a raw .dp/.sp " +

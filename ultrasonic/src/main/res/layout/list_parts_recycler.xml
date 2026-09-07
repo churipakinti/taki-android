@@ -12,7 +12,7 @@
             a:layout_width="match_parent"
             a:layout_height="match_parent"
             a:paddingTop="8dp"
-            a:paddingBottom="8dp"
+            a:paddingBottom="@dimen/content_inset_floating_chrome"
             a:clipToPadding="false"
             app:fastScrollAutoHide="true"
             app:fastScrollAutoHideDelay="2000"

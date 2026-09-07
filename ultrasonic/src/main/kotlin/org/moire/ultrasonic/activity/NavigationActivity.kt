@@ -19,12 +19,17 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.FrameLayout
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentContainerView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_READY
@@ -41,6 +46,9 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
@@ -79,6 +87,7 @@ class NavigationActivity : ScopeActivity() {
     private var nowPlayingHidden = false
     private var bottomNavigation: BottomNavigationView? = null
     private var navHostContainer: View? = null
+    private var navHostFragmentView: View? = null
     private var contentBackButton: View? = null
     private var contentNavigationHeader: View? = null
     private var toolbar: Toolbar? = null
@@ -96,6 +105,13 @@ class NavigationActivity : ScopeActivity() {
     private var currentFragmentId: Int = 0
     private var imeVisible = false
     private var navigationBarBottomInset = 0
+
+    // The live bottom inset a scrollable screen should reserve so its last item clears whatever
+    // floating chrome (system nav bar + bottom nav + mini-player band) is currently visible.
+    // Updated by applyBottomInset(); consumed reactively by bindFloatingChromeInset() and by
+    // Compose Home so the reserve grows/shrinks smoothly as the mini-player appears/disappears.
+    private val _contentBottomInset = MutableStateFlow(0)
+    val contentBottomInset: StateFlow<Int> = _contentBottomInset.asStateFlow()
 
     // Removed in onDestroy() -- never releasing it left the NavController (owned by this
     // Activity's NavHostFragment) holding a listener that closes over `this`, which on repeated
@@ -125,6 +141,7 @@ class NavigationActivity : ScopeActivity() {
         nowPlayingView = findViewById(R.id.now_playing_fragment)
         bottomNavigation = findViewById(R.id.bottom_navigation)
         navHostContainer = findViewById(R.id.nav_host_container)
+        navHostFragmentView = findViewById(R.id.nav_host_fragment)
         contentBackButton = findViewById(R.id.content_back_button)
         contentNavigationHeader = findViewById(R.id.content_navigation_header)
         toolbar = findViewById(R.id.toolbar)
@@ -191,6 +208,12 @@ class NavigationActivity : ScopeActivity() {
         }
         bottomNavigation?.setOnItemSelectedListener(switchToBottomNavTab)
         bottomNavigation?.setOnItemReselectedListener { switchToBottomNavTab(it) }
+
+        // The floating-chrome insets depend on the bottom nav's real measured height (M3 sizes
+        // it itself); re-apply once it (or a config/font-scale change) settles its height.
+        bottomNavigation?.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            if (bottom - top != oldBottom - oldTop) applyBottomInset()
+        }
 
         destinationChangedListener = NavController.OnDestinationChangedListener { _, destination, arguments ->
             val dest: String = try {
@@ -324,6 +347,9 @@ class NavigationActivity : ScopeActivity() {
             ?: currentToolbar
             ?: return
         val popup = androidx.appcompat.widget.PopupMenu(this, anchor)
+        // Align to the anchor's end edge - the overflow control always sits top-end, and the
+        // Compose Home passes the full-width content root as the anchor.
+        popup.gravity = android.view.Gravity.END
         popup.menuInflater.inflate(R.menu.library_hub_popup, popup.menu)
         popup.menu.findItem(R.id.library_hub_current).title = getString(
             R.string.library_hub_current_name,
@@ -524,46 +550,103 @@ class NavigationActivity : ScopeActivity() {
         applyBottomInset()
     }
 
-    // bottomNavigation and nowPlayingView (the mini player) are the two views that can sit
-    // directly on the display's bottom edge, depending on which one is visible on the current
-    // destination. Edge-to-edge (enforced from Android 15/targetSdk 35 on) draws app content
-    // behind the system navigation bar, so whichever of the two is currently the bottom-most
-    // visible view must absorb that inset as its own padding, or its content/controls end up
-    // rendered underneath the system's back/home/recents buttons - this was reported on Lyrics
-    // (bottomNavigation hidden, mini player visible).
-    // On destinations that hide both (Settings/About/Equalizer/ServerSelector/EditServer, when
-    // nothing is playing so the mini player also isn't shown), neither absorbs the inset, and the
-    // fragment's own bottom-anchored content is what's left exposed - found on EditServerFragment,
-    // whose Test connection/Save buttons rendered underneath the system nav bar. In that case the
-    // nav host container itself needs the padding instead.
+    private val miniPlayerEdgeMarginPx: Int
+        get() = resources.getDimensionPixelSize(R.dimen.mini_player_edge_margin)
+
+    // The bottom nav's total footprint from the screen edge: its measured height once laid out
+    // (which already includes the system nav-bar inset it carries as bottom padding), or a
+    // pre-layout estimate of the M3 labelled height + the nav-bar inset.
+    private val bottomNavFootprintPx: Int
+        get() = bottomNavigation
+            ?.takeIf { it.isLaidOut && it.height > 0 }
+            ?.height
+            ?: (
+                resources.getDimensionPixelSize(R.dimen.bottom_nav_height) +
+                    navigationBarBottomInset
+                )
+
+    // The mini-player band only: gap above content + mini_player_height + gap above the bottom
+    // nav (== the content_inset_floating_chrome dimen the XML scroll views use as a fallback).
+    private val floatingChromeInsetPx: Int
+        get() = resources.getDimensionPixelSize(R.dimen.content_inset_floating_chrome)
+
     /*
-     * How much a fragment's own scrollable content should pad its bottom by so the last item
-     * can clear whichever of bottomNavigation/nowPlayingView is currently docked at the screen
-     * edge -- those are separate views layered on top of the content, not something a
-     * RecyclerView/GridView's own system-inset padding accounts for on its own. Each view's
-     * height already includes the system nav bar inset when it is the bottom-most one (see
-     * applyBottomInset()), so this must not add navigationBarBottomInset a second time.
+     * How much a scrollable screen should pad its bottom by so its last item clears whatever
+     * floating chrome is visible. Both the bottom nav and the mini-player now overlay content
+     * (navigation_activity.xml), so the reserve is the live stack below the content:
+     *
+     *   bottom nav + mini-player : bottomNavFootprint + (16 + 64 + 16)
+     *   bottom nav only          : bottomNavFootprint + 16
+     *   mini-player only          : navBar + (16 + 64 + 16)
+     *   neither                   : navBar
+     *
+     * (bottomNavFootprint already includes the system nav-bar inset.) View fragments apply this
+     * via bindFloatingChromeInset(); Compose Home reads the same value from contentBottomInset.
      */
-    fun getContentBottomInset(): Int {
-        val bottomNavVisible = bottomNavigation?.visibility == View.VISIBLE
-        val nowPlayingVisible = nowPlayingView?.visibility == View.VISIBLE
-        val nowPlayingHeight = if (nowPlayingVisible) nowPlayingView?.height ?: 0 else 0
-        val bottomNavHeight = if (bottomNavVisible) bottomNavigation?.height ?: 0 else 0
-        return nowPlayingHeight + bottomNavHeight
+    fun getContentBottomInset(): Int = computeContentBottomInset(
+        bottomNavVisible = bottomNavigation?.visibility == View.VISIBLE,
+        nowPlayingVisible = nowPlayingView?.visibility == View.VISIBLE,
+    )
+
+    private fun computeContentBottomInset(
+        bottomNavVisible: Boolean,
+        nowPlayingVisible: Boolean,
+    ): Int {
+        val belowMiniPlayer = if (bottomNavVisible) bottomNavFootprintPx else navigationBarBottomInset
+        return when {
+            bottomNavVisible && nowPlayingVisible -> belowMiniPlayer + floatingChromeInsetPx
+            bottomNavVisible -> belowMiniPlayer + miniPlayerEdgeMarginPx
+            nowPlayingVisible -> navigationBarBottomInset + floatingChromeInsetPx
+            else -> navigationBarBottomInset
+        }
     }
 
+    /**
+     * Keep [scrollView]'s bottom padding equal to the live floating-chrome inset for as long as
+     * [owner] is at least STARTED, so its last item can scroll clear of the bottom nav and the
+     * mini-player while the rest of its content still scrolls *behind* them. [scrollView] should
+     * set `android:clipToPadding="false"`. Call once from a fragment's onViewCreated.
+     */
+    fun bindFloatingChromeInset(owner: LifecycleOwner, scrollView: View, extraBottomPx: Int = 0) {
+        owner.lifecycleScope.launch {
+            owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                contentBottomInset.collect { inset ->
+                    val target = inset + extraBottomPx
+                    if (scrollView.paddingBottom != target) {
+                        scrollView.updatePadding(bottom = target)
+                    }
+                }
+            }
+        }
+    }
+
+    // Edge-to-edge (enforced from Android 15 / targetSdk 35 on) draws app content behind the
+    // system navigation bar. The bottom nav's background fills that inset (its items sit above
+    // it); the mini-player floats 16dp above the bottom nav, or 16dp above the system nav bar
+    // when the bottom nav is hidden. Fragments with no scrollable content of their own
+    // (Settings/About/EditServer) can't self-inset, so the nav host is padded for them; every
+    // scrollable screen renders behind all layers and self-insets via bindFloatingChromeInset().
     private fun applyBottomInset() {
+        val navBar = navigationBarBottomInset
         val bottomNavVisible = bottomNavigation?.visibility == View.VISIBLE
         val nowPlayingVisible = nowPlayingView?.visibility == View.VISIBLE
-        bottomNavigation?.updatePadding(
-            bottom = if (bottomNavVisible) navigationBarBottomInset else 0
+
+        bottomNavigation?.updatePadding(bottom = if (bottomNavVisible) navBar else 0)
+
+        nowPlayingView?.updateLayoutParams<FrameLayout.LayoutParams> {
+            bottomMargin = (if (bottomNavVisible) bottomNavFootprintPx else navBar) +
+                miniPlayerEdgeMarginPx
+        }
+
+        navHostFragmentView?.updatePadding(
+            bottom = when {
+                !bottomNavVisible && !nowPlayingVisible -> navBar
+                !bottomNavVisible && nowPlayingVisible -> floatingChromeInsetPx + navBar
+                else -> 0
+            },
         )
-        nowPlayingView?.updatePadding(
-            bottom = if (!bottomNavVisible && nowPlayingVisible) navigationBarBottomInset else 0
-        )
-        navHostContainer?.updatePadding(
-            bottom = if (!bottomNavVisible && !nowPlayingVisible) navigationBarBottomInset else 0
-        )
+
+        _contentBottomInset.value = computeContentBottomInset(bottomNavVisible, nowPlayingVisible)
     }
 
     private fun updateChromeVisibility() {

@@ -7,13 +7,14 @@
     a:fillViewport="true">
 
     <LinearLayout
+        a:id="@+id/library_content"
         a:layout_width="match_parent"
         a:layout_height="wrap_content"
         a:orientation="vertical"
         a:paddingStart="@dimen/space_screen_horizontal"
         a:paddingTop="@dimen/space_md"
         a:paddingEnd="@dimen/space_screen_horizontal"
-        a:paddingBottom="@dimen/space_xl">
+        a:paddingBottom="@dimen/content_inset_floating_chrome">
 
         <LinearLayout
             a:layout_width="match_parent"

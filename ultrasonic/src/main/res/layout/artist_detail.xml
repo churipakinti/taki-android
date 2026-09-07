@@ -11,13 +11,15 @@
         a:id="@+id/artist_detail_scroll"
         a:layout_width="match_parent"
         a:layout_height="match_parent"
+        a:clipToPadding="false"
         a:fillViewport="true">
 
         <LinearLayout
+            a:id="@+id/artist_detail_content"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:orientation="vertical"
-            a:paddingBottom="@dimen/space_2xl">
+            a:paddingBottom="@dimen/content_inset_floating_chrome">
 
             <FrameLayout
                 a:id="@+id/artist_detail_hero"
