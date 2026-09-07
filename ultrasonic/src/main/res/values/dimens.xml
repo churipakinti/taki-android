@@ -65,6 +65,17 @@
     <!-- Search field (V2 section 11 / north star): a quiet tonal container, not a Material box. -->
     <dimen name="search_field_height">52dp</dimen>
 
+    <!-- Album / collection detail (V2 sections 1, 7, 12; issue #10 phase 4A). The hero cover is
+         responsive between these two - screenWidth minus the gutters, clamped - so it never
+         hard-codes one phone width. The primary Play button is the V2 section 6 transport
+         exception (64dp). The track list stays quiet and compact: a 56dp minimum row that
+         grows for a wrapped long title, with a narrow number column. -->
+    <dimen name="album_hero_artwork_min">240dp</dimen>
+    <dimen name="album_hero_artwork_max">320dp</dimen>
+    <dimen name="detail_primary_action">64dp</dimen>
+    <dimen name="track_row_min_height">56dp</dimen>
+    <dimen name="track_number_column">28dp</dimen>
+
     <!-- Floating shell (V2 sections 13-14). Both the bottom nav and the mini-player overlay
          scrollable content; nothing is a reserved row. mini_player_edge_margin doubles as the
          mini-player's screen-edge inset and the equal 16dp gap it leaves above the bottom nav,

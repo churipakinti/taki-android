@@ -22,6 +22,10 @@ import org.moire.ultrasonic.util.toastingExceptionHandler
  * opened specifically because they wanted to browse it offline.
  */
 class DownloadedAlbumFragment : TrackCollectionFragment() {
+
+    // Local-only data path - stays on the View list, never the Compose Album Detail (phase 4A).
+    override val allowComposeAlbumDetail: Boolean = false
+
     override fun getLiveData(
         refresh: Boolean,
         append: Boolean

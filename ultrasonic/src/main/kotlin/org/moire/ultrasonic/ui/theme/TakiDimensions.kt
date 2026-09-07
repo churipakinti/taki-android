@@ -57,6 +57,16 @@ data class TakiDimensions(
     val libraryCardHeight: Dp = 80.dp,
     /** `search_field_height` - the Search screen's tonal input container (V2 section 11). */
     val searchFieldHeight: Dp = 52.dp,
+    /** `album_hero_artwork_min` - the detail hero cover's responsive floor (V2 sections 7/12). */
+    val albumHeroArtworkMin: Dp = 240.dp,
+    /** `album_hero_artwork_max` - the detail hero cover's responsive cap on a phone. */
+    val albumHeroArtworkMax: Dp = 320.dp,
+    /** `detail_primary_action` - the primary Play button on a detail screen (V2 section 6). */
+    val detailPrimaryAction: Dp = 64.dp,
+    /** `track_row_min_height` - a detail track row; grows past this for a wrapped long title. */
+    val trackRowMinHeight: Dp = 56.dp,
+    /** `track_number_column` - the narrow leading number / now-playing-glyph column. */
+    val trackNumberColumn: Dp = 28.dp,
     /** `mini_player_height` - the floating mini-player band (V2 section 13). */
     val miniPlayerHeight: Dp = 64.dp,
     /**

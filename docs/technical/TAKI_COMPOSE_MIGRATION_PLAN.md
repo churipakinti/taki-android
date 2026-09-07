@@ -940,6 +940,63 @@ Exercises `PlaybackUiStateHolder` reads + `MediaPlayerManager` command callbacks
 Deliberately **before** the mini-player / Now Playing so the playback-facing plumbing is proven
 on screens that degrade gracefully if something is wrong.
 
+#### Step 5a — Album Detail (issue #10 phase 4A)
+
+**Status: DONE — automated gates green + Pixel 7 validated (not yet committed).** The first
+Compose implementation of the reusable detail-screen language.
+
+- **Scope gate.** `TrackCollectionFragment.shouldUseComposeAlbumDetail(allow, isAlbum,
+  hasPlaylistId, usesId3)` - the Compose screen is used **only** for the id3 `isAlbum` mode of
+  a plain `TrackCollectionFragment` (not a playlist, not folder mode, not the local-only
+  `DownloadedAlbumFragment`, which overrides `allowComposeAlbumDetail = false`). Every other
+  mode - Liked Songs, All Songs, genre / random / video / daily-mix / folder collections,
+  playlists - stays on the unchanged `MultiListFragment` View path. `onCreateView` /
+  `onViewCreated` branch before any legacy wiring runs; the `trackCollectionFragment`
+  destination id, its arguments and every caller are untouched.
+- **`AlbumDetailViewModel`** (`AndroidViewModel`, `by viewModels()`) - one
+  `StateFlow<AlbumDetailUiState>` (`@Immutable`). Projects exactly what
+  `TrackCollectionModel.getAlbum` / `getMusicDirectory` + `getAlbumInfo` + `getAlbumStarred`
+  load: `EntryByDiscAndTrackComparator` sort, multi-disc `DiscHeader` interleave,
+  `hasMultipleArtists` per-row artist, the single-artist + single-id navigation gate, notes
+  (HTML-stripped) and server star folded in after the track list. `albumLoader` / `metaLoader`
+  test seams. Videos kept; track numbers stay gated behind `SHOULD_SHOW_TRACK_NUMBER`.
+- **`AlbumDetailScreen`** - a centred responsive hero cover (`album_hero_artwork_min/max`
+  240-320dp, `radius_md`, no elevation), `Taki.Hero` title (2 lines), a tappable
+  `Taki.Body` artist line (issue #16), one quiet `Taki.Caption` metadata line
+  (year / genre / n songs / duration), then a `DetailActionRow` with an obviously-primary
+  ivory Play circle (`detail_primary_action` 64dp) and receding `TakiIconButton`s (shuffle,
+  the issue #15 rose heart, download, info when notes exist, a Compose `DropdownMenu`
+  overflow). One `LazyColumn`, no collapsing toolbar; the Activity's 56dp back bar supplies
+  the back affordance as it already does. New reusable `TakiTrackRow` (56dp min, grows to
+  2 lines for long classical titles, a now-playing glyph for the current track) + `TakiDiscHeader`.
+- **Playback / star / nav** stay in the Fragment behind `AlbumDetailActions`: `addToPlaylist`
+  (`CLEAR`, `startIndex` for play-from-here), autoplay arg, `RxBus` `RatingUpdate(isAlbum)` +
+  optimistic-then-reconcile, `openArtistDetail` (issue #16), and the album-overflow + the
+  per-track long-press actions routed through `ContextMenuUtil.handleContextMenuTracks` /
+  `addTracksToPlaylist` verbatim (a hidden `PopupMenu` only supplies the `MenuItem`). Consumes
+  `NavigationActivity.contentBottomInset` and `PlaybackUiStateHolder.playerState.trackId`
+  (keyed list, so a track change recomposes two rows).
+- **Pull-to-refresh:** M3 `PullToRefreshBox` (experimental annotation isolated to
+  `AlbumDetailScreen`), restrained gray/`surface` indicator, calls `AlbumDetailViewModel.refresh()`
+  → the same `load` path. `refresh()` no-ops while a load is in flight; a failed refresh keeps
+  the album on screen (`loadFailed` only when there is nothing to show).
+- **Per-track long-press:** `TakiTrackRow` gains `onLongClick` (`combinedClickable`, so a long
+  press never also fires the tap); the row opens a Compose `DropdownMenu` whose items map
+  one-for-one to `R.menu.context_menu_track_collection` (Play now / next / last / from here /
+  Start radio / Add to playlist / Download / Delete). Download / Delete / Add-to-playlist
+  visibility is a point read of `DownloadService.getDownloadState` + offline flag at menu-open
+  time (no subscription), exactly like `Utils.createPopupMenu`. Every action dispatches through
+  `AlbumDetailActions` to the unchanged infrastructure.
+- **Deferred to phase 4B / follow-ups:** a hero atmosphere (shipped with clean dark negative
+  space first, per §7.3), extracting `AlbumDetailHero` / `DetailActionRow` as shared primitives
+  (kept private until Collection Detail confirms the shape), explicit `LazyColumn` scroll-offset
+  persistence across Fragment view recreation.
+- 62 new tests (7 state / 16 VM / 5 mode-selection / 5 navigation / 22 Compose-UI / 7 Roborazzi
+  goldens: `album_standard` / `album_long_classical` / `album_multi_disc` / `album_liked` /
+  `album_no_artwork` / `album_compact_360` / `album_font_1_30`). 442 total. New tokens
+  `album_hero_artwork_min/max`, `detail_primary_action`, `track_row_min_height`,
+  `track_number_column` + `TakiTokensTest` assertions.
+
 ### Step 6 — Mini-player integration
 
 Convert `NowPlayingFragment` **contents** to a `ComposeView` + `MiniPlayer` composable on

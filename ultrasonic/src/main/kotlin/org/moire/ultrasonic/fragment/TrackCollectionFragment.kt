@@ -18,6 +18,10 @@ import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.text.HtmlCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -26,6 +30,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.HeartRating
@@ -40,11 +45,25 @@ import java.util.Collections
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
+import org.moire.ultrasonic.model.AlbumDetailViewModel
+import org.moire.ultrasonic.service.DownloadService
+import org.moire.ultrasonic.service.DownloadState
+import org.moire.ultrasonic.ui.album.AlbumDetailActions
+import org.moire.ultrasonic.ui.album.AlbumDetailArgs
+import org.moire.ultrasonic.ui.album.AlbumDetailScreen
+import org.moire.ultrasonic.ui.album.AlbumOverflowItem
+import org.moire.ultrasonic.ui.album.TrackContextAction
+import org.moire.ultrasonic.ui.album.TrackContextMenuState
+import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
+import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.adapters.AlbumDetailHeaderBinder
 import org.moire.ultrasonic.adapters.AlbumHeader
 import org.moire.ultrasonic.adapters.AlbumRowDelegate
@@ -140,6 +159,27 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
     private val navArgs: TrackCollectionFragmentArgs by navArgs()
 
+    // --- Compose Album Detail (issue #10 phase 4A) ---------------------------------------
+    // Only the id3 album-detail presentation of this Fragment switches to Compose; every
+    // other mode (Liked Songs, All Songs, genre / artist / folder collections, playlists,
+    // the offline DownloadedAlbumFragment) stays on the unchanged View path below. The
+    // `trackCollectionFragment` destination id, its arguments and every caller are untouched.
+    private val albumDetailViewModel: AlbumDetailViewModel by viewModels()
+    private val playbackUiStateHolder: PlaybackUiStateHolder by inject()
+    private val fallbackChromeInset = MutableStateFlow(0)
+
+    /** Subclasses that reuse this Fragment for a non-server album (DownloadedAlbumFragment)
+     *  opt out - their data path is local-only and unrelated. */
+    protected open val allowComposeAlbumDetail: Boolean = true
+
+    private val isComposeAlbumMode: Boolean
+        get() = shouldUseComposeAlbumDetail(
+            allow = allowComposeAlbumDetail,
+            isAlbum = navArgs.isAlbum,
+            hasPlaylistId = navArgs.playlistId != null,
+            usesId3 = ActiveServerProvider.shouldUseId3Tags(),
+        )
+
     private val isMediaLibrarySongs: Boolean
         get() = parentFragment is MainFragment || navArgs.libraryRoot || navArgs.getStarred
 
@@ -162,6 +202,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        if (isComposeAlbumMode) {
+            bindComposeAlbumDetail()
+            return
+        }
         super.onViewCreated(view, savedInstanceState)
 
         albumButtons = view.findViewById(R.id.menu_album)
@@ -1247,8 +1291,244 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        if (isComposeAlbumMode) return createComposeAlbumView()
         val layout = if (navArgs.libraryRoot) R.layout.list_layout_track_filterable else mainLayout
         return inflater.inflate(layout, container, false)
+    }
+
+    // ---- Compose Album Detail (issue #10 phase 4A) ------------------------------------------
+
+    private fun createComposeAlbumView(): View {
+        val chromeInsetFlow =
+            (activity as? NavigationActivity)?.contentBottomInset ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by albumDetailViewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val player by playbackUiStateHolder.playerState.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    AlbumDetailScreen(
+                        state = state,
+                        actions = albumDetailActions,
+                        currentTrackId = player.trackId,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun bindComposeAlbumDetail() {
+        // The Activity chrome (56dp back bar) supplies the back affordance; the toolbar title
+        // is hidden for album detail, exactly as on the legacy screen.
+        setTitle(this, "")
+
+        albumDetailViewModel.load(
+            AlbumDetailArgs(
+                id = navArgs.id,
+                name = navArgs.name,
+                isId3 = ActiveServerProvider.shouldUseId3Tags(),
+                radioAvailable = !isOffline(),
+                refresh = navArgs.refresh,
+            )
+        )
+
+        // Album Detail heart (issue #15): reconcile the optimistic icon if the server rejected
+        // the star/unstar, same as the legacy RxBus subscription.
+        rxBusSubscription += RxBus.ratingPublishedObservable.subscribe { update ->
+            if (!update.isAlbum || update.id != navArgs.id || update.success != false) {
+                return@subscribe
+            }
+            albumDetailViewModel.setStarredOptimistic(!albumDetailViewModel.uiState.value.isStarred)
+            toast(R.string.album_star_failed)
+        }
+
+        if (navArgs.autoPlay) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                albumDetailViewModel.uiState.first { !it.isLoading }
+                if (!albumDetailViewModel.uiState.value.loadFailed) {
+                    playComposeAlbum(shuffle = navArgs.shuffle)
+                }
+            }
+        }
+    }
+
+    private val albumDetailActions: AlbumDetailActions by lazy {
+        AlbumDetailActions(
+            onPlay = { playComposeAlbum(shuffle = false) },
+            onShuffle = { playComposeAlbum(shuffle = true) },
+            onToggleStar = ::toggleComposeAlbumStar,
+            onDownload = {
+                DownloadUtil.justDownload(
+                    action = DownloadAction.DOWNLOAD,
+                    fragment = this,
+                    tracks = albumDetailViewModel.tracksSnapshot(),
+                )
+            },
+            onShowInfo = ::showComposeAlbumInfo,
+            onArtistClick = ::openArtistFromComposeAlbum,
+            onOverflowItem = ::handleComposeAlbumOverflow,
+            onTrackClick = ::playComposeAlbumTrack,
+            onTrackContextAction = ::handleComposeTrackContextAction,
+            trackContextMenuState = ::resolveComposeTrackContextMenuState,
+            onDiscPlay = { disc -> playDisc(albumDetailViewModel.tracksForDisc(disc)) },
+            onDiscDownload = { disc ->
+                DownloadUtil.justDownload(
+                    action = DownloadAction.DOWNLOAD,
+                    fragment = this,
+                    tracks = albumDetailViewModel.tracksForDisc(disc),
+                )
+            },
+            onRefresh = { albumDetailViewModel.refresh() },
+        )
+    }
+
+    private fun playComposeAlbum(shuffle: Boolean) {
+        val tracks = albumDetailViewModel.tracksSnapshot()
+        if (tracks.isEmpty()) return
+        mediaPlayerManager.addToPlaylist(
+            songs = tracks,
+            autoPlay = true,
+            shuffle = shuffle,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+        )
+    }
+
+    private fun playComposeAlbumTrack(trackId: String) {
+        val track = albumDetailViewModel.trackFor(trackId) ?: return
+        if (track.isVideo) {
+            VideoPlayer.playVideo(requireContext(), track)
+            return
+        }
+        val all = albumDetailViewModel.tracksSnapshot()
+        val startIndex = all.indexOfFirst { it.id == trackId }
+        if (startIndex < 0) return
+        mediaPlayerManager.addToPlaylist(
+            songs = all,
+            autoPlay = false,
+            shuffle = false,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = startIndex,
+        )
+    }
+
+    private fun toggleComposeAlbumStar(starred: Boolean) {
+        val albumId = navArgs.id ?: return
+        albumDetailViewModel.setStarredOptimistic(starred)
+        RxBus.ratingSubmitter.onNext(RatingUpdate(albumId, HeartRating(starred), isAlbum = true))
+    }
+
+    private fun openArtistFromComposeAlbum() {
+        val state = albumDetailViewModel.uiState.value
+        val artistId = state.artistId ?: return
+        openArtistDetail(artistId, state.artist)
+    }
+
+    private fun handleComposeAlbumOverflow(item: AlbumOverflowItem) {
+        when (item) {
+            AlbumOverflowItem.GO_TO_ARTIST -> openArtistFromComposeAlbum()
+            AlbumOverflowItem.PLAY_NEXT ->
+                runAlbumTrackContextAction(R.id.song_menu_play_next)
+            AlbumOverflowItem.PLAY_LAST ->
+                runAlbumTrackContextAction(R.id.song_menu_play_last)
+            AlbumOverflowItem.START_RADIO ->
+                runAlbumTrackContextAction(R.id.song_menu_start_radio)
+        }
+    }
+
+    /**
+     * Runs one of the shared track context-menu actions (Play Next / Play Last / Start radio)
+     * over the whole album, reusing [ContextMenuUtil.handleContextMenuTracks] verbatim so no
+     * playback / radio logic is duplicated. The [PopupMenu] is only a source of a real
+     * [MenuItem]; it is never shown.
+     */
+    private fun runAlbumTrackContextAction(menuItemId: Int) {
+        runTrackContextAction(menuItemId, albumDetailViewModel.tracksSnapshot())
+    }
+
+    /**
+     * The per-track long-press menu (issue #10 phase 4A parity with the legacy
+     * `context_menu_track_collection`). Every action is dispatched to the *unchanged*
+     * infrastructure: "Play from here" reuses the tap path, "Add to playlist" reuses the same
+     * dialog the legacy `onContextMenuItemSelected` used, and the queue / radio / download /
+     * delete items go straight to [ContextMenuUtil.handleContextMenuTracks] with a real
+     * [MenuItem] taken from a never-shown [PopupMenu].
+     */
+    private fun handleComposeTrackContextAction(trackId: String, action: TrackContextAction) {
+        val track = albumDetailViewModel.trackFor(trackId) ?: return
+        when (action) {
+            TrackContextAction.PLAY_FROM_HERE -> playComposeAlbumTrack(trackId)
+            TrackContextAction.ADD_TO_PLAYLIST -> addTracksToPlaylist(listOf(track))
+            TrackContextAction.PLAY_NOW ->
+                runTrackContextAction(R.id.song_menu_play_now, listOf(track))
+            TrackContextAction.PLAY_NEXT ->
+                runTrackContextAction(R.id.song_menu_play_next, listOf(track))
+            TrackContextAction.PLAY_LAST ->
+                runTrackContextAction(R.id.song_menu_play_last, listOf(track))
+            TrackContextAction.START_RADIO ->
+                runTrackContextAction(R.id.song_menu_start_radio, listOf(track))
+            TrackContextAction.DOWNLOAD ->
+                runTrackContextAction(R.id.song_menu_download, listOf(track))
+            TrackContextAction.DELETE ->
+                runTrackContextAction(R.id.song_menu_delete, listOf(track))
+        }
+    }
+
+    private fun runTrackContextAction(menuItemId: Int, tracks: List<Track>) {
+        if (tracks.isEmpty()) return
+        val menu = PopupMenu(requireContext(), requireView())
+        menu.menuInflater.inflate(R.menu.context_menu_track_collection, menu.menu)
+        val item = menu.menu.findItem(menuItemId) ?: return
+        ContextMenuUtil.handleContextMenuTracks(
+            menuItem = item,
+            tracks = tracks,
+            mediaPlayerManager = mediaPlayerManager,
+            fragment = this,
+        )
+    }
+
+    /**
+     * Which conditional context items a track shows, resolved once when the menu opens - a
+     * point read of the download state plus the offline flag, exactly like the legacy
+     * [org.moire.ultrasonic.adapters.Utils.createPopupMenu]. No subscription is created.
+     */
+    private fun resolveComposeTrackContextMenuState(trackId: String): TrackContextMenuState {
+        val track = albumDetailViewModel.trackFor(trackId) ?: return TrackContextMenuState()
+        val online = !isOffline()
+        val downloadState = DownloadService.getDownloadState(track)
+        val isDownloaded =
+            downloadState == DownloadState.DONE || downloadState == DownloadState.PINNED
+        val canDownload = downloadState == DownloadState.IDLE ||
+            downloadState == DownloadState.FAILED ||
+            downloadState == DownloadState.CANCELLED
+        return TrackContextMenuState(
+            canAddToPlaylist = online,
+            canDownload = canDownload && online,
+            canDelete = isDownloaded,
+        )
+    }
+
+    private fun showComposeAlbumInfo() {
+        val state = albumDetailViewModel.uiState.value
+        val tracks = albumDetailViewModel.tracksSnapshot()
+        val coverEntry = tracks.firstOrNull()
+        val discCount = tracks.mapNotNull { it.discNumber }.toSet().size
+        AlbumInfoBottomSheetFragment.newInstance(
+            description = state.notes,
+            albumName = state.title,
+            artist = state.artist.ifEmpty { null },
+            year = state.year,
+            songCount = state.songCount,
+            discCount = discCount,
+            coverArtId = coverEntry?.coverArt,
+            coverArtKey = FileUtil.getAlbumArtKey(coverEntry, false),
+        ).show(childFragmentManager, AlbumInfoBottomSheetFragment.TAG)
     }
 
     private fun showGenreSelection() {
@@ -1331,5 +1611,20 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         private const val PENDING_FILTER_KEY = "songs_pending_filter"
         private const val HERO_HEIGHT_DP = 300
         private const val TOOLBAR_REVEAL_OFFSET_DP = 56
+
+        /**
+         * The single criterion that routes this Fragment's album-detail presentation to the
+         * Compose screen (issue #10 phase 4A): it is the `isAlbum` mode, it is not a playlist,
+         * the server is in id3 mode (so `getAlbumAsDir` returns a flat track list), and the
+         * concrete Fragment allows it (DownloadedAlbumFragment does not). Every other mode -
+         * Liked Songs, All Songs, genre / random / video / daily-mix / folder collections,
+         * playlists - keeps the legacy `MultiListFragment` View path.
+         */
+        fun shouldUseComposeAlbumDetail(
+            allow: Boolean,
+            isAlbum: Boolean,
+            hasPlaylistId: Boolean,
+            usesId3: Boolean,
+        ): Boolean = allow && isAlbum && !hasPlaylistId && usesId3
     }
 }
