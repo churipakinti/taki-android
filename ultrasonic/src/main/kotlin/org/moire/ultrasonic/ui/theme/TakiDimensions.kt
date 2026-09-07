@@ -53,6 +53,8 @@ data class TakiDimensions(
     val featuredCardHeight: Dp = 156.dp,
     /** `featured_card_artwork` - artwork inside the Home featured card. */
     val featuredCardArtwork: Dp = 124.dp,
+    /** `library_card_height` - Library "Your music" 2-column primary card (V2 section 11.3). */
+    val libraryCardHeight: Dp = 80.dp,
     /** `mini_player_height` - the floating mini-player band (V2 section 13). */
     val miniPlayerHeight: Dp = 64.dp,
     /**

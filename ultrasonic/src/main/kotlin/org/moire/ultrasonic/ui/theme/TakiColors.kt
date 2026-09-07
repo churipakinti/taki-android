@@ -61,6 +61,8 @@ data class TakiColors(
     val surfaceLowFloating: Color = Color(0xED111410),
     /** `taki_edge_highlight` - a 1dp tonal edge on a floating surface (~7% ivory). */
     val edgeHighlight: Color = Color(0x12F1F2ED),
+    /** `taki_liked` - muted warm-rose semantic accent for liked/favourite icons only. */
+    val liked: Color = Color(0xFFD96C75),
     /** `taki_error` - error. */
     val error: Color = Color(0xFFFFB4AB),
     /** `taki_on_error_container` - error-container content. */

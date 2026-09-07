@@ -59,6 +59,9 @@
     <dimen name="featured_card_height">156dp</dimen>
     <dimen name="featured_card_artwork">124dp</dimen>
 
+    <!-- Library "Your music" 2-column personal-destination card (V2 section 11.3). -->
+    <dimen name="library_card_height">80dp</dimen>
+
     <!-- Floating shell (V2 sections 13-14). Both the bottom nav and the mini-player overlay
          scrollable content; nothing is a reserved row. mini_player_edge_margin doubles as the
          mini-player's screen-edge inset and the equal 16dp gap it leaves above the bottom nav,

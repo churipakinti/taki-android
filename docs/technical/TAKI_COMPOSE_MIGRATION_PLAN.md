@@ -826,9 +826,57 @@ What landed:
 
 ### Step 3 — Library (`MainFragment` + browse rows)
 
-Static navigation rows + a few `*ListModel`-backed lists. Pure navigation, **no playback
-state**. Reuses `LibraryBrowseRow` / `LibraryPrimaryCard` from step 1. Exercises the
-`libraryOnlyDestination` chrome branch in `NavigationActivity` (unchanged — still id-based).
+**Status: DONE (issue #10 phase 2).** Pixel 7 validated; automated checks green.
+
+- `MainFragment` is now a thin `ComposeView` host (same shape as `HomeFragment`:
+  `DisposeOnViewTreeLifecycleDestroyed`, `TakiTheme`, a 1×48dp top-end anchor `View` so the
+  `showLibraryHub` popup lands right, `NavController` behind `LibraryActions` callbacks). It
+  no longer needs `ScopeFragment`/Koin - just `Fragment()`. The top-level `FilterableFragment`
+  interface stays in the file (used by the list fragments).
+- `LibraryUiState` (`@Immutable`) holds one field, `boxSetsAvailable` - everything else on
+  Library is static navigation, kept out of state per section 5.5. `LibraryViewModel`
+  (`ViewModel` + `KoinComponent`, `by viewModels()`) folds in the old
+  `MainFragment.setupBoxSetsRow`: `suspend fun refresh()` does the single cached-metadata read
+  (`AlbumDao.withGrouping()` + `CollectionResolver`), swallows failures to "hidden", and is
+  called from `onViewCreated`. A `boxSetsProbe` seam keeps the transitions unit-testable
+  without Room.
+- `LibraryScreen` = a `LazyColumn` (one `rememberLazyListState`, scroll survives nav) with a
+  `Taki.Hero` header + `TakiIconButton` overflow, then **two visually distinct levels** per
+  section 11 / the north star:
+  - **"Your music"** = a 2x2 grid of `LibraryPrimaryCard`s (new leaf primitive, section
+    11.3): 80dp tall (`library_card_height` token), width from `Modifier.weight(1f)` in a
+    two-column `Row` (~184dp on a 412dp screen), 12dp radius (`shapes.md`), a quiet
+    `surfaceLow` tone lifted just off the black page, a receding 24dp glyph, ivory title,
+    `SpaceBetween` layout, no elevation / border / artwork. Order: Liked Songs, Liked
+    Albums, Playlists, Downloads.
+  - **"Browse your collection"** = 56dp transparent `LibraryBrowseRow`s, **no dividers**
+    (removed in the correction), receding gray glyph, ivory title, quiet chevron. Order:
+    Albums, Artists, Songs, Genres, Box Sets (only when `boxSetsAvailable`).
+  16dp gutter, 12dp grid gaps, `sectionGap` (24dp) between sections. No hero card, no
+  atmosphere - calmer than Home. Counts omitted (section 6: no cheap source without new DB
+  work). The first cut used `LibraryBrowseRow` for both sections and was corrected here.
+- Navigation preserved exactly (same `NavigationGraphDirections` / ids as the old
+  `MainFragment`). Library consumes the shared `NavigationActivity.contentBottomInset` flow
+  via a `bottomContentInset: Dp` param - **no shell change**. The `MainFragment`
+  `bindFloatingChromeInset` call from phase 1 is gone (Compose path replaces it); the shared
+  View inset mechanism stays for the still-View list fragments.
+- Deleted: `res/layout/primary.xml`, the `library_content` id, `Widget.Taki.LibraryRow`
+  style. `library.collection` string retargeted to "Browse your collection". Added
+  `library_card_height` (80dp) token + `TakiTokensTest` assertion.
+- Semantic accent: a new `taki_liked` / `TakiColors.liked` token (`#D96C75`, a muted warm
+  rose) tints the Liked Songs + Liked Albums card glyphs only, via a new
+  `LibraryPrimaryCard(iconTint = ...)` param that defaults to gray (Playlists / Downloads
+  stay gray, surfaces unchanged, no green). `taki_liked` is Compose-only (`tools:ignore=
+  "UnusedResources"`, no XML consumer); `TakiTokensTest`'s existing XML↔Compose map covers
+  the drift.
+- 28 new tests (3 state / 6 VM / 7 navigation / 8 Compose-UI incl. a bounds-based
+  grid-structure assertion / 4 Roborazzi goldens: `library_standard` / `library_box_sets` /
+  `library_compact_360` / `library_font_1_30`, re-recorded for the card grid + liked accent).
+- Pixel 7: the two levels read as clearly different at a glance (card grid over plain
+  rows), all nine destinations navigate correctly, back restores scroll position, overflow
+  anchors top-end, Home↔Library↔Search clean (~0.9% janky, 95th 7ms), font scale 1.30
+  holds, Box Sets clears the floating chrome with and without the mini-player, inset shrinks
+  when playback stops. Content fits one viewport (not airy).
 
 ### Step 4 — Search
 

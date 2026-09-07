@@ -45,13 +45,5 @@
         <item name="boxStrokeWidthFocused">1dp</item>
     </style>
 
-    <style name="Widget.Taki.LibraryRow" parent="Widget.Material3.Button.TextButton">
-        <item name="android:gravity">start|center_vertical</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
-        <item name="backgroundTint">@android:color/transparent</item>
-        <item name="iconTint">?attr/colorOnSurfaceVariant</item>
-        <item name="rippleColor">@color/taki_selected_neutral</item>
-        <item name="shapeAppearance">@style/ShapeAppearance.Material3.SmallComponent</item>
-    </style>
 </resources>
 

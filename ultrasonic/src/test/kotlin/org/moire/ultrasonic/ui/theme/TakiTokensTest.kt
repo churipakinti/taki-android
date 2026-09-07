@@ -53,6 +53,7 @@ class TakiTokensTest {
         "taki_surface_floating" to takiColors.surfaceFloating,
         "taki_surface_low_floating" to takiColors.surfaceLowFloating,
         "taki_edge_highlight" to takiColors.edgeHighlight,
+        "taki_liked" to takiColors.liked,
         "taki_error" to takiColors.error,
         "taki_on_error_container" to takiColors.onErrorContainer
     )
@@ -120,6 +121,7 @@ class TakiTokensTest {
         assertEquals(dimenDp("artwork_card").dp, dimensions.artworkCard)
         assertEquals(dimenDp("featured_card_height").dp, dimensions.featuredCardHeight)
         assertEquals(dimenDp("featured_card_artwork").dp, dimensions.featuredCardArtwork)
+        assertEquals(dimenDp("library_card_height").dp, dimensions.libraryCardHeight)
         assertEquals(dimenDp("mini_player_height").dp, dimensions.miniPlayerHeight)
         assertEquals(dimenDp("mini_player_edge_margin").dp, dimensions.miniPlayerEdgeMargin)
         assertEquals(dimenDp("content_inset_floating_chrome").dp, dimensions.contentInsetFloatingChrome)
@@ -147,7 +149,9 @@ class TakiTokensTest {
     }
 
     private fun colorHex(name: String): String =
-        Regex("""<color name="$name">(#[0-9A-Fa-f]+)</color>""")
+        // `[^>]*` tolerates attributes on the tag (e.g. tools:ignore) - the value must still
+        // be an inline hex literal, never a @color/ reference.
+        Regex("""<color name="$name"[^>]*>(#[0-9A-Fa-f]+)</color>""")
             .find(colorsXml)
             ?.groupValues?.get(1)
             ?: error("colors.xml has no <color name=\"$name\">")

@@ -7,12 +7,10 @@
     <string name="library_hub.add">Add collection</string>
     <string name="library_hub.bottom_label">Library</string>
     <string name="library.your_music">Your music</string>
-    <string name="library.collection">Collection</string>
+    <!-- Library's second section header, above the Albums/Artists/Songs/Genres/Box Sets rows. -->
+    <string name="library.collection">Browse your collection</string>
     <string name="library.liked_songs">Liked Songs</string>
     <string name="library.liked_albums">Liked Albums</string>
-    <!-- "Box Sets" deliberately avoids the word "Collection" - library.collection above already
-         means something else (the server/library collection selector), not box sets/multi-album
-         releases. -->
     <string name="library.box_sets">Box Sets</string>
     <string name="collection.empty">No Box Sets found yet</string>
     <string name="collection.discover_more">Find missing discs</string>
