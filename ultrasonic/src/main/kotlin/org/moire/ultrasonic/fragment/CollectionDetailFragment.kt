@@ -9,196 +9,149 @@ package org.moire.ultrasonic.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.core.view.MenuHost
-import androidx.core.view.MenuProvider
-import androidx.core.view.isVisible
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
-import org.moire.ultrasonic.adapters.CollectionDiscAdapter
-import org.moire.ultrasonic.domain.Album
-import org.moire.ultrasonic.domain.MusicCollection
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
-import org.moire.ultrasonic.model.CollectionDetailModel
-import org.moire.ultrasonic.subsonic.ImageLoaderProvider
+import org.moire.ultrasonic.model.CollectionDetailViewModel
+import org.moire.ultrasonic.ui.collection.CollectionDetailActions
+import org.moire.ultrasonic.ui.collection.CollectionDetailScreen
+import org.moire.ultrasonic.ui.collection.CollectionMember
+import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.LayoutType
 import org.moire.ultrasonic.util.Util.toast
-import org.moire.ultrasonic.util.bindStackedArtwork
 
 /**
- * One Collection/Box Set's discs. Only ever works with lightweight Album rows already in
- * view - opening this screen, or scrolling through 222 of
- * them, never fetches a single track. Navigation-only: tapping a disc opens it via the existing,
- * unmodified TrackCollectionFragment (Album Detail), where Play/queue actions already live - this
- * screen doesn't duplicate them.
+ * One Collection / Box Set's member releases (issue #10 phase 4B). A thin Compose host: it
+ * owns the nav-graph boundary (the unchanged `collectionDetailFragment` destination and its
+ * `grouping` argument) and the list/grid toggle; everything visible - including the lightweight
+ * top row (back + toggle + discover) - is [CollectionDetailScreen]. The Activity's Material
+ * toolbar is hidden for this destination (see `NavigationActivity.usesContentHeader`), so the
+ * grouping name is shown once, in the Compose header.
+ *
+ * Navigation-only, exactly as the View version was - opening this screen, or scrolling a
+ * 222-disc box set, never fetches a track. Tapping a member opens it via the unchanged
+ * `TrackCollectionFragment` (now the Compose Album Detail).
  */
-class CollectionDetailFragment : Fragment(), KoinComponent {
+class CollectionDetailFragment : Fragment() {
 
     private val navArgs: CollectionDetailFragmentArgs by navArgs()
-    private val listModel: CollectionDetailModel by viewModels()
-    private val imageLoaderProvider: ImageLoaderProvider by inject()
-    private var emptyView: View? = null
-    private var swipeRefresh: SwipeRefreshLayout? = null
-    private var discoverMenuItem: MenuItem? = null
-    private var toggleLayoutMenuItem: MenuItem? = null
-    private var recyclerView: RecyclerView? = null
-    private var adapter: CollectionDiscAdapter? = null
-    private var headerArtwork: View? = null
-    private var headerTitle: TextView? = null
-    private var headerSubtitle: TextView? = null
-    private var layoutType = LayoutType.COVER
+    private val viewModel: CollectionDetailViewModel by viewModels()
 
-    private val menuProvider: MenuProvider = object : MenuProvider {
-        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-            menuInflater.inflate(R.menu.collection_detail, menu)
-            discoverMenuItem = menu.findItem(R.id.menu_discover_more_discs)
-            toggleLayoutMenuItem = menu.findItem(R.id.menu_toggle_collection_layout)
-            updateToggleIcon()
-        }
+    /** The list/grid toggle. Not persisted across recreation - COVER on open, the same
+     *  default the legacy Fragment used. */
+    private val layoutType = MutableStateFlow(LayoutType.COVER)
+    private val fallbackChromeInset = MutableStateFlow(0)
 
-        override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
-            R.id.menu_discover_more_discs -> {
-                listModel.discoverMore(navArgs.grouping)
-                true
-            }
-            R.id.menu_toggle_collection_layout -> {
-                setLayoutType(
-                    if (layoutType == LayoutType.LIST) LayoutType.COVER else LayoutType.LIST
-                )
-                true
-            }
-            else -> false
-        }
-    }
+    /** "N discs" at the last discovery start, to report how many the crawl added. */
+    private var countBeforeDiscovery: Int? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View = inflater.inflate(R.layout.collection_detail_layout, container, false)
+    ): View {
+        val chromeInsetFlow =
+            (activity as? NavigationActivity)?.contentBottomInset ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    val layout by layoutType.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    CollectionDetailScreen(
+                        state = state,
+                        actions = collectionActions,
+                        layout = layout,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setTitle(this, navArgs.grouping)
+        // The Compose header carries the grouping name; the hidden toolbar shows nothing.
+        setTitle(this, "")
 
-        (requireActivity() as MenuHost).addMenuProvider(
-            menuProvider,
-            viewLifecycleOwner,
-            Lifecycle.State.RESUMED
-        )
-
-        emptyView = view.findViewById(R.id.empty_list_view)
-        headerArtwork = view.findViewById(R.id.collection_header_artwork)
-        headerTitle = view.findViewById(R.id.collection_header_title)
-        headerSubtitle = view.findViewById(R.id.collection_header_subtitle)
-        headerTitle?.text = navArgs.grouping
-
-        adapter = CollectionDiscAdapter(onOpen = ::openDisc)
-        recyclerView = view.findViewById<RecyclerView>(R.id.recycler_view).apply {
-            adapter = this@CollectionDetailFragment.adapter
-        }
-        recyclerView?.let { list ->
-            (activity as? NavigationActivity)?.bindFloatingChromeInset(viewLifecycleOwner, list)
-        }
-        setLayoutType(layoutType)
-
-        swipeRefresh = view.findViewById(R.id.swipe_refresh_view)
-        swipeRefresh?.setOnRefreshListener {
-            listModel.load(navArgs.grouping, refresh = true)
-        }
-
-        listModel.collection.observe(viewLifecycleOwner) { collection ->
-            val albums = collection?.albums.orEmpty()
-            adapter?.submitList(albums)
-            emptyView?.isVisible = albums.isEmpty()
-            swipeRefresh?.isRefreshing = false
-            updateHeader(collection)
-        }
-
-        var previousCount: Int? = null
-        listModel.isDiscovering.observe(viewLifecycleOwner) { discovering ->
-            discoverMenuItem?.isEnabled = !discovering
-            if (discovering) {
-                previousCount = listModel.collection.value?.albumCount
-                toast(R.string.collection_discovering)
-            } else if (previousCount != null) {
-                val found = (listModel.collection.value?.albumCount ?: 0) - previousCount!!
-                toast(
-                    resources.getQuantityString(R.plurals.collection_discover_result, found, found)
-                )
-                previousCount = null
-            }
-        }
-
-        listModel.load(navArgs.grouping)
+        viewModel.load(navArgs.grouping)
+        observeDiscovery()
     }
 
-    private fun updateHeader(collection: MusicCollection?) {
-        val artwork = headerArtwork ?: return
-        val albumCount = collection?.albumCount ?: 0
-        headerTitle?.text = collection?.title ?: navArgs.grouping
-        headerSubtitle?.text = resources.getQuantityString(
-            R.plurals.n_discs,
-            albumCount,
-            albumCount
-        )
-        bindStackedArtwork(artwork, collection?.stackArtwork.orEmpty(), imageLoaderProvider)
-    }
-
-    private fun setLayoutType(newType: LayoutType) {
-        layoutType = newType
-        adapter?.layoutType = newType
-        recyclerView?.layoutManager = if (newType == LayoutType.LIST) {
-            LinearLayoutManager(context)
-        } else {
-            GridLayoutManager(context, GRID_SPAN_COUNT)
-        }
-        // notifyDataSetChanged(), not just a layoutManager swap: the two layouts use different
-        // item view types (see CollectionDiscAdapter.getItemViewType), so existing view holders
-        // must be discarded, not rebound in place.
-        adapter?.notifyDataSetChanged()
-        updateToggleIcon()
-    }
-
-    private fun updateToggleIcon() {
-        toggleLayoutMenuItem?.setIcon(
-            if (layoutType == LayoutType.LIST) {
-                R.drawable.ic_baseline_view_grid
-            } else {
-                R.drawable.ic_baseline_view_list
-            }
+    private val collectionActions: CollectionDetailActions by lazy {
+        CollectionDetailActions(
+            onBack = { findNavController().navigateUp() },
+            onToggleLayout = {
+                layoutType.value =
+                    if (layoutType.value == LayoutType.LIST) LayoutType.COVER else LayoutType.LIST
+            },
+            onOpenMember = ::openMember,
+            onRefresh = viewModel::refresh,
+            onDiscoverMore = viewModel::discoverMore,
         )
     }
 
-    private fun openDisc(disc: Album) {
+    private fun openMember(member: CollectionMember) {
         findNavController().navigate(
             NavigationGraphDirections.toTrackCollection(
-                disc.id,
+                member.id,
                 isAlbum = true,
-                name = disc.title,
-                parentId = disc.parent
+                name = member.title,
+                parentId = member.parent
             )
         )
     }
 
-    companion object {
-        private const val GRID_SPAN_COUNT = 2
+    /**
+     * The "find missing discs" progress toast + how many it added, kept in the Fragment as UI
+     * feedback (the crawl itself is in the ViewModel). Same messages as the legacy
+     * `isDiscovering` observer.
+     */
+    private fun observeDiscovery() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                var wasDiscovering = false
+                viewModel.uiState.collect { state ->
+                    if (state.isDiscovering && !wasDiscovering) {
+                        countBeforeDiscovery = state.discCount
+                        toast(R.string.collection_discovering)
+                    } else if (!state.isDiscovering && wasDiscovering) {
+                        countBeforeDiscovery?.let { before ->
+                            val found = state.discCount - before
+                            toast(
+                                resources.getQuantityString(
+                                    R.plurals.collection_discover_result, found, found
+                                )
+                            )
+                        }
+                        countBeforeDiscovery = null
+                    }
+                    wasDiscovering = state.isDiscovering
+                }
+            }
+        }
     }
 }

@@ -67,6 +67,15 @@ data class TakiDimensions(
     val trackRowMinHeight: Dp = 56.dp,
     /** `track_number_column` - the narrow leading number / now-playing-glyph column. */
     val trackNumberColumn: Dp = 28.dp,
+    /** `screen_header_height` - the lightweight screen-owned top row (back + optional title)
+     *  a Compose back-nav sub-screen draws instead of the Material app bar (issue #10 phase 4B). */
+    val screenHeaderHeight: Dp = 56.dp,
+    /** `collection_hero_cover` - one member cover in the Collection Detail identity mark
+     *  (issue #10 phase 4B): three of these fanned horizontally, front one centred. */
+    val collectionHeroCover: Dp = 112.dp,
+    /** `collection_hero_overlap_step` - how far each peeking back cover is offset from the
+     *  centred front cover in the identity fan. */
+    val collectionHeroOverlapStep: Dp = 36.dp,
     /** `mini_player_height` - the floating mini-player band (V2 section 13). */
     val miniPlayerHeight: Dp = 64.dp,
     /**

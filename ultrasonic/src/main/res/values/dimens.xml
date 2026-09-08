@@ -76,6 +76,19 @@
     <dimen name="track_row_min_height">56dp</dimen>
     <dimen name="track_number_column">28dp</dimen>
 
+    <!-- Lightweight screen-owned top row for a Compose back-nav sub-screen (issue #10 phase 4B):
+         back button + optional title on the bare canvas, no Material app bar. Matches the legacy
+         content_navigation_header height. -->
+    <dimen name="screen_header_height">56dp</dimen>
+
+    <!-- Collection Detail (issue #10 phase 4B). A structural box-set identity mark, not an
+         album hero: up to 3 member covers fanned *horizontally* (front cover centred and
+         dominant, the other two peeking left/right by one overlap step), so the cluster reads
+         wider than tall - "a collection of releases", not "one release". Single member -> one
+         centred cover, no fan. ~112 + 2*36 = 184dp wide, 112dp tall. -->
+    <dimen name="collection_hero_cover">112dp</dimen>
+    <dimen name="collection_hero_overlap_step">36dp</dimen>
+
     <!-- Floating shell (V2 sections 13-14). Both the bottom nav and the mini-player overlay
          scrollable content; nothing is a reserved row. mini_player_edge_margin doubles as the
          mini-player's screen-edge inset and the equal 16dp gap it leaves above the bottom nav,

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Box Sets list (issue #10 phase 4B). A screen-owned lightweight Compose header
+    (TakiScreenHeader: back + "Box Sets") on the Taki canvas, over the unchanged generic list
+    (RecyclerView + CollectionRowAdapter). The Activity's Material toolbar is hidden for this
+    destination (NavigationActivity.hidesSupportActionBar), so this is the only top chrome.
+-->
+<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+    a:layout_width="match_parent"
+    a:layout_height="match_parent"
+    a:background="@color/taki_black"
+    a:orientation="vertical">
+
+    <androidx.compose.ui.platform.ComposeView
+        a:id="@+id/collection_list_header"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content" />
+
+    <include
+        layout="@layout/list_layout_generic"
+        a:layout_width="match_parent"
+        a:layout_height="0dp"
+        a:layout_weight="1" />
+
+</LinearLayout>

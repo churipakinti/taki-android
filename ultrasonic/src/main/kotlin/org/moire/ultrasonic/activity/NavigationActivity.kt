@@ -257,23 +257,11 @@ class NavigationActivity : ScopeActivity() {
             if (libraryOnlyDestination) {
                 bottomNavigation?.menu?.findItem(R.id.mainFragment)?.isChecked = true
             }
-            val usesContentHeader = destination.id in setOf(
-                R.id.homeFragment,
-                R.id.mainFragment,
-                R.id.searchFragment,
-                R.id.downloadsFragment,
-                R.id.playlistsFragment,
-                R.id.playerFragment,
-                R.id.lyricsFragment,
-                R.id.artistListFragment,
-                R.id.albumListFragment,
-                R.id.selectGenreFragment,
-                R.id.serverSelectorFragment,
-                R.id.editServerFragment,
-                R.id.aboutFragment
-            ) || isLibraryTrackCollection || isAlbumDetail ||
-                destination.id == R.id.settingsFragment ||
-                destination.id == R.id.equalizerFragment
+            val usesContentHeader = hidesSupportActionBar(
+                destination.id,
+                isLibraryTrackCollection,
+                isAlbumDetail,
+            )
             if (usesContentHeader) {
                 supportActionBar?.hide()
             } else {
@@ -668,5 +656,40 @@ class NavigationActivity : ScopeActivity() {
             showNowPlaying()
         }
         applyBottomInset()
+    }
+
+    companion object {
+        /**
+         * Whether a destination draws its own top chrome and the shared Material toolbar must
+         * be hidden (`supportActionBar?.hide()`). Every Compose screen owns its header, so it
+         * belongs here - including the Box Sets list (`collectionListFragment`) and
+         * `collectionDetailFragment` (issue #10 phase 4B: each draws a lightweight Taki top row
+         * on the dark canvas, no toolbar). Pure so `NavigationChromeSelectionTest` can lock it;
+         * the Activity still applies it in `onDestinationChanged` (only runtime validation
+         * proves the `ActionBar.hide()` call itself).
+         */
+        fun hidesSupportActionBar(
+            destinationId: Int,
+            isLibraryTrackCollection: Boolean,
+            isAlbumDetail: Boolean,
+        ): Boolean = destinationId in setOf(
+            R.id.homeFragment,
+            R.id.mainFragment,
+            R.id.searchFragment,
+            R.id.downloadsFragment,
+            R.id.playlistsFragment,
+            R.id.playerFragment,
+            R.id.lyricsFragment,
+            R.id.artistListFragment,
+            R.id.albumListFragment,
+            R.id.selectGenreFragment,
+            R.id.collectionListFragment,
+            R.id.collectionDetailFragment,
+            R.id.serverSelectorFragment,
+            R.id.editServerFragment,
+            R.id.aboutFragment,
+        ) || isLibraryTrackCollection || isAlbumDetail ||
+            destinationId == R.id.settingsFragment ||
+            destinationId == R.id.equalizerFragment
     }
 }

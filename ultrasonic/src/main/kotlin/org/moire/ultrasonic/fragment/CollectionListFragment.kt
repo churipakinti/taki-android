@@ -11,6 +11,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -22,8 +25,9 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.adapters.CollectionRowAdapter
 import org.moire.ultrasonic.domain.MusicCollection
-import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.CollectionListModel
+import org.moire.ultrasonic.ui.components.TakiScreenHeader
+import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /**
  * Collections/Box Sets list, reached from Library's "Box Sets" row (MainFragment).
@@ -32,6 +36,12 @@ import org.moire.ultrasonic.model.CollectionListModel
  * Album across several screens, and MusicCollection doesn't fit that contract - forcing it in
  * would mean widening a shared generic base class for every album list screen, a much bigger and
  * riskier change than this feature needs.
+ *
+ * Issue #10 phase 4B (visual continuity): the Activity's Material toolbar is hidden for this
+ * destination and a lightweight Compose [TakiScreenHeader] (back + "Box Sets") sits on the Taki
+ * canvas above the unchanged RecyclerView grid, so this screen looks like the same shell as the
+ * screens before (Library) and after (Collection Detail) it. Data, adapter, ordering,
+ * navigation and refresh are untouched.
  */
 class CollectionListFragment : Fragment() {
 
@@ -43,11 +53,24 @@ class CollectionListFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View = inflater.inflate(R.layout.list_layout_generic, container, false)
+    ): View = inflater.inflate(R.layout.collection_list_layout, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setTitle(this, R.string.library_box_sets)
+
+        // The Compose header carries the title; the Activity toolbar is hidden for this
+        // destination (NavigationActivity.hidesSupportActionBar).
+        view.findViewById<ComposeView>(R.id.collection_list_header).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    TakiScreenHeader(
+                        onBack = { findNavController().navigateUp() },
+                        title = stringResource(R.string.library_box_sets),
+                    )
+                }
+            }
+        }
 
         emptyView = view.findViewById(R.id.empty_list_view)
         view.findViewById<android.widget.TextView>(R.id.empty_list_text)

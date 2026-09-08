@@ -109,6 +109,11 @@ class ComposePrimitivesScreenshotTest {
     }
 
     @Test
+    fun takiScreenHeader() = capture("taki_screen_header") {
+        TakiScreenHeader(onBack = {}, title = "Box Sets")
+    }
+
+    @Test
     fun takiFloatingSurface() = capture("taki_floating_surface") {
         TakiFloatingSurface(
             modifier = Modifier.fillMaxWidth().height(64.dp),

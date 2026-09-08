@@ -942,8 +942,8 @@ on screens that degrade gracefully if something is wrong.
 
 #### Step 5a — Album Detail (issue #10 phase 4A)
 
-**Status: DONE — automated gates green + Pixel 7 validated (not yet committed).** The first
-Compose implementation of the reusable detail-screen language.
+**Status: DONE — committed `c8d485c0` on `develop`, Pixel 7 validated.** The first Compose
+implementation of the reusable detail-screen language.
 
 - **Scope gate.** `TrackCollectionFragment.shouldUseComposeAlbumDetail(allow, isAlbum,
   hasPlaylistId, usesId3)` - the Compose screen is used **only** for the id3 `isAlbum` mode of
@@ -996,6 +996,100 @@ Compose implementation of the reusable detail-screen language.
   `album_no_artwork` / `album_compact_360` / `album_font_1_30`). 442 total. New tokens
   `album_hero_artwork_min/max`, `detail_primary_action`, `track_row_min_height`,
   `track_number_column` + `TakiTokensTest` assertions.
+
+#### Step 5b — Collection Detail (issue #10 phase 4B)
+
+**Status: DONE — automated gates green + Pixel 7 validated (not yet committed).** A straight
+presentation swap: the box-set screen keeps the exact semantics it always had.
+
+- **Audit result — this screen is navigation-only, and always was.** The legacy
+  `CollectionDetailFragment` shows a grid/list of member releases ("discs") of one box set and
+  nothing else: **no track list is ever fetched or rendered**, and there is no collection / disc
+  / track Play, Shuffle, download, star or context menu. Its only interactions are: tap a member
+  → open it via the unchanged `trackCollectionFragment` (now the Compose Album Detail); the
+  action-bar **Switch layout** (grid ↔ list) and **Find missing discs** menu items; and
+  pull-to-refresh. So phase 4B adds **none** of Album Detail's action surface - there is nothing
+  to port. `TakiTrackRow` / `TakiDiscHeader` are **not** used here.
+- **Grouping identity preserved exactly.** The `collectionDetailFragment` destination id and its
+  required `grouping: String` argument are unchanged. `grouping` is still the exact
+  `CollectionResolver`-resolved `MusicCollection.title`; the resolve is still
+  `AlbumDao.withGrouping()` → `CollectionResolver.resolve(...)` → `.firstOrNull { it.title ==
+  grouping }` (exact string equality, no normalization, no fuzzy match). `CollectionResolver`,
+  `MusicCollection` and its member ordering are untouched. No new repository, no new endpoint.
+- **`CollectionDetailViewModel`** (`AndroidViewModel`, `KoinComponent`, `by viewModels()`) - one
+  `StateFlow<CollectionDetailUiState>` (`@Immutable`). A 1:1 port of `CollectionDetailModel`:
+  `load(grouping, refresh)` is load-once (keeps scroll/data across back navigation),
+  `refresh()` re-resolves through the same path (no-op while a load or a discovery crawl runs;
+  a failed refresh keeps the members on screen), and `discoverMore()` runs the same
+  bounded-concurrency (`Semaphore(4)`) artist crawl - **never** called on open. `collectionLoader`
+  / `discoverer` test seams keep `ActiveServerProvider` / the network out of unit tests. The old
+  `CollectionDetailModel` is deleted (it had a single consumer).
+- **`CollectionDetailScreen`** - a compact, structural **fixed** header that belongs to the same
+  family as Home / Library / Album Detail, *not* the old Ultrasonic toolbar:
+  1. a lightweight top row on the bare dark canvas - a back `TakiIconButton` (ivory) on the left,
+     the layout toggle + discover `TakiIconButton`s (gray) on the right, no fill / elevation /
+     divider / title;
+  2. a **horizontal** box-set identity mark - up to 3 member covers (`collection_hero_cover`
+     112dp, `radius_md` 12dp) fanned *sideways*: the front (first) cover centred and fully
+     visible, the other two peeking left/right by one `collection_hero_overlap_step` (36dp), so
+     the cluster is 184dp wide × 112dp tall - reads as "a collection of releases", not an album
+     hero. 2 members → two overlapped covers; 1 (or loading) → one centred cover, no fan; zero
+     elevation / glow / container;
+  3. the `Taki.Hero` grouping title, shown **once** (the Activity toolbar is hidden for this
+     destination - see below);
+  4. a `Taki.Caption` "N discs" line.
+  Then one scrollable `LazyVerticalGrid(2)` (COVER) or `LazyColumn` (LIST) of member cards, keyed
+  by member id, mirroring the legacy `grid_item_collection_disc` / `list_item_collection_disc`
+  (cover, "Disc N", **single-line** ellipsized title - both grid and list, so a large collection
+  keeps an even card rhythm; the full title is on the member's Album Detail - "N tracks"). Reuses
+  `TakiArtwork`, `TakiIconButton`,
+  `TakiScaffold`, `EmptyState`, the `PullToRefreshBox` pattern and
+  `NavigationActivity.contentBottomInset` (scrolling area only, so the fixed header gains no dead
+  space). No `PlaybackUiStateHolder` (no tracks → no current-track marker). First-load 2dp strip.
+- **The Fragment stays the nav boundary.** `NavigationActivity` hides its Material toolbar for
+  `collectionDetailFragment`: the destination-selection rule is the pure companion
+  `NavigationActivity.hidesSupportActionBar(destinationId, isLibraryTrackCollection,
+  isAlbumDetail)` (extracted so `NavigationChromeSelectionTest` locks it). The olive app bar and
+  its duplicate title are gone; the top row is drawn in Compose. Runtime-verified on Pixel 7
+  (`uiautomator dump`: 0 `Toolbar` nodes, exactly one "Bach 333" node) across fresh nav,
+  back-from-member, layout toggle / discover, background-resume and Activity recreation.
+- **Box Sets list (`CollectionListFragment`) visual continuity.** The intermediate screen in the
+  Library -> Box Sets -> Collection Detail -> Album Detail flow kept a legacy Material toolbar,
+  so it looked older than the screens on either side. Smallest safe fix (Option A - no data
+  migration): `collectionListFragment` added to `hidesSupportActionBar`; the Fragment inflates a
+  thin wrapper `collection_list_layout.xml` = a screen-owned `ComposeView` header over the
+  unchanged `list_layout_generic` (RecyclerView + `CollectionRowAdapter`). The header is the new
+  reusable **`TakiScreenHeader`** leaf primitive (`screen_header_height` 56dp, back
+  `TakiIconButton` ivory + one-line `Taki.Hero` title + optional trailing `actions` slot,
+  transparent, no elevation/divider). Back = `findNavController().navigateUp()` from the Fragment.
+  Data, adapter, ordering, `CollectionListFragmentDirections.toCollectionDetail`, refresh and
+  `bindFloatingChromeInset` are all untouched. Pixel 7: 0 `Toolbar` nodes, one "Box Sets" node,
+  grid unchanged, no toolbar reappearance after round-tripping into Collection Detail.
+  The grid/list toggle is a Fragment-held `MutableStateFlow<LayoutType>` (COVER default, not
+  persisted - legacy parity); back is `findNavController().navigateUp()`; discover is
+  `viewModel.discoverMore()`; the "found N discs" toast diff stays in the Fragment observing
+  `uiState.isDiscovering`. Member open is
+  `NavigationGraphDirections.toTrackCollection(id, isAlbum = true, name, parentId)` verbatim. The
+  now-unused `R.menu.collection_detail` is deleted.
+- **Shared-primitive extraction: none.** Album Detail's hero, `DetailActionRow` and track rows
+  have no counterpart on a screen that shows neither a hero cover nor tracks nor actions;
+  forcing a shared abstraction here would be premature. `TakiArtwork` is the only reused
+  primitive. The phase 4A follow-up to extract `AlbumDetailHero` / `DetailActionRow` is
+  therefore **still deferred** (Artist Detail is the next screen that could confirm the shape).
+- **Album Detail (`c8d485c0`) is untouched** - no shared file was modified for 4B beyond adding
+  one `TakiDimensions` token; regression-checked on device.
+- 58 new tests (5 state / 15 VM / 18 Compose-UI / 3 navigation / 7 `NavigationChromeSelectionTest`
+  / 4 `TakiScreenHeaderTest` / 9 Roborazzi goldens: 8 `collection_*` + `taki_screen_header`).
+  499 total. New tokens `screen_header_height` 56dp + `collection_hero_cover` 112dp +
+  `collection_hero_overlap_step` 36dp + `TakiTokensTest` assertions. New reusable primitive
+  `TakiScreenHeader`. New wrapper layout `collection_list_layout.xml`. Deleted:
+  `CollectionDetailModel`, `CollectionDiscAdapter`, `R.menu.collection_detail`, and the four
+  Collection-Detail-only layouts (grep-verified zero remaining consumers); `StackedArtworkBinder`
+  / `view_stacked_artwork` / `CollectionResolver` / strings are shared and kept.
+  `NavigationActivity`: the toolbar-hide rule is the pure companion `hidesSupportActionBar(...)`
+  (extracted, `NavigationChromeSelectionTest` locks it); `collectionListFragment` and
+  `collectionDetailFragment` are both in its set. Artist Detail stays on its legacy toolbar until
+  its own migration.
 
 ### Step 6 — Mini-player integration
 

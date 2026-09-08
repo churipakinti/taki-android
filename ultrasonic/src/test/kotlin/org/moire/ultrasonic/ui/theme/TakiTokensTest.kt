@@ -128,6 +128,12 @@ class TakiTokensTest {
         assertEquals(dimenDp("detail_primary_action").dp, dimensions.detailPrimaryAction)
         assertEquals(dimenDp("track_row_min_height").dp, dimensions.trackRowMinHeight)
         assertEquals(dimenDp("track_number_column").dp, dimensions.trackNumberColumn)
+        assertEquals(dimenDp("screen_header_height").dp, dimensions.screenHeaderHeight)
+        assertEquals(dimenDp("collection_hero_cover").dp, dimensions.collectionHeroCover)
+        assertEquals(
+            dimenDp("collection_hero_overlap_step").dp,
+            dimensions.collectionHeroOverlapStep,
+        )
         assertEquals(dimenDp("mini_player_height").dp, dimensions.miniPlayerHeight)
         assertEquals(dimenDp("mini_player_edge_margin").dp, dimensions.miniPlayerEdgeMargin)
         assertEquals(dimenDp("content_inset_floating_chrome").dp, dimensions.contentInsetFloatingChrome)
