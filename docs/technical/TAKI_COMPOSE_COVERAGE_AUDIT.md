@@ -380,19 +380,56 @@ the task's own instructions; building it now would be scope creep beyond an audi
 
 ## J. Pixel navigation crawl
 
-**Not performed.** This audit session has no `adb`/device-bridge tool available in its
-environment (`adb devices` — command not found; no Android device automation tool is present in
-this session's toolset), unlike prior phases where Pixel 7 validation was performed with direct
-hardware access. Fabricating a crawl result would violate the audit's own read-only, no-guessing
-standard, so this section is left as an explicit gap rather than invented data.
+**Performed** on a physical Pixel 7 (`2B191FDH200E36`, Android build `ro.build.version.release=17`)
+via `adb` (found locally at `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe`, not on `PATH` —
+the earlier "not performed" note in this section was written before that path was located).
+Installed the current `assembleDebug` output (`Taki-0.1.0-beta-debug.apk`,
+`io.github.churipakinti.taki.debug`) with `adb install -r` and drove the app with
+`input tap`/`uiautomator dump` for precise coordinates, screenshotting each screen with
+`exec-out screencap`.
 
-**Recommendation:** run the crawl listed in the task (Home → Library → Search → Albums → Album
-Detail → Artists → Artist Detail → Songs → Liked Songs → Liked Albums → Playlists → Downloads →
-Genres → Box Sets → Collection Detail → Daily Mix → mini-player → Now Playing → Queue → Lyrics)
-in a session/environment with device access, recording for each screen: Compose vs. legacy visual
-signature, toolbar ownership, and any visual discontinuity — this audit's matrix (§B) predicts
-exactly where the legacy/Compose boundary should be visible (every `MIGRATE_IN_#10` row in §B.2
-is a place where a visible "legacy chrome" moment should still be reproducible today).
+Screens visited: Home → Library → Albums → Album Detail (Compose) → Artists → Artist Detail
+(Compose) → Songs/All Songs → Liked Songs → Liked Albums → Playlists → Playlist Detail →
+Downloads → Downloaded Album Detail → Genres → Genre tracks → Box Sets → Collection Detail →
+Home → Daily Mix → mini-player → Now Playing → Queue → Lyrics (via overflow menu) → Search.
+
+| Screen | Visual signature | Toolbar | Notes |
+|---|---|---|---|
+| Home | Compose | none | Mini-player overlay visible, playback active throughout |
+| Library | Compose | none | matches §B.1 |
+| Album List | Legacy View | none | visually indistinguishable from Compose at a glance — already tokenized (issues #3/#4) even though structurally legacy, confirming §D's read that this migration is about code health, not a visible fix |
+| Album Detail (ID3) | **Compose** | none | matches phase 4A exactly |
+| Artist List | Legacy View | none | same tokenized-but-legacy pattern as Album List |
+| Artist Detail | **Compose** | none | matches phase 4C exactly, real band photo hero |
+| All Songs (library root) | Legacy View | none | `LibraryTrackBinder` rows, filter dropdown, "Play all" — toolbar correctly hidden (`isLibraryTrackCollection`) |
+| Liked Songs | Legacy View | none | green heart rows, toolbar hidden as predicted |
+| Liked Albums | Legacy View | none | same `AlbumListFragment` as Album List, `STARRED` type |
+| Playlists list | Legacy View | none | |
+| Playlist Detail | Legacy View | none | hero header with playlist-specific actions, toolbar hidden — **but not** via `isAlbum` (playlist detail has `isAlbum=false`); confirmed the plain-header/no-toolbar look here comes from the screen's own styling, not the chrome rule |
+| Downloads list | Legacy View | none | |
+| Downloaded Album Detail | Legacy View | none | **visually distinguishable from Compose Album Detail on close inspection**: download-checkmark icons instead of track numbers, different action-row icon order/alignment, no genre/rating metadata line — confirms §B.2's read that this is a materially different code path, not just an internal detail |
+| Genres list | Legacy View | none | |
+| **Genre tracks** (direct entry from Genres, not via filter bar) | Legacy View | **visible olive Material toolbar** | **Confirmed visual discontinuity** — exactly the "legacy chrome" moment the audit predicted for a mode with neither `isAlbum` nor `isLibraryTrackCollection` set |
+| Box Sets | Hybrid (Compose header) | none | matches phase 4B |
+| Collection Detail | Compose | none | matches phase 4B |
+| **Daily Mix** (from Home) | Legacy View | **visible olive Material toolbar** | **Confirmed visual discontinuity**, and a notable one: tapping the Daily Mix card on the otherwise fully-Compose Home screen drops straight into a legacy-toolbar screen |
+| Mini-player | Legacy View | n/a (overlay) | already tokenized per issue #7 — flat icons, no jarring look despite being legacy |
+| Now Playing | Legacy View | none (custom back+overflow bar) | already tokenized per issue #7; structurally legacy but doesn't read as broken |
+| Queue | Legacy View | none | `ViewFlipper` second child, as documented |
+| Lyrics | Legacy View | none (minimal "Sync" + back bar) | reached via Now Playing overflow → Lyrics; empty for the test track (no synced/plain lyrics available for that song) — not a bug, just no data |
+| Search | Compose | none | |
+
+No crashes, no fatal exceptions, and no errors mentioning the app's package were found in
+`adb logcat -b crash` or `adb logcat *:E` after the full crawl.
+
+**Headline finding:** the two clearest, most reproducible "still legacy" visual moments in the
+whole app today are **Genre tracks** (entered directly from the Genres screen) and **Daily Mix**
+(entered from the otherwise fully-Compose Home screen) — both drop the user into a screen with a
+visible olive Material toolbar with no warning. Every other legacy screen visited already reads
+as visually consistent (same dark tokenized theme) even though it's structurally still
+View/XML — meaning the remaining migration work in §D is primarily about code health and future
+maintainability, not fixing currently-visible breakage, with these two toolbar-flicker screens
+being the notable exception worth prioritizing for a quick win.
 
 ---
 
