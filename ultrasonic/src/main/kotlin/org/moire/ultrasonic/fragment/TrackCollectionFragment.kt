@@ -54,6 +54,7 @@ import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.model.AlbumDetailViewModel
+import org.moire.ultrasonic.model.TrackListViewModel
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
 import org.moire.ultrasonic.ui.album.AlbumDetailActions
@@ -61,6 +62,9 @@ import org.moire.ultrasonic.ui.album.AlbumDetailArgs
 import org.moire.ultrasonic.ui.album.AlbumDetailScreen
 import org.moire.ultrasonic.ui.album.AlbumOverflowItem
 import org.moire.ultrasonic.ui.album.TrackContextAction
+import org.moire.ultrasonic.ui.tracklist.TrackListActions
+import org.moire.ultrasonic.ui.tracklist.TrackListRow
+import org.moire.ultrasonic.ui.tracklist.TrackListScreen
 import org.moire.ultrasonic.ui.album.TrackContextMenuState
 import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
@@ -185,6 +189,19 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             hasPlaylistId = navArgs.playlistId != null,
         )
 
+    // --- Compose Track List (issue #10 phase 4F1) -------------------------------------------
+    // The "Songs" (navArgs.libraryRoot) and dedicated Liked Songs (navArgs.getStarred)
+    // destinations switch to Compose here; every other useLibraryTrackRows mode (Genre, Daily
+    // Mix) - which shares the same legacy LibraryTrackBinder row today - is deliberately left on
+    // the unchanged View path below, exactly like isComposeAlbumMode leaves every non-album mode
+    // alone. Mirrors isMediaLibrarySongs's real (non-dead) condition: `parentFragment is
+    // MainFragment` can never be true any more (Library moved to Compose in an earlier phase),
+    // so it is not repeated here.
+    private val trackListViewModel: TrackListViewModel by viewModels()
+
+    private val isComposeLibraryTrackListMode: Boolean
+        get() = navArgs.libraryRoot || navArgs.getStarred
+
     private val isMediaLibrarySongs: Boolean
         get() = parentFragment is MainFragment || navArgs.libraryRoot || navArgs.getStarred
 
@@ -228,6 +245,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         if (isComposeAlbumMode) {
             bindComposeAlbumDetail()
+            return
+        }
+        if (isComposeLibraryTrackListMode) {
+            bindComposeTrackList()
             return
         }
         super.onViewCreated(view, savedInstanceState)
@@ -1318,6 +1339,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         savedInstanceState: Bundle?
     ): View? {
         if (isComposeAlbumMode) return createComposeAlbumView()
+        if (isComposeLibraryTrackListMode) return createComposeTrackListView()
         val layout = if (navArgs.libraryRoot) R.layout.list_layout_track_filterable else mainLayout
         return inflater.inflate(layout, container, false)
     }
@@ -1579,6 +1601,221 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             coverArtId = coverEntry?.coverArt,
             coverArtKey = FileUtil.getAlbumArtKey(coverEntry, false),
         ).show(childFragmentManager, AlbumInfoBottomSheetFragment.TAG)
+    }
+
+    // ---- Compose Track List (issue #10 phase 4F1) -------------------------------------------
+    // "Songs" (navArgs.libraryRoot) and Liked Songs (navArgs.getStarred) - see
+    // isComposeLibraryTrackListMode's kdoc. This leaves the legacy filter-bar/artist-genre-filter
+    // machinery below (showArtistSelection/showGenreSelection/setOrderType/getListOfSortOrders/
+    // viewCapabilities/applyArtistFilter/handleFilterSelectionResult's BY_ARTIST+BY_GENRE
+    // branches) unreachable - their only caller was the libraryRoot-gated FilterButtonBar this
+    // phase replaces. Documented as a new dead-code finding (see the phase 4F1 report) rather
+    // than removed here, matching the "don't fix #23 in this task" boundary.
+
+    private fun createComposeTrackListView(): View {
+        val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
+            ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by trackListViewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    TrackListScreen(
+                        state = state,
+                        actions = trackListActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun bindComposeTrackList() {
+        // The shared content_navigation_header supplies the back affordance; the toolbar is
+        // hidden for both destinations (NavigationActivity.isLibraryTrackCollection, unchanged
+        // by this phase), so this title is never visibly shown - kept only for parity with the
+        // legacy (also invisible) ActionBar title, exactly like AlbumListFragment/
+        // ArtistListFragment.
+        setTitle(
+            if (navArgs.getStarred) {
+                getString(R.string.main_songs_starred)
+            } else {
+                getString(R.string.main_songs_title)
+            },
+        )
+        trackListViewModel.initialize(libraryRoot = navArgs.libraryRoot, getStarred = navArgs.getStarred)
+        trackListViewModel.load()
+
+        childFragmentManager.setFragmentResultListener(
+            ItemSelectionDialogFragment.REQUEST_KEY,
+            viewLifecycleOwner,
+        ) { _, bundle -> handleTrackListSelectionResult(bundle) }
+
+        // Songs re-fetches on a server switch (getLiveData(refresh) semantics); a folder change
+        // on a "Songs" search-based listing was never wired up by the legacy screen either (no
+        // RxBus.musicFolderChangedEventObservable subscription existed in TrackCollectionFragment
+        // for this mode), so none is added here.
+        rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
+            trackListViewModel.refresh()
+        }
+    }
+
+    private val trackListActions: TrackListActions by lazy {
+        TrackListActions(
+            onTrackClick = ::onTrackListClick,
+            onContextAction = ::onTrackListContextAction,
+            trackContextMenuState = { row -> resolveTrackListContextMenuState(row.id) },
+            onHeartToggle = ::onTrackListHeartToggle,
+            onSortOrderSelected = ::onTrackListSortOrderSelected,
+            onPlayAll = ::onTrackListPlayAll,
+            onRefresh = trackListViewModel::refresh,
+            onLoadMore = trackListViewModel::loadMore,
+        )
+    }
+
+    private fun onTrackListClick(row: TrackListRow) {
+        val track = trackListViewModel.itemFor(row.id) ?: return
+        if (track.isVideo) {
+            VideoPlayer.playVideo(requireContext(), track)
+            return
+        }
+        playTrackListTrackFromHere(track)
+    }
+
+    private fun playTrackListTrackFromHere(track: Track) {
+        PerfMetrics.mark("play_tap")
+        val allTracks = trackListViewModel.tracksSnapshot()
+        val startIndex = allTracks.indexOfFirst { it === track }
+        if (startIndex < 0) return
+        mediaPlayerManager.addToPlaylist(
+            songs = allTracks,
+            autoPlay = false,
+            shuffle = false,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = startIndex,
+        )
+    }
+
+    private fun onTrackListPlayAll() {
+        val tracks = trackListViewModel.tracksSnapshot()
+        if (tracks.isEmpty()) return
+        mediaPlayerManager.addToPlaylist(
+            songs = tracks,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            autoPlay = true,
+            shuffle = false,
+        )
+    }
+
+    private fun onTrackListHeartToggle(row: TrackListRow) {
+        val newStarred = trackListViewModel.toggleHeartOptimistic(row.id) ?: return
+        RxBus.ratingSubmitter.onNext(RatingUpdate(row.id, HeartRating(newStarred)))
+    }
+
+    /**
+     * Reuses the unchanged [ContextMenuUtil.handleContextMenuTracks] dispatch with a real
+     * [MenuItem] taken from a never-shown [PopupMenu], the same pattern Compose Album Detail's
+     * [handleComposeTrackContextAction] already established. `PLAY_FROM_HERE`/`ADD_TO_PLAYLIST`
+     * are intercepted first, exactly like the legacy `onContextMenuItemSelected`.
+     */
+    private fun onTrackListContextAction(row: TrackListRow, action: TrackContextAction) {
+        val track = trackListViewModel.itemFor(row.id) ?: return
+        when (action) {
+            TrackContextAction.PLAY_FROM_HERE -> playTrackListTrackFromHere(track)
+            TrackContextAction.ADD_TO_PLAYLIST -> addTracksToPlaylist(listOf(track))
+            else -> runTrackContextAction(action.toMenuItemId(), listOf(track))
+        }
+    }
+
+    private fun TrackContextAction.toMenuItemId(): Int = when (this) {
+        TrackContextAction.PLAY_NOW -> R.id.song_menu_play_now
+        TrackContextAction.PLAY_NEXT -> R.id.song_menu_play_next
+        TrackContextAction.PLAY_LAST -> R.id.song_menu_play_last
+        TrackContextAction.START_RADIO -> R.id.song_menu_start_radio
+        TrackContextAction.DOWNLOAD -> R.id.song_menu_download
+        TrackContextAction.DELETE -> R.id.song_menu_delete
+        TrackContextAction.PLAY_FROM_HERE, TrackContextAction.ADD_TO_PLAYLIST ->
+            error("handled directly in onTrackListContextAction")
+    }
+
+    /** `Utils.createPopupMenu`'s per-track gating, resolved once when the menu opens - a point
+     *  read of the download state + offline flag, exactly like the legacy popup. */
+    private fun resolveTrackListContextMenuState(trackId: String): TrackContextMenuState {
+        val online = !isOffline()
+        val downloadState = DownloadService.getDownloadState(
+            trackListViewModel.itemFor(trackId) ?: return TrackContextMenuState(),
+        )
+        val isDownloaded = downloadState == DownloadState.DONE || downloadState == DownloadState.PINNED
+        val canDownload = downloadState == DownloadState.IDLE ||
+            downloadState == DownloadState.FAILED ||
+            downloadState == DownloadState.CANCELLED
+        return TrackContextMenuState(
+            canAddToPlaylist = online,
+            canDownload = canDownload && online,
+            canDelete = isDownloaded,
+        )
+    }
+
+    /** Cached from the last [onTrackListSortOrderSelected]`(BY_ARTIST)` fetch, so resolving the
+     *  dialog's selection doesn't re-fetch - the same two-tier lookup the legacy
+     *  `applyArtistFilter` used (`availableArtists` first, a fresh fetch only as a fallback). */
+    private var cachedTrackListArtists: List<ArtistOrIndex> = emptyList()
+
+    private fun onTrackListSortOrderSelected(order: SortOrder) {
+        when (order) {
+            SortOrder.BY_ARTIST -> {
+                trackListViewModel.beginArtistSort()
+                viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+                    cachedTrackListArtists = trackListViewModel.loadArtists()
+                    showTrackListSelectionDialog(
+                        R.string.main_artists_title,
+                        cachedTrackListArtists.mapNotNull { it.name }.toTypedArray(),
+                    )
+                }
+            }
+            SortOrder.BY_GENRE -> {
+                trackListViewModel.beginGenreSort()
+                viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+                    val genres = trackListViewModel.loadGenres()
+                    showTrackListSelectionDialog(
+                        R.string.main_genres_title,
+                        genres.map { it.name }.sorted().toTypedArray(),
+                    )
+                }
+            }
+            else -> trackListViewModel.setSortOrder(order)
+        }
+    }
+
+    private fun showTrackListSelectionDialog(title: Int, items: Array<String>) {
+        if (items.isEmpty()) return
+        if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
+            ItemSelectionDialogFragment.create(title, items)
+                .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
+        }
+    }
+
+    private fun handleTrackListSelectionResult(bundle: Bundle) {
+        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return
+        val selectedName = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM) ?: return
+        when (trackListViewModel.uiState.value.sortOrder) {
+            SortOrder.BY_ARTIST -> {
+                viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
+                    val artist = cachedTrackListArtists.firstOrNull { it.name == selectedName }
+                        ?: trackListViewModel.loadArtists().firstOrNull { it.name == selectedName }
+                        ?: return@launch
+                    trackListViewModel.selectArtist(artist.id, artist.name.orEmpty())
+                }
+            }
+            SortOrder.BY_GENRE -> trackListViewModel.selectGenre(selectedName)
+            else -> Unit
+        }
     }
 
     private fun showGenreSelection() {
