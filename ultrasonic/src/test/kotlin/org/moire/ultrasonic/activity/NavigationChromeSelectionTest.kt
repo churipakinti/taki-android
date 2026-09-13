@@ -25,7 +25,11 @@ import org.robolectric.RobolectricTestRunner
  * Genre and Daily Mix modes (`isLightweightHeaderTrackCollection`): unlike
  * `isAlbumDetail`/`isLibraryTrackCollection`, these draw a Fragment-owned Compose
  * `TakiScreenHeader` rather than the shared `content_navigation_header`, but they must hide the
- * Material toolbar the same way.
+ * Material toolbar the same way. And [NavigationActivity.isAlbumDetailDestination]: the offline
+ * `downloadedAlbumFragment` destination renders the exact same Compose Album Detail screen as
+ * `trackCollectionFragment` (issue #10 phase 4D) and must get identical chrome - a
+ * destination-id-only check originally missed this, leaving the shared olive toolbar visible
+ * over the downloaded album screen.
  *
  * This can only assert the *selection*; that the Activity then actually calls
  * `supportActionBar?.hide()` is Activity-runtime behaviour, validated on the Pixel 7.
@@ -112,5 +116,50 @@ class NavigationChromeSelectionTest {
         assertFalse(hides(R.id.trackCollectionFragment))
         // Liked Songs already hid the toolbar via isLibraryTrackCollection before this fix.
         assertTrue(hides(R.id.trackCollectionFragment, libraryTrackCollection = true))
+    }
+
+    // --- isAlbumDetailDestination (issue #10 phase 4D shell-continuity fix) ---------------
+
+    @Test
+    fun `downloadedAlbumFragment is recognised as an album-detail destination, same as trackCollectionFragment`() {
+        assertTrue(
+            NavigationActivity.isAlbumDetailDestination(R.id.downloadedAlbumFragment, isAlbumArg = true),
+        )
+        assertTrue(
+            NavigationActivity.isAlbumDetailDestination(R.id.trackCollectionFragment, isAlbumArg = true),
+        )
+    }
+
+    @Test
+    fun `isAlbumDetailDestination still requires the isAlbum arg`() {
+        assertFalse(
+            NavigationActivity.isAlbumDetailDestination(R.id.downloadedAlbumFragment, isAlbumArg = false),
+        )
+        assertFalse(
+            NavigationActivity.isAlbumDetailDestination(R.id.trackCollectionFragment, isAlbumArg = false),
+        )
+    }
+
+    @Test
+    fun `isAlbumDetailDestination does not widen to unrelated destinations`() {
+        // Regression guard: only the two Fragments that actually render Compose Album Detail
+        // qualify - a plain Downloads list (which merely opens downloadedAlbumFragment) must not.
+        assertFalse(
+            NavigationActivity.isAlbumDetailDestination(R.id.downloadsFragment, isAlbumArg = true),
+        )
+    }
+
+    @Test
+    fun `the downloaded album screen hides the shared toolbar exactly like online album detail`() {
+        val downloaded = NavigationActivity.isAlbumDetailDestination(
+            R.id.downloadedAlbumFragment,
+            isAlbumArg = true,
+        )
+        val online = NavigationActivity.isAlbumDetailDestination(
+            R.id.trackCollectionFragment,
+            isAlbumArg = true,
+        )
+        assertTrue(hides(R.id.downloadedAlbumFragment, albumDetail = downloaded))
+        assertTrue(hides(R.id.trackCollectionFragment, albumDetail = online))
     }
 }

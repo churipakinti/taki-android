@@ -229,8 +229,10 @@ class NavigationActivity : ScopeActivity() {
                     arguments?.getBoolean("libraryRoot") == true ||
                         arguments?.getBoolean("getStarred") == true
                     )
-            val isAlbumDetail = destination.id == R.id.trackCollectionFragment &&
-                arguments?.getBoolean("isAlbum") == true
+            val isAlbumDetail = isAlbumDetailDestination(
+                destination.id,
+                arguments?.getBoolean("isAlbum") == true,
+            )
             // Genre and Daily Mix (issue #10 shell-continuity fix): same "hide the shared
             // toolbar" treatment as isAlbumDetail/isLibraryTrackCollection, but the Fragment
             // draws its own back+title header (see hidesSupportActionBar's kdoc) instead of the
@@ -670,6 +672,24 @@ class NavigationActivity : ScopeActivity() {
     }
 
     companion object {
+        /**
+         * Destinations that render the Compose Album Detail screen for `isAlbum=true` (issue
+         * #10 phase 4A id3, phase 4D folder-mode + offline). Both `trackCollectionFragment`
+         * (online, id3 or folder) and `downloadedAlbumFragment` (the local-only screen opened
+         * from Downloads) are the *same* screen/ViewModel with a different data source - they
+         * must get identical chrome treatment (shared toolbar hidden, the shared
+         * `content_navigation_header` back bar shown instead), or one of them shows a stray
+         * olive toolbar strip the other doesn't. Pure and reused by both `isAlbumDetail`
+         * (`onDestinationChanged`) and `NavigationChromeSelectionTest`.
+         */
+        private val albumDetailDestinationIds = setOf(
+            R.id.trackCollectionFragment,
+            R.id.downloadedAlbumFragment,
+        )
+
+        fun isAlbumDetailDestination(destinationId: Int, isAlbumArg: Boolean): Boolean =
+            destinationId in albumDetailDestinationIds && isAlbumArg
+
         /**
          * Whether a destination draws its own top chrome and the shared Material toolbar must
          * be hidden (`supportActionBar?.hide()`). Every Compose screen owns its header, so it

@@ -23,6 +23,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
@@ -35,18 +38,22 @@ import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 
 /**
- * Owns the Compose Album Detail state (issue #10 phase 4A) as one
- * [StateFlow]<[AlbumDetailUiState]>. A projection of exactly what
- * `TrackCollectionModel.getAlbum` / `getMusicDirectory` + `getAlbumInfo` + `getAlbumStarred`
- * already load for `TrackCollectionFragment`'s `isAlbum == true` mode - the sort, disc
- * grouping and header derivation mirror the old `buildDisplayList` / `AlbumDetailHeaderBinder`
- * one for one. Playback, star submission and navigation stay in the Fragment; this class only
- * reads.
+ * Owns the Compose Album Detail state (issue #10 phase 4A; folder-mode and offline/downloaded
+ * albums added in phase 4D) as one [StateFlow]<[AlbumDetailUiState]>. A projection of exactly
+ * what `TrackCollectionModel.getAlbum` / `getMusicDirectory` / `getDownloadedAlbumTracks` +
+ * `getAlbumInfo` + `getAlbumStarred` already load for `TrackCollectionFragment`'s
+ * `isAlbum == true` mode - the sort, disc grouping and header derivation mirror the old
+ * `buildDisplayList` / `AlbumDetailHeaderBinder` one for one. Playback, star submission and
+ * navigation stay in the Fragment; this class only reads.
  *
  * The state survives Fragment view recreation (retained ViewModel), so returning from a track
  * / the artist restores the album with no new server call.
  */
-class AlbumDetailViewModel(application: Application) : AndroidViewModel(application) {
+class AlbumDetailViewModel(application: Application) :
+    AndroidViewModel(application),
+    KoinComponent {
+
+    private val activeServerProvider: ActiveServerProvider by inject()
 
     private val _uiState = MutableStateFlow(AlbumDetailUiState())
     val uiState: StateFlow<AlbumDetailUiState> = _uiState.asStateFlow()
@@ -57,8 +64,14 @@ class AlbumDetailViewModel(application: Application) : AndroidViewModel(applicat
     /** The unsliced, sorted track list - playback and the info sheet read it, no re-fetch. */
     private var rawTracks: List<Track> = emptyList()
 
-    /** The album track list. id3 -> `getAlbumAsDir`; folder -> `getMusicDirectory`, tracks
-     *  only. Mirrors `TrackCollectionModel.getAlbum` / `getMusicDirectory`. Test seam. */
+    /** The online album track list. id3 -> `getAlbumAsDir`; folder -> `getMusicDirectory`,
+     *  tracks only (issue #10 phase 4D: a folder-mode directory can also return sub-folder
+     *  children - e.g. a disc-per-folder layout - which the legacy screen shows as tappable
+     *  rows via `AlbumRowDelegate`; this Compose screen deliberately keeps the phase-4A
+     *  "tracks only" behavior rather than adding a second row/navigation shape, so a folder-mode
+     *  album with nested sub-folders shows only the tracks directly in that folder. Documented,
+     *  narrow, non-blocking limitation - see the phase 4D report). Mirrors
+     *  `TrackCollectionModel.getAlbum` / `getMusicDirectory`. Test seam. */
     internal var albumLoader: suspend (AlbumDetailArgs) -> List<Track>? = { args ->
         withContext(Dispatchers.IO) {
             val service = MusicServiceFactory.getMusicService()
@@ -69,6 +82,15 @@ class AlbumDetailViewModel(application: Application) : AndroidViewModel(applicat
                 service.getMusicDirectory(id, args.name, args.refresh)
             }
             dir.getChildren().filterIsInstance<Track>()
+        }
+    }
+
+    /** The offline/downloaded album track list (issue #10 phase 4D): the same local-only data
+     *  path `TrackCollectionModel.getDownloadedAlbumTracks` reads, so `DownloadedAlbumFragment`
+     *  keeps working with no network at all. Test seam. */
+    internal var offlineAlbumLoader: suspend (albumId: String) -> List<Track> = { albumId ->
+        withContext(Dispatchers.IO) {
+            activeServerProvider.offlineMetaDatabase.trackDao().byAlbum(albumId)
         }
     }
 
@@ -102,20 +124,14 @@ class AlbumDetailViewModel(application: Application) : AndroidViewModel(applicat
                 loadFailed = false,
                 albumId = args.id,
                 title = it.title.ifEmpty { args.name.orEmpty() },
-                starVisible = args.isId3,
+                starVisible = true,
                 radioAvailable = args.radioAvailable,
             )
         }
 
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            val tracks = try {
-                albumLoader(args)
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") expected: Exception) {
-                null
-            }
+            val tracks = loadTracksSafely(args)
 
             if (tracks == null) {
                 // A failed refresh must not destroy an album that is already on screen - only
@@ -134,26 +150,43 @@ class AlbumDetailViewModel(application: Application) : AndroidViewModel(applicat
                 )
             }
 
-            val albumId = args.id
-            if (albumId != null && args.isId3) {
-                val meta = try {
-                    metaLoader(albumId)
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (
-                    @Suppress("TooGenericExceptionCaught", "SwallowedException") expected: Exception,
-                ) {
-                    null
-                }
-                if (meta != null) {
-                    _uiState.update {
-                        it.copy(
-                            notes = meta.notes,
-                            isStarred = meta.starred ?: it.isStarred,
-                        )
-                    }
-                }
-            }
+            loadMetaIfApplicable(args)
+        }
+    }
+
+    /** Dispatches to the offline or online loader and turns any failure into `null`, exactly
+     *  as [load] did inline before this was extracted to keep `load`'s own complexity down. */
+    private suspend fun loadTracksSafely(args: AlbumDetailArgs): List<Track>? = try {
+        if (args.isDownloadedAlbum) {
+            args.id?.let { offlineAlbumLoader(it) } ?: emptyList()
+        } else {
+            albumLoader(args)
+        }
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") expected: Exception) {
+        null
+    }
+
+    /** The slower notes/starred fold-in - id3-only, and never for a downloaded album (which
+     *  never called `loadAlbumInfo`/`loadAlbumStarred` on the legacy screen either). */
+    private suspend fun loadMetaIfApplicable(args: AlbumDetailArgs) {
+        val albumId = args.id
+        if (albumId == null || !args.isId3 || args.isDownloadedAlbum) return
+
+        val meta = try {
+            metaLoader(albumId)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") expected: Exception) {
+            null
+        } ?: return
+
+        _uiState.update {
+            it.copy(
+                notes = meta.notes,
+                isStarred = meta.starred ?: it.isStarred,
+            )
         }
     }
 

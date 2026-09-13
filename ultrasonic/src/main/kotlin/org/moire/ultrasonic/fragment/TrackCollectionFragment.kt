@@ -160,25 +160,29 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
     private val navArgs: TrackCollectionFragmentArgs by navArgs()
 
-    // --- Compose Album Detail (issue #10 phase 4A) ---------------------------------------
-    // Only the id3 album-detail presentation of this Fragment switches to Compose; every
-    // other mode (Liked Songs, All Songs, genre / artist / folder collections, playlists,
-    // the offline DownloadedAlbumFragment) stays on the unchanged View path below. The
-    // `trackCollectionFragment` destination id, its arguments and every caller are untouched.
+    // --- Compose Album Detail (issue #10 phase 4A; folder-mode + offline in phase 4D) ------
+    // The album-detail presentation of this Fragment switches to Compose for every isAlbum
+    // mode (id3, folder, and the offline DownloadedAlbumFragment); every other mode (Liked
+    // Songs, All Songs, genre / artist / folder collections, playlists) stays on the unchanged
+    // View path below. The `trackCollectionFragment` destination id, its arguments and every
+    // caller are untouched.
     private val albumDetailViewModel: AlbumDetailViewModel by viewModels()
     private val playbackUiStateHolder: PlaybackUiStateHolder by inject()
     private val fallbackChromeInset = MutableStateFlow(0)
 
-    /** Subclasses that reuse this Fragment for a non-server album (DownloadedAlbumFragment)
-     *  opt out - their data path is local-only and unrelated. */
+    /** A generic escape hatch for a subclass that reuses this Fragment for something Compose
+     *  Album Detail shouldn't render at all. No current subclass opts out. */
     protected open val allowComposeAlbumDetail: Boolean = true
+
+    /** True only for [DownloadedAlbumFragment] (issue #10 phase 4D): tracks load from the
+     *  local offline database instead of the network. */
+    protected open val isDownloadedAlbumSource: Boolean = false
 
     private val isComposeAlbumMode: Boolean
         get() = shouldUseComposeAlbumDetail(
             allow = allowComposeAlbumDetail,
             isAlbum = navArgs.isAlbum,
             hasPlaylistId = navArgs.playlistId != null,
-            usesId3 = ActiveServerProvider.shouldUseId3Tags(),
         )
 
     private val isMediaLibrarySongs: Boolean
@@ -1381,6 +1385,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 isId3 = ActiveServerProvider.shouldUseId3Tags(),
                 radioAvailable = !isOffline(),
                 refresh = navArgs.refresh,
+                isDownloadedAlbum = isDownloadedAlbumSource,
             )
         )
 
@@ -1659,17 +1664,28 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
         /**
          * The single criterion that routes this Fragment's album-detail presentation to the
-         * Compose screen (issue #10 phase 4A): it is the `isAlbum` mode, it is not a playlist,
-         * the server is in id3 mode (so `getAlbumAsDir` returns a flat track list), and the
-         * concrete Fragment allows it (DownloadedAlbumFragment does not). Every other mode -
-         * Liked Songs, All Songs, genre / random / video / daily-mix / folder collections,
-         * playlists - keeps the legacy `MultiListFragment` View path.
+         * Compose screen: it is the `isAlbum` mode, it is not a playlist, and the concrete
+         * Fragment allows it (no current subclass opts out). Every other mode - Liked Songs,
+         * All Songs, genre / random / video / daily-mix / folder collections, playlists - keeps
+         * the legacy `MultiListFragment` View path.
+         *
+         * Issue #10 phase 4A shipped this gated to id3 servers only (`getAlbumAsDir` returns a
+         * flat track list) and excluded `DownloadedAlbumFragment`. Phase 4D lifted both
+         * restrictions: [org.moire.ultrasonic.model.AlbumDetailViewModel] already loads
+         * folder-mode albums via `getMusicDirectory` and offline albums via the local database.
+         * One known, documented, narrow limitation remains from 4A: a folder-mode album whose
+         * directory contains nested sub-folders (e.g. a disc-per-folder layout) shows only the
+         * tracks directly in that folder, same as the ViewModel's existing `filterIsInstance
+         * <Track>()` - the legacy screen's `AlbumRowDelegate` sub-folder rows are not
+         * reproduced here. This is uncommon (most folder libraries are flat, and multi-disc
+         * folder albums typically use a `discNumber` file tag instead of sub-folders, which
+         * this screen already handles), so it is shipped as a disclosed limitation rather than
+         * a blocking gap - see the phase 4D report.
          */
         fun shouldUseComposeAlbumDetail(
             allow: Boolean,
             isAlbum: Boolean,
             hasPlaylistId: Boolean,
-            usesId3: Boolean,
-        ): Boolean = allow && isAlbum && !hasPlaylistId && usesId3
+        ): Boolean = allow && isAlbum && !hasPlaylistId
     }
 }

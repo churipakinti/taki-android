@@ -53,8 +53,12 @@ class AlbumDetailViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun args(id: String = "al1", name: String? = "Kind of Blue", isId3: Boolean = true) =
-        AlbumDetailArgs(id = id, name = name, isId3 = isId3)
+    private fun args(
+        id: String = "al1",
+        name: String? = "Kind of Blue",
+        isId3: Boolean = true,
+        isDownloadedAlbum: Boolean = false,
+    ) = AlbumDetailArgs(id = id, name = name, isId3 = isId3, isDownloadedAlbum = isDownloadedAlbum)
 
     private fun track(
         id: String,
@@ -81,10 +85,12 @@ class AlbumDetailViewModelTest {
         meta: suspend (String) -> AlbumDetailViewModel.AlbumMeta = {
             AlbumDetailViewModel.AlbumMeta(null, null)
         },
+        offlineLoader: suspend (String) -> List<Track> = { listOf(track("1"), track("2")) },
         loader: suspend (AlbumDetailArgs) -> List<Track>? = { listOf(track("1"), track("2")) },
     ) = AlbumDetailViewModel(app).apply {
         albumLoader = loader
         metaLoader = meta
+        offlineAlbumLoader = offlineLoader
     }
 
     private fun trackRows(model: AlbumDetailViewModel) =
@@ -322,5 +328,95 @@ class AlbumDetailViewModelTest {
         assertTrue(model.uiState.value.isStarred)
         model.setStarredOptimistic(false)
         assertFalse(model.uiState.value.isStarred)
+    }
+
+    // --- Phase 4D: folder-mode + offline/downloaded albums ------------------------------
+
+    @Test
+    fun `a folder-mode album (isId3 = false) still loads and projects normally`() = runTest {
+        var loaderArgsSeen: AlbumDetailArgs? = null
+        val model = vm(loader = { a -> loaderArgsSeen = a; listOf(track("1"), track("2")) })
+        model.load(args(isId3 = false))
+        advanceUntilIdle()
+
+        assertEquals(false, loaderArgsSeen?.isId3)
+        val state = model.uiState.value
+        assertEquals(2, state.songCount)
+        assertFalse(state.isLoading)
+        assertFalse(state.loadFailed)
+    }
+
+    @Test
+    fun `folder-mode albums still show the star, same as id3 albums`() = runTest {
+        val model = vm()
+        model.load(args(isId3 = false))
+        advanceUntilIdle()
+        assertTrue(model.uiState.value.starVisible)
+    }
+
+    @Test
+    fun `folder-mode albums skip the notes-starred network fold-in, same as before`() = runTest {
+        var metaCalls = 0
+        val model = vm(meta = { metaCalls++; AlbumDetailViewModel.AlbumMeta(null, null) })
+        model.load(args(isId3 = false))
+        advanceUntilIdle()
+        assertEquals(0, metaCalls)
+    }
+
+    @Test
+    fun `a downloaded album loads from the offline loader, not the network one`() = runTest {
+        var onlineCalls = 0
+        var offlineCalls = 0
+        val model = vm(
+            loader = { onlineCalls++; listOf(track("online")) },
+            offlineLoader = { offlineCalls++; listOf(track("local-1"), track("local-2")) },
+        )
+        model.load(args(isDownloadedAlbum = true))
+        advanceUntilIdle()
+
+        assertEquals(0, onlineCalls)
+        assertEquals(1, offlineCalls)
+        assertEquals(2, model.uiState.value.songCount)
+    }
+
+    @Test
+    fun `a downloaded album shows the star but skips the notes-starred network fold-in`() = runTest {
+        var metaCalls = 0
+        val model = vm(
+            meta = { metaCalls++; AlbumDetailViewModel.AlbumMeta("notes", true) },
+            offlineLoader = { listOf(track("local")) },
+        )
+        // isId3 = true here on purpose: isDownloadedAlbum must win regardless of isId3.
+        model.load(args(isId3 = true, isDownloadedAlbum = true))
+        advanceUntilIdle()
+
+        val state = model.uiState.value
+        assertEquals(0, metaCalls)
+        assertTrue(state.starVisible)
+        assertNull(state.notes)
+    }
+
+    @Test
+    fun `a downloaded album with no tracks ends as a finished empty album, not a crash`() = runTest {
+        val model = vm(offlineLoader = { emptyList() })
+        model.load(args(isDownloadedAlbum = true))
+        advanceUntilIdle()
+
+        val state = model.uiState.value
+        assertFalse(state.isLoading)
+        assertTrue(state.showEmpty)
+    }
+
+    @Test
+    fun `refreshing a downloaded album re-reads the offline loader`() = runTest {
+        var offlineCalls = 0
+        val model = vm(offlineLoader = { offlineCalls++; listOf(track("local")) })
+        model.load(args(isDownloadedAlbum = true))
+        advanceUntilIdle()
+        assertEquals(1, offlineCalls)
+
+        model.refresh()
+        advanceUntilIdle()
+        assertEquals(2, offlineCalls)
     }
 }

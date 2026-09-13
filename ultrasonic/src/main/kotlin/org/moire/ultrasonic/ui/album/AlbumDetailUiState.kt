@@ -40,8 +40,9 @@ data class AlbumDetailUiState(
     /** Coil model for the hero cover, or null for the neutral placeholder. */
     val artworkModel: CoverArtRequest? = null,
     val isStarred: Boolean = false,
-    /** The album heart is shown only for the id3 album mode, exactly like the legacy
-     *  `AlbumDetailHeaderBinder.onToggleStar != null` gate (issue #15). */
+    /** The album heart is shown for every album mode (id3, folder, offline/downloaded) -
+     *  `AlbumDetailHeaderBinder` registers `onToggleStar` unconditionally for `isAlbum`, with no
+     *  id3 gate (issue #15). */
     val starVisible: Boolean = false,
     /** Album notes/review, once the slower `getAlbumInfo` call resolved to something non-empty.
      *  Drives the "Information" action's visibility, as in the legacy header. */
@@ -101,6 +102,11 @@ data class AlbumDetailArgs(
      *  (computed by the host so the ViewModel stays free of the server provider). */
     val radioAvailable: Boolean = true,
     val refresh: Boolean = false,
+    /** True only for `DownloadedAlbumFragment` (issue #10 phase 4D): tracks load from the local
+     *  offline database, exactly like the legacy `TrackCollectionModel.getDownloadedAlbumTracks`
+     *  - no network call at all, and no notes/starred fold-in (the legacy screen never called
+     *  `loadAlbumInfo`/`loadAlbumStarred` either). */
+    val isDownloadedAlbum: Boolean = false,
 )
 
 /** The four secondary actions on the Album Detail overflow (issue #16 parity). */
