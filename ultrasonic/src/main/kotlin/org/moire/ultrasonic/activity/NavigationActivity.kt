@@ -662,11 +662,11 @@ class NavigationActivity : ScopeActivity() {
         /**
          * Whether a destination draws its own top chrome and the shared Material toolbar must
          * be hidden (`supportActionBar?.hide()`). Every Compose screen owns its header, so it
-         * belongs here - including the Box Sets list (`collectionListFragment`) and
-         * `collectionDetailFragment` (issue #10 phase 4B: each draws a lightweight Taki top row
-         * on the dark canvas, no toolbar). Pure so `NavigationChromeSelectionTest` can lock it;
-         * the Activity still applies it in `onDestinationChanged` (only runtime validation
-         * proves the `ActionBar.hide()` call itself).
+         * belongs here - including the Box Sets list (`collectionListFragment`),
+         * `collectionDetailFragment` (issue #10 phase 4B) and `artistDetailFragment` (issue #10
+         * phase 4C): each draws a lightweight Taki top row on the dark canvas, no toolbar. Pure
+         * so `NavigationChromeSelectionTest` can lock it; the Activity still applies it in
+         * `onDestinationChanged` (only runtime validation proves the `ActionBar.hide()` call).
          */
         fun hidesSupportActionBar(
             destinationId: Int,
@@ -681,6 +681,7 @@ class NavigationActivity : ScopeActivity() {
             R.id.playerFragment,
             R.id.lyricsFragment,
             R.id.artistListFragment,
+            R.id.artistDetailFragment,
             R.id.albumListFragment,
             R.id.selectGenreFragment,
             R.id.collectionListFragment,

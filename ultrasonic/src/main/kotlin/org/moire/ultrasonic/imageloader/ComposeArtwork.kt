@@ -27,3 +27,20 @@ fun MusicDirectory.Child.coverArtRequestOrNull(large: Boolean = false): CoverArt
     // size 0 -> server default / no downsample, matching the existing carousel delegates.
     return CoverArtRequest(id, key, size = 0)
 }
+
+/**
+ * The Coil model for an artist's own art, using the artist-name-derived cache key
+ * ([FileUtil.getArtistArtKey]) the View-based `SimilarArtistDelegate` / `ArtistDetailFragment`
+ * use. Returns `null` when there is no cover-art id, so the caller shows the placeholder.
+ */
+fun artistArtRequestOrNull(
+    artistName: String?,
+    coverArtId: String?,
+    large: Boolean = false,
+): CoverArtRequest? {
+    if (coverArtId.isNullOrEmpty()) return null
+    // getArtistArtKey hashes a path under the media root; if that root cannot initialise
+    // (a resource-less unit test), degrade to the neutral placeholder rather than crash.
+    val key = runCatching { FileUtil.getArtistArtKey(artistName, large) }.getOrNull() ?: return null
+    return CoverArtRequest(coverArtId, key, size = 0)
+}

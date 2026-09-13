@@ -7,7 +7,6 @@
 
 package org.moire.ultrasonic.ui.album
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,7 +27,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,6 +56,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import kotlinx.collections.immutable.persistentListOf
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.ui.components.DetailPrimaryPlayButton
 import org.moire.ultrasonic.ui.components.EmptyState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiDiscHeader
@@ -246,7 +245,10 @@ private fun DetailActionRow(state: AlbumDetailUiState, actions: AlbumDetailActio
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PrimaryPlayButton(onClick = actions.onPlay)
+        DetailPrimaryPlayButton(
+            onClick = actions.onPlay,
+            contentDescription = stringResource(R.string.album_play_description),
+        )
         Spacer(Modifier.weight(1f))
         TakiIconButton(
             onClick = actions.onShuffle,
@@ -271,25 +273,6 @@ private fun DetailActionRow(state: AlbumDetailUiState, actions: AlbumDetailActio
             )
         }
         OverflowAction(state, actions)
-    }
-}
-
-/** V2 §2.3 / §6: an ivory circle with a dark glyph - not a promotional green fill. */
-@Composable
-private fun PrimaryPlayButton(onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(TakiTheme.dimensions.detailPrimaryAction)
-            .background(TakiTheme.colors.ivory, CircleShape)
-            .clickable(role = Role.Button, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.media_start),
-            contentDescription = stringResource(R.string.album_play_description),
-            tint = TakiTheme.colors.black,
-            modifier = Modifier.size(TakiTheme.dimensions.iconLg),
-        )
     }
 }
 

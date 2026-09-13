@@ -70,6 +70,9 @@ data class TakiDimensions(
     /** `screen_header_height` - the lightweight screen-owned top row (back + optional title)
      *  a Compose back-nav sub-screen draws instead of the Material app bar (issue #10 phase 4B). */
     val screenHeaderHeight: Dp = 56.dp,
+    /** `artist_hero_artwork` - the Artist Detail identity hero, a fixed centred rounded square
+     *  (issue #10 phase 4C). Smaller than the Album Detail responsive hero. */
+    val artistHeroArtwork: Dp = 220.dp,
     /** `collection_hero_cover` - one member cover in the Collection Detail identity mark
      *  (issue #10 phase 4B): three of these fanned horizontally, front one centred. */
     val collectionHeroCover: Dp = 112.dp,

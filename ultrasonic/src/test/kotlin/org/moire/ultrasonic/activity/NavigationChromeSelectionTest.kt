@@ -17,11 +17,11 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Locks [NavigationActivity.hidesSupportActionBar] - the rule that decides whether the shared
  * Material toolbar is hidden because the destination draws its own top chrome. Regression
- * guard for issue #10 phase 4B: the Box Sets list (`collectionListFragment`) and
- * `collectionDetailFragment` must both be in this set (each renders a lightweight Compose top
- * row), so the legacy olive toolbar never appears across the Library -> Box Sets -> Collection
- * Detail -> Album Detail flow. Artist Detail is deliberately left on its legacy behaviour
- * until its own migration.
+ * guard for issue #10: the Box Sets list (`collectionListFragment`, phase 4B),
+ * `collectionDetailFragment` (phase 4B) and `artistDetailFragment` (phase 4C) must each be in
+ * this set (each renders a lightweight Compose top row), so the legacy olive toolbar never
+ * appears across the Library -> Box Sets -> Collection Detail -> Album Detail /
+ * Artist Detail flow.
  *
  * This can only assert the *selection*; that the Activity then actually calls
  * `supportActionBar?.hide()` is Activity-runtime behaviour, validated on the Pixel 7.
@@ -64,12 +64,20 @@ class NavigationChromeSelectionTest {
     }
 
     @Test
-    fun `artist detail keeps its legacy toolbar until its own migration`() {
-        assertFalse(hides(R.id.artistDetailFragment))
+    fun `artist detail hides the shared toolbar - it draws its own Compose header (phase 4C)`() {
+        assertTrue(hides(R.id.artistDetailFragment))
     }
 
     @Test
-    fun `a plain browsing destination keeps the shared toolbar`() {
+    fun `the whole browse-to-detail flow hides the shared toolbar`() {
+        assertTrue(hides(R.id.collectionListFragment))
+        assertTrue(hides(R.id.collectionDetailFragment))
+        assertTrue(hides(R.id.artistDetailFragment))
+        assertTrue(hides(R.id.trackCollectionFragment, albumDetail = true))
+    }
+
+    @Test
+    fun `a plain browsing track-collection mode keeps the shared toolbar`() {
         assertFalse(hides(R.id.trackCollectionFragment))
     }
 }

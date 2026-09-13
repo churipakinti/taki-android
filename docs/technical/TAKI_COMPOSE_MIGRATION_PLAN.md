@@ -1088,8 +1088,67 @@ presentation swap: the box-set screen keeps the exact semantics it always had.
   / `view_stacked_artwork` / `CollectionResolver` / strings are shared and kept.
   `NavigationActivity`: the toolbar-hide rule is the pure companion `hidesSupportActionBar(...)`
   (extracted, `NavigationChromeSelectionTest` locks it); `collectionListFragment` and
-  `collectionDetailFragment` are both in its set. Artist Detail stays on its legacy toolbar until
-  its own migration.
+  `collectionDetailFragment` are both in its set.
+
+#### Step 5c — Artist Detail (issue #10 phase 4C)
+
+**Status: DONE — automated gates green + Pixel 7 validated (not yet committed).** The screen
+that confirmed a small shared detail primitive (`DetailPrimaryPlayButton`) is now justified.
+
+- **Audit.** Legacy `ArtistDetailFragment` (`artist_detail.xml` in a `NestedScrollView` +
+  `SwipeRefreshLayout`): a 300dp full-bleed artwork hero with the name overlaid + a
+  scroll-collapse toolbar title; a right-aligned Play(FAB)/Radio/Download cluster; sections =
+  "Popular" (top 5 tracks, `ArtistPopularTrackDelegate`, tap = play-from-index over the full
+  fetched list, no context menu), "Albums" (horizontal `HomeAlbumDelegate` cards, year-desc
+  sort, tap -> `toTrackCollection(isAlbum=true)`), "About" (HTML-stripped `ArtistInfo.biography`,
+  5-line collapse past 320 chars), "Similar artists" (`SimilarArtistDelegate`, tap ->
+  `toArtistDetail`); a "no music" empty state; pull-to-refresh; the issue #16 cover-art gap-fill
+  (`getArtists` resolves the artist's own id when the caller arrives without one); load-once
+  across rotation.
+- **`ArtistDetailViewModel`** (`ViewModel` + `KoinComponent`, `by viewModels()`) - one
+  `StateFlow<ArtistDetailUiState>`. 1:1 port of `ArtistDetailModel`: the four parallel server
+  calls, the top-songs -> `search` -> first-albums track fallback chain, year-desc album sort,
+  ranked top-5 popular preview, HTML-stripped biography, the #16 gap-fill. One `dataLoader` seam
+  (the whole fetch, faked in tests) + a `heroArtwork` seam (the artist-name cache key, which
+  needs a media-root `Storage` the resource-less unit tests do not have). `artistArtRequestOrNull`
+  wraps `getArtistArtKey` in `runCatching` so a missing root degrades to the placeholder.
+  load-once (`loadedArtistId` only set on success; empty artists included); `refresh()` no-ops
+  while a load runs and keeps the sections visible.
+- **`ArtistDetailScreen`** - `TakiScreenHeader` (back only), a centred `artist_hero_artwork`
+  220dp `radius_md` identity square (rounded, not a circle: Navidrome serves real, roughly
+  square band photos that crop badly in a circle - decided from device data), the name once
+  (`Taki.Hero`, 2 lines), an "N albums" caption, then the Album-Detail action pattern
+  (`DetailPrimaryPlayButton` left, Radio + Download receding right - not the legacy right-aligned
+  cluster), then the four sections as one `LazyColumn` reusing `TakiSectionHeader`,
+  `TakiTrackRow` (Popular), `AlbumShelfItem` (Albums), a private circular `SimilarArtistItem`
+  (Similar), and a local collapsible `BiographyBlock`. `PullToRefreshBox` on the same pattern.
+  No `PlaybackUiStateHolder` (legacy showed no current-track marker on the preview). No
+  collapsing-toolbar title (Taki detail screens don't use one).
+- **`ArtistDetailFragment`** thin host: `artistId` / `artistName` / `artistCoverArt` args
+  unchanged; `playTracksAndToast(isArtist=true)`, the verbatim `ArtistRadioQueueBuilder` flow
+  (its toasts + `suggestedPlaylistName`), `DownloadUtil.justDownload(isArtist=true)`,
+  `toTrackCollection` (album), `toArtistDetail` (similar) all route through the same unchanged
+  managers/services. `artistDetailFragment` added to `hidesSupportActionBar`;
+  `NavigationChromeSelectionTest` updated (was `assertFalse`, now `assertTrue`).
+- **Shared-primitive decision.** Extracted only **`DetailPrimaryPlayButton`** (the ivory 64dp
+  Play circle - byte-identical between Album and Artist Detail, no layout coupling; Album Detail
+  adopted it, goldens unchanged). **Not** extracted: `DetailHero` and `DetailActionRow` - the
+  content below the title (Album's tappable-artist line + 4-part metadata vs Artist's single
+  album count) and the secondary-icon sets (shuffle/star/info/overflow vs radio/download) differ
+  enough that a shared slot-lambda version reads worse on both screens. Revisit if a third
+  detail screen wants the same shape.
+- 42 new tests (6 state / 12 VM / 11 Compose-UI / 5 navigation / +1 chrome; 7 Roborazzi goldens:
+  `artist_standard` / `artist_long_name` / `artist_no_artwork` / `artist_only_albums` /
+  `artist_empty` / `artist_compact_360` / `artist_font_1_30`). 541 total. New token
+  `artist_hero_artwork` 220dp + `TakiTokensTest` assertion. Deleted (grep-verified zero
+  consumers): `ArtistDetailModel`, `ArtistPopularTrackDelegate`, `HomeAlbumDelegate`,
+  `SimilarArtistDelegate`, and the four Artist-Detail-only layouts. detekt 53 -> 49 (dead legacy
+  removed), lint baseline 77 -> 75.
+- **Adjacent legacy still reachable (out of scope, for the #10 Migration Coverage Audit):**
+  `ArtistListFragment` (the artist grid, reached from Library "Artists" and used as
+  `mediaLibraryFragment`); the generic `TrackCollectionFragment` non-album modes (Liked Songs,
+  All Songs, genre, random, videos, daily mix, folder collections, playlist detail);
+  `DownloadedAlbumFragment`; `PlayerFragment` / `NowPlayingFragment`.
 
 ### Step 6 — Mini-player integration
 

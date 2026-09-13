@@ -81,6 +81,12 @@
          content_navigation_header height. -->
     <dimen name="screen_header_height">56dp</dimen>
 
+    <!-- Artist Detail identity hero (issue #10 phase 4C). A fixed centred square - smaller than
+         the Album Detail responsive hero so the section-heavy artist screen keeps its first
+         section near the fold; rounded (radius_md), not a circle, since artist art is often
+         album-derived and crops badly in a circle. -->
+    <dimen name="artist_hero_artwork">220dp</dimen>
+
     <!-- Collection Detail (issue #10 phase 4B). A structural box-set identity mark, not an
          album hero: up to 3 member covers fanned *horizontally* (front cover centred and
          dominant, the other two peeking left/right by one overlap step), so the cluster reads
