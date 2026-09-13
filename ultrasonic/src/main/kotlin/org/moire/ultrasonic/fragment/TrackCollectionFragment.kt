@@ -62,6 +62,7 @@ import org.moire.ultrasonic.ui.album.AlbumDetailScreen
 import org.moire.ultrasonic.ui.album.AlbumOverflowItem
 import org.moire.ultrasonic.ui.album.TrackContextAction
 import org.moire.ultrasonic.ui.album.TrackContextMenuState
+import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.adapters.AlbumDetailHeaderBinder
@@ -186,6 +187,25 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private val useLibraryTrackRows: Boolean
         get() = isMediaLibrarySongs || navArgs.genreName != null || navArgs.dailyMix
 
+    // --- Shell-continuity fix (issue #10 coverage audit) ----------------------------------
+    // Genre (direct entry from SelectGenreFragment) and Daily Mix are the only two remaining
+    // legacy TrackCollection modes that still showed the shared olive Material toolbar - every
+    // other legacy mode already hides it (isLibraryTrackCollection/isAlbumDetail). This draws a
+    // lightweight Compose TakiScreenHeader instead, matching NavigationActivity
+    // .isLightweightHeaderTrackCollection; the legacy list/adapter/data path is untouched.
+    // Reached only via navArgs (genre via the filter bar sets selectedGenreName, not
+    // navArgs.genreName, so that in-place sort switch is deliberately excluded here - it already
+    // gets the shared content_navigation_header via isLibraryTrackCollection/libraryRoot).
+    private val isLightweightHeaderTrackCollection: Boolean
+        get() = navArgs.dailyMix || navArgs.genreName != null
+
+    private val lightweightHeaderTitle: String
+        get() = if (navArgs.dailyMix) {
+            getString(R.string.home_mix_title)
+        } else {
+            navArgs.genreName.orEmpty()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (sortOrder == null && navArgs.libraryRoot) {
@@ -207,6 +227,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             return
         }
         super.onViewCreated(view, savedInstanceState)
+
+        bindLightweightHeader(view)
 
         albumButtons = view.findViewById(R.id.menu_album)
 
@@ -1294,6 +1316,29 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         if (isComposeAlbumMode) return createComposeAlbumView()
         val layout = if (navArgs.libraryRoot) R.layout.list_layout_track_filterable else mainLayout
         return inflater.inflate(layout, container, false)
+    }
+
+    // ---- Shell-continuity fix: Genre / Daily Mix lightweight header (issue #10) --------------
+
+    /**
+     * Draws the Compose [TakiScreenHeader] (back + title) into the `track_collection_header`
+     * `ComposeView` that [R.layout.list_layout_track] declares GONE by default. A no-op for
+     * every mode except Genre/Daily Mix - the legacy list/adapter below is never touched.
+     */
+    private fun bindLightweightHeader(view: View) {
+        if (!isLightweightHeaderTrackCollection) return
+        view.findViewById<ComposeView>(R.id.track_collection_header)?.apply {
+            isVisible = true
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    TakiScreenHeader(
+                        onBack = { findNavController().navigateUp() },
+                        title = lightweightHeaderTitle,
+                    )
+                }
+            }
+        }
     }
 
     // ---- Compose Album Detail (issue #10 phase 4A) ------------------------------------------

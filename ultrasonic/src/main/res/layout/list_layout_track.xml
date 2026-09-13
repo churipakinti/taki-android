@@ -4,6 +4,17 @@
     a:layout_height="fill_parent"
     a:orientation="vertical" >
 
+    <!-- Issue #10 shell-continuity fix: Genre and Daily Mix draw a lightweight Compose
+         TakiScreenHeader here instead of the shared Material toolbar (see
+         TrackCollectionFragment.bindLightweightHeader / NavigationActivity
+         .isLightweightHeaderTrackCollection). GONE and unbound for every other mode that uses
+         this layout, so nothing changes for them. -->
+    <androidx.compose.ui.platform.ComposeView
+        a:id="@+id/track_collection_header"
+        a:layout_width="match_parent"
+        a:layout_height="wrap_content"
+        a:visibility="gone" />
+
     <include layout="@layout/list_parts_empty_view" />
     <include layout="@layout/list_parts_recycler" />
     <include layout="@layout/track_buttons" />

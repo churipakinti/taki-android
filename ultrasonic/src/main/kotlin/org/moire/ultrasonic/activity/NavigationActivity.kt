@@ -231,6 +231,16 @@ class NavigationActivity : ScopeActivity() {
                     )
             val isAlbumDetail = destination.id == R.id.trackCollectionFragment &&
                 arguments?.getBoolean("isAlbum") == true
+            // Genre and Daily Mix (issue #10 shell-continuity fix): same "hide the shared
+            // toolbar" treatment as isAlbumDetail/isLibraryTrackCollection, but the Fragment
+            // draws its own back+title header (see hidesSupportActionBar's kdoc) instead of the
+            // shared content_navigation_header, so this flag is deliberately NOT added to
+            // libraryOnlyDestination/showsContentBackButton below.
+            val isLightweightHeaderTrackCollection = destination.id == R.id.trackCollectionFragment &&
+                (
+                    arguments?.getBoolean("dailyMix") == true ||
+                        !arguments?.getString("genreName").isNullOrEmpty()
+                    )
 
             // The nav graph is flat, so AndroidX's setupWithNavController() only checks
             // destination.id against the 4 top-level menu items themselves - it can't know that
@@ -261,6 +271,7 @@ class NavigationActivity : ScopeActivity() {
                 destination.id,
                 isLibraryTrackCollection,
                 isAlbumDetail,
+                isLightweightHeaderTrackCollection,
             )
             if (usesContentHeader) {
                 supportActionBar?.hide()
@@ -664,14 +675,23 @@ class NavigationActivity : ScopeActivity() {
          * be hidden (`supportActionBar?.hide()`). Every Compose screen owns its header, so it
          * belongs here - including the Box Sets list (`collectionListFragment`),
          * `collectionDetailFragment` (issue #10 phase 4B) and `artistDetailFragment` (issue #10
-         * phase 4C): each draws a lightweight Taki top row on the dark canvas, no toolbar. Pure
-         * so `NavigationChromeSelectionTest` can lock it; the Activity still applies it in
+         * phase 4C): each draws a lightweight Taki top row on the dark canvas, no toolbar.
+         * `isLightweightHeaderTrackCollection` covers the same treatment for
+         * `trackCollectionFragment`'s Genre and Daily Mix modes (issue #10 shell-continuity
+         * fix): the legacy list/adapter stays exactly as-is, but the Fragment draws its own
+         * [org.moire.ultrasonic.ui.components.TakiScreenHeader] instead of the Material toolbar,
+         * same as it does for Compose Album Detail's `isAlbumDetail` - the difference is only
+         * *where* the back+title row is drawn (Fragment-owned Compose view here, not the shared
+         * `content_navigation_header`), because unlike `isAlbumDetail`/`isLibraryTrackCollection`
+         * this mode needs a visible title next to the back arrow. Pure so
+         * `NavigationChromeSelectionTest` can lock it; the Activity still applies it in
          * `onDestinationChanged` (only runtime validation proves the `ActionBar.hide()` call).
          */
         fun hidesSupportActionBar(
             destinationId: Int,
             isLibraryTrackCollection: Boolean,
             isAlbumDetail: Boolean,
+            isLightweightHeaderTrackCollection: Boolean = false,
         ): Boolean = destinationId in setOf(
             R.id.homeFragment,
             R.id.mainFragment,
@@ -689,7 +709,7 @@ class NavigationActivity : ScopeActivity() {
             R.id.serverSelectorFragment,
             R.id.editServerFragment,
             R.id.aboutFragment,
-        ) || isLibraryTrackCollection || isAlbumDetail ||
+        ) || isLibraryTrackCollection || isAlbumDetail || isLightweightHeaderTrackCollection ||
             destinationId == R.id.settingsFragment ||
             destinationId == R.id.equalizerFragment
     }

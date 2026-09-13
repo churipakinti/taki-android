@@ -21,7 +21,11 @@ import org.robolectric.RobolectricTestRunner
  * `collectionDetailFragment` (phase 4B) and `artistDetailFragment` (phase 4C) must each be in
  * this set (each renders a lightweight Compose top row), so the legacy olive toolbar never
  * appears across the Library -> Box Sets -> Collection Detail -> Album Detail /
- * Artist Detail flow.
+ * Artist Detail flow. Also locks the shell-continuity fix for `trackCollectionFragment`'s
+ * Genre and Daily Mix modes (`isLightweightHeaderTrackCollection`): unlike
+ * `isAlbumDetail`/`isLibraryTrackCollection`, these draw a Fragment-owned Compose
+ * `TakiScreenHeader` rather than the shared `content_navigation_header`, but they must hide the
+ * Material toolbar the same way.
  *
  * This can only assert the *selection*; that the Activity then actually calls
  * `supportActionBar?.hide()` is Activity-runtime behaviour, validated on the Pixel 7.
@@ -29,8 +33,17 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class NavigationChromeSelectionTest {
 
-    private fun hides(id: Int, libraryTrackCollection: Boolean = false, albumDetail: Boolean = false) =
-        NavigationActivity.hidesSupportActionBar(id, libraryTrackCollection, albumDetail)
+    private fun hides(
+        id: Int,
+        libraryTrackCollection: Boolean = false,
+        albumDetail: Boolean = false,
+        lightweightHeaderTrackCollection: Boolean = false,
+    ) = NavigationActivity.hidesSupportActionBar(
+        id,
+        libraryTrackCollection,
+        albumDetail,
+        lightweightHeaderTrackCollection,
+    )
 
     @Test
     fun `collection detail hides the shared toolbar - it draws its own Compose top row`() {
@@ -79,5 +92,25 @@ class NavigationChromeSelectionTest {
     @Test
     fun `a plain browsing track-collection mode keeps the shared toolbar`() {
         assertFalse(hides(R.id.trackCollectionFragment))
+    }
+
+    @Test
+    fun `genre and daily mix hide the shared toolbar - they draw their own lightweight header`() {
+        assertTrue(hides(R.id.trackCollectionFragment, lightweightHeaderTrackCollection = true))
+    }
+
+    @Test
+    fun `a destination that doesn't already hide the toolbar isn't affected by an unset flag`() {
+        // createPlaylistFragment isn't in the base set and none of the trackCollection-only
+        // flags apply to it - it must keep its existing (shown) toolbar.
+        assertFalse(hides(R.id.createPlaylistFragment))
+    }
+
+    @Test
+    fun `playlist detail and liked songs are unaffected by the lightweight header flag`() {
+        // Playlist detail: none of the three flags apply to it, it keeps its existing behaviour.
+        assertFalse(hides(R.id.trackCollectionFragment))
+        // Liked Songs already hid the toolbar via isLibraryTrackCollection before this fix.
+        assertTrue(hides(R.id.trackCollectionFragment, libraryTrackCollection = true))
     }
 }
