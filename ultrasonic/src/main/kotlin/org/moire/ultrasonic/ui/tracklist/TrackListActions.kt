@@ -32,6 +32,10 @@ data class TrackListActions(
     val onPlayAll: () -> Unit,
     val onRefresh: () -> Unit,
     val onLoadMore: () -> Unit,
+    /** Only invoked when [TrackListUiState.headerTitle] is non-null (Genre tracks/Daily Mix,
+     *  issue #10 phase 4F2) - the Compose-drawn header's back arrow, exactly like the legacy
+     *  `bindLightweightHeader`'s `onBack = { findNavController().navigateUp() }`. */
+    val onBack: () -> Unit = {},
 ) {
     companion object {
         val Noop = TrackListActions(
@@ -43,6 +47,7 @@ data class TrackListActions(
             onPlayAll = {},
             onRefresh = {},
             onLoadMore = {},
+            onBack = {},
         )
     }
 }

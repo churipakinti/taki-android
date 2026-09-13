@@ -29,6 +29,7 @@ import org.moire.ultrasonic.domain.Genre
 import org.moire.ultrasonic.domain.SearchCriteria
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
+import org.moire.ultrasonic.service.DailyMixQueueBuilder
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.tracklist.TrackListRow
 import org.moire.ultrasonic.ui.tracklist.TrackListUiState
@@ -37,25 +38,35 @@ import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.view.SortOrder
 
 /**
- * Owns the Compose Track List state (issue #10 phase 4F1) as one
- * [StateFlow]<[TrackListUiState]>. Backs both the "Songs" destination (`libraryRoot`) and the
- * dedicated Liked Songs destination (`getStarred`), a 1:1 projection of the relevant
+ * Owns the Compose Track List state (issue #10 phase 4F1; Genre tracks/Daily Mix in phase 4F2)
+ * as one [StateFlow]<[TrackListUiState]>. Backs the "Songs" destination (`libraryRoot`), the
+ * dedicated Liked Songs destination (`getStarred`), the standalone Genre tracks destination
+ * (`navArgs.genreName`), and Daily Mix (`navArgs.dailyMix`) - a 1:1 projection of the relevant
  * `TrackCollectionModel` methods and `TrackCollectionFragment` dispatch:
  *
  * - `ALL_SONGS`/`BY_ARTIST`/`BY_GENRE` are paged (`TrackCollectionModel.getAllSongs`/
  *   `getSongsForArtist`/`getSongsForGenre`'s exact offset/loading/`canLoadMore` bookkeeping,
  *   ported verbatim per mode); `RANDOM` pages with no exhaustion cutoff (`getRandomSongs`
- *   has none either); `STARRED` never pages (`getStarred()`/`getStarred2()` are a single call).
+ *   has none either); `STARRED`/`DAILY_MIX` never page (`getStarred()`/`getStarred2()` and
+ *   `DailyMixQueueBuilder.build()` are each a single call).
+ * - The standalone Genre tracks destination reuses `BY_GENRE` directly - [initialize] pre-sets
+ *   the fixed genre and skips the picker entirely (`showControls` false, so the Fragment never
+ *   wires up a sort menu that could reach [beginGenreSort]/[selectGenre] for it) - not a new
+ *   internal mode. Daily Mix *is* a new mode: `DailyMixQueueBuilder` is a genuinely different
+ *   data source (a stable-per-day-and-server seed unless force-refreshed - `getDailyMix()`
+ *   never force-refreshes, so a pull-to-refresh here is a content no-op on the same day, exactly
+ *   like the legacy screen; regenerating a *new* mix is a separate, deliberate Home-screen action
+ *   this class does not touch).
  * - **No load-once-across-back-navigation guard anywhere** - unlike `AlbumListViewModel`/
  *   `ArtistListViewModel`, the legacy `TrackCollectionFragment.getLiveData()` has no
- *   "already loaded, skip" check for any of these branches, so returning to either screen always
- *   re-fetches. [isLoading] is therefore set for *every* [load] call, append included - the
- *   legacy `swipeRefresh.isRefreshing = true/false` wraps the whole dispatch unconditionally,
+ *   "already loaded, skip" check for any of these branches, so returning to any of these screens
+ *   always re-fetches. [isLoading] is therefore set for *every* [load] call, append included -
+ *   the legacy `swipeRefresh.isRefreshing = true/false` wraps the whole dispatch unconditionally,
  *   so an infinite-scroll append also briefly shows the pull-to-refresh spinner. Both are
  *   preserved exactly, not "fixed" (see the phase 4F1 report).
- * - `BY_ARTIST`/`BY_GENRE` always re-prompt their picker dialog on tap (Fragment-hosted, see
- *   [beginArtistSort]/[beginGenreSort]/[loadArtists]/[loadGenres]/[selectArtist]/[selectGenre]),
- *   exactly like the same quirk `AlbumListViewModel`'s `BY_GENRE` already has.
+ * - `BY_ARTIST`/`BY_GENRE` (from the "Songs" screen's own sort menu) always re-prompt their
+ *   picker dialog on tap (Fragment-hosted, see [beginArtistSort]/[beginGenreSort]/[loadArtists]/
+ *   [loadGenres]/[selectArtist]/[selectGenre]).
  * - The heart column ([TrackListUiState.showHeart]) is a fixed per-instance flag from
  *   `navArgs.getStarred`, never derived from the active sort - selecting "Liked" from the
  *   "Songs" screen's own sort menu does not turn hearts on there either, matching
@@ -180,23 +191,51 @@ class TrackListViewModel(application: Application) :
         withContext(Dispatchers.IO) { MusicServiceFactory.getMusicService().getGenres(true) }
     }
 
+    /** `TrackCollectionModel.getDailyMix`'s `DailyMixQueueBuilder.build()` call - `forceRefresh`
+     *  is never passed `true` here, matching the legacy screen exactly (see the class kdoc).
+     *  Test seam. */
+    internal var dailyMixLoader: suspend () -> List<Track> = {
+        withContext(Dispatchers.IO) {
+            DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build()
+        }
+    }
+
     /**
      * Sets up the fixed, nav-arg-derived parameters for this screen instance - mirrors what
      * `TrackCollectionFragment`'s `navArgs` fix for the lifetime of the Fragment. A no-op after
      * the first call, matching [org.moire.ultrasonic.model.AlbumListViewModel.initialize]'s
      * rationale (the Fragment calls this unconditionally from `onViewCreated`).
+     *
+     * [genreName] (Genre tracks) and [dailyMix] pre-select their fixed source and are mutually
+     * exclusive with [libraryRoot]/[getStarred] in practice (no caller sets more than one) -
+     * `dailyMix` wins over `genreName` over `getStarred` over the `ALL_SONGS` default if more
+     * than one is somehow set, matching `TrackCollectionFragment.getLiveData()`'s own branch
+     * order (`dailyMix` checked before `genreName`, `genreName` before `getStarred`).
      */
-    fun initialize(libraryRoot: Boolean, getStarred: Boolean) {
+    fun initialize(
+        libraryRoot: Boolean,
+        getStarred: Boolean,
+        genreName: String? = null,
+        dailyMix: Boolean = false,
+        headerTitle: String? = null,
+    ) {
         if (initialized) return
         initialized = true
         this.libraryRoot = libraryRoot
-        mode = if (getStarred) TrackListMode.STARRED else TrackListMode.ALL_SONGS
+        mode = when {
+            dailyMix -> TrackListMode.DAILY_MIX
+            genreName != null -> TrackListMode.BY_GENRE
+            getStarred -> TrackListMode.STARRED
+            else -> TrackListMode.ALL_SONGS
+        }
+        if (genreName != null) selectedGenreName = genreName
         _uiState.update {
             it.copy(
                 sortOrder = mode.toSortOrder(),
                 availableSortOrders = availableSortOrders().toImmutableList(),
                 showControls = libraryRoot,
                 showHeart = getStarred,
+                headerTitle = headerTitle,
             )
         }
     }
@@ -221,7 +260,7 @@ class TrackListViewModel(application: Application) :
             TrackListMode.BY_GENRE -> canLoadMoreGenreSongs
             TrackListMode.BY_ARTIST -> canLoadMoreArtistSongs
             TrackListMode.ALL_SONGS -> canLoadMoreAllSongs
-            TrackListMode.STARRED -> false
+            TrackListMode.STARRED, TrackListMode.DAILY_MIX -> false
         }
         if (!canAppend) return
         if (loadJob?.isActive == true) return
@@ -314,6 +353,7 @@ class TrackListViewModel(application: Application) :
                 TrackListMode.RANDOM -> LoadResult(randomLoader(Settings.MAX_SONGS), append)
                 TrackListMode.BY_ARTIST -> loadArtistSongs(append)
                 TrackListMode.BY_GENRE -> loadGenreSongs(append)
+                TrackListMode.DAILY_MIX -> LoadResult(dailyMixLoader(), append = false)
             }
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -429,12 +469,16 @@ class TrackListViewModel(application: Application) :
         liked = starred,
     )
 
+    /** `DAILY_MIX` has no matching `SortOrder` (the legacy filter bar never covered it) and
+     *  [TrackListUiState.showControls] is always false there, so this value is never rendered -
+     *  `ALL_SONGS` is an arbitrary, harmless placeholder. */
     private fun TrackListMode.toSortOrder(): SortOrder = when (this) {
         TrackListMode.ALL_SONGS -> SortOrder.ALL_SONGS
         TrackListMode.RANDOM -> SortOrder.RANDOM
         TrackListMode.STARRED -> SortOrder.STARRED
         TrackListMode.BY_ARTIST -> SortOrder.BY_ARTIST
         TrackListMode.BY_GENRE -> SortOrder.BY_GENRE
+        TrackListMode.DAILY_MIX -> SortOrder.ALL_SONGS
     }
 
     private fun SortOrder.toMode(): TrackListMode? = when (this) {
@@ -446,7 +490,7 @@ class TrackListViewModel(application: Application) :
 
     private data class LoadResult(val tracks: List<Track>, val append: Boolean)
 
-    private enum class TrackListMode { ALL_SONGS, RANDOM, STARRED, BY_ARTIST, BY_GENRE }
+    private enum class TrackListMode { ALL_SONGS, RANDOM, STARRED, BY_ARTIST, BY_GENRE, DAILY_MIX }
 
     private companion object {
         const val SUBTITLE_SEPARATOR = " · "

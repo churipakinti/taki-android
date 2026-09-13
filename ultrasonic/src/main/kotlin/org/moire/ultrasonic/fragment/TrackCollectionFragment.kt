@@ -189,18 +189,19 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             hasPlaylistId = navArgs.playlistId != null,
         )
 
-    // --- Compose Track List (issue #10 phase 4F1) -------------------------------------------
-    // The "Songs" (navArgs.libraryRoot) and dedicated Liked Songs (navArgs.getStarred)
-    // destinations switch to Compose here; every other useLibraryTrackRows mode (Genre, Daily
-    // Mix) - which shares the same legacy LibraryTrackBinder row today - is deliberately left on
-    // the unchanged View path below, exactly like isComposeAlbumMode leaves every non-album mode
-    // alone. Mirrors isMediaLibrarySongs's real (non-dead) condition: `parentFragment is
-    // MainFragment` can never be true any more (Library moved to Compose in an earlier phase),
-    // so it is not repeated here.
+    // --- Compose Track List (issue #10 phase 4F1: "Songs"/Liked Songs; phase 4F2: Genre
+    // tracks/Daily Mix) --------------------------------------------------------------------
+    // Every useLibraryTrackRows mode now switches to Compose here - isComposeLibraryTrackListMode
+    // is deliberately defined as that same (real, non-dead) condition rather than duplicating it,
+    // since after phase 4F2 the two are identical. isLightweightHeaderTrackCollection/
+    // lightweightHeaderTitle/bindLightweightHeader below are therefore unreachable dead code now
+    // (their only caller was the legacy onViewCreated path this always bypasses for Genre/Daily
+    // Mix) - documented rather than removed, matching the phase 4F1 precedent for the
+    // filter-bar/artist-genre-filter machinery (see that section's own comment).
     private val trackListViewModel: TrackListViewModel by viewModels()
 
     private val isComposeLibraryTrackListMode: Boolean
-        get() = navArgs.libraryRoot || navArgs.getStarred
+        get() = useLibraryTrackRows
 
     private val isMediaLibrarySongs: Boolean
         get() = parentFragment is MainFragment || navArgs.libraryRoot || navArgs.getStarred
@@ -208,15 +209,13 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private val useLibraryTrackRows: Boolean
         get() = isMediaLibrarySongs || navArgs.genreName != null || navArgs.dailyMix
 
-    // --- Shell-continuity fix (issue #10 coverage audit) ----------------------------------
-    // Genre (direct entry from SelectGenreFragment) and Daily Mix are the only two remaining
-    // legacy TrackCollection modes that still showed the shared olive Material toolbar - every
-    // other legacy mode already hides it (isLibraryTrackCollection/isAlbumDetail). This draws a
-    // lightweight Compose TakiScreenHeader instead, matching NavigationActivity
-    // .isLightweightHeaderTrackCollection; the legacy list/adapter/data path is untouched.
-    // Reached only via navArgs (genre via the filter bar sets selectedGenreName, not
-    // navArgs.genreName, so that in-place sort switch is deliberately excluded here - it already
-    // gets the shared content_navigation_header via isLibraryTrackCollection/libraryRoot).
+    // --- Shell-continuity fix (issue #10 coverage audit) - unreachable since phase 4F2 --------
+    // Genre (direct entry from SelectGenreFragment) and Daily Mix used to be the only two
+    // remaining legacy TrackCollection modes that still showed the shared olive Material toolbar
+    // - every other legacy mode already hid it (isLibraryTrackCollection/isAlbumDetail). This
+    // drew a lightweight Compose TakiScreenHeader instead, matching NavigationActivity
+    // .isLightweightHeaderTrackCollection - now ported to TrackListUiState.headerTitle /
+    // TrackListScreen's own TakiScreenHeader instead (see bindComposeTrackList).
     private val isLightweightHeaderTrackCollection: Boolean
         get() = navArgs.dailyMix || navArgs.genreName != null
 
@@ -1603,14 +1602,14 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         ).show(childFragmentManager, AlbumInfoBottomSheetFragment.TAG)
     }
 
-    // ---- Compose Track List (issue #10 phase 4F1) -------------------------------------------
-    // "Songs" (navArgs.libraryRoot) and Liked Songs (navArgs.getStarred) - see
-    // isComposeLibraryTrackListMode's kdoc. This leaves the legacy filter-bar/artist-genre-filter
-    // machinery below (showArtistSelection/showGenreSelection/setOrderType/getListOfSortOrders/
-    // viewCapabilities/applyArtistFilter/handleFilterSelectionResult's BY_ARTIST+BY_GENRE
-    // branches) unreachable - their only caller was the libraryRoot-gated FilterButtonBar this
-    // phase replaces. Documented as a new dead-code finding (see the phase 4F1 report) rather
-    // than removed here, matching the "don't fix #23 in this task" boundary.
+    // ---- Compose Track List (issue #10 phase 4F1: "Songs"/Liked Songs; phase 4F2: Genre
+    // tracks/Daily Mix) ------------------------------------------------------------------------
+    // See isComposeLibraryTrackListMode's kdoc. This leaves the legacy filter-bar/
+    // artist-genre-filter machinery below (showArtistSelection/showGenreSelection/setOrderType/
+    // getListOfSortOrders/viewCapabilities/applyArtistFilter/handleFilterSelectionResult's
+    // BY_ARTIST+BY_GENRE branches) unreachable - their only caller was the libraryRoot-gated
+    // FilterButtonBar phase 4F1 replaced. Documented as a dead-code finding (see the phase 4F1
+    // report) rather than removed here, matching the "don't fix #23 in this task" boundary.
 
     private fun createComposeTrackListView(): View {
         val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
@@ -1636,20 +1635,39 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
+    /** Non-null only for Genre tracks/Daily Mix - see [TrackListUiState.headerTitle]'s kdoc.
+     *  Mirrors [lightweightHeaderTitle] exactly (now dead code - see this section's own
+     *  comment), which itself mirrors `TrackCollectionFragment.getLiveData()`'s own per-mode
+     *  `setTitle()` calls for these two branches. */
+    private val composeTrackListHeaderTitle: String?
+        get() = when {
+            navArgs.dailyMix -> getString(R.string.home_mix_title)
+            navArgs.genreName != null -> navArgs.genreName
+            else -> null
+        }
+
     private fun bindComposeTrackList() {
-        // The shared content_navigation_header supplies the back affordance; the toolbar is
-        // hidden for both destinations (NavigationActivity.isLibraryTrackCollection, unchanged
-        // by this phase), so this title is never visibly shown - kept only for parity with the
-        // legacy (also invisible) ActionBar title, exactly like AlbumListFragment/
-        // ArtistListFragment.
+        // The shared content_navigation_header supplies the back affordance for "Songs"/Liked
+        // Songs (NavigationActivity.isLibraryTrackCollection, unchanged by this phase); Genre
+        // tracks/Daily Mix draw their own header instead (TrackListScreen, gated on
+        // composeTrackListHeaderTitle) - either way this title is never visibly shown in the
+        // shared ActionBar, kept only for parity with the legacy (also invisible there) title,
+        // exactly like AlbumListFragment/ArtistListFragment.
         setTitle(
-            if (navArgs.getStarred) {
-                getString(R.string.main_songs_starred)
-            } else {
-                getString(R.string.main_songs_title)
+            when {
+                navArgs.dailyMix -> getString(R.string.home_mix_title)
+                navArgs.genreName != null -> navArgs.genreName
+                navArgs.getStarred -> getString(R.string.main_songs_starred)
+                else -> getString(R.string.main_songs_title)
             },
         )
-        trackListViewModel.initialize(libraryRoot = navArgs.libraryRoot, getStarred = navArgs.getStarred)
+        trackListViewModel.initialize(
+            libraryRoot = navArgs.libraryRoot,
+            getStarred = navArgs.getStarred,
+            genreName = navArgs.genreName,
+            dailyMix = navArgs.dailyMix,
+            headerTitle = composeTrackListHeaderTitle,
+        )
         trackListViewModel.load()
 
         childFragmentManager.setFragmentResultListener(
@@ -1676,6 +1694,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             onPlayAll = ::onTrackListPlayAll,
             onRefresh = trackListViewModel::refresh,
             onLoadMore = trackListViewModel::loadMore,
+            onBack = { findNavController().navigateUp() },
         )
     }
 

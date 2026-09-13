@@ -31,7 +31,10 @@ import org.robolectric.annotation.GraphicsMode
 /**
  * Roborazzi goldens for the shared Track List screen (issue #10 phase 4F1): the "Songs"
  * controls row (populated), the dedicated Liked Songs list (hearts, no controls), Liked Songs
- * empty, and the empty state. Fully deterministic - fake [TrackListUiState], no artwork network.
+ * empty, and the empty state. Phase 4F2 adds one golden for the [TrackListUiState.headerTitle]
+ * back+title treatment (Genre tracks and Daily Mix render it identically, so a single shared
+ * golden covers both - no separate screenshot per mode). Fully deterministic - fake
+ * [TrackListUiState], no artwork network.
  * Record with:
  *   ./gradlew :ultrasonic:testDebugUnitTest -Proborazzi.test.record=true
  */
@@ -120,5 +123,20 @@ class TrackListScreenScreenshotTest {
     @Test
     fun trackListEmpty() = capture("track_list_empty") {
         screen(songs.copy(rows = persistentListOf(), availableSortOrders = persistentListOf()))()
+    }
+
+    @Test
+    fun trackListWithHeader() = capture("track_list_with_header") {
+        screen(
+            TrackListUiState(
+                isLoading = false,
+                showControls = false,
+                headerTitle = "Jazz",
+                rows = persistentListOf(
+                    row("t1", "So What", "Miles Davis · Kind of Blue"),
+                    row("t2", "Take Five", "Dave Brubeck · Time Out"),
+                ),
+            ),
+        )()
     }
 }

@@ -37,7 +37,8 @@ import org.robolectric.annotation.Config
  * The shared Track List screen (issue #10 phase 4F1): the "Songs" controls row (sort menu +
  * "Play all"), the dedicated Liked Songs list (no controls, hearts visible), infinite scroll,
  * the per-track context menu (gated by [org.moire.ultrasonic.ui.album.TrackContextMenuState]),
- * and the empty state.
+ * and the empty state. Phase 4F2 adds the Genre tracks/Daily Mix header (back + title, shown only
+ * when [TrackListUiState.headerTitle] is non-null).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w412dp-h1200dp-xxhdpi")
@@ -67,6 +68,15 @@ class TrackListScreenComposeTest {
         sortOrder = SortOrder.STARRED,
         rows = persistentListOf(
             row("t1", "Combativo", "A.N.I.M.A.L. · Combativo", liked = true),
+        ),
+    )
+
+    private val genreTracksState = TrackListUiState(
+        isLoading = false,
+        showControls = false,
+        headerTitle = "Jazz",
+        rows = persistentListOf(
+            row("t1", "So What", "Miles Davis · Kind of Blue"),
         ),
     )
 
@@ -194,5 +204,34 @@ class TrackListScreenComposeTest {
     fun `still loading with no rows does not show the empty state`() {
         setContent(TrackListUiState(isLoading = true, rows = persistentListOf()))
         compose.onNodeWithText("No matches", substring = true).assertDoesNotExist()
+    }
+
+    // --- header (Genre tracks/Daily Mix only) - phase 4F2 -------------------------------------
+
+    @Test
+    fun `a non-null headerTitle shows the back button and title, and back fires onBack`() {
+        var backs = 0
+        setContent(genreTracksState, TrackListActions.Noop.copy(onBack = { backs++ }))
+        compose.onNodeWithText("Jazz").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Go back").performClick()
+        assertEquals(1, backs)
+    }
+
+    @Test
+    fun `Songs shows no header title and no header back button`() {
+        setContent(songsState)
+        compose.onNodeWithContentDescription("Go back").assertDoesNotExist()
+    }
+
+    @Test
+    fun `Liked Songs shows no header title and no header back button`() {
+        setContent(likedSongsState)
+        compose.onNodeWithContentDescription("Go back").assertDoesNotExist()
+    }
+
+    @Test
+    fun `Genre tracks still shows no controls row - no sort menu, no Play all`() {
+        setContent(genreTracksState)
+        compose.onNodeWithText("Play all").assertDoesNotExist()
     }
 }

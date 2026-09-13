@@ -48,6 +48,9 @@ import org.robolectric.RobolectricTestRunner
  * (issue #10 phase 4F1): the "Songs" (`libraryRoot`) filterable browser's five sub-modes (All
  * Songs/Random/By Artist/By Genre/Liked, each with its own paging bookkeeping ported verbatim)
  * and the dedicated Liked Songs (`getStarred`) destination's flat, unpaged, no-controls list.
+ * Phase 4F2 adds: the standalone Genre tracks destination (`genreName`, reusing `BY_GENRE` with
+ * the picker skipped) and Daily Mix (`dailyMix`, a new unpaged `DAILY_MIX` mode), plus
+ * [TrackListUiState.headerTitle] wiring for both.
  * Deliberately has no load-once-across-back-navigation tests: the class exists specifically
  * because the legacy screen never had that guard - every [org.moire.ultrasonic.model.TrackListViewModel.load]
  * always re-fetches.
@@ -95,6 +98,9 @@ class TrackListViewModelTest {
     private fun vm(
         libraryRoot: Boolean = true,
         getStarred: Boolean = false,
+        genreName: String? = null,
+        dailyMix: Boolean = false,
+        headerTitle: String? = null,
         allSongs: suspend (Int, Int, String?) -> List<Track> = { _, _, _ -> emptyList() },
         starred: suspend () -> List<Track> = { emptyList() },
         random: suspend (Int) -> List<Track> = { emptyList() },
@@ -102,6 +108,7 @@ class TrackListViewModelTest {
         genreSongs: suspend (String, Int, Int) -> List<Track> = { _, _, _ -> emptyList() },
         artists: suspend () -> List<ArtistOrIndex> = { emptyList() },
         genres: suspend () -> List<Genre> = { emptyList() },
+        dailyMixSongs: suspend () -> List<Track> = { emptyList() },
     ) = TrackListViewModel(app).apply {
         allSongsLoader = allSongs
         starredLoader = starred
@@ -110,7 +117,8 @@ class TrackListViewModelTest {
         genreSongsLoader = genreSongs
         artistsLoader = artists
         genresLoader = genres
-        initialize(libraryRoot, getStarred)
+        dailyMixLoader = dailyMixSongs
+        initialize(libraryRoot, getStarred, genreName, dailyMix, headerTitle)
     }
 
     // --- Initial state / initialize() -------------------------------------------------------
@@ -416,5 +424,133 @@ class TrackListViewModelTest {
         assertEquals("Bravo", model.itemFor("t1")?.title)
         assertNull(model.itemFor("nope"))
         assertEquals(1, model.tracksSnapshot().size)
+    }
+
+    // --- Genre tracks (standalone, from SelectGenreFragment) - phase 4F2 ----------------------
+
+    @Test
+    fun `Genre tracks pre-selects the genre and skips the picker - no controls, header set`() = runTest {
+        val state = vm(
+            libraryRoot = false,
+            genreName = "Jazz",
+            headerTitle = "Jazz",
+        ).uiState.value
+        assertFalse(state.showControls)
+        assertFalse(state.showHeart)
+        assertEquals("Jazz", state.headerTitle)
+        assertEquals(SortOrder.BY_GENRE, state.sortOrder)
+        assertTrue(state.availableSortOrders.isEmpty())
+    }
+
+    @Test
+    fun `Genre tracks loads via the genre songs loader for the pre-selected genre`() = runTest {
+        var requestedGenre: String? = null
+        val model = vm(
+            libraryRoot = false,
+            genreName = "Jazz",
+            genreSongs = { genre, _, _ -> requestedGenre = genre; listOf(track("t1")) },
+        )
+        model.load()
+        advanceUntilIdle()
+
+        assertEquals("Jazz", requestedGenre)
+        assertEquals(listOf("t1"), model.uiState.value.rows.map { it.id })
+    }
+
+    @Test
+    fun `Genre tracks pages exactly like By Genre from the Songs sort menu`() = runTest {
+        val offsets = mutableListOf<Int>()
+        val model = vm(
+            libraryRoot = false,
+            genreName = "Jazz",
+            genreSongs = { _, count, offset -> offsets += offset; List(count) { track("t-$offset-$it") } },
+        )
+        model.load()
+        advanceUntilIdle()
+        model.loadMore()
+        advanceUntilIdle()
+
+        assertEquals(listOf(0, Settings.MAX_SONGS), offsets)
+        assertEquals(Settings.MAX_SONGS * 2, model.uiState.value.rows.size)
+    }
+
+    // --- Daily Mix (from HomeFragment) - phase 4F2 ---------------------------------------------
+
+    @Test
+    fun `Daily Mix has no controls and a header, and never pages`() = runTest {
+        val state = vm(
+            libraryRoot = false,
+            dailyMix = true,
+            headerTitle = "Featured Mix",
+        ).uiState.value
+        assertFalse(state.showControls)
+        assertFalse(state.showHeart)
+        assertEquals("Featured Mix", state.headerTitle)
+        assertTrue(state.availableSortOrders.isEmpty())
+    }
+
+    @Test
+    fun `Daily Mix loads via the daily mix loader, unpaged`() = runTest {
+        var dailyMixCalls = 0
+        var allSongsCalls = 0
+        val model = vm(
+            libraryRoot = false,
+            dailyMix = true,
+            dailyMixSongs = { dailyMixCalls++; listOf(track("m1"), track("m2")) },
+            allSongs = { _, _, _ -> allSongsCalls++; emptyList() },
+        )
+        model.load()
+        advanceUntilIdle()
+
+        assertEquals(1, dailyMixCalls)
+        assertEquals(0, allSongsCalls)
+        assertEquals(listOf("m1", "m2"), model.uiState.value.rows.map { it.id })
+    }
+
+    @Test
+    fun `Daily Mix loadMore is a no-op - never paged`() = runTest {
+        var dailyMixCalls = 0
+        val model = vm(
+            libraryRoot = false,
+            dailyMix = true,
+            dailyMixSongs = { dailyMixCalls++; listOf(track("m1")) },
+        )
+        model.load()
+        advanceUntilIdle()
+        model.loadMore()
+        advanceUntilIdle()
+        assertEquals(1, dailyMixCalls)
+    }
+
+    @Test
+    fun `Daily Mix refresh re-fetches through the same loader - a same-day mix is stable content`() = runTest {
+        // The loader itself (DailyMixQueueBuilder.build with forceRefresh=false) is what makes
+        // same-day content stable - this only proves the ViewModel always re-invokes it on
+        // refresh, matching every other mode here (see the class kdoc: no load-once guard).
+        var dailyMixCalls = 0
+        val model = vm(libraryRoot = false, dailyMix = true, dailyMixSongs = { dailyMixCalls++; listOf(track("m1")) })
+        model.load()
+        advanceUntilIdle()
+        model.refresh()
+        advanceUntilIdle()
+        assertEquals(2, dailyMixCalls)
+    }
+
+    @Test
+    fun `dailyMix wins over genreName if both are somehow set, matching the legacy branch order`() = runTest {
+        var dailyMixCalls = 0
+        var genreCalls = 0
+        val model = vm(
+            libraryRoot = false,
+            genreName = "Jazz",
+            dailyMix = true,
+            dailyMixSongs = { dailyMixCalls++; emptyList() },
+            genreSongs = { _, _, _ -> genreCalls++; emptyList() },
+        )
+        model.load()
+        advanceUntilIdle()
+
+        assertEquals(1, dailyMixCalls)
+        assertEquals(0, genreCalls)
     }
 }

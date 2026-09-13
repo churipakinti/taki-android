@@ -15,15 +15,20 @@ import org.moire.ultrasonic.view.SortOrder
 
 /**
  * The immutable, presentation-ready state of the shared Compose Track List screen (issue #10
- * phase 4F1). Backs two legacy `TrackCollectionFragment` destinations that both render through
- * `LibraryTrackBinder` today - "Songs" (`navArgs.libraryRoot`, a filterable multi-mode browser:
- * All Songs / Random / By Artist / By Genre / Liked, exactly like the legacy `FilterButtonBar`
- * exposed) and the dedicated Liked Songs destination (`navArgs.getStarred`, a flat liked-only
- * list with no filter bar at all - [showControls] is false there, matching the legacy Fragment
- * never wiring up a `FilterButtonBar` unless `libraryRoot` is set).
+ * phase 4F1; Genre tracks/Daily Mix added in phase 4F2). Backs every legacy
+ * `TrackCollectionFragment` destination that rendered through `LibraryTrackBinder`:
  *
- * Deliberately carries no current-track-marker field: the legacy `LibraryTrackBinder` these two
- * destinations already use has none either (unlike Compose Album Detail's `TakiTrackRow`), so
+ * - "Songs" (`navArgs.libraryRoot`) - a filterable multi-mode browser: All Songs / Random / By
+ *   Artist / By Genre / Liked, exactly like the legacy `FilterButtonBar` exposed.
+ * - the dedicated Liked Songs destination (`navArgs.getStarred`) - a flat liked-only list, no
+ *   filter bar ([showControls] false).
+ * - the standalone Genre tracks destination (`navArgs.genreName`, from `SelectGenreFragment`) -
+ *   a fixed single-genre paged list with a visible back+title [headerTitle], no filter bar.
+ * - Daily Mix (`navArgs.dailyMix`, from `HomeFragment`) - a fixed, unpaged list, same header
+ *   treatment as Genre tracks.
+ *
+ * Deliberately carries no current-track-marker field: the legacy `LibraryTrackBinder` every one
+ * of these destinations uses has none either (unlike Compose Album Detail's `TakiTrackRow`), so
  * none is invented here.
  */
 @Immutable
@@ -46,6 +51,12 @@ data class TrackListUiState(
      *  .getStarred)`, *not* derived from [sortOrder]: switching the "Songs" screen's own sort
      *  to "Liked" does not turn hearts on there, exactly like the legacy screen. */
     val showHeart: Boolean = false,
+    /** Non-null only for Genre tracks (the genre name) and Daily Mix (issue #10 phase 4F2) -
+     *  the Compose port of the legacy shell-continuity fix's Fragment-owned `TakiScreenHeader`
+     *  (back + title), drawn in place of the shared `content_navigation_header` those two
+     *  destinations never used (`NavigationActivity.isLightweightHeaderTrackCollection`,
+     *  unchanged by this phase). Null for "Songs" and Liked Songs, which draw no header. */
+    val headerTitle: String? = null,
     val rows: ImmutableList<TrackListRow> = persistentListOf(),
 ) {
     val hasContent: Boolean get() = rows.isNotEmpty()

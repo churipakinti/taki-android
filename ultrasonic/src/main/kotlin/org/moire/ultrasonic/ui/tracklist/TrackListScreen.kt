@@ -47,6 +47,7 @@ import org.moire.ultrasonic.ui.components.EmptyState
 import org.moire.ultrasonic.ui.components.TakiFilterChip
 import org.moire.ultrasonic.ui.components.TakiLibraryTrackRow
 import org.moire.ultrasonic.ui.components.TakiScaffold
+import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.components.TakiSortMenu
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.view.SortOrder
@@ -60,17 +61,21 @@ private const val LOAD_MORE_THRESHOLD_ROWS = 7
 const val TRACK_LIST_CONTENT_TEST_TAG = "track_list_content"
 
 /**
- * The shared Compose Track List screen (issue #10 phase 4F1): backs both the "Songs" destination
- * (`libraryRoot` - a filterable All Songs/Random/By Artist/By Genre/Liked browser with a "Play
- * all" action, exactly like the legacy `FilterButtonBar`'s `songs_action_row`) and the dedicated
- * Liked Songs destination (`getStarred` - a flat liked-only list, no controls row at all). A 1:1
- * visual/behavioural port of the legacy `list_layout_track_filterable`/`list_layout_track` +
- * `LibraryTrackBinder`.
+ * The shared Compose Track List screen (issue #10 phase 4F1; Genre tracks/Daily Mix in phase
+ * 4F2). Backs the "Songs" destination (`libraryRoot` - a filterable All Songs/Random/By Artist/
+ * By Genre/Liked browser with a "Play all" action, exactly like the legacy `FilterButtonBar`'s
+ * `songs_action_row`), the dedicated Liked Songs destination (`getStarred` - a flat liked-only
+ * list, no controls row at all), and the standalone Genre tracks / Daily Mix destinations (fixed
+ * single-source lists with a visible header, also no controls row). A 1:1 visual/behavioural
+ * port of the legacy `list_layout_track_filterable`/`list_layout_track` + `LibraryTrackBinder`.
  *
- * Deliberately draws **no back button and no visible title**: `NavigationActivity` already hides
- * the shared Material toolbar for both destinations (`isLibraryTrackCollection`, unchanged by
- * this phase - both were already gated on `libraryRoot`/`getStarred` before it) and shows its
- * shared `content_navigation_header` back-only bar instead, exactly as the legacy screens did.
+ * Draws **no back button and no visible title** when [TrackListUiState.headerTitle] is null
+ * ("Songs"/Liked Songs): `NavigationActivity` already hides the shared Material toolbar for
+ * those two (`isLibraryTrackCollection`, unchanged by this phase) and shows its shared
+ * `content_navigation_header` back-only bar instead, exactly as the legacy screens did. When
+ * [TrackListUiState.headerTitle] is non-null (Genre tracks/Daily Mix), this screen draws its own
+ * [TakiScreenHeader] instead - the Compose port of the legacy shell-continuity fix's
+ * Fragment-owned header, since those two destinations never used the shared one either.
  */
 @Composable
 fun TrackListScreen(
@@ -84,6 +89,9 @@ fun TrackListScreen(
 
     TakiScaffold(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth()) {
+            if (state.headerTitle != null) {
+                TakiScreenHeader(onBack = actions.onBack, title = state.headerTitle)
+            }
             // Reserved strip so the first load never shifts the controls row below it.
             Box(modifier = Modifier.fillMaxWidth().height(TakiTheme.spacing.xxs)) {
                 if (firstLoad) {
