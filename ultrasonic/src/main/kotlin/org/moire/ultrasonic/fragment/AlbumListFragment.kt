@@ -1,6 +1,6 @@
 /*
  * AlbumListFragment.kt
- * Copyright (C) 2009-2023 Ultrasonic developers
+ * Copyright (C) 2009-2026 Ultrasonic developers
  *
  * Distributed under terms of the GNU GPLv3 license.
  */
@@ -11,358 +11,218 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
-import org.moire.ultrasonic.adapters.AlbumGridDelegate
-import org.moire.ultrasonic.adapters.AlbumRowDelegate
-import org.moire.ultrasonic.api.subsonic.models.AlbumListType
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.domain.Album
-import org.moire.ultrasonic.model.AlbumListModel
-import org.moire.ultrasonic.util.LayoutType
-import org.moire.ultrasonic.util.Settings
-import org.moire.ultrasonic.util.toastingExceptionHandler
-import org.moire.ultrasonic.view.FilterButtonBar
+import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
+import org.moire.ultrasonic.model.AlbumListViewModel
+import org.moire.ultrasonic.model.ServerSettingsModel
+import org.moire.ultrasonic.service.MediaPlayerManager
+import org.moire.ultrasonic.service.RxBus
+import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.ui.albumlist.AlbumContextAction
+import org.moire.ultrasonic.ui.albumlist.AlbumListActions
+import org.moire.ultrasonic.ui.albumlist.AlbumListRow
+import org.moire.ultrasonic.ui.albumlist.AlbumListScreen
+import org.moire.ultrasonic.ui.theme.TakiTheme
+import org.moire.ultrasonic.util.ContextMenuUtil
 import org.moire.ultrasonic.view.SortOrder
-import org.moire.ultrasonic.view.ViewCapabilities
 
 /**
- * Displays a list of Albums from the media library
+ * Displays a list of Albums from the media library (issue #10 phase 4E2) - either a paged
+ * `AlbumListType` browse (id3 or folder-mode, with infinite scroll) or, when reached "by
+ * artist", one artist's full album list. A thin Compose host, following the phase 4E1
+ * (`ArtistListFragment`) pattern: it owns the unchanged `albumListFragment` nav-graph boundary
+ * and its args, the RxBus server/folder-change subscriptions, the genre-picker dialog (`BY_GENRE`
+ * always re-prompts, exactly like the legacy screen), and the playback/download/navigation
+ * commands; everything visible is [AlbumListScreen]. The Activity's Material toolbar was already
+ * hidden for this destination before this phase (`NavigationActivity.hidesSupportActionBar`'s
+ * base set already includes `albumListFragment`), so the shared `content_navigation_header`
+ * supplies the back affordance and no title is ever visibly shown, matching the legacy screen -
+ * this Fragment still calls [setTitle] only for parity with the legacy (also invisible)
+ * ActionBar title.
+ *
+ * The legacy screen's `isStandalone` branch (`parentFragment !is MainFragment`, a `ViewPager2`
+ * host that no longer exists since Library moved to Compose) is always true today, so this
+ * Fragment always behaves like that branch: title set, full filter/sort controls shown, grid the
+ * default layout. There is no surviving embedded/non-standalone mode to port.
  */
-class AlbumListFragment(
-    private var layoutType: LayoutType = LayoutType.LIST,
-    private var orderType: SortOrder? = null
-) : EntryListFragment<Album>(),
-    FilterableFragment {
-
-    private var filterButtonBar: FilterButtonBar? = null
-
-    /**
-     * The ViewModel to use to get the data
-     */
-    override val listModel: AlbumListModel by viewModels()
-
-    /**
-     * The id of the main layout
-     */
-    override val mainLayout: Int = R.layout.list_layout_generic
-
-    /**
-     * Whether to refresh the data onViewCreated
-     */
-    override val refreshOnCreation: Boolean = false
+class AlbumListFragment : Fragment() {
 
     private val navArgs: AlbumListFragmentArgs by navArgs()
+    private val viewModel: AlbumListViewModel by viewModels()
+    private val mediaPlayerManager: MediaPlayerManager by inject()
+    private val activeServerProvider: ActiveServerProvider by inject()
+    private val serverSettingsModel: ServerSettingsModel by viewModel()
 
-    private var selectedGenre: String? = null
-
-    private val isStandalone: Boolean
-        get() = parentFragment !is MainFragment
-
-    /**
-     * The central function to pass a query to the model and return a LiveData object
-     */
-    override fun getLiveData(refresh: Boolean, append: Boolean): LiveData<List<Album>> {
-        fetchAlbums(refresh)
-
-        return listModel.list
-    }
-
-    private fun fetchAlbums(
-        refresh: Boolean = navArgs.refresh,
-        append: Boolean = navArgs.append,
-        newSortOrderChosen: Boolean = false
-    ) {
-        listModel.viewModelScope.launch(
-            toastingExceptionHandler()
-        ) {
-            swipeRefresh?.isRefreshing = true
-
-            if (navArgs.byArtist) {
-                listModel.getAlbumsOfArtist(
-                    refresh = refresh,
-                    id = navArgs.id!!,
-                    name = navArgs.title
-                )
-            } else if (orderType == SortOrder.BY_GENRE) {
-                fetchAlbumsByGenre(refresh, append, newSortOrderChosen)
-            } else {
-                listModel.getAlbums(
-                    albumListType = orderType?.mapToAlbumListType() ?: navArgs.type,
-                    size = navArgs.size,
-                    offset = navArgs.offset,
-                    append = append,
-                    refresh = refresh or append
-                )
-            }
-            swipeRefresh?.isRefreshing = false
-        }
-    }
-
-    private suspend fun fetchAlbumsByGenre(
-        refresh: Boolean,
-        append: Boolean,
-        newSortOrderChosen: Boolean
-    ) {
-        if (selectedGenre != null && !newSortOrderChosen) {
-            listModel.getAlbums(
-                albumListType = AlbumListType.BY_GENRE,
-                size = navArgs.size,
-                offset = navArgs.offset,
-                append = append,
-                refresh = refresh or append,
-                genre = selectedGenre
-            )
-            swipeRefresh?.isRefreshing = false
-            return
-        }
-        val genres = listModel.getGenres(true)
-        if (genres.isEmpty()) {
-            swipeRefresh?.isRefreshing = false
-            return
-        }
-        val genreStrings = genres.map { it.name }.toTypedArray()
-        if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
-            ItemSelectionDialogFragment.create(R.string.main_genres_title, genreStrings)
-                .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
-        }
-    }
-
-    override fun setLayoutType(newType: LayoutType) {
-        layoutType = newType
-        viewManager = if (layoutType == LayoutType.LIST) {
-            LinearLayoutManager(this.context)
-        } else {
-            GridLayoutManager(this.context, ROWS)
-        }
-
-        listView!!.layoutManager = viewManager
-
-        // Attach our onScrollListener
-        val scrollListener = object : EndlessScrollListener(viewManager) {
-            override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
-                // Triggered only when new data needs to be appended to the list
-                // Add whatever code is needed to append new items to the bottom of the list
-                fetchAlbums(append = true)
-            }
-        }
-
-        listView!!.addOnScrollListener(scrollListener)
-    }
-
-    override fun setOrderType(newOrder: SortOrder) {
-        orderType = newOrder
-
-        // If we are on an Artist page we just need to reorder the list. Otherwise refetch
-        if (navArgs.byArtist) {
-            listModel.sortListByOrder(newOrder.mapToAlbumListType())
-        } else {
-            fetchAlbums(refresh = true, append = false, newSortOrderChosen = true)
-        }
-    }
-
-    override fun getOrderType(): SortOrder? = orderType
-
-    override var viewCapabilities: ViewCapabilities = ViewCapabilities(
-        supportsGrid = true,
-        supportedSortOrders = getListOfSortOrders()
-    )
-
-    @Suppress("ComplexMethod")
-    private fun getListOfSortOrders(): List<SortOrder> {
-        val useId3 = Settings.id3TagsEnabledOnline
-        val useId3Offline = Settings.id3TagsEnabledOffline
-        val isOnline = !ActiveServerProvider.isOffline()
-
-        val supported = mutableListOf<SortOrder>()
-
-        if (isOnline || useId3Offline) {
-            supported.add(SortOrder.NEWEST)
-        }
-        if (isOnline) {
-            supported.add(SortOrder.RECENT)
-        }
-        if (isOnline) {
-            supported.add(SortOrder.FREQUENT)
-        }
-        if (isOnline && !useId3) {
-            supported.add(SortOrder.HIGHEST)
-        }
-        if (isOnline) {
-            supported.add(SortOrder.RANDOM)
-        }
-        if (isOnline) {
-            supported.add(SortOrder.STARRED)
-        }
-        if (isOnline || useId3Offline) {
-            supported.add(SortOrder.BY_NAME)
-        }
-        if (isOnline || useId3Offline) {
-            supported.add(SortOrder.BY_ARTIST)
-        }
-        if (isOnline || useId3Offline) {
-            supported.add(SortOrder.BY_GENRE)
-        }
-
-        return supported
-    }
+    private val rxBusSubscription = CompositeDisposable()
+    private val fallbackChromeInset = MutableStateFlow(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (orderType == null) {
-            orderType = navArgs.type.mapToSortOrder()
+
+        // Same contract EntryListFragment used: refetch on server switch. Unlike a folder
+        // change (see AlbumListViewModel.onFolderSelected's kdoc for the pre-existing gap this
+        // preserves), a server switch does reload the album page, exactly like the legacy
+        // `getLiveData(refresh = true)` call this mirrors.
+        rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
+            viewModel.load(refresh = true)
         }
-        if (savedInstanceState != null) {
-            val orderTypeName = savedInstanceState.getString("order_type")
-            if (orderTypeName != null) {
-                orderType = SortOrder.valueOf(orderTypeName)
+        rxBusSubscription += RxBus.musicFolderChangedEventObservable.subscribe { folder ->
+            if (!ActiveServerProvider.isOffline()) {
+                val currentSetting = activeServerProvider.getActiveServer()
+                currentSetting.musicFolderId = folder.id
+                serverSettingsModel.updateItem(currentSetting)
             }
-            selectedGenre = savedInstanceState.getString("selected_genre")
+            viewModel.onFolderSelected()
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val layout = if (isStandalone) R.layout.list_layout_filterable else mainLayout
-        return inflater.inflate(layout, container, false)
+        savedInstanceState: Bundle?,
+    ): View {
+        val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
+            ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    AlbumListScreen(
+                        state = state,
+                        actions = albumListActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Handler for genre selection dialog. Invoked if the user selects "By Genre" in the
-        // orderType dropdown menu.
+        // Handler for the genre-selection dialog. Invoked if the user selects "By Genre" in the
+        // sort-order menu - always re-shown on tap, exactly like the legacy screen (see
+        // AlbumListViewModel.beginGenreSort's kdoc).
         childFragmentManager.setFragmentResultListener(
             ItemSelectionDialogFragment.REQUEST_KEY,
-            viewLifecycleOwner
+            viewLifecycleOwner,
         ) { _, bundle ->
-            if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) {
-                swipeRefresh?.isRefreshing = false
-                return@setFragmentResultListener
-            }
+            if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return@setFragmentResultListener
             val genreName = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)
-            if (genreName != null) {
-                selectedGenre = genreName
-                fetchAlbums(refresh = true, append = false)
-            }
+            if (genreName != null) viewModel.selectGenre(genreName)
         }
 
-        // Setup refresh handler
-        swipeRefresh = view.findViewById(refreshListId)
-        swipeRefresh?.setOnRefreshListener {
-            fetchAlbums(refresh = true)
-        }
+        setTitle(this, navArgs.title ?: getString(R.string.main_albums_title))
 
-        // In most cases this fragment will be hosted by a ViewPager2 in the MainFragment,
-        // which provides its own FilterBar.
-        // But when we are looking at the Albums of a specific Artist this Fragment is standalone,
-        // so we need to setup the FilterBar here..
-        if (isStandalone) {
-            setTitle(navArgs.title ?: getString(R.string.main_albums_title))
-            setupFilterBar(view)
-        }
-
-        // Get a reference to the listView
-        listView = view.findViewById(recyclerViewId)
-
-        setLayoutType(layoutType)
-
-        // Magic to switch between different view layouts:
-        // We register two delegates, one which layouts grid items and one which layouts row items
-        // Based on the current status of the ViewType, the right delegate is picked.
-        viewAdapter.register(Album::class).to(
-            AlbumRowDelegate(::onItemClick, ::onContextMenuItemSelected),
-            AlbumGridDelegate(::onItemClick, ::onContextMenuItemSelected)
-        ).withKotlinClassLinker { _, _ ->
-            when (layoutType) {
-                LayoutType.COVER -> AlbumGridDelegate::class
-                LayoutType.LIST -> AlbumRowDelegate::class
-            }
-        }
-
-        emptyTextView.setText(R.string.select_album_empty)
+        viewModel.initialize(
+            type = navArgs.type,
+            byArtist = navArgs.byArtist,
+            artistId = navArgs.id,
+            artistName = navArgs.title,
+            size = navArgs.size,
+            offset = navArgs.offset,
+        )
+        viewModel.load(refresh = false, append = navArgs.append)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString("order_type", orderType?.name)
-        outState.putString("selected_genre", selectedGenre)
+    override fun onDestroy() {
+        super.onDestroy()
+        rxBusSubscription.dispose()
     }
 
-    private fun setupFilterBar(view: View) {
-        // Standalone album screens use the cover grid as their visual baseline. The toolbar
-        // toggle still allows switching to the compact list when wanted.
-        layoutType = LayoutType.COVER
-        filterButtonBar = view.findViewById(R.id.filter_button_bar)
-        filterButtonBar!!.setOnLayoutTypeChangedListener(::setLayoutType)
-        filterButtonBar!!.setOnOrderChangedListener(::setOrderType)
-        val capabilities = if (navArgs.byArtist) {
-            ViewCapabilities(
-                supportsGrid = true,
-                supportedSortOrders = listOf(
-                    SortOrder.BY_NAME,
-                    SortOrder.BY_YEAR
-                )
-            )
-        } else {
-            viewCapabilities
-        }
-        filterButtonBar!!.configureWithCapabilities(capabilities, orderType)
-
-        // Set layout toggle Chip to correct state
-        filterButtonBar!!.setLayoutType(layoutType)
+    private val albumListActions: AlbumListActions by lazy {
+        AlbumListActions(
+            onEntryClick = ::onEntryClick,
+            onContextAction = ::onContextAction,
+            onSortOrderSelected = ::onSortOrderSelected,
+            onLayoutTypeSelected = viewModel::setLayoutType,
+            onFolderSelected = { folderId ->
+                RxBus.musicFolderChangedEventPublisher.onNext(RxBus.Folder(folderId))
+            },
+            onRefresh = viewModel::refresh,
+            onLoadMore = viewModel::loadMore,
+        )
     }
 
-    override fun onItemClick(item: Album) {
+    private fun onEntryClick(row: AlbumListRow) {
+        val item = viewModel.itemFor(row.id) ?: return
         val action = NavigationGraphDirections.toTrackCollection(
             item.id,
             isAlbum = item.isDirectory,
             name = item.title,
-            parentId = item.parent
+            parentId = item.parent,
         )
         findNavController().navigate(action)
     }
 
-    private fun SortOrder.mapToAlbumListType(): AlbumListType = when (this) {
-        SortOrder.ALL_SONGS -> error("All songs is only supported by the song library")
-        SortOrder.RANDOM -> AlbumListType.RANDOM
-        SortOrder.NEWEST -> AlbumListType.NEWEST
-        SortOrder.HIGHEST -> AlbumListType.HIGHEST
-        SortOrder.FREQUENT -> AlbumListType.FREQUENT
-        SortOrder.RECENT -> AlbumListType.RECENT
-        SortOrder.BY_NAME -> AlbumListType.SORTED_BY_NAME
-        SortOrder.BY_ARTIST -> AlbumListType.SORTED_BY_ARTIST
-        SortOrder.BY_GENRE -> AlbumListType.BY_GENRE
-        SortOrder.STARRED -> AlbumListType.STARRED
-        SortOrder.BY_YEAR -> AlbumListType.BY_YEAR
+    private fun onSortOrderSelected(order: SortOrder) {
+        if (order != SortOrder.BY_GENRE) {
+            viewModel.setSortOrder(order)
+            return
+        }
+        // Immediately reflect the selection in the sort chip, then fetch the genre list and
+        // show the picker dialog - exactly like AlbumListFragment.fetchAlbumsByGenre.
+        viewModel.beginGenreSort()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val genres = viewModel.loadGenres()
+            if (genres.isEmpty()) return@launch
+            val genreStrings = genres.map { it.name }.toTypedArray()
+            if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
+                ItemSelectionDialogFragment.create(R.string.main_genres_title, genreStrings)
+                    .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
+            }
+        }
     }
 
-    private fun AlbumListType.mapToSortOrder(): SortOrder = when (this) {
-        AlbumListType.RANDOM -> SortOrder.RANDOM
-        AlbumListType.NEWEST -> SortOrder.NEWEST
-        AlbumListType.HIGHEST -> SortOrder.HIGHEST
-        AlbumListType.FREQUENT -> SortOrder.FREQUENT
-        AlbumListType.RECENT -> SortOrder.RECENT
-        AlbumListType.SORTED_BY_NAME -> SortOrder.BY_NAME
-        AlbumListType.SORTED_BY_ARTIST -> SortOrder.BY_ARTIST
-        AlbumListType.BY_GENRE -> SortOrder.BY_GENRE
-        AlbumListType.STARRED -> SortOrder.STARRED
-        AlbumListType.BY_YEAR -> SortOrder.BY_YEAR
-    }
-
-    companion object {
-        private const val ROWS = 3
+    /**
+     * Reuses the unchanged [ContextMenuUtil.handleContextMenu] dispatch with a real [MenuItem]
+     * taken from a never-shown [PopupMenu], the same pattern `ArtistListFragment.onContextAction`
+     * established in phase 4E1. `isArtist` is always `false` here - unlike Artist List, there is
+     * no `START_RADIO` action to dispatch (see [AlbumContextAction]'s kdoc).
+     */
+    private fun onContextAction(row: AlbumListRow, action: AlbumContextAction) {
+        val item = viewModel.itemFor(row.id) ?: return
+        val menuItemId = when (action) {
+            AlbumContextAction.PLAY_NOW -> R.id.menu_play_now
+            AlbumContextAction.PLAY_NEXT -> R.id.menu_play_next
+            AlbumContextAction.PLAY_LAST -> R.id.menu_play_last
+            AlbumContextAction.DOWNLOAD -> R.id.menu_download
+        }
+        val menu = PopupMenu(requireContext(), requireView())
+        menu.menuInflater.inflate(R.menu.context_menu_artist, menu.menu)
+        val menuItem = menu.menu.findItem(menuItemId) ?: return
+        ContextMenuUtil.handleContextMenu(
+            menuItem = menuItem,
+            item = item,
+            isArtist = false,
+            mediaPlayerManager = mediaPlayerManager,
+            fragment = this,
+        )
     }
 }
