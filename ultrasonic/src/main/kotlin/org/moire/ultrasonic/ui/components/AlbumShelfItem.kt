@@ -7,7 +7,7 @@
 
 package org.moire.ultrasonic.ui.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -28,6 +28,10 @@ import org.moire.ultrasonic.ui.theme.TakiTheme
  *
  * [artworkSize] selects the shelf weight: `artworkShelfCompact` (104dp) for "Recently
  * played", `artworkCard` (140dp) for album-oriented shelves.
+ *
+ * [onLongClick] is optional (issue #10 phase 4E1: the Artist List grid needs a context menu,
+ * Home shelves and Artist Detail's album grid do not) - `combinedClickable` degrades to a
+ * plain click target when it is null, so existing callers are unaffected.
  */
 @Composable
 fun AlbumShelfItem(
@@ -37,11 +41,12 @@ fun AlbumShelfItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     artworkSize: Dp = TakiTheme.dimensions.artworkCard,
+    onLongClick: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
             .width(artworkSize)
-            .clickable(role = Role.Button, onClick = onClick)
+            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick)
             .semantics(mergeDescendants = true) {},
     ) {
         TakiArtwork(

@@ -1,6 +1,6 @@
 /*
  * ArtistListFragment.kt
- * Copyright (C) 2009-2022 Ultrasonic developers
+ * Copyright (C) 2009-2026 Ultrasonic developers
  *
  * Distributed under terms of the GNU GPLv3 license.
  */
@@ -11,211 +11,178 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
-import org.moire.ultrasonic.adapters.ArtistGridBinder
-import org.moire.ultrasonic.adapters.ArtistRowBinder
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.domain.ArtistOrIndex
-import org.moire.ultrasonic.domain.Index
-import org.moire.ultrasonic.model.ArtistListModel
-import org.moire.ultrasonic.util.LayoutType
-import org.moire.ultrasonic.util.Settings
-import org.moire.ultrasonic.view.FilterButtonBar
-import org.moire.ultrasonic.view.SortOrder
-import org.moire.ultrasonic.view.ViewCapabilities
+import org.moire.ultrasonic.domain.Artist
+import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
+import org.moire.ultrasonic.model.ArtistListViewModel
+import org.moire.ultrasonic.model.ServerSettingsModel
+import org.moire.ultrasonic.service.MediaPlayerManager
+import org.moire.ultrasonic.service.RxBus
+import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.ui.artistlist.ArtistContextAction
+import org.moire.ultrasonic.ui.artistlist.ArtistListActions
+import org.moire.ultrasonic.ui.artistlist.ArtistListRow
+import org.moire.ultrasonic.ui.artistlist.ArtistListScreen
+import org.moire.ultrasonic.ui.theme.TakiTheme
+import org.moire.ultrasonic.util.ContextMenuUtil
 
 /**
- * Displays the list of Artists or Indexes (folders) from the media library
+ * Displays the list of Artists or Indexes (folders) from the media library (issue #10 phase
+ * 4E1). A thin Compose host: it owns the unchanged `artistListFragment` nav-graph boundary and
+ * its `refresh`/`title` arguments, the RxBus server/folder-change subscriptions, and the
+ * playback/radio/download/navigation commands; everything visible is [ArtistListScreen]. The
+ * Activity's Material toolbar is hidden for this destination exactly as before
+ * (`NavigationActivity.hidesSupportActionBar`'s base set already includes
+ * `artistListFragment` - unchanged by this phase), so the shared `content_navigation_header`
+ * supplies the back affordance and no title is ever visibly shown, matching the legacy screen.
  */
-class ArtistListFragment(private var layoutType: LayoutType = LayoutType.COVER) :
-    EntryListFragment<ArtistOrIndex>(),
-    FilterableFragment {
-
-    override val listModel: ArtistListModel by viewModels()
-    override val mainLayout = R.layout.list_layout_generic
-
-    // Same fix as AlbumListFragment (commit 026aa795, "don't refresh the album list on back
-    // navigation"): without this, every open of this screen defaults to refresh=true and
-    // bypasses the Room cache backing getArtists()/getIndexes() unconditionally. This screen's
-    // own nav argument already defaults refresh to false; it's this Kotlin-level default that
-    // was still forcing it on.
-    override val refreshOnCreation: Boolean = false
+class ArtistListFragment : Fragment() {
 
     private val navArgs: ArtistListFragmentArgs by navArgs()
-    private var filterButtonBar: FilterButtonBar? = null
-    private var orderType: SortOrder = SortOrder.BY_NAME
+    private val viewModel: ArtistListViewModel by viewModels()
+    private val mediaPlayerManager: MediaPlayerManager by inject()
+    private val activeServerProvider: ActiveServerProvider by inject()
+    private val serverSettingsModel: ServerSettingsModel by viewModel()
 
-    // Set only when setOrderType() changes the order (never on initial load or when the same
-    // order is re-applied, e.g. state restored on back navigation) - see onListCommitted().
-    private var resetScrollOnNextUpdate = false
-
-    override var viewCapabilities = ViewCapabilities(
-        supportsGrid = true,
-        supportedSortOrders = getListOfSortOrders(),
-        sortOrderLabels = mapOf(SortOrder.BY_NAME to R.string.main_artists_alphaByName)
-    )
-
-    private val isStandalone: Boolean
-        get() = parentFragment !is MainFragment
-
-    override fun getLiveData(refresh: Boolean, append: Boolean): LiveData<List<ArtistOrIndex>> {
-        listModel.setSortOrder(orderType)
-        return listModel.getItems(navArgs.refresh || refresh, swipeRefresh!!)
-    }
+    private val rxBusSubscription = CompositeDisposable()
+    private val fallbackChromeInset = MutableStateFlow(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState != null) {
-            savedInstanceState.getString(LAYOUT_TYPE_KEY)?.let {
-                layoutType = LayoutType.valueOf(it)
+
+        // Same contract EntryListFragment used: refetch on server switch, and react to a
+        // folder change - whether it came from this screen's own TakiFolderSelectorHeader or
+        // (while this screen isn't even the one on screen) the still-legacy Album List's
+        // FolderSelectorBinder, exactly as before this phase.
+        rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
+            viewModel.load(refresh = true)
+        }
+        rxBusSubscription += RxBus.musicFolderChangedEventObservable.subscribe { folder ->
+            if (!ActiveServerProvider.isOffline()) {
+                val currentSetting = activeServerProvider.getActiveServer()
+                currentSetting.musicFolderId = folder.id
+                serverSettingsModel.updateItem(currentSetting)
             }
-            savedInstanceState.getString(ORDER_TYPE_KEY)?.let {
-                orderType = SortOrder.valueOf(it)
-            }
+            viewModel.load(refresh = true)
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val layout = if (isStandalone) R.layout.list_layout_filterable else mainLayout
-        return inflater.inflate(layout, container, false)
+        savedInstanceState: Bundle?,
+    ): View {
+        val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
+            ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    ArtistListScreen(
+                        state = state,
+                        actions = artistListActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setTitle(navArgs.title ?: getString(R.string.main_artists_title))
+        // The shared content_navigation_header supplies the back affordance; the toolbar is
+        // hidden for this destination, so this title is never visibly shown - kept only for
+        // parity with the legacy screen's (also invisible) ActionBar title.
+        setTitle(this, navArgs.title ?: getString(R.string.main_artists_title))
 
-        val onClick = { entry: ArtistOrIndex -> onItemClick(entry) }
-        val onMenuClick = { menuItem: android.view.MenuItem, entry: ArtistOrIndex ->
-            onContextMenuItemSelected(menuItem, entry)
-        }
-
-        viewAdapter.register(ArtistOrIndex::class).to(
-            ArtistRowBinder(
-                onItemClick = onClick,
-                onContextMenuClick = onMenuClick,
-                enableSections = false,
-                alwaysShowPicture = true,
-                defaultPicture = R.drawable.artist_placeholder
-            ),
-            ArtistGridBinder(onClick, onMenuClick)
-        ).withKotlinClassLinker { _, _ ->
-            when (layoutType) {
-                LayoutType.LIST -> ArtistRowBinder::class
-                LayoutType.COVER -> ArtistGridBinder::class
-            }
-        }
-
-        if (isStandalone) setupFilterBar(view)
-        setLayoutType(layoutType)
-        setOrderType(orderType)
+        viewModel.load(navArgs.refresh)
     }
 
-    override fun setLayoutType(newType: LayoutType) {
-        layoutType = newType
-        viewManager = when (newType) {
-            LayoutType.LIST -> LinearLayoutManager(context)
-
-            LayoutType.COVER -> GridLayoutManager(context, ARTIST_GRID_COLUMNS).apply {
-                spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                    override fun getSpanSize(position: Int): Int =
-                        if (viewAdapter.items.getOrNull(position) is ArtistOrIndex) {
-                            1
-                        } else {
-                            ARTIST_GRID_COLUMNS
-                        }
-                }
-            }
-        }
-        listView?.layoutManager = viewManager
-        viewAdapter.notifyDataSetChanged()
+    override fun onDestroy() {
+        super.onDestroy()
+        rxBusSubscription.dispose()
     }
 
-    override fun setOrderType(newOrder: SortOrder) {
-        // Re-sorting the same dataset by a different criterion invalidates the current scroll
-        // position entirely (the item that was on screen means nothing in the new order), so
-        // the list must land back at the top - but only when the order actually changes, not on
-        // initial load or when the previous order is merely re-applied (e.g. restored on back
-        // navigation), where the existing scroll position is still meaningful and must survive.
-        if (newOrder != orderType) resetScrollOnNextUpdate = true
-        orderType = newOrder
-        listModel.setSortOrder(newOrder, swipeRefresh)
+    private val artistListActions: ArtistListActions by lazy {
+        ArtistListActions(
+            onEntryClick = ::onEntryClick,
+            onContextAction = ::onContextAction,
+            onSortOrderSelected = viewModel::setSortOrder,
+            onLayoutTypeSelected = viewModel::setLayoutType,
+            onFolderSelected = { folderId ->
+                RxBus.musicFolderChangedEventPublisher.onNext(RxBus.Folder(folderId))
+            },
+            onRefresh = viewModel::refresh,
+        )
     }
 
-    override fun getOrderType(): SortOrder = orderType
-
-    override fun onListCommitted() {
-        if (resetScrollOnNextUpdate) {
-            resetScrollOnNextUpdate = false
-            listView?.scrollToPosition(0)
-        }
-    }
-
-    private fun setupFilterBar(view: View) {
-        filterButtonBar = view.findViewById(R.id.filter_button_bar)
-        filterButtonBar?.setOnLayoutTypeChangedListener(::setLayoutType)
-        filterButtonBar?.setOnOrderChangedListener(::setOrderType)
-        filterButtonBar?.configureWithCapabilities(viewCapabilities, orderType)
-        filterButtonBar?.setLayoutType(layoutType)
-    }
-
-    // Kept deliberately small: Name, Recently Played, Recently Added, Most Played (in that
-    // order). Random/Starred/By Genre are gone; Albums/Songs keep their own full option sets
-    // (getListOfSortOrders is local to this fragment, not shared). The online/offline gating
-    // mirrors what each order actually needs:
-    // RECENT/FREQUENT require a live server, NEWEST/BY_NAME can also work from an ID3-tagged
-    // offline cache.
-    private fun getListOfSortOrders(): List<SortOrder> {
-        val useId3Offline = Settings.id3TagsEnabledOffline
-        val isOnline = !ActiveServerProvider.isOffline()
-        val supported = mutableListOf<SortOrder>()
-
-        if (isOnline || useId3Offline) supported.add(SortOrder.BY_NAME)
-        if (isOnline) supported.add(SortOrder.RECENT)
-        if (isOnline || useId3Offline) supported.add(SortOrder.NEWEST)
-        if (isOnline) supported.add(SortOrder.FREQUENT)
-
-        return supported
-    }
-
-    override fun onItemClick(item: ArtistOrIndex) {
-        val action = if (item is Index) {
+    private fun onEntryClick(row: ArtistListRow) {
+        val item = viewModel.itemFor(row.id)
+        val action = if (row.isIndex) {
             NavigationGraphDirections.toTrackCollection(
-                id = item.id,
-                name = item.name,
-                parentId = item.id,
-                isArtist = false
+                id = row.id,
+                name = row.name,
+                parentId = row.id,
+                isArtist = false,
             )
         } else {
             NavigationGraphDirections.toArtistDetail(
-                artistId = item.id,
-                artistName = item.name ?: getString(R.string.common_artist),
-                artistCoverArt = item.coverArt
+                artistId = row.id,
+                artistName = item?.name ?: getString(R.string.common_artist),
+                artistCoverArt = item?.coverArt,
             )
         }
-
         findNavController().navigate(action)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(LAYOUT_TYPE_KEY, layoutType.name)
-        outState.putString(ORDER_TYPE_KEY, orderType.name)
-    }
-
-    companion object {
-        private const val ARTIST_GRID_COLUMNS = 3
-        private const val LAYOUT_TYPE_KEY = "artist_layout_type"
-        private const val ORDER_TYPE_KEY = "artist_order_type"
+    /**
+     * Reuses the unchanged [ContextMenuUtil.handleContextMenu] dispatch with a real [MenuItem]
+     * taken from a never-shown [PopupMenu], the same pattern
+     * `TrackCollectionFragment.runTrackContextAction` already established for Compose Album
+     * Detail's track context menu.
+     */
+    private fun onContextAction(row: ArtistListRow, action: ArtistContextAction) {
+        val item = viewModel.itemFor(row.id) ?: Artist(id = row.id, name = row.name)
+        val menuItemId = when (action) {
+            ArtistContextAction.PLAY_NOW -> R.id.menu_play_now
+            ArtistContextAction.PLAY_NEXT -> R.id.menu_play_next
+            ArtistContextAction.PLAY_LAST -> R.id.menu_play_last
+            ArtistContextAction.START_RADIO -> R.id.menu_start_radio
+            ArtistContextAction.DOWNLOAD -> R.id.menu_download
+        }
+        val menu = PopupMenu(requireContext(), requireView())
+        menu.menuInflater.inflate(R.menu.context_menu_artist, menu.menu)
+        val menuItem = menu.menu.findItem(menuItemId) ?: return
+        ContextMenuUtil.handleContextMenu(
+            menuItem = menuItem,
+            item = item,
+            isArtist = !row.isIndex,
+            mediaPlayerManager = mediaPlayerManager,
+            fragment = this,
+        )
     }
 }
