@@ -117,6 +117,11 @@ enum class AlbumOverflowItem { GO_TO_ARTIST, PLAY_NEXT, PLAY_LAST, START_RADIO }
  * `R.menu.context_menu_track_collection` (album mode). Every one is dispatched back to the
  * host, which invokes the unchanged `ContextMenuUtil` / `DownloadUtil` / add-to-playlist
  * paths - no playback / queue / radio logic is re-implemented in Compose.
+ *
+ * [REMOVE_FROM_PLAYLIST] is the one item Album Detail/Track List never show - it is
+ * `R.menu.context_menu_track_collection_playlist`'s one addition over the base menu (issue #10
+ * phase 4F3, Playlist Detail). Added here rather than a parallel enum so the other eight actions
+ * stay a single shared type across every track-context menu in the app.
  */
 enum class TrackContextAction {
     PLAY_NOW,
@@ -127,11 +132,12 @@ enum class TrackContextAction {
     ADD_TO_PLAYLIST,
     DOWNLOAD,
     DELETE,
+    REMOVE_FROM_PLAYLIST,
 }
 
 /**
- * Which of the three conditional track-context items to show, resolved once when the menu
- * opens (a point read of the download state + offline flag, exactly like the legacy
+ * Which of the conditional track-context items to show, resolved once when the menu opens (a
+ * point read of the download state + offline flag, exactly like the legacy
  * `Utils.createPopupMenu`). Ephemeral - never part of [AlbumDetailUiState].
  */
 @Immutable
@@ -139,4 +145,8 @@ data class TrackContextMenuState(
     val canAddToPlaylist: Boolean = true,
     val canDownload: Boolean = true,
     val canDelete: Boolean = false,
+    /** Playlist Detail only (issue #10 phase 4F3) - `Utils.createPopupMenu` hides
+     *  `song_menu_remove_from_playlist` offline, exactly like `canAddToPlaylist`. Defaults
+     *  false, so Album Detail/Track List's menus (which never set this) are unaffected. */
+    val canRemoveFromPlaylist: Boolean = false,
 )

@@ -233,6 +233,14 @@ class NavigationActivity : ScopeActivity() {
                 destination.id,
                 arguments?.getBoolean("isAlbum") == true,
             )
+            // Playlist Detail (issue #10 phase 4F3): the legacy screen already reused Album
+            // Detail's own hero binder (AlbumDetailHeaderBinder) for playlists, and its Compose
+            // replacement gets the exact same chrome treatment - the shared toolbar hidden, the
+            // shared content_navigation_header back bar shown instead. Distinct from
+            // isAlbumDetail only because it is keyed on the "playlistId" arg instead of
+            // "isAlbum".
+            val isPlaylistDetail = destination.id == R.id.trackCollectionFragment &&
+                !arguments?.getString("playlistId").isNullOrEmpty()
             // Genre and Daily Mix (issue #10 shell-continuity fix): same "hide the shared
             // toolbar" treatment as isAlbumDetail/isLibraryTrackCollection, but the Fragment
             // draws its own back+title header (see hidesSupportActionBar's kdoc) instead of the
@@ -274,6 +282,7 @@ class NavigationActivity : ScopeActivity() {
                 isLibraryTrackCollection,
                 isAlbumDetail,
                 isLightweightHeaderTrackCollection,
+                isPlaylistDetail,
             )
             if (usesContentHeader) {
                 supportActionBar?.hide()
@@ -289,7 +298,7 @@ class NavigationActivity : ScopeActivity() {
                 R.id.editServerFragment,
                 R.id.aboutFragment,
                 R.id.downloadsFragment
-            ) || isLibraryTrackCollection || isAlbumDetail ||
+            ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail ||
                 destination.id == R.id.settingsFragment ||
                 destination.id == R.id.equalizerFragment
             contentNavigationHeader?.visibility =
@@ -703,7 +712,10 @@ class NavigationActivity : ScopeActivity() {
          * same as it does for Compose Album Detail's `isAlbumDetail` - the difference is only
          * *where* the back+title row is drawn (Fragment-owned Compose view here, not the shared
          * `content_navigation_header`), because unlike `isAlbumDetail`/`isLibraryTrackCollection`
-         * this mode needs a visible title next to the back arrow. Pure so
+         * this mode needs a visible title next to the back arrow. [isPlaylistDetail] (issue #10
+         * phase 4F3) gets the exact same treatment as [isAlbumDetail] - the shared
+         * `content_navigation_header` back bar, no Fragment-owned header - since Playlist
+         * Detail's hero already carries its own title, same as Album Detail's. Pure so
          * `NavigationChromeSelectionTest` can lock it; the Activity still applies it in
          * `onDestinationChanged` (only runtime validation proves the `ActionBar.hide()` call).
          */
@@ -712,6 +724,7 @@ class NavigationActivity : ScopeActivity() {
             isLibraryTrackCollection: Boolean,
             isAlbumDetail: Boolean,
             isLightweightHeaderTrackCollection: Boolean = false,
+            isPlaylistDetail: Boolean = false,
         ): Boolean = destinationId in setOf(
             R.id.homeFragment,
             R.id.mainFragment,
@@ -730,6 +743,7 @@ class NavigationActivity : ScopeActivity() {
             R.id.editServerFragment,
             R.id.aboutFragment,
         ) || isLibraryTrackCollection || isAlbumDetail || isLightweightHeaderTrackCollection ||
+            isPlaylistDetail ||
             destinationId == R.id.settingsFragment ||
             destinationId == R.id.equalizerFragment
     }

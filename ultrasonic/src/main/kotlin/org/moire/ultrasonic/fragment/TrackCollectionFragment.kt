@@ -54,6 +54,7 @@ import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.model.AlbumDetailViewModel
+import org.moire.ultrasonic.model.PlaylistDetailViewModel
 import org.moire.ultrasonic.model.TrackListViewModel
 import org.moire.ultrasonic.service.DownloadService
 import org.moire.ultrasonic.service.DownloadState
@@ -62,6 +63,9 @@ import org.moire.ultrasonic.ui.album.AlbumDetailArgs
 import org.moire.ultrasonic.ui.album.AlbumDetailScreen
 import org.moire.ultrasonic.ui.album.AlbumOverflowItem
 import org.moire.ultrasonic.ui.album.TrackContextAction
+import org.moire.ultrasonic.ui.playlist.PlaylistDetailActions
+import org.moire.ultrasonic.ui.playlist.PlaylistDetailArgs
+import org.moire.ultrasonic.ui.playlist.PlaylistDetailScreen
 import org.moire.ultrasonic.ui.tracklist.TrackListActions
 import org.moire.ultrasonic.ui.tracklist.TrackListRow
 import org.moire.ultrasonic.ui.tracklist.TrackListScreen
@@ -189,6 +193,24 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             hasPlaylistId = navArgs.playlistId != null,
         )
 
+    // --- Compose Playlist Detail (issue #10 phase 4F3) ----------------------------------------
+    // A specialized sibling of Compose Album Detail, not a mode of TrackListScreen - the legacy
+    // screen already reused AlbumDetailHeaderBinder's own hero for playlists (see the audit in
+    // the phase 4F3 report), so this follows the exact same host pattern (isComposeAlbumMode /
+    // bindComposeAlbumDetail) rather than TrackListViewModel's. This makes the
+    // `else if (navArgs.playlistId != null)` AlbumDetailHeaderBinder registration, the
+    // `context_menu_track_collection_playlist` branch of the legacy TrackViewBinder's
+    // createContextMenu, and `showRating = !(... || navArgs.playlistId != null)` below
+    // unreachable dead code for playlists specifically (documented, not removed - same
+    // precedent as isComposeLibraryTrackListMode's own kdoc). `showPlaylistHeaderMenu`/
+    // `handlePlaylistHeaderMenuResult`/`showRenamePlaylistDialog`/`renamePlaylist`/
+    // `confirmDeletePlaylist` remain very much alive - they are reused as-is by
+    // `playlistDetailActions` below (see that property's kdoc).
+    private val playlistDetailViewModel: PlaylistDetailViewModel by viewModels()
+
+    private val isComposePlaylistDetailMode: Boolean
+        get() = navArgs.playlistId != null
+
     // --- Compose Track List (issue #10 phase 4F1: "Songs"/Liked Songs; phase 4F2: Genre
     // tracks/Daily Mix) --------------------------------------------------------------------
     // Every useLibraryTrackRows mode now switches to Compose here - isComposeLibraryTrackListMode
@@ -244,6 +266,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         if (isComposeAlbumMode) {
             bindComposeAlbumDetail()
+            return
+        }
+        if (isComposePlaylistDetailMode) {
+            bindComposePlaylistDetail()
             return
         }
         if (isComposeLibraryTrackListMode) {
@@ -830,7 +856,15 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return
 
         when (bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)) {
-            getString(R.string.common_download) -> downloadSelectedOrAllTracks()
+            // Playlist Detail is always Compose now (isComposePlaylistDetailMode) - this menu's
+            // only reachable caller is playlistDetailActions.onShowHeaderMenu, so "Download"
+            // reads the Compose ViewModel's snapshot, not the legacy (always-empty here)
+            // viewAdapter getSelectedOrAllTracks() used to.
+            getString(R.string.common_download) -> DownloadUtil.justDownload(
+                action = DownloadAction.DOWNLOAD,
+                fragment = this,
+                tracks = playlistDetailViewModel.tracksSnapshot(),
+            )
             getString(R.string.playlist_rename_action) -> showRenamePlaylistDialog()
             getString(R.string.common_delete) -> confirmDeletePlaylist()
         }
@@ -1338,6 +1372,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         savedInstanceState: Bundle?
     ): View? {
         if (isComposeAlbumMode) return createComposeAlbumView()
+        if (isComposePlaylistDetailMode) return createComposePlaylistDetailView()
         if (isComposeLibraryTrackListMode) return createComposeTrackListView()
         val layout = if (navArgs.libraryRoot) R.layout.list_layout_track_filterable else mainLayout
         return inflater.inflate(layout, container, false)
@@ -1548,6 +1583,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 runTrackContextAction(R.id.song_menu_download, listOf(track))
             TrackContextAction.DELETE ->
                 runTrackContextAction(R.id.song_menu_delete, listOf(track))
+            TrackContextAction.REMOVE_FROM_PLAYLIST ->
+                Unit // Album Detail never sets canRemoveFromPlaylist (issue #10 phase 4F3).
         }
     }
 
@@ -1600,6 +1637,192 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             coverArtId = coverEntry?.coverArt,
             coverArtKey = FileUtil.getAlbumArtKey(coverEntry, false),
         ).show(childFragmentManager, AlbumInfoBottomSheetFragment.TAG)
+    }
+
+    // ---- Compose Playlist Detail (issue #10 phase 4F3) ---------------------------------------
+
+    private fun createComposePlaylistDetailView(): View {
+        val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
+            ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by playlistDetailViewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val player by playbackUiStateHolder.playerState.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    PlaylistDetailScreen(
+                        state = state,
+                        actions = playlistDetailActions,
+                        currentTrackId = player.trackId,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun bindComposePlaylistDetail() {
+        // The Activity chrome (56dp back bar) supplies the back affordance; the toolbar title
+        // is hidden - exactly like Album Detail (NavigationActivity.isPlaylistDetail).
+        setTitle(this, "")
+
+        playlistDetailViewModel.load(playlistDetailArgs())
+
+        if (navArgs.autoPlay) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                playlistDetailViewModel.uiState.first { !it.isLoading }
+                if (!playlistDetailViewModel.uiState.value.loadFailed) {
+                    playComposePlaylist(shuffle = navArgs.shuffle)
+                }
+            }
+        }
+
+        // showPlaylistHeaderMenu (download/rename/delete) and addTracksToPlaylist (per-track
+        // "Add to playlist") both reuse the same ItemSelectionDialogFragment request key +
+        // router (handleSelectionDialogResult) the legacy View path used - see
+        // isComposePlaylistDetailMode's kdoc.
+        childFragmentManager.setFragmentResultListener(
+            ItemSelectionDialogFragment.REQUEST_KEY,
+            viewLifecycleOwner,
+            ::handleSelectionDialogResult,
+        )
+    }
+
+    private fun playlistDetailArgs(): PlaylistDetailArgs = PlaylistDetailArgs(
+        playlistId = navArgs.playlistId ?: error("isComposePlaylistDetailMode requires playlistId"),
+        playlistName = navArgs.playlistName
+            ?: error("isComposePlaylistDetailMode requires playlistName"),
+        radioAvailable = !isOffline(),
+    )
+
+    private val playlistDetailActions: PlaylistDetailActions by lazy {
+        PlaylistDetailActions(
+            onPlay = { playComposePlaylist(shuffle = false) },
+            onShuffle = { playComposePlaylist(shuffle = true) },
+            onShowHeaderMenu = ::showPlaylistHeaderMenu,
+            onTrackClick = ::playComposePlaylistTrack,
+            onTrackContextAction = ::handleComposePlaylistTrackContextAction,
+            trackContextMenuState = ::resolveComposePlaylistTrackContextMenuState,
+            onRefresh = { playlistDetailViewModel.refresh(playlistDetailArgs()) },
+        )
+    }
+
+    private fun playComposePlaylist(shuffle: Boolean) {
+        val tracks = playlistDetailViewModel.tracksSnapshot()
+        if (tracks.isEmpty()) return
+        // Matches the legacy playAll()'s unconditional assignment before addToPlaylist.
+        mediaPlayerManager.suggestedPlaylistName = navArgs.playlistName
+        mediaPlayerManager.addToPlaylist(
+            songs = tracks,
+            autoPlay = true,
+            shuffle = shuffle,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+        )
+    }
+
+    private fun playComposePlaylistTrack(trackId: String) {
+        val track = playlistDetailViewModel.trackFor(trackId) ?: return
+        if (track.isVideo) {
+            VideoPlayer.playVideo(requireContext(), track)
+            return
+        }
+        val all = playlistDetailViewModel.tracksSnapshot()
+        val startIndex = all.indexOfFirst { it.id == trackId }
+        if (startIndex < 0) return
+        mediaPlayerManager.addToPlaylist(
+            songs = all,
+            autoPlay = false,
+            shuffle = false,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = startIndex,
+        )
+    }
+
+    /**
+     * The per-track long-press menu (issue #10 phase 4F3 parity with the legacy
+     * `context_menu_track_collection_playlist`: the base menu plus "Remove from playlist").
+     * `PLAY_FROM_HERE`/`ADD_TO_PLAYLIST`/`REMOVE_FROM_PLAYLIST` are intercepted first, exactly
+     * like the legacy `onContextMenuItemSelected`; the rest reuse the same never-shown-[PopupMenu]
+     * dispatch Compose Album Detail already established.
+     */
+    private fun handleComposePlaylistTrackContextAction(trackId: String, action: TrackContextAction) {
+        val track = playlistDetailViewModel.trackFor(trackId) ?: return
+        when (action) {
+            TrackContextAction.PLAY_FROM_HERE -> playComposePlaylistTrack(trackId)
+            TrackContextAction.ADD_TO_PLAYLIST -> addTracksToPlaylist(listOf(track))
+            TrackContextAction.REMOVE_FROM_PLAYLIST -> removeFromComposePlaylist(trackId)
+            TrackContextAction.PLAY_NOW ->
+                runTrackContextAction(R.id.song_menu_play_now, listOf(track))
+            TrackContextAction.PLAY_NEXT ->
+                runTrackContextAction(R.id.song_menu_play_next, listOf(track))
+            TrackContextAction.PLAY_LAST ->
+                runTrackContextAction(R.id.song_menu_play_last, listOf(track))
+            TrackContextAction.START_RADIO ->
+                runTrackContextAction(R.id.song_menu_start_radio, listOf(track))
+            TrackContextAction.DOWNLOAD ->
+                runTrackContextAction(R.id.song_menu_download, listOf(track))
+            TrackContextAction.DELETE ->
+                runTrackContextAction(R.id.song_menu_delete, listOf(track))
+        }
+    }
+
+    /**
+     * "Quitar de esta playlist" - Compose port of the legacy `removeFromPlaylist`. The index is
+     * the track's position in [PlaylistDetailViewModel.tracksSnapshot], the same ordering
+     * `updatePlaylist`'s `songIndexesToRemove` expects (positional, not by id - a playlist can
+     * contain the same song more than once). The row is only removed from the ViewModel once the
+     * network call actually succeeds, exactly like the legacy code mutated `listModel.currentList`
+     * only after the call returned.
+     */
+    private fun removeFromComposePlaylist(trackId: String) {
+        val playlistId = navArgs.playlistId ?: return
+        val track = playlistDetailViewModel.trackFor(trackId) ?: return
+        val index = playlistDetailViewModel.indexOf(trackId) ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(getString(R.string.playlist_remove_error))
+        ) {
+            withContext(Dispatchers.IO) {
+                MusicServiceFactory.getMusicService()
+                    .updatePlaylist(playlistId, null, null, null, listOf(index))
+            }
+            playlistDetailViewModel.removeTrackAt(trackId)
+            toast(
+                getString(
+                    R.string.playlist_removed_from_playlist,
+                    track.title ?: track.name.orEmpty()
+                )
+            )
+        }
+    }
+
+    /** `Utils.createPopupMenu`'s per-track gating for
+     *  `context_menu_track_collection_playlist`, resolved once when the menu opens - a point
+     *  read of the download state + offline flag, matching
+     *  [resolveComposeTrackContextMenuState]'s Album Detail equivalent plus
+     *  `canRemoveFromPlaylist`, gated offline exactly like `canAddToPlaylist` was in the legacy
+     *  popup. */
+    private fun resolveComposePlaylistTrackContextMenuState(trackId: String): TrackContextMenuState {
+        val track = playlistDetailViewModel.trackFor(trackId) ?: return TrackContextMenuState()
+        val online = !isOffline()
+        val downloadState = DownloadService.getDownloadState(track)
+        val isDownloaded =
+            downloadState == DownloadState.DONE || downloadState == DownloadState.PINNED
+        val canDownload = downloadState == DownloadState.IDLE ||
+            downloadState == DownloadState.FAILED ||
+            downloadState == DownloadState.CANCELLED
+        return TrackContextMenuState(
+            canAddToPlaylist = online,
+            canDownload = canDownload && online,
+            canDelete = isDownloaded,
+            canRemoveFromPlaylist = online,
+        )
     }
 
     // ---- Compose Track List (issue #10 phase 4F1: "Songs"/Liked Songs; phase 4F2: Genre
@@ -1761,6 +1984,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         TrackContextAction.DELETE -> R.id.song_menu_delete
         TrackContextAction.PLAY_FROM_HERE, TrackContextAction.ADD_TO_PLAYLIST ->
             error("handled directly in onTrackListContextAction")
+        TrackContextAction.REMOVE_FROM_PLAYLIST ->
+            error("Track List never sets canRemoveFromPlaylist - see PlaylistDetailScreen's own dispatch (issue #10 phase 4F3)")
     }
 
     /** `Utils.createPopupMenu`'s per-track gating, resolved once when the menu opens - a point

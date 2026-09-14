@@ -31,6 +31,10 @@ import org.robolectric.RobolectricTestRunner
  * destination-id-only check originally missed this, leaving the shared olive toolbar visible
  * over the downloaded album screen.
  *
+ * Also locks Playlist Detail (`isPlaylistDetail`, issue #10 phase 4F3): it gets the exact same
+ * treatment as `isAlbumDetail` - the shared `content_navigation_header` back bar, no
+ * Fragment-owned header - since its hero already carries the playlist's own title.
+ *
  * This can only assert the *selection*; that the Activity then actually calls
  * `supportActionBar?.hide()` is Activity-runtime behaviour, validated on the Pixel 7.
  */
@@ -42,11 +46,13 @@ class NavigationChromeSelectionTest {
         libraryTrackCollection: Boolean = false,
         albumDetail: Boolean = false,
         lightweightHeaderTrackCollection: Boolean = false,
+        playlistDetail: Boolean = false,
     ) = NavigationActivity.hidesSupportActionBar(
         id,
         libraryTrackCollection,
         albumDetail,
         lightweightHeaderTrackCollection,
+        playlistDetail,
     )
 
     @Test
@@ -111,11 +117,24 @@ class NavigationChromeSelectionTest {
     }
 
     @Test
-    fun `playlist detail and liked songs are unaffected by the lightweight header flag`() {
-        // Playlist detail: none of the three flags apply to it, it keeps its existing behaviour.
+    fun `liked songs is unaffected by the lightweight header flag - it already hid the toolbar`() {
         assertFalse(hides(R.id.trackCollectionFragment))
         // Liked Songs already hid the toolbar via isLibraryTrackCollection before this fix.
         assertTrue(hides(R.id.trackCollectionFragment, libraryTrackCollection = true))
+    }
+
+    // --- isPlaylistDetail (issue #10 phase 4F3) -----------------------------------------------
+
+    @Test
+    fun `playlist detail hides the toolbar only via the isPlaylistDetail flag, not its id`() {
+        assertFalse(hides(R.id.trackCollectionFragment))
+        assertTrue(hides(R.id.trackCollectionFragment, playlistDetail = true))
+    }
+
+    @Test
+    fun `playlist detail gets the same treatment as album detail - the shared back bar, no Fragment header`() {
+        assertTrue(hides(R.id.trackCollectionFragment, playlistDetail = true))
+        assertTrue(hides(R.id.trackCollectionFragment, albumDetail = true))
     }
 
     // --- isAlbumDetailDestination (issue #10 phase 4D shell-continuity fix) ---------------
