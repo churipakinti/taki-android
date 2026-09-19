@@ -28,8 +28,11 @@ import org.moire.ultrasonic.ui.theme.TakiTheme
 /**
  * A generic list-mode row for a browse list (issue #10 phase 4E1): a compact artwork thumbnail,
  * a one-line title and an optional one-line subtitle. Not tied to any one entity - built for
- * Artist List (title only) and designed to be reused as-is by Album List (title + subtitle) in
- * a later phase.
+ * Artist List (title only), reused as-is by Album List (title + subtitle), and extended with
+ * [caption]/[trailing] in phase 4G1 for Playlists List, whose legacy row carries a third
+ * (download-status) line and an always-visible trailing menu button/progress spinner slot that
+ * neither prior caller needed. Both are opt-in and default to absent, so Artist/Album List are
+ * unaffected.
  *
  * [onLongClick] opens the caller's context menu; `combinedClickable` guarantees a long press
  * cannot also fire [onClick], matching [TakiTrackRow]'s row-tap contract.
@@ -41,8 +44,15 @@ fun TakiEntryRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    /** A third text line below [subtitle] (issue #10 phase 4G1 - Playlists List's download
+     *  status, e.g. "Downloaded"). Null for every row that doesn't need one. */
+    caption: String? = null,
     placeholder: Painter = painterResource(R.drawable.unknown_album),
     onLongClick: (() -> Unit)? = null,
+    /** An optional trailing slot (issue #10 phase 4G1 - Playlists List's per-row "more options"
+     *  icon button, swapped for a progress spinner while busy). Null for every row that doesn't
+     *  need one. */
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -74,6 +84,18 @@ fun TakiEntryRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            if (caption != null) {
+                Text(
+                    text = caption,
+                    style = TakiTheme.type.caption,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        if (trailing != null) {
+            Spacer(Modifier.width(TakiTheme.spacing.xs))
+            trailing()
         }
     }
 }

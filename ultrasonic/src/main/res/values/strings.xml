@@ -230,8 +230,6 @@
     <string name="playlist.remove_error">Could not remove the song from the playlist.</string>
     <string name="playlist.menu_unavailable_offline">Not available offline.</string>
     <string name="playlist.remove_download_description">Remove downloaded playlist</string>
-    <string name="playlist.status_checking">Checking download…</string>
-    <string name="playlist.status_not_downloaded">Not downloaded</string>
     <string name="playlist.status_downloading">Downloading…</string>
     <string name="playlist.status_downloaded">Downloaded</string>
     <string name="playlist.status_partial">Partially downloaded</string>

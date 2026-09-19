@@ -150,8 +150,6 @@
     <string name="playlist.create_error">No se pudo crear la lista de reproducción.</string>
     <string name="playlist.download_description">Descargar lista de reproducción</string>
     <string name="playlist.remove_download_description">Eliminar lista descargada</string>
-    <string name="playlist.status_checking">Comprobando descarga…</string>
-    <string name="playlist.status_not_downloaded">No descargada</string>
     <string name="playlist.status_downloading">Descargando…</string>
     <string name="playlist.status_downloaded">Descargada</string>
     <string name="playlist.status_partial">Descarga parcial</string>

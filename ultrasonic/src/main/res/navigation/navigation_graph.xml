@@ -262,7 +262,7 @@
     </fragment>
     <fragment
         android:id="@+id/playlistsFragment"
-        android:name="org.moire.ultrasonic.fragment.legacy.PlaylistsFragment">
+        android:name="org.moire.ultrasonic.fragment.PlaylistListFragment">
     </fragment>
     <fragment
         android:id="@+id/createPlaylistFragment"

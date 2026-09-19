@@ -43,9 +43,10 @@ data class PlaylistDetailUiState(
     val songCount: Int = 0,
     /** Pre-formatted total running time (`Util.formatTotalDuration`), or null when unknown. */
     val totalDuration: String? = null,
-    /** Coil model for the hero cover (the first track that actually has one - see
-     *  `PlaylistsFragment.bindPlaylistCover`'s own comment on why a single representative cover
-     *  beats a collage), or null for the neutral placeholder. */
+    /** Coil model for the hero cover (the first track that actually has one - a single
+     *  representative cover was chosen over a collage, the same choice
+     *  [org.moire.ultrasonic.model.PlaylistListViewModel] makes for Playlists List's own rows,
+     *  issue #10 phase 4G1), or null for the neutral placeholder. */
     val artworkModel: CoverArtRequest? = null,
     /** Whether "Start radio" is offered in the per-track context menu (hidden offline, like the
      *  legacy `song_menu_start_radio` visibility). */
