@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.AlbumInfo
 import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.domain.Genre
@@ -52,25 +51,6 @@ class TrackCollectionModel(application: Application) : GenericListModel(applicat
             val musicDirectory = MusicDirectory().apply { addAll(tracks) }
             currentListIsSortable = false
             updateList(musicDirectory)
-        }
-    }
-
-    val downloadedAlbums: MutableLiveData<List<Album>> = MutableLiveData()
-
-    /**
-     * The Downloads screen's top level: downloaded tracks grouped by album. An album's
-     * songCount reflects its full length on the server, which may be larger than what's
-     * actually downloaded (the user might have grabbed only some tracks) -- so it's overwritten
-     * here with the real local count instead of trusting the cached server value.
-     */
-    suspend fun getDownloadedAlbums() {
-        withContext(Dispatchers.IO) {
-            val db = activeServerProvider.offlineMetaDatabase
-            val counts = db.trackDao().get().groupingBy { it.albumId }.eachCount()
-            val albums = db.albumDao().get()
-                .onEach { it.songCount = (counts[it.id] ?: 0).toLong() }
-                .sortedBy { it.title.orEmpty().lowercase(Locale.ROOT) }
-            downloadedAlbums.postValue(albums)
         }
     }
 

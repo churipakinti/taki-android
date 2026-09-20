@@ -158,6 +158,17 @@ class NavigationChromeSelectionTest {
         assertTrue(hides(R.id.selectGenreFragment))
     }
 
+    // --- Downloads (issue #10 phase 4G3) ------------------------------------------------------
+
+    @Test
+    fun `downloads hides the shared toolbar - it was already in the base set before this phase`() {
+        // No NavigationActivity change was needed for phase 4G3 either - downloadsFragment was
+        // already in hidesSupportActionBar's base id set (and showsContentBackButton's) before
+        // the legacy DownloadsFragment was replaced with the Compose one, which draws its own
+        // "Downloads" title under the shared content_navigation_header back bar.
+        assertTrue(hides(R.id.downloadsFragment))
+    }
+
     // --- isAlbumDetailDestination (issue #10 phase 4D shell-continuity fix) ---------------
 
     @Test

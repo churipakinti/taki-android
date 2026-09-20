@@ -8,87 +8,124 @@
 package org.moire.ultrasonic.fragment
 
 import android.os.Bundle
-import android.view.MenuItem
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.ImageView
-import android.widget.Toast
+import android.view.ViewGroup
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
-import org.moire.ultrasonic.adapters.DownloadedAlbumRowBinder
-import org.moire.ultrasonic.domain.Album
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
-import org.moire.ultrasonic.model.TrackCollectionModel
-import org.moire.ultrasonic.service.DownloadService
-import org.moire.ultrasonic.util.toastingExceptionHandler
+import org.moire.ultrasonic.model.DownloadsEvent
+import org.moire.ultrasonic.model.DownloadsViewModel
+import org.moire.ultrasonic.ui.downloads.DownloadedAlbumRow
+import org.moire.ultrasonic.ui.downloads.DownloadsActions
+import org.moire.ultrasonic.ui.downloads.DownloadsScreen
+import org.moire.ultrasonic.ui.theme.TakiTheme
+import org.moire.ultrasonic.util.CommunicationError
+import org.moire.ultrasonic.util.Util.toast
 
 /**
- * A download manager: the albums that currently have downloaded/pinned tracks, shown as cards
- * (same visual language as the Playlists screen). Tapping a card opens [DownloadedAlbumFragment]
- * for that album; the trash icon removes its downloaded tracks directly from this screen without
- * having to open it first.
+ * A download manager: the albums that currently have downloaded/pinned tracks (issue #10 phase
+ * 4G3) - a thin Compose host that owns the unchanged `downloadsFragment` nav-graph boundary (no
+ * arguments), the tap-to-open navigation and the toasts; everything visible is
+ * [DownloadsScreen]. Tapping an album opens [DownloadedAlbumFragment]; the trash icon removes
+ * its downloaded tracks directly from this screen.
  *
- * Deliberately does not extend [TrackCollectionFragment] -- this screen shows Album cards, not
- * Track rows, so it has nothing to gain from that class's track-selection/context-menu
- * machinery. [MultiListFragment] already provides everything actually needed (swipe refresh,
- * empty state, RecyclerView).
+ * The Activity's Material toolbar was already hidden for this destination before this phase
+ * (`NavigationActivity.hidesSupportActionBar`'s base set includes `downloadsFragment`), so the
+ * shared `content_navigation_header` supplies the back affordance. There is no RxBus subscription
+ * - the legacy screen had none.
  */
-class DownloadsFragment : MultiListFragment<Album>() {
-    override val listModel: TrackCollectionModel by viewModels()
-    override val mainLayout: Int = R.layout.downloads
+class DownloadsFragment : Fragment() {
+
+    private val viewModel: DownloadsViewModel by viewModels()
+    private val fallbackChromeInset = MutableStateFlow(0)
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
+            ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    DownloadsScreen(
+                        state = state,
+                        actions = downloadsActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setTitle(this, R.string.menu_downloads)
-        emptyTextView.setText(R.string.download_empty)
-        emptyView.findViewById<ImageView>(R.id.empty_list_icon)
-            .setImageResource(R.drawable.ic_menu_download)
+        // Re-query on every view creation (as the legacy screen did), so coming back from a
+        // downloaded album shows current data.
+        viewModel.load()
 
-        viewAdapter.register(
-            DownloadedAlbumRowBinder(
-                onItemClick = ::onItemClick,
-                onRemoveDownload = ::removeAlbumDownload
-            )
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.events.collect(::onEvent)
+            }
+        }
+    }
+
+    private val downloadsActions: DownloadsActions by lazy {
+        DownloadsActions(
+            onAlbumClick = ::onAlbumClick,
+            onRemoveClick = { viewModel.removeAlbum(it.id) },
+            onRefresh = viewModel::refresh,
         )
     }
 
-    override fun getLiveData(refresh: Boolean, append: Boolean): LiveData<List<Album>> {
-        listModel.viewModelScope.launch(toastingExceptionHandler()) {
-            swipeRefresh?.isRefreshing = true
-            listModel.getDownloadedAlbums()
-            swipeRefresh?.isRefreshing = false
-        }
-        return listModel.downloadedAlbums
-    }
-
-    override fun onItemClick(item: Album) {
+    private fun onAlbumClick(row: DownloadedAlbumRow) {
         findNavController().navigate(
             NavigationGraphDirections.toDownloadedAlbum(
-                id = item.id,
-                name = item.title
-            )
+                id = row.id,
+                name = row.title,
+            ),
         )
     }
 
-    private fun removeAlbumDownload(album: Album) {
-        viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
-            val tracks = listModel.getDownloadedTracksForAlbum(album.id)
-            DownloadService.deleteAsync(tracks)
-            listModel.getDownloadedAlbums()
-
-            Toast.makeText(
-                requireContext(),
-                resources.getQuantityString(R.plurals.n_songs_deleted, tracks.size, tracks.size),
-                Toast.LENGTH_SHORT
-            ).show()
+    private fun onEvent(event: DownloadsEvent) {
+        when (event) {
+            is DownloadsEvent.Removed -> toast(
+                resources.getQuantityString(
+                    R.plurals.n_songs_deleted,
+                    event.songCount,
+                    event.songCount,
+                ),
+            )
+            is DownloadsEvent.Error -> toast(
+                " ${CommunicationError.getErrorMessage(event.cause)}",
+                shortDuration = false,
+            )
         }
     }
-
-    override fun onContextMenuItemSelected(menuItem: MenuItem, item: Album): Boolean = false
 }
