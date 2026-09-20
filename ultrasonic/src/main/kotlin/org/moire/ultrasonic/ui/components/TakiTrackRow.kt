@@ -128,13 +128,13 @@ private fun TrackLeadingColumn(number: String?, isCurrent: Boolean) {
 /**
  * A quiet "Disc N" marker between two discs' tracks on a multi-disc album, with the same
  * per-disc Play / Download affordances the legacy `DiscHeaderBinder` carried. Never shown for
- * single-disc albums.
+ * single-disc albums. A null [onDownload] hides the Download button (offline mode).
  */
 @Composable
 fun TakiDiscHeader(
     label: String,
     onPlay: () -> Unit,
-    onDownload: () -> Unit,
+    onDownload: (() -> Unit)?,
     playContentDescription: String,
     downloadContentDescription: String,
     modifier: Modifier = Modifier,
@@ -165,12 +165,14 @@ fun TakiDiscHeader(
                 contentDescription = playContentDescription,
                 iconSize = TakiTheme.dimensions.iconSm,
             )
-            TakiIconButton(
-                onClick = onDownload,
-                painter = painterResource(R.drawable.ic_menu_download),
-                contentDescription = downloadContentDescription,
-                iconSize = TakiTheme.dimensions.iconSm,
-            )
+            if (onDownload != null) {
+                TakiIconButton(
+                    onClick = onDownload,
+                    painter = painterResource(R.drawable.ic_menu_download),
+                    contentDescription = downloadContentDescription,
+                    iconSize = TakiTheme.dimensions.iconSm,
+                )
+            }
         }
     }
 }

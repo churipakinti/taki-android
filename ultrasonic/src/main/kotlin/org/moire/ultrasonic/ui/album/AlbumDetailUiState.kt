@@ -9,7 +9,9 @@ package org.moire.ultrasonic.ui.album
 
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import org.moire.ultrasonic.imageloader.CoverArtRequest
 
 /**
@@ -51,6 +53,14 @@ data class AlbumDetailUiState(
     /** Whether the "Start radio" overflow item is offered (hidden offline, like the legacy
      *  `song_menu_start_radio` visibility). */
     val radioAvailable: Boolean = true,
+    /** False while the app is in offline mode: the star and Download actions need the server (or
+     *  do nothing), so the hero hides them (issue #10 phase 4H1). True for every online album. */
+    val online: Boolean = true,
+    /** True only for the offline/downloaded album (issue #10 phase 4H1): each track row carries
+     *  the legacy per-track download-status indicator from [trackStatuses]. */
+    val showDownloadStatus: Boolean = false,
+    /** Resolved per-track download status, keyed by track id. Absent = not resolved yet / none. */
+    val trackStatuses: ImmutableMap<String, TrackDownloadIndicator> = persistentMapOf(),
     val rows: ImmutableList<AlbumDetailRow> = persistentListOf(),
 ) {
     val hasContent: Boolean get() = rows.isNotEmpty()
@@ -59,6 +69,18 @@ data class AlbumDetailUiState(
     val showEmpty: Boolean get() = !isLoading && rows.isEmpty()
 
     val infoAvailable: Boolean get() = !notes.isNullOrEmpty()
+
+    /** A folder-mode directory that holds only sub-folders (no tracks): the legacy screen showed
+     *  just the folder rows with no hero header, so Play/Shuffle/Download have nothing to act on
+     *  and are hidden. */
+    val hasTracks: Boolean get() = songCount > 0
+}
+
+/** One track's download status as the legacy row indicator showed it. [progress] is only
+ *  meaningful for [Kind.DOWNLOADING]. */
+@Immutable
+data class TrackDownloadIndicator(val kind: Kind, val progress: Int? = null) {
+    enum class Kind { DOWNLOADED, FAILED, DOWNLOADING, QUEUED }
 }
 
 /**
@@ -85,6 +107,20 @@ sealed interface AlbumDetailRow {
         val duration: String?,
         val isVideo: Boolean,
     ) : AlbumDetailRow
+
+    /**
+     * A sub-folder inside a folder-mode (non-ID3) album directory - e.g. a disc-per-folder
+     * layout. Tapping it opens that folder as another album (issue #10 phase 4H1: the legacy
+     * `AlbumRowDelegate` row). No long-press: the legacy folder-row menu resolved to an empty
+     * track list and did nothing.
+     */
+    @Immutable
+    data class Folder(
+        val id: String,
+        val title: String,
+        val artist: String?,
+        val artworkModel: CoverArtRequest? = null,
+    ) : AlbumDetailRow
 }
 
 /**
@@ -107,6 +143,9 @@ data class AlbumDetailArgs(
      *  - no network call at all, and no notes/starred fold-in (the legacy screen never called
      *  `loadAlbumInfo`/`loadAlbumStarred` either). */
     val isDownloadedAlbum: Boolean = false,
+    /** `!ActiveServerProvider.isOffline()` at open time - whether the server-dependent hero
+     *  actions (star, Download) are offered (issue #10 phase 4H1). */
+    val online: Boolean = true,
 )
 
 /** The four secondary actions on the Album Detail overflow (issue #16 parity). */

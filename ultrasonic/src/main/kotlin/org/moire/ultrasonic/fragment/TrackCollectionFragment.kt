@@ -1442,8 +1442,17 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 radioAvailable = !isOffline(),
                 refresh = navArgs.refresh,
                 isDownloadedAlbum = isDownloadedAlbumSource,
+                online = !isOffline(),
             )
         )
+
+        // Downloaded albums show the legacy per-row download status (issue #10 phase 4H1). The
+        // RxBus subscription stays at the Fragment boundary; the ViewModel only applies it.
+        if (isDownloadedAlbumSource) {
+            rxBusSubscription += RxBus.trackDownloadStateObservable.subscribe {
+                albumDetailViewModel.onTrackDownloadState(it.id, it.state, it.progress)
+            }
+        }
 
         // Album Detail heart (issue #15): reconcile the optimistic icon if the server rejected
         // the star/unstar, same as the legacy RxBus subscription.
@@ -1492,6 +1501,23 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 )
             },
             onRefresh = { albumDetailViewModel.refresh() },
+            onFolderClick = ::openComposeAlbumFolder,
+            onTrackStatusNeeded = albumDetailViewModel::requestTrackStatus,
+            onDownloadErrorClick = { toast(R.string.download_download_error) },
+        )
+    }
+
+    /** A sub-folder row of a folder-mode album: the same navigation the legacy `onItemClick`
+     *  used for a directory child. */
+    private fun openComposeAlbumFolder(folderId: String) {
+        val folder = albumDetailViewModel.folderFor(folderId) ?: return
+        findNavController().navigate(
+            NavigationGraphDirections.toTrackCollection(
+                id = folder.id,
+                isAlbum = true,
+                name = folder.title,
+                parentId = folder.parent,
+            )
         )
     }
 
@@ -2154,14 +2180,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
          * flat track list) and excluded `DownloadedAlbumFragment`. Phase 4D lifted both
          * restrictions: [org.moire.ultrasonic.model.AlbumDetailViewModel] already loads
          * folder-mode albums via `getMusicDirectory` and offline albums via the local database.
-         * One known, documented, narrow limitation remains from 4A: a folder-mode album whose
-         * directory contains nested sub-folders (e.g. a disc-per-folder layout) shows only the
-         * tracks directly in that folder, same as the ViewModel's existing `filterIsInstance
-         * <Track>()` - the legacy screen's `AlbumRowDelegate` sub-folder rows are not
-         * reproduced here. This is uncommon (most folder libraries are flat, and multi-disc
-         * folder albums typically use a `discNumber` file tag instead of sub-folders, which
-         * this screen already handles), so it is shipped as a disclosed limitation rather than
-         * a blocking gap - see the phase 4D report.
+         * Phase 4H1 closed the last known gap: a folder-mode directory that contains
+         * sub-folders (e.g. a disc-per-folder layout) now shows them as tappable folder rows, as
+         * the legacy `AlbumRowDelegate` did.
          */
         fun shouldUseComposeAlbumDetail(
             allow: Boolean,

@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import java.util.Collections
 import java.util.Locale
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,13 +27,18 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.domain.Album
+import org.moire.ultrasonic.domain.MusicDirectory
+import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
+import org.moire.ultrasonic.service.DownloadService
+import org.moire.ultrasonic.service.DownloadState
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.album.AlbumDetailArgs
 import org.moire.ultrasonic.ui.album.AlbumDetailRow
 import org.moire.ultrasonic.ui.album.AlbumDetailUiState
+import org.moire.ultrasonic.ui.album.TrackDownloadIndicator
 import org.moire.ultrasonic.util.EntryByDiscAndTrackComparator
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
@@ -64,15 +70,21 @@ class AlbumDetailViewModel(application: Application) :
     /** The unsliced, sorted track list - playback and the info sheet read it, no re-fetch. */
     private var rawTracks: List<Track> = emptyList()
 
-    /** The online album track list. id3 -> `getAlbumAsDir`; folder -> `getMusicDirectory`,
-     *  tracks only (issue #10 phase 4D: a folder-mode directory can also return sub-folder
-     *  children - e.g. a disc-per-folder layout - which the legacy screen shows as tappable
-     *  rows via `AlbumRowDelegate`; this Compose screen deliberately keeps the phase-4A
-     *  "tracks only" behavior rather than adding a second row/navigation shape, so a folder-mode
-     *  album with nested sub-folders shows only the tracks directly in that folder. Documented,
-     *  narrow, non-blocking limitation - see the phase 4D report). Mirrors
-     *  `TrackCollectionModel.getAlbum` / `getMusicDirectory`. Test seam. */
-    internal var albumLoader: suspend (AlbumDetailArgs) -> List<Track>? = { args ->
+    /** Folder-mode sub-folders (issue #10 phase 4H1), in display order, for tap lookup. Empty for
+     *  id3 and downloaded albums. */
+    private var rawFolders: List<MusicDirectory.Child> = emptyList()
+
+    /** Every child in display order - the legacy screen mixed tracks + sub-folders list. */
+    private var rawChildren: List<MusicDirectory.Child> = emptyList()
+
+    private val requestedStatuses = mutableSetOf<String>()
+
+    /** The online album children. id3 -> `getAlbumAsDir`; folder -> `getMusicDirectory`, which
+     *  can also return sub-folder children (e.g. a disc-per-folder layout) - those are kept here
+     *  (issue #10 phase 4H1) and shown as tappable folder rows, like the legacy
+     *  `AlbumRowDelegate`. Mirrors `TrackCollectionModel.getAlbum` / `getMusicDirectory`. Test
+     *  seam. */
+    internal var albumLoader: suspend (AlbumDetailArgs) -> List<MusicDirectory.Child>? = { args ->
         withContext(Dispatchers.IO) {
             val service = MusicServiceFactory.getMusicService()
             val id = args.id ?: return@withContext emptyList()
@@ -81,7 +93,7 @@ class AlbumDetailViewModel(application: Application) :
             } else {
                 service.getMusicDirectory(id, args.name, args.refresh)
             }
-            dir.getChildren().filterIsInstance<Track>()
+            dir.getChildren()
         }
     }
 
@@ -109,6 +121,12 @@ class AlbumDetailViewModel(application: Application) :
         }
     }
 
+    /** A track's current download status (the legacy row's bind-time
+     *  `DownloadService.getDownloadState` lookup). Test seam. */
+    internal var statusResolver: suspend (Track) -> DownloadState = { track ->
+        withContext(Dispatchers.IO) { DownloadService.getDownloadState(track) }
+    }
+
     /**
      * Load the album once. Idempotent across Fragment view recreation - the same args (barring
      * an explicit refresh) return without a new call.
@@ -124,16 +142,18 @@ class AlbumDetailViewModel(application: Application) :
                 loadFailed = false,
                 albumId = args.id,
                 title = it.title.ifEmpty { args.name.orEmpty() },
-                starVisible = true,
+                starVisible = args.online,
                 radioAvailable = args.radioAvailable,
+                online = args.online,
+                showDownloadStatus = args.isDownloadedAlbum,
             )
         }
 
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            val tracks = loadTracksSafely(args)
+            val children = loadChildrenSafely(args)
 
-            if (tracks == null) {
+            if (children == null) {
                 // A failed refresh must not destroy an album that is already on screen - only
                 // the very first load surfaces the "No media found" state.
                 _uiState.update {
@@ -142,11 +162,13 @@ class AlbumDetailViewModel(application: Application) :
                 return@launch
             }
 
-            rawTracks = sortForDisplay(tracks)
+            rawChildren = sortForDisplay(children)
+            rawTracks = rawChildren.filterIsInstance<Track>()
+            rawFolders = rawChildren.filter { it.isDirectory }
             _uiState.update { current ->
                 project(current, args).copy(
                     isLoading = false,
-                    loadFailed = rawTracks.isEmpty(),
+                    loadFailed = rawChildren.isEmpty(),
                 )
             }
 
@@ -156,7 +178,7 @@ class AlbumDetailViewModel(application: Application) :
 
     /** Dispatches to the offline or online loader and turns any failure into `null`, exactly
      *  as [load] did inline before this was extracted to keep `load`'s own complexity down. */
-    private suspend fun loadTracksSafely(args: AlbumDetailArgs): List<Track>? = try {
+    private suspend fun loadChildrenSafely(args: AlbumDetailArgs): List<MusicDirectory.Child>? = try {
         if (args.isDownloadedAlbum) {
             args.id?.let { offlineAlbumLoader(it) } ?: emptyList()
         } else {
@@ -208,14 +230,50 @@ class AlbumDetailViewModel(application: Application) :
     /** All album tracks in display order - the Fragment's playback commands read this. */
     fun tracksSnapshot(): List<Track> = rawTracks
 
+    /** The folder-mode sub-folder behind a tapped folder row (issue #10 phase 4H1). */
+    fun folderFor(id: String): MusicDirectory.Child? = rawFolders.firstOrNull { it.id == id }
+
+    /** Resolve one row's download status, once (downloaded albums only). */
+    fun requestTrackStatus(trackId: String) {
+        if (!_uiState.value.showDownloadStatus || !requestedStatuses.add(trackId)) return
+        val track = trackFor(trackId) ?: return
+        viewModelScope.launch {
+            val state = try {
+                statusResolver(track)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") expected: Exception) {
+                return@launch
+            }
+            applyTrackStatus(trackId, state, progress = null)
+        }
+    }
+
+    /** A live download-state change from the Fragment RxBus subscription. An id that is not one
+     *  of this album tracks is ignored. */
+    fun onTrackDownloadState(trackId: String, state: DownloadState, progress: Int?) {
+        if (!_uiState.value.showDownloadStatus || trackFor(trackId) == null) return
+        requestedStatuses.add(trackId)
+        applyTrackStatus(trackId, state, progress)
+    }
+
+    private fun applyTrackStatus(trackId: String, state: DownloadState, progress: Int?) {
+        val indicator = state.toIndicator(progress)
+        _uiState.update { current ->
+            val next = current.trackStatuses.toMutableMap()
+            if (indicator == null) next.remove(trackId) else next[trackId] = indicator
+            current.copy(trackStatuses = next.toPersistentMap())
+        }
+    }
+
     fun trackFor(id: String): Track? = rawTracks.firstOrNull { it.id == id }
 
     fun tracksForDisc(discNumber: Int): List<Track> =
         rawTracks.filter { (it.discNumber ?: 1) == discNumber }
 
-    private fun sortForDisplay(tracks: List<Track>): List<Track> {
-        if (!Settings.SHOULD_SORT_BY_DISC) return tracks
-        val mutable = tracks.toMutableList()
+    private fun sortForDisplay(children: List<MusicDirectory.Child>): List<MusicDirectory.Child> {
+        if (!Settings.SHOULD_SORT_BY_DISC) return children
+        val mutable = children.toMutableList()
         Collections.sort(mutable, EntryByDiscAndTrackComparator())
         return mutable
     }
@@ -237,18 +295,20 @@ class AlbumDetailViewModel(application: Application) :
         val totalSeconds = tracks.sumOf { (it.duration ?: 0).toLong() }
 
         val rows = buildList {
-            if (hasMultipleDiscs) {
-                var lastDisc: Int? = null
-                for (track in tracks) {
-                    val disc = track.discNumber ?: 1
+            var lastDisc: Int? = null
+            for (child in rawChildren) {
+                if (child !is Track) {
+                    (child as? Album)?.let { add(it.toFolderRow()) }
+                    continue
+                }
+                if (hasMultipleDiscs) {
+                    val disc = child.discNumber ?: 1
                     if (disc != lastDisc) {
                         add(AlbumDetailRow.Disc(disc))
                         lastDisc = disc
                     }
-                    add(track.toRow(hasMultipleArtists))
                 }
-            } else {
-                tracks.forEach { add(it.toRow(hasMultipleArtists)) }
+                add(child.toRow(hasMultipleArtists))
             }
         }
 
@@ -256,7 +316,11 @@ class AlbumDetailViewModel(application: Application) :
             title = args.name?.takeIf { it.isNotEmpty() }
                 ?: tracks.firstOrNull()?.album.orEmpty(),
             artist = singleArtist
-                ?: getApplication<Application>().getString(R.string.common_various_artists),
+                ?: if (tracks.isEmpty()) {
+                    ""
+                } else {
+                    getApplication<Application>().getString(R.string.common_various_artists)
+                },
             artistId = artistIds.singleOrNull()?.takeIf { singleArtist != null },
             year = year,
             genre = genre,
@@ -285,5 +349,26 @@ class AlbumDetailViewModel(application: Application) :
         )
     }
 
+    private fun Album.toFolderRow(): AlbumDetailRow.Folder = AlbumDetailRow.Folder(
+        id = id,
+        title = title.orEmpty().ifEmpty { name.orEmpty() },
+        artist = artist?.takeIf { it.isNotBlank() },
+        artworkModel = coverArtRequestOrNull(large = false),
+    )
+
     data class AlbumMeta(val notes: String?, val starred: Boolean?)
+}
+
+/** The legacy row indicator mapping: DONE/PINNED = downloaded, DOWNLOADING = determinate
+ *  progress, QUEUED/RETRYING = indeterminate, FAILED = error; everything else (IDLE, CANCELLED,
+ *  UNKNOWN) shows nothing. */
+internal fun DownloadState.toIndicator(progress: Int?): TrackDownloadIndicator? = when (this) {
+    DownloadState.DONE, DownloadState.PINNED ->
+        TrackDownloadIndicator(TrackDownloadIndicator.Kind.DOWNLOADED)
+    DownloadState.FAILED -> TrackDownloadIndicator(TrackDownloadIndicator.Kind.FAILED)
+    DownloadState.DOWNLOADING ->
+        TrackDownloadIndicator(TrackDownloadIndicator.Kind.DOWNLOADING, progress)
+    DownloadState.QUEUED, DownloadState.RETRYING ->
+        TrackDownloadIndicator(TrackDownloadIndicator.Kind.QUEUED)
+    else -> null
 }

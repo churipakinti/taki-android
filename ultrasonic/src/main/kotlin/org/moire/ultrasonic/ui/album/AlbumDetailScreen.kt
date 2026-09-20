@@ -31,12 +31,14 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +62,7 @@ import org.moire.ultrasonic.ui.components.DetailPrimaryPlayButton
 import org.moire.ultrasonic.ui.components.EmptyState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiDiscHeader
+import org.moire.ultrasonic.ui.components.TakiEntryRow
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
 import org.moire.ultrasonic.ui.components.TakiTrackRow
@@ -136,23 +139,35 @@ fun AlbumDetailScreen(
                         .testTag(ALBUM_DETAIL_LIST_TEST_TAG),
                     contentPadding = PaddingValues(bottom = bottomContentInset),
                 ) {
-                    item(key = "hero") { AlbumDetailHero(state, actions) }
-                    item(key = "actions") { DetailActionRow(state, actions) }
-
-                    if (state.showEmpty) {
-                        item(key = "empty") {
-                            EmptyState(
-                                icon = painterResource(R.drawable.ic_menu_search),
-                                title = stringResource(R.string.select_album_empty),
-                                modifier = Modifier.padding(top = TakiTheme.spacing.xxl),
-                            )
-                        }
-                    } else {
-                        trackRows(state, actions, currentTrackId)
-                    }
+                    albumDetailItems(state, actions, currentTrackId)
                 }
             }
         }
+    }
+}
+
+/** The Album Detail list body: hero, action row (only when there is something to play), then the
+ *  empty state or the track / folder rows. */
+private fun LazyListScope.albumDetailItems(
+    state: AlbumDetailUiState,
+    actions: AlbumDetailActions,
+    currentTrackId: String?,
+) {
+    item(key = "hero") { AlbumDetailHero(state, actions) }
+    if (state.hasTracks) {
+        item(key = "actions") { DetailActionRow(state, actions) }
+    }
+
+    if (state.showEmpty) {
+        item(key = "empty") {
+            EmptyState(
+                icon = painterResource(R.drawable.ic_menu_search),
+                title = stringResource(R.string.select_album_empty),
+                modifier = Modifier.padding(top = TakiTheme.spacing.xxl),
+            )
+        }
+    } else {
+        trackRows(state, actions, currentTrackId)
     }
 }
 
@@ -258,12 +273,14 @@ private fun DetailActionRow(state: AlbumDetailUiState, actions: AlbumDetailActio
         if (state.starVisible) {
             StarAction(isStarred = state.isStarred, onToggle = actions.onToggleStar)
         }
-        TakiIconButton(
-            onClick = actions.onDownload,
-            painter = painterResource(R.drawable.ic_menu_download),
-            contentDescription = stringResource(R.string.album_download_description),
-            iconSize = TakiTheme.dimensions.iconSm,
-        )
+        if (state.online) {
+            TakiIconButton(
+                onClick = actions.onDownload,
+                painter = painterResource(R.drawable.ic_menu_download),
+                contentDescription = stringResource(R.string.album_download_description),
+                iconSize = TakiTheme.dimensions.iconSm,
+            )
+        }
         if (state.infoAvailable) {
             TakiIconButton(
                 onClick = actions.onShowInfo,
@@ -351,6 +368,7 @@ private fun LazyListScope.trackRows(
             when (row) {
                 is AlbumDetailRow.Disc -> "disc_${row.number}"
                 is AlbumDetailRow.Track -> "track_${row.id}"
+                is AlbumDetailRow.Folder -> "folder_${row.id}"
             }
         },
     ) { row ->
@@ -358,7 +376,11 @@ private fun LazyListScope.trackRows(
             is AlbumDetailRow.Disc -> TakiDiscHeader(
                 label = stringResource(R.string.album_disc_header, row.number),
                 onPlay = { actions.onDiscPlay(row.number) },
-                onDownload = { actions.onDiscDownload(row.number) },
+                onDownload = if (state.online) {
+                    { actions.onDiscDownload(row.number) }
+                } else {
+                    null
+                },
                 playContentDescription = stringResource(R.string.album_play_disc_description),
                 downloadContentDescription =
                 stringResource(R.string.album_download_disc_description),
@@ -368,6 +390,15 @@ private fun LazyListScope.trackRows(
                 row = row,
                 isCurrent = row.id == currentTrackId,
                 actions = actions,
+                showStatus = state.showDownloadStatus,
+                indicator = state.trackStatuses[row.id],
+            )
+
+            is AlbumDetailRow.Folder -> TakiEntryRow(
+                title = row.title,
+                artworkModel = row.artworkModel,
+                subtitle = row.artist,
+                onClick = { actions.onFolderClick(row.id) },
             )
         }
     }
@@ -384,7 +415,14 @@ private fun AlbumTrackItem(
     row: AlbumDetailRow.Track,
     isCurrent: Boolean,
     actions: AlbumDetailActions,
+    showStatus: Boolean,
+    indicator: TrackDownloadIndicator?,
 ) {
+    if (showStatus) {
+        // The Compose equivalent of the legacy row bind-time status lookup: once per row that
+        // actually enters composition; the ViewModel de-dupes repeats.
+        LaunchedEffect(row.id) { actions.onTrackStatusNeeded(row.id) }
+    }
     var menuExpanded by remember { mutableStateOf(false) }
     var menuState by remember { mutableStateOf(TrackContextMenuState()) }
     Box {
@@ -399,6 +437,11 @@ private fun AlbumTrackItem(
                 menuState = actions.trackContextMenuState(row.id)
                 menuExpanded = true
             },
+            trailing = if (showStatus && indicator != null) {
+                { DownloadStatusIndicator(indicator, actions.onDownloadErrorClick) }
+            } else {
+                null
+            },
         )
         TrackContextMenu(
             expanded = menuExpanded,
@@ -411,6 +454,48 @@ private fun AlbumTrackItem(
         )
     }
 }
+
+/**
+ * The legacy row status indicator (issue #10 phase 4H1, downloaded albums): a check for a
+ * downloaded track, an error glyph (tap explains it) for a failed one, and a small progress ring
+ * - determinate while downloading, indeterminate while queued/retrying.
+ */
+@Composable
+private fun DownloadStatusIndicator(indicator: TrackDownloadIndicator, onErrorClick: () -> Unit) {
+    val size = TakiTheme.dimensions.iconSm
+    when (indicator.kind) {
+        TrackDownloadIndicator.Kind.DOWNLOADED -> Icon(
+            painter = painterResource(R.drawable.ic_downloaded_check),
+            contentDescription = null,
+            tint = TakiTheme.colors.accent,
+            modifier = Modifier.size(size),
+        )
+
+        TrackDownloadIndicator.Kind.FAILED -> Icon(
+            painter = painterResource(R.drawable.ic_baseline_error),
+            contentDescription = stringResource(R.string.download_download_error),
+            tint = TakiTheme.colors.gray,
+            modifier = Modifier
+                .size(size)
+                .clickable(role = Role.Button, onClick = onErrorClick),
+        )
+
+        TrackDownloadIndicator.Kind.DOWNLOADING -> CircularProgressIndicator(
+            progress = { (indicator.progress ?: 0) / PERCENT_MAX },
+            modifier = Modifier.size(size),
+            color = TakiTheme.colors.accent,
+            trackColor = TakiTheme.colors.surfaceLow,
+        )
+
+        TrackDownloadIndicator.Kind.QUEUED -> CircularProgressIndicator(
+            modifier = Modifier.size(size),
+            color = TakiTheme.colors.accent,
+            trackColor = TakiTheme.colors.surfaceLow,
+        )
+    }
+}
+
+private const val PERCENT_MAX = 100f
 
 @Composable
 private fun TrackContextMenu(

@@ -13,7 +13,7 @@ package org.moire.ultrasonic.ui.album
  * in issue #8); the screen itself owns no `NavController`, no `MediaPlayerManager`, no
  * `RxBus`. Mirrors `HomeActions` / `LibraryActions` / `SearchActions`.
  */
-class AlbumDetailActions(
+data class AlbumDetailActions(
     /** Play the whole album from the top (`InsertionMode.CLEAR`, autoplay). */
     val onPlay: () -> Unit,
     /** Play the whole album shuffled. */
@@ -43,6 +43,13 @@ class AlbumDetailActions(
     val onDiscDownload: (discNumber: Int) -> Unit,
     /** Pull-to-refresh: re-fetch the album from the server. */
     val onRefresh: () -> Unit,
+    /** Open a sub-folder row of a folder-mode album as another album (issue #10 phase 4H1). */
+    val onFolderClick: (folderId: String) -> Unit = {},
+    /** A downloaded-album track row entered composition: resolve its download status once
+     *  (the Compose equivalent of the legacy row's bind-time lookup). */
+    val onTrackStatusNeeded: (trackId: String) -> Unit = {},
+    /** The failed-download indicator was tapped: explain it (legacy toast). */
+    val onDownloadErrorClick: () -> Unit = {},
 ) {
     companion object {
         val Noop = AlbumDetailActions(

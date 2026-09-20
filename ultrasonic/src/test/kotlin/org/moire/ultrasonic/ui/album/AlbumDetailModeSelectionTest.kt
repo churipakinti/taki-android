@@ -30,11 +30,9 @@ class AlbumDetailModeSelectionTest {
 
     @Test
     fun `folder-mode albums also use the Compose screen (phase 4D)`() {
-        // Folder-mode "album" directories can, rarely, contain nested sub-folders (e.g. a
-        // disc-per-folder layout); AlbumDetailViewModel shows only the tracks directly in that
-        // folder, a disclosed, narrow limitation - see the phase 4D report. usesId3 is no
-        // longer a parameter of this predicate at all: AlbumDetailViewModel picks
-        // getAlbumAsDir vs getMusicDirectory itself from AlbumDetailArgs.isId3.
+        // Folder-mode directories can contain sub-folders; since phase 4H1 they render as folder
+        // rows inside AlbumDetailViewModel. usesId3 is not a parameter of this predicate:
+        // AlbumDetailViewModel picks getAlbumAsDir vs getMusicDirectory from AlbumDetailArgs.isId3.
         assertTrue(
             shouldUseComposeAlbumDetail(allow = true, isAlbum = true, hasPlaylistId = false),
         )
