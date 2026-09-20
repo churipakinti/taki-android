@@ -312,7 +312,7 @@
         android:name="org.moire.ultrasonic.fragment.AboutFragment" />
     <fragment
         android:id="@+id/selectGenreFragment"
-        android:name="org.moire.ultrasonic.fragment.legacy.SelectGenreFragment">
+        android:name="org.moire.ultrasonic.fragment.GenreListFragment">
     </fragment>
     <fragment
         android:id="@+id/playerFragment"

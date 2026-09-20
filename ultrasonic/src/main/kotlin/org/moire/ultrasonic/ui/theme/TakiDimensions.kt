@@ -91,6 +91,11 @@ data class TakiDimensions(
      * last item can clear the floating mini-player overlay. Screens still render *behind* it.
      */
     val contentInsetFloatingChrome: Dp = 96.dp,
+    /** `genre_card_height` - a Genres List grid card (issue #10 phase 4G2), matching the legacy
+     *  `genre_card_item.xml` card height exactly. */
+    val genreCardHeight: Dp = 92.dp,
+    /** `genre_cover_size` - the small representative-track cover inside a genre card. */
+    val genreCoverSize: Dp = 72.dp,
     /** `elevation_raised` - reserved for a genuinely floating element (mini-player, sheet). */
     val elevationRaised: Dp = 3.dp,
     /** `border_thin` - the 1dp border used only when a border is unavoidable. */

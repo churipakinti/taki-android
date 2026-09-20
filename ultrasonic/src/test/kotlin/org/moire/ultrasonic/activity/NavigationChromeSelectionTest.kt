@@ -148,6 +148,16 @@ class NavigationChromeSelectionTest {
         assertTrue(hides(R.id.playlistsFragment))
     }
 
+    // --- Genres List (issue #10 phase 4G2) ----------------------------------------------------
+
+    @Test
+    fun `genres list hides the shared toolbar - it was already in the base set before this phase`() {
+        // No NavigationActivity change was needed for phase 4G2 either - selectGenreFragment was
+        // already in hidesSupportActionBar's base id set (and showsContentBackButton's) before
+        // the legacy SelectGenreFragment was replaced with the Compose GenreListFragment.
+        assertTrue(hides(R.id.selectGenreFragment))
+    }
+
     // --- isAlbumDetailDestination (issue #10 phase 4D shell-continuity fix) ---------------
 
     @Test

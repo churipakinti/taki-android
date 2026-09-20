@@ -110,6 +110,12 @@
     <dimen name="bottom_nav_height">80dp</dimen>
     <dimen name="content_inset_floating_chrome">96dp</dimen>
 
+    <!-- Genres List (issue #10 phase 4G2). A fixed 2-column grid of horizontal cards - name on
+         the left, a small representative-track cover on the right - matching the legacy
+         `genre_card_item.xml` card exactly. -->
+    <dimen name="genre_card_height">92dp</dimen>
+    <dimen name="genre_cover_size">72dp</dimen>
+
     <!-- Elevation / borders. Depth is tonal by default; these are the rare exceptions. -->
     <dimen name="elevation_raised">3dp</dimen>
     <dimen name="border_thin">1dp</dimen>
