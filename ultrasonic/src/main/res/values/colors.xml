@@ -21,9 +21,12 @@
          over artwork scrolling behind it. Each is its base surface tone at that alpha, plus a
          1dp tonal edge / top hairline. Alphas match
          TakiAtmosphere.MINI_PLAYER_SURFACE_ALPHA / FLOATING_SURFACE_ALPHA / EDGE_HIGHLIGHT_ALPHA. -->
-    <color name="taki_surface_floating">#DE171A16</color>
+    <!-- The mini-player is Compose now (phase 4I): taki_surface_floating and taki_edge_highlight
+         have no XML reference any more; they stay as the source of truth TakiTokensTest diffs
+         TakiColors.surfaceFloating / edgeHighlight against. -->
+    <color name="taki_surface_floating" tools:ignore="UnusedResources">#DE171A16</color>
     <color name="taki_surface_low_floating">#ED111410</color>
-    <color name="taki_edge_highlight">#12F1F2ED</color>
+    <color name="taki_edge_highlight" tools:ignore="UnusedResources">#12F1F2ED</color>
     <!-- Semantic "liked / favourite" accent: a muted warm rose, restrained enough to sit in
          the dark palette without turning a control loud. Icon tint only - never a fill,
          border or background. Consumed from Compose (TakiColors.liked); the XML entry is the

@@ -8,6 +8,7 @@
 package org.moire.ultrasonic.ui.playback
 
 import androidx.compose.runtime.Immutable
+import org.moire.ultrasonic.imageloader.CoverArtRequest
 
 /**
  * The small, Compose-friendly projection of "what is playing right now" that
@@ -29,6 +30,9 @@ data class PlayerUiState(
     val phase: PlaybackPhase = PlaybackPhase.Idle,
     val isCurrentTrackLiked: Boolean = false,
     val durationMs: Long = 0L,
+    /** Coil model for the current track's small cover (issue #10 phase 4I: the mini-player),
+     *  or null for the neutral placeholder. Resolved by the holder's artwork seam. */
+    val artworkModel: CoverArtRequest? = null,
 )
 
 /**

@@ -75,9 +75,10 @@
             app:labelVisibilityMode="labeled"
             app:menu="@menu/bottom_navigation" />
 
-        <androidx.fragment.app.FragmentContainerView
-            a:id="@+id/now_playing_fragment"
-            a:name="org.moire.ultrasonic.fragment.NowPlayingFragment"
+        <!-- The persistent Compose mini-player (issue #10 phase 4I). NavigationActivity owns it:
+             it sets the content, toggles the visibility and sets the bottom margin. -->
+        <androidx.compose.ui.platform.ComposeView
+            a:id="@+id/mini_player_host"
             a:layout_width="match_parent"
             a:layout_height="wrap_content"
             a:layout_gravity="bottom"

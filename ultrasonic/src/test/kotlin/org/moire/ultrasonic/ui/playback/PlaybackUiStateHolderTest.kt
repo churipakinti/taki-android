@@ -17,6 +17,8 @@ import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
+import org.moire.ultrasonic.imageloader.CoverArtRequest
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.RxBus
@@ -46,7 +48,7 @@ class PlaybackUiStateHolderTest {
 
     @Test
     fun `projects the current track into a Media3-free ui state`() = runTest {
-        val holder = PlaybackUiStateHolder(mediaPlayerManager, backgroundScope)
+        val holder = PlaybackUiStateHolder(mediaPlayerManager, backgroundScope, artworkResolver = { null })
 
         holder.playerState.test {
             assertEquals(PlayerUiState(), awaitItem())
@@ -79,7 +81,7 @@ class PlaybackUiStateHolderTest {
 
     @Test
     fun `maps an empty player state to no current track`() = runTest {
-        val holder = PlaybackUiStateHolder(mediaPlayerManager, backgroundScope)
+        val holder = PlaybackUiStateHolder(mediaPlayerManager, backgroundScope, artworkResolver = { null })
 
         holder.playerState.test {
             skipItems(1) // initial
@@ -134,5 +136,94 @@ class PlaybackUiStateHolderTest {
         assertEquals(PlaybackPhase.Ready, PlaybackPhase.fromMedia3State(3))
         assertEquals(PlaybackPhase.Ended, PlaybackPhase.fromMedia3State(4))
         assertEquals(PlaybackPhase.Idle, PlaybackPhase.fromMedia3State(99))
+    }
+
+    // --- Mini-player projection (issue #10 phase 4I) -------------------------------------------
+
+    @Test
+    fun `projects the resolved cover artwork model for the current track`() = runTest {
+        val holder = PlaybackUiStateHolder(
+            mediaPlayerManager,
+            backgroundScope,
+            artworkResolver = { CoverArtRequest(it.coverArt.orEmpty(), "key-${it.id}", 0) },
+        )
+
+        holder.playerState.test {
+            skipItems(1)
+            RxBus.playerStatePublisher.onNext(
+                RxBus.StateWithTrack(track = track("art"), index = 0, isPlaying = true, state = 3)
+            )
+            var state = awaitItem()
+            while (state.trackId != "art") state = awaitItem()
+
+            assertEquals(CoverArtRequest("cover-art", "key-art", 0), state.artworkModel)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a track change and a pause each project into the next state`() = runTest {
+        val holder = PlaybackUiStateHolder(
+            mediaPlayerManager,
+            backgroundScope,
+            artworkResolver = { CoverArtRequest(it.id, "k-${it.id}", 0) },
+        )
+
+        holder.playerState.test {
+            skipItems(1)
+            RxBus.playerStatePublisher.onNext(
+                RxBus.StateWithTrack(track = track("a"), index = 0, isPlaying = true, state = 3)
+            )
+            var state = awaitItem()
+            while (state.trackId != "a") state = awaitItem()
+            assertTrue(state.isPlaying)
+
+            RxBus.playerStatePublisher.onNext(
+                RxBus.StateWithTrack(track = track("b"), index = 1, isPlaying = true, state = 3)
+            )
+            state = awaitItem()
+            while (state.trackId != "b") state = awaitItem()
+            assertEquals("Title b", state.title)
+            assertEquals("k-b", state.artworkModel?.cacheKey)
+
+            RxBus.playerStatePublisher.onNext(
+                RxBus.StateWithTrack(track = track("b"), index = 1, isPlaying = false, state = 3)
+            )
+            state = awaitItem()
+            while (state.isPlaying) state = awaitItem()
+            assertEquals("b", state.trackId)
+            assertFalse(state.isPlaying)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a buffering track still counts as current, with the buffering phase`() = runTest {
+        val holder = PlaybackUiStateHolder(mediaPlayerManager, backgroundScope, artworkResolver = { null })
+
+        holder.playerState.test {
+            skipItems(1)
+            RxBus.playerStatePublisher.onNext(
+                // androidx.media3.common.Player.STATE_BUFFERING
+                RxBus.StateWithTrack(track = track("buf"), index = 0, isPlaying = false, state = 2)
+            )
+            var state = awaitItem()
+            while (state.trackId != "buf") state = awaitItem()
+            assertTrue(state.hasCurrentTrack)
+            assertEquals(PlaybackPhase.Buffering, state.phase)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `snapshotProgress reads the transport and never goes negative`() {
+        whenever(mediaPlayerManager.playerPosition).thenReturn(30_000)
+        whenever(mediaPlayerManager.playerDuration).thenReturn(120_000)
+        val holder = PlaybackUiStateHolder(mediaPlayerManager)
+        assertEquals(PlaybackProgress(30_000L, 120_000L), holder.snapshotProgress())
+
+        whenever(mediaPlayerManager.playerPosition).thenReturn(-1)
+        whenever(mediaPlayerManager.playerDuration).thenReturn(-1)
+        assertEquals(PlaybackProgress(0L, 0L), holder.snapshotProgress())
     }
 }

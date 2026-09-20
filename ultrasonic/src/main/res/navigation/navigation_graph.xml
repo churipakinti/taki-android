@@ -57,10 +57,6 @@
         android:name="org.moire.ultrasonic.fragment.ArtistListFragment"
         android:label="@string/music_library.label" />
     <fragment
-        android:id="@+id/nowPlayingFragment"
-        android:name="org.moire.ultrasonic.fragment.NowPlayingFragment"
-        android:label="@string/button_bar.now_playing" />
-    <fragment
         android:id="@+id/artistListFragment"
         android:name="org.moire.ultrasonic.fragment.ArtistListFragment">
         <argument

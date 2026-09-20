@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.moire.ultrasonic.domain.Track
+import org.moire.ultrasonic.imageloader.CoverArtRequest
+import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.RxBus
 
@@ -49,6 +51,9 @@ private const val STOP_TIMEOUT_MS = 5_000L
 class PlaybackUiStateHolder(
     private val mediaPlayerManager: MediaPlayerManager,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    /** Builds the Coil model for a track's small cover. Pure and cheap (an md5 of the album
+     *  path); a seam because the default touches `Storage`, which JVM tests do not have. */
+    private val artworkResolver: (Track) -> CoverArtRequest? = { it.coverArtRequestOrNull() },
 ) {
 
     /**
@@ -61,7 +66,7 @@ class PlaybackUiStateHolder(
     val playerState: StateFlow<PlayerUiState> =
         RxBus.playerStateObservable
             .asFlow()
-            .map { it.toUiState() }
+            .map { it.toUiState(artworkResolver) }
             .stateIn(
                 scope = scope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -99,7 +104,9 @@ private fun <T : Any> Observable<T>.asFlow() = callbackFlow {
     awaitClose { disposable.dispose() }
 }
 
-private fun RxBus.StateWithTrack.toUiState(): PlayerUiState {
+private fun RxBus.StateWithTrack.toUiState(
+    artworkResolver: (Track) -> CoverArtRequest?,
+): PlayerUiState {
     val current: Track? = track
     return PlayerUiState(
         hasCurrentTrack = current != null,
@@ -111,5 +118,6 @@ private fun RxBus.StateWithTrack.toUiState(): PlayerUiState {
         phase = PlaybackPhase.fromMedia3State(state),
         isCurrentTrackLiked = current?.starred == true,
         durationMs = current?.duration?.let { it.toLong() * MILLIS_PER_SECOND } ?: 0L,
+        artworkModel = current?.let(artworkResolver),
     )
 }

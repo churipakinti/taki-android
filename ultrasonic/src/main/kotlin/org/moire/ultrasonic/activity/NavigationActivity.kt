@@ -21,13 +21,16 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.widget.Toolbar
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
-import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.MediaItem
@@ -64,6 +67,10 @@ import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.ui.playback.MiniPlayerActions
+import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
+import org.moire.ultrasonic.ui.playback.TakiMiniPlayer
+import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.CommunicationError
 import org.moire.ultrasonic.util.Constants
 import org.moire.ultrasonic.util.LocaleHelper
@@ -74,6 +81,7 @@ import org.moire.ultrasonic.util.ShortcutUtil
 import org.moire.ultrasonic.util.Storage
 import org.moire.ultrasonic.util.UncaughtExceptionHandler
 import org.moire.ultrasonic.util.Util
+import org.moire.ultrasonic.util.toTrack
 import timber.log.Timber
 
 /**
@@ -83,7 +91,7 @@ import timber.log.Timber
  */
 @Suppress("TooManyFunctions")
 class NavigationActivity : ScopeActivity() {
-    private var nowPlayingView: FragmentContainerView? = null
+    private var nowPlayingView: ComposeView? = null
     private var nowPlayingHidden = false
     private var bottomNavigation: BottomNavigationView? = null
     private var navHostContainer: View? = null
@@ -99,6 +107,7 @@ class NavigationActivity : ScopeActivity() {
 
     private val lifecycleSupport: MediaPlayerLifecycleSupport by inject()
     private val mediaPlayerManager: MediaPlayerManager by inject()
+    private val playbackUiStateHolder: PlaybackUiStateHolder by inject()
     private val activeServerProvider: ActiveServerProvider by inject()
     private val serverSettingDao: ServerSettingDao by inject()
 
@@ -138,7 +147,7 @@ class NavigationActivity : ScopeActivity() {
 
         volumeControlStream = AudioManager.STREAM_MUSIC
         setContentView(R.layout.navigation_activity)
-        nowPlayingView = findViewById(R.id.now_playing_fragment)
+        nowPlayingView = findViewById<ComposeView>(R.id.mini_player_host).also(::bindMiniPlayer)
         bottomNavigation = findViewById(R.id.bottom_navigation)
         navHostContainer = findViewById(R.id.nav_host_container)
         navHostFragmentView = findViewById(R.id.nav_host_fragment)
@@ -524,6 +533,47 @@ class NavigationActivity : ScopeActivity() {
         }
     }
 
+    /**
+     * Installs the Compose mini-player into its Activity-owned host (issue #10 phase 4I). The
+     * Activity still decides whether it is shown ([showNowPlaying] / [hideNowPlaying]) and sets
+     * its margins; the composable is a pure projection of [PlaybackUiStateHolder]. Commands go
+     * to the unchanged runtime: transport through the holder (-> `MediaPlayerManager`), taps
+     * through the Activity's nav host controller.
+     */
+    private fun bindMiniPlayer(view: ComposeView) {
+        val actions = MiniPlayerActions(
+            onOpenNowPlaying = { host?.navController?.navigate(R.id.playerFragment) },
+            onArtworkClick = ::openCurrentAlbum,
+            onPlayPause = playbackUiStateHolder::onPlayPause,
+            onPrevious = playbackUiStateHolder::onPrevious,
+            onNext = playbackUiStateHolder::onNext,
+        )
+        view.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        view.setContent {
+            TakiTheme {
+                val player by playbackUiStateHolder.playerState.collectAsStateWithLifecycle()
+                TakiMiniPlayer(
+                    state = player,
+                    actions = actions,
+                    progressProvider = playbackUiStateHolder::snapshotProgress,
+                )
+            }
+        }
+    }
+
+    /** The legacy cover tap: open the playing track's album (id3: album id, folder: parent). */
+    private fun openCurrentAlbum() {
+        val file = mediaPlayerManager.currentMediaItem?.toTrack() ?: return
+        val id3 = Settings.id3TagsEnabledOnline
+        host?.navController?.navigate(
+            NavigationGraphDirections.toTrackCollection(
+                isAlbum = id3,
+                id = if (id3) file.albumId else file.parent,
+                name = file.album,
+            )
+        )
+    }
+
     private fun showNowPlaying() {
         if (!Settings.SHOW_NOW_PLAYING) {
             hideNowPlaying()
@@ -534,9 +584,7 @@ class NavigationActivity : ScopeActivity() {
         // and when the MediaPlayerService requests that it should be shown, it returns
         nowPlayingHidden = false
         // Do not show for Player or while Search is using the IME.
-        if (currentFragmentId == R.id.playerFragment ||
-            (currentFragmentId == R.id.searchFragment && imeVisible)
-        ) {
+        if (miniPlayerHiddenFor(currentFragmentId, imeVisible)) {
             hideNowPlaying()
             return
         }
@@ -601,15 +649,14 @@ class NavigationActivity : ScopeActivity() {
     private fun computeContentBottomInset(
         bottomNavVisible: Boolean,
         nowPlayingVisible: Boolean,
-    ): Int {
-        val belowMiniPlayer = if (bottomNavVisible) bottomNavFootprintPx else navigationBarBottomInset
-        return when {
-            bottomNavVisible && nowPlayingVisible -> belowMiniPlayer + floatingChromeInsetPx
-            bottomNavVisible -> belowMiniPlayer + miniPlayerEdgeMarginPx
-            nowPlayingVisible -> navigationBarBottomInset + floatingChromeInsetPx
-            else -> navigationBarBottomInset
-        }
-    }
+    ): Int = contentBottomInsetFor(
+        bottomNavVisible = bottomNavVisible,
+        miniPlayerVisible = nowPlayingVisible,
+        navigationBarBottomInset = navigationBarBottomInset,
+        bottomNavFootprintPx = bottomNavFootprintPx,
+        floatingChromeInsetPx = floatingChromeInsetPx,
+        miniPlayerEdgeMarginPx = miniPlayerEdgeMarginPx,
+    )
 
     /**
      * Keep [scrollView]'s bottom padding equal to the live floating-chrome inset for as long as
@@ -672,7 +719,7 @@ class NavigationActivity : ScopeActivity() {
         val hideForSearchIme = currentFragmentId == R.id.searchFragment && imeVisible
         bottomNavigation?.visibility =
             if (hideForDestination || hideForSearchIme) View.GONE else View.VISIBLE
-        if (currentFragmentId == R.id.playerFragment || hideForSearchIme) {
+        if (miniPlayerHiddenFor(currentFragmentId, imeVisible)) {
             hideNowPlaying()
         } else if (!nowPlayingHidden) {
             showNowPlaying()
@@ -681,6 +728,45 @@ class NavigationActivity : ScopeActivity() {
     }
 
     companion object {
+        /**
+         * Whether the floating mini-player is hidden on [destinationId] (issue #10 phase 4I): only
+         * on the full player itself, and while Search is showing the keyboard. It is a function of
+         * the destination *id*, never of what renders it, so it is identical over Compose and
+         * legacy screens alike (Settings, Equalizer, Now Playing, ...).
+         */
+        fun miniPlayerHiddenFor(destinationId: Int, imeVisible: Boolean): Boolean =
+            destinationId == R.id.playerFragment ||
+                (destinationId == R.id.searchFragment && imeVisible)
+
+        /**
+         * How much a scrollable screen pads its bottom so its last item clears the floating
+         * chrome (see [getContentBottomInset]). Pure so the shell contract that every Compose and
+         * View screen depends on is locked by `MiniPlayerShellTest`:
+         *
+         *   bottom nav + mini-player : bottomNavFootprint + floatingChrome (16 + 64 + 16)
+         *   bottom nav only          : bottomNavFootprint + edge margin
+         *   mini-player only         : nav bar + floatingChrome
+         *   neither                  : nav bar
+         */
+        @Suppress("LongParameterList")
+        fun contentBottomInsetFor(
+            bottomNavVisible: Boolean,
+            miniPlayerVisible: Boolean,
+            navigationBarBottomInset: Int,
+            bottomNavFootprintPx: Int,
+            floatingChromeInsetPx: Int,
+            miniPlayerEdgeMarginPx: Int,
+        ): Int {
+            val belowMiniPlayer =
+                if (bottomNavVisible) bottomNavFootprintPx else navigationBarBottomInset
+            return when {
+                bottomNavVisible && miniPlayerVisible -> belowMiniPlayer + floatingChromeInsetPx
+                bottomNavVisible -> belowMiniPlayer + miniPlayerEdgeMarginPx
+                miniPlayerVisible -> navigationBarBottomInset + floatingChromeInsetPx
+                else -> navigationBarBottomInset
+            }
+        }
+
         /**
          * Destinations that render the Compose Album Detail screen for `isAlbum=true` (issue
          * #10 phase 4A id3, phase 4D folder-mode + offline). Both `trackCollectionFragment`
