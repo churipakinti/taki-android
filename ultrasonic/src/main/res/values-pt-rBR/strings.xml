@@ -10,7 +10,6 @@
     <string name="button_bar.now_playing">Tocando Agora</string>
     <string name="buttons.play">Tocar</string>
     <string name="buttons.pause">Pausar</string>
-    <string name="buttons.repeat">Repetir</string>
     <string name="buttons.shuffle">Misturar</string>
     <string name="buttons.stop">Parar</string>
     <string name="buttons.next">Próxima</string>
@@ -38,13 +37,9 @@
     <string name="download.empty">Nada está baixando</string>
     <string name="playlist.empty">Playlist está vazia</string>
     <string name="download.jukebox_not_authorized">Controle remoto não está permitido. Habilite o modo jukebox em <b>Usuário &gt; Configurações</b> no seu servidor Subsonic.</string>
-    <string name="download.jukebox_off">Controle remoto desligado. Música tocada no celular.</string>
     <string name="download.jukebox_offline">Controle remoto não está disponível no modo offline.</string>
-    <string name="download.jukebox_on">Controle remoto ligado. Música tocada no servidor.</string>
     <string name="download.jukebox_server_too_old">Controle remoto não suportado. Atualize seu servidor Subsonic.</string>
     <string name="download.menu_equalizer">Equalizador</string>
-    <string name="download.menu_jukebox_off">Jukebox Desligado</string>
-    <string name="download.menu_jukebox_on">Jukebox Ligado</string>
     <string name="download.menu_lyrics">Letras</string>
     <string name="download.menu_save">Salvar Playlist</string>
     <string name="download.menu_screen_off">Tela Desligada</string>
@@ -53,8 +48,6 @@
     <string name="download.menu_shuffle">Misturar</string>
     <string name="download.menu_shuffle_on">Modo aleatório ativado</string>
     <string name="download.menu_shuffle_off">Modo aleatório desativado</string>
-    <string name="download.playerstate_loading">Carregando…</string>
-    <string name="download.playerstate_playing_shuffle">Tocando misturado</string>
     <string name="download.playlist_done">Playlist salva.</string>
     <string name="download.playlist_error">Falha ao salvar a playlist, Tente mais tarde.</string>
     <string name="download.playlist_name">Entre o nome da playlist:</string>

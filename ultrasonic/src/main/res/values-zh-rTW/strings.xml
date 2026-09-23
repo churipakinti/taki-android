@@ -3,7 +3,6 @@
     <string name="button_bar.now_playing">正在播放</string>
     <string name="buttons.play">播放</string>
     <string name="buttons.pause">暫停</string>
-    <string name="buttons.repeat">重複</string>
     <string name="buttons.shuffle">隨機播放</string>
     <string name="buttons.stop">停止</string>
     <string name="buttons.next">下一首</string>
@@ -34,7 +33,6 @@
     <string name="download.menu_shuffle">隨機播放</string>
     <string name="download.menu_shuffle_on">隨機播放模式啟動</string>
     <string name="download.menu_shuffle_off">隨機播放模式關閉</string>
-    <string name="download.playerstate_loading">緩衝中 …</string>
     <string name="equalizer.enabled">已啟用</string>
     <string name="equalizer.label">等化器</string>
     <string name="error.label">錯誤</string>
@@ -95,7 +93,6 @@
     <string name="background_task.ssl_error">SSL 連線異常。請檢查伺服器憑證。</string>
     <string name="background_task.parse_error">無法理解答覆，請檢查伺服器位址。</string>
     <string name="language.nl">荷蘭語</string>
-    <string name="download.jukebox_off">已關閉遠端控制，音樂將在手機上播放。</string>
     <string name="language.de">德語</string>
     <string name="download.playlist_name">輸入播放清單名稱：</string>
     <string name="main.albums_by_year">依照時間排列</string>
@@ -113,13 +110,10 @@
     <string name="download.playlist_error">儲存播放清單失敗，請稍後再試。</string>
     <string name="download.menu_screen_off">關閉熒幕常亮</string>
     <string name="search.more">顯示更多</string>
-    <string name="download.menu_jukebox_on">打開點唱機</string>
     <string name="equalizer.preset">選擇預設</string>
     <string name="search.songs">歌曲</string>
     <string name="download.jukebox_offline">離線模式下無法使用遠端控制。</string>
-    <string name="download.playerstate_playing_shuffle">隨機播放</string>
     <string name="common.ok">確定</string>
-    <string name="download.menu_jukebox_off">關閉點唱機</string>
     <string name="lyrics.nomatch">未找到歌詞</string>
     <string name="language.pt_BR">葡萄牙語（巴西）</string>
     <string name="download.repeat_all">全部循環播放</string>
@@ -130,7 +124,6 @@
     <string name="download.repeat_off">關閉循環播放</string>
     <string name="jukebox.is_default">預設使用點唱機</string>
     <string name="background_task.network_error">發生網路錯誤。請檢查伺服器位址或稍後重試。</string>
-    <string name="download.jukebox_on">已打開遠端控制，音樂將在伺服器上播放。</string>
     <string name="download.playlist_title">儲存播放清單</string>
     <string name="language.cs">捷克語</string>
     <string name="language.en">英語</string>

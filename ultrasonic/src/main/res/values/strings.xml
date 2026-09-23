@@ -75,7 +75,6 @@
     <string name="button_bar.now_playing">Now Playing</string>
     <string name="buttons.play">Play</string>
     <string name="buttons.pause">Pause</string>
-    <string name="buttons.repeat">Repeat</string>
     <string name="buttons.shuffle">Shuffle</string>
     <string name="buttons.stop">Stop</string>
     <string name="buttons.next">Next</string>
@@ -109,14 +108,10 @@
     <string name="playlist.empty">Playlist is empty</string>
     <string name="playlist.move">Reorder song</string>
     <string name="download.jukebox_not_authorized">Remote control is not allowed. Please enable jukebox mode in <b>Users &gt; Settings</b> on your Subsonic server.</string>
-    <string name="download.jukebox_off">Turned off remote control. Music is played on phone.</string>
     <string name="download.jukebox_offline">Remote control is not available in offline mode.</string>
     <string name="download.lyrics_offline">Lyrics are not available in offline mode.</string>
-    <string name="download.jukebox_on">Turned on remote control. Music is played on server.</string>
     <string name="download.jukebox_server_too_old">Remote control is not supported. Please upgrade your Subsonic server.</string>
     <string name="download.menu_equalizer">Equalizer</string>
-    <string name="download.menu_jukebox_off">Jukebox Off</string>
-    <string name="download.menu_jukebox_on">Jukebox On</string>
     <string name="download.menu_lyrics">Lyrics</string>
     <string name="download.menu_save">Save Playlist</string>
     <string name="download.menu_screen_off">Screen Off</string>
@@ -126,13 +121,11 @@
     <string name="download.menu_shuffle_on">Shuffle mode enabled</string>
     <string name="download.menu_shuffle_off">Shuffle mode disabled</string>
     <string name="download.menu_favorite">Like</string>
-    <string name="download.playerstate_loading">Buffering …</string>
     <string name="download.play_error">Couldn\'t play this song.</string>
     <string name="download.play_error_track_unavailable">Couldn\'t play this track. It may have moved on the server — refresh the album.</string>
     <string name="download.play_error_stalled_skipped">Playback stalled and couldn\'t recover — skipping to the next track.</string>
     <string name="download.play_error_stalled_stopped">Playback stalled and couldn\'t recover — playback stopped.</string>
     <string name="download.download_error">Couldn\'t download this song. Try again.</string>
-    <string name="download.playerstate_playing_shuffle">Playing shuffle</string>
     <string name="download.playlist_done">Playlist saved.</string>
     <string name="download.playlist_error">Failed to save playlist, please try later.</string>
     <string name="download.playlist_name">Enter the playlist name:</string>
@@ -368,6 +361,9 @@
     <string name="download_song_removed">\"%s\" was removed from playlist</string>
     <string name="download.menu_show_artist">Go to Artist</string>
     <string name="albumArt">Album artwork</string>
+    <string name="now_playing.like_description">Like this song</string>
+    <string name="now_playing.unlike_description">Unlike this song</string>
+    <string name="now_playing.favorite_failed">Setting rating failed</string>
     <string name="common_multiple_years">Multiple Years</string>
     <string name="settings.show_confirmation_dialog">Show confirmation dialog</string>
     <string name="settings.show_confirmation_dialog_summary">Displays a confirmation dialog before deleting downloaded songs</string>

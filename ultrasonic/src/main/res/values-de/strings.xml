@@ -10,7 +10,6 @@
     <string name="button_bar.now_playing">Aktuelle Wiedergabe</string>
     <string name="buttons.play">Abspielen</string>
     <string name="buttons.pause">Pause</string>
-    <string name="buttons.repeat">Wiederholen</string>
     <string name="buttons.shuffle">Zufall</string>
     <string name="buttons.stop">Stop</string>
     <string name="buttons.next">Nächstes</string>
@@ -38,13 +37,9 @@
     <string name="download.empty">Es wird nichts heruntergeladen</string>
     <string name="playlist.empty">Wiedergabeliste ist leer</string>
     <string name="download.jukebox_not_authorized">Fernbedienung ist nicht erlaubt. Bitte Jukebox Modus auf dem Subsonic Server in <b>Benutzer &gt; Einstellungen</b> aktivieren.</string>
-    <string name="download.jukebox_off">Fernbedienung ausgeschaltet. Musik wird auf dem Telefon wiedergegeben.</string>
     <string name="download.jukebox_offline">Fernbedienungs-Modus is Offline nicht verfügbar.</string>
-    <string name="download.jukebox_on">Fernbedienung eingeschaltet. Musik wird auf dem Server wiedergegeben.</string>
     <string name="download.jukebox_server_too_old">Fernbedienungs Modus wird nicht unterstützt. Bitte aktualisiere den Subsonic Server.</string>
     <string name="download.menu_equalizer">Equalizer</string>
-    <string name="download.menu_jukebox_off">Jukebox Aus</string>
-    <string name="download.menu_jukebox_on">Jukebox An</string>
     <string name="download.menu_lyrics">Liedtext</string>
     <string name="download.menu_save">Wiedergabeliste speichern</string>
     <string name="download.menu_screen_off">Bildschirm aus</string>
@@ -53,8 +48,6 @@
     <string name="download.menu_shuffle">Mischen</string>
     <string name="download.menu_shuffle_on">Zufalls-Modus aktiviert</string>
     <string name="download.menu_shuffle_off">Zufalls-Modus deaktiviert</string>
-    <string name="download.playerstate_loading">Laden …</string>
-    <string name="download.playerstate_playing_shuffle">Wiedergabeliste mischen</string>
     <string name="download.playlist_done">Wiedergabeliste gespeichert.</string>
     <string name="download.playlist_error">Konnte die Wiedergabeliste nicht speichern, bitte später erneut versuchen.</string>
     <string name="download.playlist_name">Namen der Wiedergabeliste eingeben:</string>

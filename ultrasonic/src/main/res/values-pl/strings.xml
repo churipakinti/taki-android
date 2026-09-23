@@ -29,20 +29,15 @@
     <string name="delete_playlist">Czy chcesz usunąć %1$s</string>
     <string name="playlist.empty">Playlista jest pusta</string>
     <string name="download.jukebox_not_authorized">Kontrola pilotem jest niedostępna. Proszę uruchomić tryb jukebox w <b>Użytkownicy &gt; Ustawienia</b> na serwerze Subsonic.</string>
-    <string name="download.jukebox_off">Tryb pilota jest wyłączony. Muzyka jest odtwarzana w telefonie.</string>
     <string name="download.jukebox_offline">Pilot jest niedostępny w trybie offline.</string>
-    <string name="download.jukebox_on">Tryb pilota jest włączony. Muzyka jest odtwarzana na serwerze.</string>
     <string name="download.jukebox_server_too_old">Tryb pilota jest niedostępny. Proszę uaktualnić serwer Subsonic.</string>
     <string name="download.menu_equalizer">Korektor dźwięku</string>
-    <string name="download.menu_jukebox_off">Jukebox wyłączony</string>
-    <string name="download.menu_jukebox_on">Jukebox włączony</string>
     <string name="download.menu_lyrics">Tekst utworu</string>
     <string name="download.menu_save">Zapisz playlistę</string>
     <string name="download.menu_screen_off">Ekran wyłączony</string>
     <string name="download.menu_screen_on">Ekran włączony</string>
     <string name="download.menu_show_album">Przejdź do albumu</string>
     <string name="download.menu_shuffle">Wymieszaj</string>
-    <string name="download.playerstate_playing_shuffle">Odtwarzanie losowe</string>
     <string name="download.playlist_done">Playlista została zapisana.</string>
     <string name="download.playlist_error">Błąd zapisu playlisty. Proszę spróbować później.</string>
     <string name="download.playlist_name">Wprowadź nazwę playlisty:</string>
@@ -198,10 +193,8 @@
         <item quantity="many">Usunięto %d utworów</item>
         <item quantity="other">Usunięto %d utworów</item>
     </plurals>
-    <string name="buttons.repeat">Powtarzaj</string>
     <string name="download.empty">Nic nie jest pobierane</string>
     <string name="language.ru">Rosyjski</string>
-    <string name="download.playerstate_loading">Buforowanie…</string>
     <string name="language.zh_CN">Chiński (Chiny)</string>
     <string name="settings.override_language">Nadpisz język</string>
     <string name="buttons.play">Odtwórz</string>

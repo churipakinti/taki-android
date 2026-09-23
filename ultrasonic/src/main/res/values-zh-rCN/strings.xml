@@ -10,7 +10,6 @@
     <string name="button_bar.now_playing">正在播放</string>
     <string name="buttons.play">播放</string>
     <string name="buttons.pause">暂停</string>
-    <string name="buttons.repeat">重复播放</string>
     <string name="buttons.shuffle">随机播放</string>
     <string name="buttons.stop">停止</string>
     <string name="buttons.next">下一首</string>
@@ -38,13 +37,9 @@
     <string name="download.empty">未下载任何内容</string>
     <string name="playlist.empty">空的播放列表</string>
     <string name="download.jukebox_not_authorized">不允许远程控制. 请在您 Subsonic 服务器上的 <b>用户 &gt; 设置</b> 中打开点唱机模式。</string>
-    <string name="download.jukebox_off">已关闭远程控制，音乐将在手机上播放。</string>
     <string name="download.jukebox_offline">离线模式不支持远程控制。</string>
-    <string name="download.jukebox_on">已打开远程控制，音乐将在服务端播放。</string>
     <string name="download.jukebox_server_too_old">远程控制不支持，请升级您的 Subsonic 服务器。</string>
     <string name="download.menu_equalizer">均衡器</string>
-    <string name="download.menu_jukebox_off">关闭点唱机</string>
-    <string name="download.menu_jukebox_on">开启点唱机</string>
     <string name="download.menu_lyrics">歌词</string>
     <string name="download.menu_save">保存播放列表</string>
     <string name="download.menu_screen_off">关闭屏幕常亮</string>
@@ -53,8 +48,6 @@
     <string name="download.menu_shuffle">随机</string>
     <string name="download.menu_shuffle_on">随机播放模式已启用</string>
     <string name="download.menu_shuffle_off">随机播放模式已禁用</string>
-    <string name="download.playerstate_loading">缓冲…</string>
-    <string name="download.playerstate_playing_shuffle">随机播放</string>
     <string name="download.playlist_done">播放列表已保存。</string>
     <string name="download.playlist_error">保存播放列表失败，请重试。</string>
     <string name="download.playlist_name">输入播放列表名称：</string>

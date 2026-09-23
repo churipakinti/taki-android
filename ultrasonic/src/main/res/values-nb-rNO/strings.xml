@@ -8,7 +8,6 @@
     <string name="button_bar.search">Søk</string>
     <string name="buttons.play">Spill</string>
     <string name="buttons.previous">Forrige</string>
-    <string name="buttons.repeat">Gjenta</string>
     <string name="common.artist">Artist</string>
     <string name="buttons.next">Neste</string>
     <string name="common.comment">Kommentar</string>
@@ -51,7 +50,6 @@
     <string name="common.various_artists">Ymse artister</string>
     <string name="delete_playlist">Slett %1$s\?</string>
     <string name="download.jukebox_offline">Fjernkontroll er ikke tilgjengelig i frakoblet modus.</string>
-    <string name="download.jukebox_on">Fjernkontroll påskrudd. Musikk spilles på tjeneren.</string>
     <string name="download.playlist_error">Kunne ikke lagre spilleliste. Prøv igjen senere.</string>
     <string name="settings.cache_size_7000">7 GB</string>
     <plurals name="n_songs_added_after_current">
@@ -185,15 +183,10 @@
     <string name="background_task.ssl_error">Unntak for SSL-tilkobling. Sjekk tjenersertifikatet.</string>
     <string name="common.play_shuffled">Spill omstokket</string>
     <string name="download.jukebox_not_authorized">Fjernkontroll er avskrudd. Skru på jukebox-modus i <b>Brukere &gt; Innstillinger</b> på din Subsonic-tjener.</string>
-    <string name="download.jukebox_off">Fjernkontroll avskrudd. Musikk spilles på enheten.</string>
     <string name="download.jukebox_server_too_old">Fjernkontroll støttes ikke. Oppgrader din Subsonic-tjener.</string>
-    <string name="download.menu_jukebox_off">Jukebox avslått</string>
-    <string name="download.menu_jukebox_on">Jukebox påslått</string>
     <string name="download.menu_shuffle">Omstokking</string>
     <string name="download.menu_shuffle_on">Omstokking påskrudd</string>
     <string name="download.menu_shuffle_off">Omstokking avskrudd</string>
-    <string name="download.playerstate_playing_shuffle">Spiller omstokket</string>
-    <string name="download.playerstate_loading">Laster inn …</string>
     <string name="jukebox.is_default">Jukebox som forvalg</string>
     <string name="language.nl">Hollandsk</string>
     <string name="language.zh_CN">Forenklet kinesisk (Kina)</string>

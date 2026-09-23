@@ -6,7 +6,6 @@
     <string name="background_task.ssl_error">SSL接続が異常です。サーバーの証明書を確認してください。</string>
     <string name="button_bar.now_playing">再生中</string>
     <string name="buttons.pause">一時停止</string>
-    <string name="buttons.repeat">リピート</string>
     <string name="buttons.shuffle">シャッフル</string>
     <string name="buttons.stop">停止</string>
     <string name="common.artist">アーティスト</string>
@@ -28,16 +27,11 @@
     <string name="common.title">タイトル</string>
     <string name="download.jukebox_not_authorized">リモートコントロールが許可されていません。Subsonicサーバー上で <b> ユーザ &gt; 設定</b> からジュークボックスモードを有効化してください。</string>
     <string name="download.jukebox_offline">リモートコントロールはオフラインモードでは利用できません。</string>
-    <string name="download.jukebox_on">リモートコントロールがオンになりました。サーバーで音楽が再生されます。</string>
-    <string name="download.jukebox_off">リモートコントロールがオフになりました。モバイル端末で音楽が再生されます。</string>
     <string name="download.jukebox_server_too_old">リモートコントロールがサポートされていません。Subsonicサーバーをアップグレードしてください。</string>
-    <string name="download.menu_jukebox_on">ジュークボックス ON</string>
     <string name="download.menu_lyrics">歌詞</string>
     <string name="download.menu_show_album">アルバムを表示</string>
     <string name="download.menu_shuffle">シャッフル</string>
     <string name="download.menu_shuffle_on">シャッフルモードは有効です</string>
-    <string name="download.playerstate_loading">バッファ中…</string>
-    <string name="download.playerstate_playing_shuffle">シャッフル再生</string>
     <string name="download.playlist_done">プレイリストが保存されました。</string>
     <string name="download.playlist_error">プレイリストの保存ができません、やり直してください。</string>
     <string name="download.playlist_name">プレイリストの名前を入力:</string>
@@ -198,7 +192,6 @@
     <string name="download.menu_equalizer">イコライザー</string>
     <string name="download.menu_save">プレイリストを保存</string>
     <string name="download.menu_screen_off">画面オフ</string>
-    <string name="download.menu_jukebox_off">ジュークボックス OFF</string>
     <string name="download.menu_screen_on">画面オン</string>
     <string name="download.menu_shuffle_off">シャッフルモードは無効です</string>
     <string name="equalizer.preset">プリセットを選択</string>

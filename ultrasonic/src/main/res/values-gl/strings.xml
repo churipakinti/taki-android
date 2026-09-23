@@ -10,7 +10,6 @@
     <string name="button_bar.now_playing">A reproducir</string>
     <string name="buttons.play">Reproducir</string>
     <string name="buttons.pause">Pór en pausa</string>
-    <string name="buttons.repeat">Repetir</string>
     <string name="buttons.shuffle">Barallar</string>
     <string name="buttons.stop">Deter</string>
     <string name="buttons.next">Seguinte</string>
@@ -75,13 +74,11 @@
     <string name="language.pt">Portugués</string>
     <string name="error.label">Erro</string>
     <string name="download.playlist_error">Non se gardou a lista, inténtao máis tarde.</string>
-    <string name="download.playerstate_playing_shuffle">Reprodución barallada</string>
     <string name="download.menu_save">Gardar Lista de reprodución</string>
     <string name="language.de">Alemán</string>
     <string name="main.albums_title">Álbums</string>
     <string name="common.various_artists">Varios Artistas</string>
     <string name="download.playlist_title">Gardar Lista</string>
-    <string name="download.playerstate_loading">Almacenando…</string>
     <string name="main.albums_frequent">Máis reproducido</string>
     <string name="language.pt_BR">Portugués (Brasil)</string>
     <string name="language.cs">Checo</string>
@@ -95,7 +92,6 @@
     <string name="language.default">Seguir ao sistema</string>
     <string name="equalizer.label">Ecualizador</string>
     <string name="main.albums_recent">Reproducido recente</string>
-    <string name="download.jukebox_off">Control remoto desactivado. A música reprodúcese no móbil.</string>
     <string name="settings.cache_size_100">100 MB</string>
     <string name="settings.cache_size_1000">1 GB</string>
     <string name="settings.cache_size_10000">10 GB</string>
@@ -105,7 +101,6 @@
     <string name="settings.clear_search_history">Limpar Historial de busca</string>
     <string name="shortcut_play_random_songs_long">Reproducir cancións ao chou</string>
     <string name="download.jukebox_offline">O control remoto non está dispoñible no modo sen conexión.</string>
-    <string name="download.jukebox_on">Control remoto acendido. A música reprodúcese desde o servidor.</string>
     <string name="download.jukebox_server_too_old">Non hai soporte para control remoto. Debes usar unha versión superior do servidor Subsonic.</string>
     <string name="menu.deleted_playlist_error">Fallou a eliminación da lista %s</string>
     <string name="menu.downloads">Descargas</string>
@@ -201,8 +196,6 @@
         <item quantity="other">%d cancións engadidas á cola de reprodución</item>
     </plurals>
     <string name="download.menu_equalizer">Ecualizador</string>
-    <string name="download.menu_jukebox_off">Jukebox Apagado</string>
-    <string name="download.menu_jukebox_on">Jukebox Acendido</string>
     <string name="download.menu_lyrics">Letras</string>
     <string name="menu.about">Acerca de</string>
     <string name="menu.deleted_playlist">Eliminouse a lista %s</string>

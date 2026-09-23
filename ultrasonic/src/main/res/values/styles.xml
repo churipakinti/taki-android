@@ -11,10 +11,6 @@
         <item name="cornerSize">@dimen/radius_sm</item>
     </style>
 
-    <style name="ShapeAppearanceOverlay.Taki.Medium" parent="">
-        <item name="cornerSize">@dimen/radius_md</item>
-    </style>
-
     <style name="Ultrasonic.SecondaryText" parent="">
         <item name="android:fontFamily">sans-serif-light</item>
     </style>

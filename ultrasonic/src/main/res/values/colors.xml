@@ -3,7 +3,10 @@
     <color name="taki_accent">#B7D63C</color>
     <color name="taki_accent_pressed">#91AD30</color>
     <color name="taki_accent_secondary">#91AD30</color>
-    <color name="taki_progress">#7C9229</color>
+    <!-- The mini-player and Now Playing seek bar are both Compose now (phases 4I/4J):
+         taki_progress has no XML reference any more; it stays as the source of truth
+         TakiTokensTest diffs TakiColors.progress against. -->
+    <color name="taki_progress" tools:ignore="UnusedResources">#7C9229</color>
     <color name="taki_selected_container">#293217</color>
     <color name="taki_on_accent">#11130D</color>
     <color name="taki_black">#090B09</color>

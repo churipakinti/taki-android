@@ -73,4 +73,21 @@ object TakiAtmosphere {
 
     /** A 1dp tonal edge on a floating surface. Baked as `taki_edge_highlight` in XML. */
     const val EDGE_HIGHLIGHT_ALPHA: Float = 0.07f
+
+    // Now Playing's full-bleed backdrop (issue #10 phase 4J): the same technique as the
+    // featured-card wash above (small Coil decode, blur, saturation lift, cached - no
+    // per-frame work), but a top-to-bottom scrim instead of left-to-right, since the whole
+    // screen is one vertical composition (top bar -> hero artwork -> opaque control panel)
+    // rather than a text-beside-artwork card. More subdued than the card wash - it sits behind
+    // the entire screen, not just a peek of artwork, so it must stay calm rather than a
+    // deliberate palette accent.
+
+    /** How much of the (blurred) artwork is present before the scrim. */
+    const val NOW_PLAYING_ARTWORK_ALPHA: Float = 0.4f
+
+    /** Scrim at the top of the screen (behind the back/overflow bar). */
+    const val NOW_PLAYING_SCRIM_ALPHA_TOP: Float = 0.55f
+
+    /** Scrim at the bottom, just above the opaque control panel. */
+    const val NOW_PLAYING_SCRIM_ALPHA_BOTTOM: Float = 0.9f
 }
