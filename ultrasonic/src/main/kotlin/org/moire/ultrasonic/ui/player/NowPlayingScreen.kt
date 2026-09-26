@@ -167,20 +167,16 @@ fun NowPlayingScreen(
     actions: NowPlayingActions,
     queueContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    upNext: List<UpNextItem> = emptyList(),
 ) {
     TakiScaffold(modifier = modifier) {
         NowPlayingAtmosphere(model = state.artworkModelLarge)
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-        val showPanel = maxHeight >= TakiTheme.dimensions.nowPlayingPanelMinScreenHeight
         Column(Modifier.fillMaxSize()) {
             NowPlayingTopBar(state = state, actions = actions)
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 Crossfade(targetState = showQueue, label = "now_playing_panel") { queueShown ->
                     if (queueShown) {
                         // The full queue is a dense scrollable list (legacy view, unchanged), so it sits
-                        // on the same quiet rounded surface as the context panel below it rather than
-                        // floating on the atmosphere.
+                        // on a quiet rounded surface rather than floating on the atmosphere.
                         Box(
                             Modifier
                                 .fillMaxSize()
@@ -201,11 +197,8 @@ fun NowPlayingScreen(
                 progress = progress,
                 sleepTimerState = sleepTimerState,
                 showQueue = showQueue,
-                showPanel = showPanel,
-                upNext = upNext,
                 actions = actions,
             )
-        }
         }
     }
 }
@@ -397,46 +390,37 @@ private fun NowPlayingHeroArtwork(state: PlayerUiState, actions: NowPlayingActio
 }
 
 /**
- * Metadata, seek, transport, the labeled utility row and (on screens tall enough, [showPanel])
- * the UP NEXT / LYRICS / ABOUT context panel (issue #10 phases 4J2/4J3). Metadata, seek and
- * transport sit directly on the atmosphere with no enclosing card - spacing and typography carry
- * the hierarchy; only the context panel is a quiet surface. Always present (both with and
- * without the full queue shown).
+ * Metadata, seek, transport and the labeled utility row (issue #10 phases 4J2/4J4). All of it sits
+ * directly on the atmosphere with no enclosing card or panel - spacing and typography carry the
+ * hierarchy, and the space below the utility row is deliberately left open. Always present (both
+ * with and without the full queue shown).
  */
-@Suppress("LongParameterList")
 @Composable
 private fun NowPlayingPlaybackSurface(
     state: PlayerUiState,
     progress: PlaybackProgress,
     sleepTimerState: SleepTimerState,
     showQueue: Boolean,
-    showPanel: Boolean,
-    upNext: List<UpNextItem>,
     actions: NowPlayingActions,
 ) {
-    Column(Modifier.fillMaxWidth().padding(bottom = TakiTheme.spacing.lg)) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = TakiTheme.spacing.xl)) {
-            NowPlayingMediaInfo(state = state, actions = actions)
-            Spacer(Modifier.height(TakiTheme.spacing.md))
-            NowPlayingSeekSection(state = state, progress = progress, actions = actions)
-            Spacer(Modifier.height(TakiTheme.spacing.md))
-            NowPlayingTransportRow(state = state, actions = actions)
-            Spacer(Modifier.height(TakiTheme.spacing.sm))
-            NowPlayingUtilityRow(
-                sleepTimerState = sleepTimerState,
-                sleepTimerDescription = sleepTimerContentDescription(sleepTimerState),
-                showQueue = showQueue,
-                actions = actions,
-            )
-        }
-        if (showPanel) {
-            Spacer(Modifier.height(TakiTheme.spacing.md))
-            NowPlayingContextPanel(
-                upNext = upNext,
-                actions = actions,
-                modifier = Modifier.padding(horizontal = TakiTheme.spacing.lg),
-            )
-        }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TakiTheme.spacing.xl)
+            .padding(bottom = TakiTheme.spacing.xxl),
+    ) {
+        NowPlayingMediaInfo(state = state, actions = actions)
+        Spacer(Modifier.height(TakiTheme.spacing.lg))
+        NowPlayingSeekSection(state = state, progress = progress, actions = actions)
+        Spacer(Modifier.height(TakiTheme.spacing.xl))
+        NowPlayingTransportRow(state = state, actions = actions)
+        Spacer(Modifier.height(TakiTheme.spacing.md))
+        NowPlayingUtilityRow(
+            sleepTimerState = sleepTimerState,
+            sleepTimerDescription = sleepTimerContentDescription(sleepTimerState),
+            showQueue = showQueue,
+            actions = actions,
+        )
     }
 }
 

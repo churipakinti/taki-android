@@ -109,9 +109,6 @@ data class TakiDimensions(
     val nowPlayingPrimaryAction: Dp = 80.dp,
     /** `now_playing_seek_thumb` - the seek bar's restrained thumb diameter. */
     val nowPlayingSeekThumb: Dp = 12.dp,
-    /** `now_playing_panel_min_screen_height` - the bottom context panel is only shown at or
-     *  above this available height (issue #10 phase 4J3). */
-    val nowPlayingPanelMinScreenHeight: Dp = 720.dp,
 )
 
 /**

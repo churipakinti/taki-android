@@ -128,8 +128,5 @@
     <dimen name="now_playing_hero_artwork_max">360dp</dimen>
     <dimen name="now_playing_primary_action">80dp</dimen>
     <dimen name="now_playing_seek_thumb">12dp</dimen>
-    <!-- Phase 4J3: the bottom context panel (tabs + one row) only shows on screens at least this
-         tall, so a short portrait device keeps its hero artwork instead. -->
-    <dimen name="now_playing_panel_min_screen_height">720dp</dimen>
 
 </resources>

@@ -15,7 +15,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
@@ -101,7 +100,6 @@ class NowPlayingScreenComposeTest {
             onArtworkSwipePrevious = { events += "swipePrevious" },
             onArtworkSwipeSeekForward = { events += "swipeSeekForward" },
             onArtworkSwipeSeekBack = { events += "swipeSeekBack" },
-            onPlayUpNext = { events += "playUpNext:$it" },
         )
     }
 
@@ -111,7 +109,6 @@ class NowPlayingScreenComposeTest {
         progress: PlaybackProgress = PlaybackProgress(100_000L, 500_000L, 40),
         sleepTimerState: SleepTimerState = SleepTimerState.Off,
         showQueue: Boolean = false,
-        upNext: List<UpNextItem> = emptyList(),
     ): Recorder {
         compose.setContent {
             TakiTheme {
@@ -122,7 +119,6 @@ class NowPlayingScreenComposeTest {
                     showQueue = showQueue,
                     actions = recorder.actions(),
                     queueContent = { Text("QUEUE_CONTENT") },
-                    upNext = upNext,
                 )
             }
         }
@@ -495,9 +491,7 @@ class NowPlayingScreenComposeTest {
         compose.onNodeWithContentDescription("Play").assertIsDisplayed()
     }
 
-    // --- phase 4J3: labeled utility row + UP NEXT / LYRICS / ABOUT context panel -----------------
-
-    private val queued = listOf(UpNextItem("Stairway to Heaven", "Led Zeppelin", null, 3))
+    // --- phases 4J3/4J4: labeled utility row (no persistent context panel) -----------------
 
     @Test
     fun `the utility row shows labels under Up Next, Lyrics and Sleep Timer`() {
@@ -515,59 +509,6 @@ class NowPlayingScreenComposeTest {
     }
 
     @Test
-    fun `the context panel offers the three tabs with Up next selected by default`() {
-        setContent(playing, upNext = queued)
-        compose.onNodeWithText("UP NEXT").assertIsSelected()
-        compose.onNodeWithText("LYRICS").assertIsNotSelected()
-        compose.onNodeWithText("ABOUT").assertIsNotSelected()
-    }
-
-    @Test
-    fun `selecting a tab moves the selected state`() {
-        setContent(playing, upNext = queued)
-        compose.onNodeWithText("ABOUT").performClick()
-        compose.onNodeWithText("ABOUT").assertIsSelected()
-        compose.onNodeWithText("UP NEXT").assertIsNotSelected()
-    }
-
-    @Test
-    fun `the Up Next tab previews the queued item and tapping it plays it`() {
-        val recorder = setContent(playing, upNext = queued)
-        compose.onNodeWithText("Stairway to Heaven").assertIsDisplayed().performClick()
-        assertEquals(listOf("playUpNext:3"), recorder.events)
-    }
-
-    @Test
-    fun `an empty queue tail shows the empty message`() {
-        setContent(playing, upNext = emptyList())
-        compose.onNodeWithText("Nothing queued next").assertIsDisplayed()
-    }
-
-    @Test
-    fun `the Up Next row can open the full queue`() {
-        val recorder = setContent(playing, upNext = queued)
-        compose.onNodeWithContentDescription("Show full queue").performClick()
-        assertEquals(listOf("toggleQueue"), recorder.events)
-    }
-
-    @Test
-    fun `the Lyrics tab keeps the existing lyrics action as an entry`() {
-        val recorder = setContent(playing)
-        compose.onNodeWithText("LYRICS").performClick()
-        compose.onNodeWithText("Open lyrics for this song").performClick()
-        assertEquals(listOf("lyrics"), recorder.events)
-    }
-
-    @Test
-    fun `the About tab shows existing metadata with go-to-album and go-to-artist entries`() {
-        val recorder = setContent(playing)
-        compose.onNodeWithText("ABOUT").performClick()
-        compose.onNodeWithText("Go to album").performClick()
-        compose.onNodeWithText("Go to artist").performClick()
-        assertEquals(listOf("title", "artist"), recorder.events)
-    }
-
-    @Test
     fun `an active sleep timer marks its utility item selected`() {
         setContent(playing, sleepTimerState = SleepTimerState.EndOfTrack)
         compose.onNodeWithContentDescription("Sleep timer · End of song").assertIsSelected()
@@ -578,6 +519,22 @@ class NowPlayingScreenComposeTest {
         setContent(playing)
         compose.onNodeWithContentDescription("Lyrics").assertHeightIsAtLeast(48.dp)
         compose.onNodeWithContentDescription("Queue").assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test
+    fun `no persistent context panel or tabs are rendered`() {
+        setContent(playing)
+        compose.onNodeWithText("UP NEXT").assertDoesNotExist()
+        compose.onNodeWithText("LYRICS").assertDoesNotExist()
+        compose.onNodeWithText("ABOUT").assertDoesNotExist()
+    }
+
+    @Test
+    fun `go to album and artist stay reachable from the overflow menu`() {
+        val recorder = setContent(playing)
+        compose.onNodeWithContentDescription("Player options").performClick()
+        compose.onNodeWithText("Go to Album").performClick()
+        assertEquals(listOf("overflow:GO_TO_ALBUM"), recorder.events)
     }
 
     @Test
