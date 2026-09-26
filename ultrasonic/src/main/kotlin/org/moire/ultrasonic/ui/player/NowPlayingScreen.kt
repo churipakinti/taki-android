@@ -34,8 +34,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,10 +49,12 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -64,11 +64,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.text.style.TextOverflow
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
@@ -82,6 +86,7 @@ import org.moire.ultrasonic.service.SleepTimerState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
+import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.playback.PlaybackPhase
 import org.moire.ultrasonic.ui.playback.PlaybackProgress
 import org.moire.ultrasonic.ui.playback.PlayerUiState
@@ -136,15 +141,16 @@ fun resolvePlayerFlingGesture(
 }
 
 /**
- * Now Playing (issue #10 phase 4J): Taki's main emotional playback surface. A pure projection
- * of [PlayerUiState] plus a [PlaybackProgress] snapshot and the sleep timer's own state - no
- * playback, navigation or subscription lives here; every action is dispatched to the host
- * `PlayerFragment` through [NowPlayingActions].
+ * Now Playing (issue #10 phase 4J, redesigned in phase 4J2): Taki's main emotional playback
+ * surface. A pure projection of [PlayerUiState] plus a [PlaybackProgress] snapshot and the sleep
+ * timer's own state - no playback, navigation or subscription lives here; every action is
+ * dispatched to the host `PlayerFragment` through [NowPlayingActions].
  *
- * Full-bleed artwork-derived atmosphere behind an artwork-first vertical composition: a back/
- * overflow bar, the swipeable hero artwork (or the legacy embedded queue view, toggled by
- * [showQueue] - see [queueContent]'s kdoc), and an opaque control panel (title/artist/heart,
- * seek bar, transport, secondary actions).
+ * Phase 4J2 turned the screen into one continuous artwork-first composition instead of
+ * "artwork + opaque control panel": a subtle top bar, a dominant hero artwork (or the legacy
+ * embedded queue view, toggled by [showQueue]), and metadata/seek/transport sitting directly on
+ * the full-bleed artwork-derived atmosphere - no card, no boxed groups. Every command and test
+ * tag from phase 4J is unchanged; this is a visual pass only.
  *
  * [queueContent] hosts the legacy `current_playlist.xml` queue (drag-reorder, swipe-to-delete,
  * tap-to-play) unchanged, via an `AndroidView` the Fragment builds - deliberately not
@@ -169,7 +175,19 @@ fun NowPlayingScreen(
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 Crossfade(targetState = showQueue, label = "now_playing_panel") { queueShown ->
                     if (queueShown) {
-                        Box(Modifier.fillMaxSize().testTag(NOW_PLAYING_QUEUE_PANEL_TEST_TAG)) {
+                        // Unlike the hero artwork, the queue is a dense scrollable text list (its
+                        // own legacy header + rows, issue #10 phase 4J) rather than part of the
+                        // artwork-first composition, so it keeps a quiet solid backing - the same
+                        // canvas colour every other Compose list screen sits on - instead of
+                        // floating directly on the atmosphere. That also gives it a clean seam
+                        // against the transparent playback surface below rather than the two
+                        // blending together with no visual boundary.
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(TakiTheme.colors.black)
+                                .testTag(NOW_PLAYING_QUEUE_PANEL_TEST_TAG),
+                        ) {
                             queueContent()
                         }
                     } else {
@@ -177,7 +195,7 @@ fun NowPlayingScreen(
                     }
                 }
             }
-            NowPlayingControlPanel(
+            NowPlayingPlaybackSurface(
                 state = state,
                 progress = progress,
                 sleepTimerState = sleepTimerState,
@@ -189,10 +207,11 @@ fun NowPlayingScreen(
 }
 
 /**
- * The full-bleed artwork-derived backdrop (issue #10 phase 4J): the same technique as
- * [org.moire.ultrasonic.ui.components.TakiAtmosphericSurface] (a small cached Coil decode,
+ * The full-bleed artwork-derived backdrop (issue #10 phase 4J, re-tuned 4J2): the same technique
+ * as [org.moire.ultrasonic.ui.components.TakiAtmosphericSurface] (a small cached Coil decode,
  * blurred and lightly saturated - no per-frame work) but a top-to-bottom scrim sized for one
- * vertical screen instead of a card. A flat black canvas with no [model].
+ * vertical screen instead of a card. Recomposes only when [model] (the artwork request) changes,
+ * never on a progress tick. A flat black canvas with no [model].
  */
 @Composable
 private fun NowPlayingAtmosphere(model: Any?) {
@@ -227,36 +246,32 @@ private fun NowPlayingAtmosphere(model: Any?) {
     )
 }
 
+/** A minimal back/overflow bar on the bare atmosphere (V2 section 6) - no title (it would
+ *  duplicate the metadata below) and no Material app bar. Shares [TakiScreenHeader] with every
+ *  other Compose sub-screen instead of hand-rolling its own row. */
 @Composable
 private fun NowPlayingTopBar(state: PlayerUiState, actions: NowPlayingActions) {
     var overflowExpanded by remember { mutableStateOf(false) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(TakiTheme.dimensions.screenHeaderHeight)
-            .padding(horizontal = TakiTheme.spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TakiIconButton(
-            onClick = actions.onBack,
-            painter = painterResource(R.drawable.ic_arrow_back),
-            contentDescription = stringResource(R.string.player_back),
-        )
-        Spacer(Modifier.weight(1f))
-        Box {
-            TakiIconButton(
-                onClick = { overflowExpanded = true },
-                painter = painterResource(R.drawable.ic_more_vert),
-                contentDescription = stringResource(R.string.player_options),
-            )
-            NowPlayingOverflowMenu(
-                expanded = overflowExpanded,
-                onDismiss = { overflowExpanded = false },
-                state = state,
-                actions = actions,
-            )
-        }
-    }
+    TakiScreenHeader(
+        onBack = actions.onBack,
+        backContentDescription = stringResource(R.string.player_back),
+        actions = {
+            Box {
+                TakiIconButton(
+                    onClick = { overflowExpanded = true },
+                    painter = painterResource(R.drawable.ic_more_vert),
+                    contentDescription = stringResource(R.string.player_options),
+                    tint = TakiTheme.colors.ivory,
+                )
+                NowPlayingOverflowMenu(
+                    expanded = overflowExpanded,
+                    onDismiss = { overflowExpanded = false },
+                    state = state,
+                    actions = actions,
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -312,6 +327,13 @@ private fun NowPlayingOverflowMenu(
     }
 }
 
+/**
+ * The hero artwork (issue #10 phase 4J2): the screen's dominant visual element, centred with
+ * generous negative space rather than reading as a header thumbnail. Responsive between
+ * [org.moire.ultrasonic.ui.theme.TakiDimensions.albumHeroArtworkMin] and the Now Playing-specific
+ * [org.moire.ultrasonic.ui.theme.TakiDimensions.nowPlayingHeroArtworkMax] - larger than the
+ * shared detail-screen hero cap, since this is the app's one full-screen playback surface.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NowPlayingHeroArtwork(state: PlayerUiState, actions: NowPlayingActions) {
@@ -358,9 +380,9 @@ private fun NowPlayingHeroArtwork(state: PlayerUiState, actions: NowPlayingActio
             },
         contentAlignment = Alignment.Center,
     ) {
-        val horizontalInset = TakiTheme.spacing.xl
+        val horizontalInset = TakiTheme.spacing.lg
         val side = minOf(maxWidth - horizontalInset * 2, maxHeight - TakiTheme.spacing.lg)
-            .coerceIn(TakiTheme.dimensions.albumHeroArtworkMin, TakiTheme.dimensions.albumHeroArtworkMax)
+            .coerceIn(TakiTheme.dimensions.albumHeroArtworkMin, TakiTheme.dimensions.nowPlayingHeroArtworkMax)
         TakiArtwork(
             model = state.artworkModelLarge,
             contentDescription = stringResource(R.string.albumArt),
@@ -370,8 +392,13 @@ private fun NowPlayingHeroArtwork(state: PlayerUiState, actions: NowPlayingActio
     }
 }
 
+/**
+ * Metadata, seek, transport and quick actions (issue #10 phase 4J2): sits directly on the
+ * atmosphere with no enclosing card - spacing and typography carry the hierarchy instead of a
+ * container. Always present (both with and without the queue shown), matching phase 4J.
+ */
 @Composable
-private fun NowPlayingControlPanel(
+private fun NowPlayingPlaybackSurface(
     state: PlayerUiState,
     progress: PlaybackProgress,
     sleepTimerState: SleepTimerState,
@@ -381,22 +408,23 @@ private fun NowPlayingControlPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TakiTheme.spacing.sm)
-            .padding(bottom = TakiTheme.spacing.sm)
-            .clip(TakiTheme.shapes.lg)
-            .background(TakiTheme.colors.surfaceHigh)
-            .padding(TakiTheme.spacing.xl),
+            .padding(horizontal = TakiTheme.spacing.xl)
+            .padding(bottom = TakiTheme.spacing.xl),
     ) {
         NowPlayingMediaInfo(state = state, actions = actions)
-        Spacer(Modifier.height(TakiTheme.spacing.xl))
-        NowPlayingSlider(state = state, progress = progress, actions = actions)
+        Spacer(Modifier.height(TakiTheme.spacing.lg))
+        NowPlayingSeekSection(state = state, progress = progress, actions = actions)
         Spacer(Modifier.height(TakiTheme.spacing.xl))
         NowPlayingTransportRow(state = state, actions = actions)
+        Spacer(Modifier.height(TakiTheme.spacing.md))
+        NowPlayingShuffleRepeatRow(state = state, actions = actions)
         Spacer(Modifier.height(TakiTheme.spacing.xl))
-        NowPlayingSecondaryRow(sleepTimerState = sleepTimerState, showQueue = showQueue, actions = actions)
+        NowPlayingQuickActionsRow(sleepTimerState = sleepTimerState, showQueue = showQueue, actions = actions)
     }
 }
 
+/** Title, artist and favourite as one identity group (V2 direction: favourite belongs to track
+ *  identity, not a generic toolbar) - `title / artist ... heart`, unchanged from phase 4J. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NowPlayingMediaInfo(state: PlayerUiState, actions: NowPlayingActions) {
@@ -443,38 +471,32 @@ private fun NowPlayingMediaInfo(state: PlayerUiState, actions: NowPlayingActions
     }
 }
 
+/** Hoists the drag-in-progress position and formats the elapsed/total labels; the actual seek
+ *  surface is [NowPlayingSeekBar] (issue #10 phase 4J2 - replaces the Material3 `Slider` with a
+ *  thin custom track so the screen never reads as an old-style Android SeekBar). */
 @Composable
-private fun NowPlayingSlider(state: PlayerUiState, progress: PlaybackProgress, actions: NowPlayingActions) {
+private fun NowPlayingSeekSection(state: PlayerUiState, progress: PlaybackProgress, actions: NowPlayingActions) {
     var dragPositionMs by remember { mutableStateOf<Float?>(null) }
     val durationMs = progress.durationMs.coerceAtLeast(0L)
-    val sliderRange = 0f..durationMs.coerceAtLeast(1L).toFloat()
-    val positionMs = (dragPositionMs ?: progress.positionMs.toFloat())
-        .coerceIn(sliderRange.start, sliderRange.endInclusive)
+    val maxMs = durationMs.coerceAtLeast(1L).toFloat()
+    val positionMs = (dragPositionMs ?: progress.positionMs.toFloat()).coerceIn(0f, maxMs)
     // Matches the legacy `progressBar.isEnabled = isPlaying || isJukeboxEnabled`: dragging a
     // paused, non-jukebox stream is not meaningful (nothing is buffering to seek within).
     val enabled = state.hasCurrentTrack && (state.isPlaying || state.isJukeboxEnabled)
 
     Column {
-        BufferedIndicator(bufferedPercent = progress.bufferedPercent, visible = state.hasCurrentTrack)
-        Slider(
-            value = if (durationMs > 0) positionMs else 0f,
+        NowPlayingSeekBar(
+            positionMs = positionMs,
+            maxMs = if (durationMs > 0) maxMs else 0f,
+            bufferedPercent = if (state.hasCurrentTrack) progress.bufferedPercent else 0,
+            enabled = enabled,
             onValueChange = { dragPositionMs = it },
             onValueChangeFinished = {
                 actions.onSeekTo((dragPositionMs ?: positionMs).toInt())
                 dragPositionMs = null
             },
-            valueRange = sliderRange,
-            enabled = enabled,
-            colors = SliderDefaults.colors(
-                thumbColor = TakiTheme.colors.progress,
-                activeTrackColor = TakiTheme.colors.progress,
-                inactiveTrackColor = TakiTheme.colors.surface,
-                disabledThumbColor = TakiTheme.colors.progress,
-                disabledActiveTrackColor = TakiTheme.colors.progress,
-                disabledInactiveTrackColor = TakiTheme.colors.surface,
-            ),
-            modifier = Modifier.fillMaxWidth().testTag(NOW_PLAYING_SEEK_TEST_TAG),
         )
+        Spacer(Modifier.height(TakiTheme.spacing.xxs))
         Row(Modifier.fillMaxWidth()) {
             val elapsed = if (state.hasCurrentTrack) {
                 Util.formatTotalDuration((dragPositionMs?.toLong() ?: progress.positionMs), true)
@@ -493,68 +515,216 @@ private fun NowPlayingSlider(state: PlayerUiState, progress: PlaybackProgress, a
     }
 }
 
-/** The legacy `SeekBar.secondaryProgress` (how much of the stream is buffered), as a thin line
- *  above the interactive seek bar rather than baked into the same track - Material3's `Slider`
- *  does not expose a third colour region. */
+/**
+ * A thin, restrained seek surface (V2 direction: no old-style Android SeekBar) drawn directly
+ * rather than a Material3 `Slider`, so the visual track can stay a couple of dp thick regardless
+ * of the platform's slider styling. The touch target is still a full [TakiTheme.dimensions
+ * .touchTargetMin]-tall row - only the drawn line is thin. A single unified gesture ([Modifier
+ * .nowPlayingSeekGesture], matching this file's existing hero-artwork / skip-button pointer
+ * handling) drives both "tap to seek" and "drag to seek": the position follows the finger from
+ * first contact to release, then [onValueChangeFinished] commits it. [Modifier
+ * .nowPlayingSeekSemantics] wires `SemanticsActions.SetProgress` for accessibility services and
+ * instrumented tests; [drawNowPlayingSeekTrack] paints the track/buffered/progress/thumb.
+ */
+@Suppress("LongParameterList")
 @Composable
-private fun BufferedIndicator(bufferedPercent: Int, visible: Boolean) {
-    if (!visible) return
-    val track = TakiTheme.colors.surface
-    val fill = TakiTheme.colors.gray
-    val fraction = (bufferedPercent / PERCENT_MAX).coerceIn(0f, 1f)
+private fun NowPlayingSeekBar(
+    positionMs: Float,
+    maxMs: Float,
+    bufferedPercent: Int,
+    enabled: Boolean,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit,
+) {
+    val trackColor = TakiTheme.colors.surface
+    val bufferedColor = TakiTheme.colors.gray
+    val activeColor = TakiTheme.colors.progress
+    val trackHeight = TakiTheme.spacing.xxs
+    val thumbDiameter = TakiTheme.dimensions.nowPlayingSeekThumb
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
+    val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)
+
     Box(
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .height(TakiTheme.spacing.xxs)
-            .clearAndSetSemantics {}
+            .height(TakiTheme.dimensions.touchTargetMin)
+            .testTag(NOW_PLAYING_SEEK_TEST_TAG)
+            .nowPlayingSeekSemantics(
+                positionMs = positionMs,
+                maxMs = maxMs,
+                enabled = enabled,
+                onValueChange = currentOnValueChange,
+                onValueChangeFinished = currentOnValueChangeFinished,
+            )
+            .nowPlayingSeekGesture(
+                enabled = enabled,
+                maxMs = maxMs,
+                onValueChange = currentOnValueChange,
+                onValueChangeFinished = currentOnValueChangeFinished,
+            )
             .drawBehind {
-                drawRect(track, size = size)
-                drawRect(fill, topLeft = Offset.Zero, size = Size(size.width * fraction, size.height))
+                drawNowPlayingSeekTrack(
+                    positionMs = positionMs,
+                    maxMs = maxMs,
+                    bufferedPercent = bufferedPercent,
+                    trackColor = trackColor,
+                    bufferedColor = bufferedColor,
+                    activeColor = activeColor,
+                    trackHeightPx = trackHeight.toPx(),
+                    thumbRadiusPx = thumbDiameter.toPx() / 2f,
+                )
             },
     )
 }
 
+/** Wires `SemanticsActions.SetProgress` (accessibility services, instrumented tests) and the
+ *  standard progress-bar range info onto the seek [Box][NowPlayingSeekBar]. */
+@Suppress("LongParameterList")
+private fun Modifier.nowPlayingSeekSemantics(
+    positionMs: Float,
+    maxMs: Float,
+    enabled: Boolean,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit,
+): Modifier = semantics(mergeDescendants = true) {
+    if (!enabled) disabled()
+    progressBarRangeInfo = ProgressBarRangeInfo(current = positionMs, range = 0f..maxMs.coerceAtLeast(1f))
+    setProgress { targetValue ->
+        if (!enabled || maxMs <= 0f) return@setProgress false
+        onValueChange(targetValue.coerceIn(0f, maxMs))
+        onValueChangeFinished()
+        true
+    }
+}
+
+/** A single gesture drives both "tap to seek" and "drag to seek": the position follows the
+ *  finger from first contact to release, then [onValueChangeFinished] commits it. */
+private fun Modifier.nowPlayingSeekGesture(
+    enabled: Boolean,
+    maxMs: Float,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit,
+): Modifier = pointerInput(enabled, maxMs) {
+    if (!enabled || maxMs <= 0f) return@pointerInput
+    awaitEachGesture {
+        val down = awaitFirstDown()
+        val trackWidthPx = size.width.toFloat()
+        fun valueAt(x: Float) = (x / trackWidthPx).coerceIn(0f, 1f) * maxMs
+        onValueChange(valueAt(down.position.x))
+        var pointerId = down.id
+        var dragging = true
+        while (dragging) {
+            val eventChange = awaitPointerEvent().changes.firstOrNull { it.id == pointerId }
+            if (eventChange == null || !eventChange.pressed) {
+                dragging = false
+            } else {
+                eventChange.consume()
+                onValueChange(valueAt(eventChange.position.x))
+                pointerId = eventChange.id
+            }
+        }
+        onValueChangeFinished()
+    }
+}
+
+/** Background track, buffered-ahead segment, active progress and the restrained thumb - in that
+ *  paint order, all as thin round-capped lines rather than a filled bar. */
+@Suppress("LongParameterList")
+private fun DrawScope.drawNowPlayingSeekTrack(
+    positionMs: Float,
+    maxMs: Float,
+    bufferedPercent: Int,
+    trackColor: Color,
+    bufferedColor: Color,
+    activeColor: Color,
+    trackHeightPx: Float,
+    thumbRadiusPx: Float,
+) {
+    val centerY = size.height / 2f
+    val fraction = if (maxMs > 0f) (positionMs / maxMs).coerceIn(0f, 1f) else 0f
+    val bufferedFraction = (bufferedPercent / PERCENT_MAX).coerceIn(0f, 1f)
+    drawLine(
+        color = trackColor,
+        start = Offset(0f, centerY),
+        end = Offset(size.width, centerY),
+        strokeWidth = trackHeightPx,
+        cap = StrokeCap.Round,
+    )
+    if (bufferedFraction > fraction) {
+        drawLine(
+            color = bufferedColor,
+            start = Offset(0f, centerY),
+            end = Offset(size.width * bufferedFraction, centerY),
+            strokeWidth = trackHeightPx,
+            cap = StrokeCap.Round,
+        )
+    }
+    if (fraction > 0f) {
+        drawLine(
+            color = activeColor,
+            start = Offset(0f, centerY),
+            end = Offset(size.width * fraction, centerY),
+            strokeWidth = trackHeightPx,
+            cap = StrokeCap.Round,
+        )
+    }
+    drawCircle(color = activeColor, radius = thumbRadiusPx, center = Offset(size.width * fraction, centerY))
+}
+
+/** Previous / Play-Pause / Next (issue #10 phase 4J2): the most obvious interaction after the
+ *  artwork, so it gets the widest spacing and the largest primary button on the screen - no
+ *  enclosing card, just the three controls on the atmosphere. */
 @Composable
 private fun NowPlayingTransportRow(state: PlayerUiState, actions: NowPlayingActions) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            TakiIconButton(
-                onClick = actions.onToggleShuffle,
-                painter = painterResource(R.drawable.media_shuffle),
-                contentDescription = stringResource(R.string.buttons_shuffle),
-                selected = state.isShuffleEnabled,
-            )
-        }
-        Box(Modifier.weight(2f), contentAlignment = Alignment.Center) {
-            NowPlayingSkipButton(
-                painter = painterResource(R.drawable.media_backward),
-                contentDescription = stringResource(R.string.buttons_previous),
-                enabled = state.canSeekToPrevious,
-                onClick = actions.onPrevious,
-                onRepeat = actions.onSeekBackRepeat,
-            )
-        }
-        Box(Modifier.weight(2f), contentAlignment = Alignment.Center) {
-            NowPlayingPrimaryButton(state = state, actions = actions)
-        }
-        Box(Modifier.weight(2f), contentAlignment = Alignment.Center) {
-            NowPlayingSkipButton(
-                painter = painterResource(R.drawable.media_forward),
-                contentDescription = stringResource(R.string.buttons_next),
-                enabled = state.canSeekToNext,
-                onClick = actions.onNext,
-                onRepeat = actions.onSeekForwardRepeat,
-            )
-        }
-        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            val (icon, description) = repeatButtonIcon(state.repeatMode)
-            TakiIconButton(
-                onClick = actions.onCycleRepeat,
-                painter = painterResource(icon),
-                contentDescription = stringResource(description),
-                selected = state.repeatMode != RepeatMode.OFF,
-            )
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NowPlayingSkipButton(
+            painter = painterResource(R.drawable.media_backward),
+            contentDescription = stringResource(R.string.buttons_previous),
+            enabled = state.canSeekToPrevious,
+            onClick = actions.onPrevious,
+            onRepeat = actions.onSeekBackRepeat,
+        )
+        NowPlayingPrimaryButton(state = state, actions = actions)
+        NowPlayingSkipButton(
+            painter = painterResource(R.drawable.media_forward),
+            contentDescription = stringResource(R.string.buttons_next),
+            enabled = state.canSeekToNext,
+            onClick = actions.onNext,
+            onRepeat = actions.onSeekForwardRepeat,
+        )
+    }
+}
+
+/** Shuffle and repeat (issue #10 phase 4J2): subordinate to the primary transport, so they move
+ *  to their own quiet row below it instead of flanking Play/Pause. Selected state still reads
+ *  clearly via [TakiIconButton]'s accent tint. */
+@Composable
+private fun NowPlayingShuffleRepeatRow(state: PlayerUiState, actions: NowPlayingActions) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TakiIconButton(
+            onClick = actions.onToggleShuffle,
+            painter = painterResource(R.drawable.media_shuffle),
+            contentDescription = stringResource(R.string.buttons_shuffle),
+            iconSize = TakiTheme.dimensions.iconSm,
+            selected = state.isShuffleEnabled,
+        )
+        Spacer(Modifier.width(TakiTheme.spacing.xxl))
+        val (icon, description) = repeatButtonIcon(state.repeatMode)
+        TakiIconButton(
+            onClick = actions.onCycleRepeat,
+            painter = painterResource(icon),
+            contentDescription = stringResource(description),
+            iconSize = TakiTheme.dimensions.iconSm,
+            selected = state.repeatMode != RepeatMode.OFF,
+        )
     }
 }
 
@@ -590,7 +760,7 @@ private fun NowPlayingPrimaryButton(state: PlayerUiState, actions: NowPlayingAct
     }
     Box(
         modifier = Modifier
-            .size(TakiTheme.dimensions.detailPrimaryAction)
+            .size(TakiTheme.dimensions.nowPlayingPrimaryAction)
             .background(TakiTheme.colors.ivory, CircleShape)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -663,8 +833,10 @@ private fun NowPlayingSkipButton(
     }
 }
 
+/** Save / Lyrics / Queue / Sleep timer (issue #10 phase 4J2): reachable but visually quiet -
+ *  small icons, centred, no labels, sitting last in the composition. */
 @Composable
-private fun NowPlayingSecondaryRow(
+private fun NowPlayingQuickActionsRow(
     sleepTimerState: SleepTimerState,
     showQueue: Boolean,
     actions: NowPlayingActions,

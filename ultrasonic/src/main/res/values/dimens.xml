@@ -120,4 +120,13 @@
     <dimen name="elevation_raised">3dp</dimen>
     <dimen name="border_thin">1dp</dimen>
 
+    <!-- Now Playing (issue #10 phase 4J2): the app's one full-screen playback surface, so its
+         hero cover and primary transport are allowed to read larger than the shared
+         album_hero_artwork_max / detail_primary_action tokens above without changing Album or
+         Artist Detail. The seek thumb stays deliberately small ("restrained thumb" - V2 design
+         direction) against the thin space_xxs seek track. -->
+    <dimen name="now_playing_hero_artwork_max">360dp</dimen>
+    <dimen name="now_playing_primary_action">80dp</dimen>
+    <dimen name="now_playing_seek_thumb">12dp</dimen>
+
 </resources>

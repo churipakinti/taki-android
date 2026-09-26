@@ -142,6 +142,9 @@ class TakiTokensTest {
         assertEquals(dimenDp("genre_cover_size").dp, dimensions.genreCoverSize)
         assertEquals(dimenDp("elevation_raised").dp, dimensions.elevationRaised)
         assertEquals(dimenDp("border_thin").dp, dimensions.borderThin)
+        assertEquals(dimenDp("now_playing_hero_artwork_max").dp, dimensions.nowPlayingHeroArtworkMax)
+        assertEquals(dimenDp("now_playing_primary_action").dp, dimensions.nowPlayingPrimaryAction)
+        assertEquals(dimenDp("now_playing_seek_thumb").dp, dimensions.nowPlayingSeekThumb)
     }
 
     @Test

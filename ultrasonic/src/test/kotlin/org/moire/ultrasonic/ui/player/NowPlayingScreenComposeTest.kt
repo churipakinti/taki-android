@@ -11,9 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -247,6 +249,41 @@ class NowPlayingScreenComposeTest {
             "events were: ${recorder.events}",
             recorder.events.any { it.startsWith("seekTo:") },
         )
+    }
+
+    // --- seek bar: the phase 4J2 hand-rolled thin track (replaces the Material3 Slider) --------
+
+    @Test
+    fun `tapping a point on the seek bar seeks to roughly that position`() {
+        val recorder = setContent(playing, progress = PlaybackProgress(0L, 400_000L, 100))
+        compose.onNodeWithTag(NOW_PLAYING_SEEK_TEST_TAG).performTouchInput {
+            click(Offset(width * 0.5f, height / 2f))
+        }
+        val seekedMs = recorder.events.firstOrNull { it.startsWith("seekTo:") }
+            ?.removePrefix("seekTo:")?.toInt()
+        assertTrue("expected a seekTo event, got ${recorder.events}", seekedMs != null)
+        assertTrue("expected roughly the midpoint, got $seekedMs", seekedMs!! in 150_000..250_000)
+    }
+
+    @Test
+    fun `dragging across the seek bar commits the released position`() {
+        val recorder = setContent(playing, progress = PlaybackProgress(0L, 400_000L, 100))
+        compose.onNodeWithTag(NOW_PLAYING_SEEK_TEST_TAG).performTouchInput {
+            down(Offset(0f, height / 2f))
+            moveTo(Offset(width * 0.9f, height / 2f))
+            up()
+        }
+        val seekedMs = recorder.events.firstOrNull { it.startsWith("seekTo:") }
+            ?.removePrefix("seekTo:")?.toInt()
+        assertTrue("expected a seekTo event, got ${recorder.events}", seekedMs != null)
+        assertTrue("expected near the end of the track, got $seekedMs", seekedMs!! > 300_000)
+    }
+
+    @Test
+    fun `the seek bar ignores touch input while disabled`() {
+        val recorder = setContent(playing.copy(isPlaying = false, isJukeboxEnabled = false))
+        compose.onNodeWithTag(NOW_PLAYING_SEEK_TEST_TAG).performTouchInput { click(center) }
+        assertTrue(recorder.events.none { it.startsWith("seekTo:") })
     }
 
     // --- shuffle / repeat / favourite -----------------------------------------------------------

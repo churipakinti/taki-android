@@ -74,20 +74,22 @@ object TakiAtmosphere {
     /** A 1dp tonal edge on a floating surface. Baked as `taki_edge_highlight` in XML. */
     const val EDGE_HIGHLIGHT_ALPHA: Float = 0.07f
 
-    // Now Playing's full-bleed backdrop (issue #10 phase 4J): the same technique as the
-    // featured-card wash above (small Coil decode, blur, saturation lift, cached - no
+    // Now Playing's full-bleed backdrop (issue #10 phase 4J, re-tuned 4J2): the same technique
+    // as the featured-card wash above (small Coil decode, blur, saturation lift, cached - no
     // per-frame work), but a top-to-bottom scrim instead of left-to-right, since the whole
-    // screen is one vertical composition (top bar -> hero artwork -> opaque control panel)
-    // rather than a text-beside-artwork card. More subdued than the card wash - it sits behind
-    // the entire screen, not just a peek of artwork, so it must stay calm rather than a
-    // deliberate palette accent.
+    // screen is one continuous vertical composition (subtle top bar -> hero artwork -> metadata
+    // -> transport, all on the same atmospheric surface - phase 4J2 removed the opaque control
+    // panel). A touch richer than the phase 4J values so the artwork palette still reads once
+    // there is no separate panel to carry a flat colour, and a slightly deeper floor at the
+    // bottom so the transport controls that now sit directly on the atmosphere keep full
+    // contrast.
 
     /** How much of the (blurred) artwork is present before the scrim. */
-    const val NOW_PLAYING_ARTWORK_ALPHA: Float = 0.4f
+    const val NOW_PLAYING_ARTWORK_ALPHA: Float = 0.46f
 
     /** Scrim at the top of the screen (behind the back/overflow bar). */
-    const val NOW_PLAYING_SCRIM_ALPHA_TOP: Float = 0.55f
+    const val NOW_PLAYING_SCRIM_ALPHA_TOP: Float = 0.5f
 
-    /** Scrim at the bottom, just above the opaque control panel. */
-    const val NOW_PLAYING_SCRIM_ALPHA_BOTTOM: Float = 0.9f
+    /** Scrim at the bottom, behind the metadata and transport controls. */
+    const val NOW_PLAYING_SCRIM_ALPHA_BOTTOM: Float = 0.93f
 }

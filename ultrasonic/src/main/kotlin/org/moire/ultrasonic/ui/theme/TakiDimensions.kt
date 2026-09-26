@@ -100,6 +100,15 @@ data class TakiDimensions(
     val elevationRaised: Dp = 3.dp,
     /** `border_thin` - the 1dp border used only when a border is unavoidable. */
     val borderThin: Dp = 1.dp,
+    /** `now_playing_hero_artwork_max` - Now Playing's hero cover cap (issue #10 phase 4J2):
+     *  larger than [albumHeroArtworkMax] since it is the app's one full-screen playback
+     *  surface, not a shared detail-screen hero. */
+    val nowPlayingHeroArtworkMax: Dp = 360.dp,
+    /** `now_playing_primary_action` - Now Playing's Play/Pause/Stop, larger than
+     *  [detailPrimaryAction] for the same reason. */
+    val nowPlayingPrimaryAction: Dp = 80.dp,
+    /** `now_playing_seek_thumb` - the seek bar's restrained thumb diameter. */
+    val nowPlayingSeekThumb: Dp = 12.dp,
 )
 
 /**
