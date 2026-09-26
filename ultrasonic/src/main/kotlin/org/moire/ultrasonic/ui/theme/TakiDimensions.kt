@@ -103,7 +103,7 @@ data class TakiDimensions(
     /** `now_playing_hero_artwork_max` - Now Playing's hero cover cap (issue #10 phase 4J2):
      *  larger than [albumHeroArtworkMax] since it is the app's one full-screen playback
      *  surface, not a shared detail-screen hero. */
-    val nowPlayingHeroArtworkMax: Dp = 360.dp,
+    val nowPlayingHeroArtworkMax: Dp = 304.dp,
     /** `now_playing_primary_action` - Now Playing's Play/Pause/Stop, larger than
      *  [detailPrimaryAction] for the same reason. */
     val nowPlayingPrimaryAction: Dp = 80.dp,

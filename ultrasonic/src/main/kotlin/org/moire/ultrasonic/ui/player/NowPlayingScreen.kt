@@ -377,8 +377,10 @@ private fun NowPlayingHeroArtwork(state: PlayerUiState, actions: NowPlayingActio
             },
         contentAlignment = Alignment.Center,
     ) {
-        val horizontalInset = TakiTheme.spacing.lg
-        val side = minOf(maxWidth - horizontalInset * 2, maxHeight - TakiTheme.spacing.lg)
+        val horizontalInset = TakiTheme.spacing.xl
+        // Reserve vertical air above and below the cover so it sits in the column instead of
+        // being wedged between the header and the title.
+        val side = minOf(maxWidth - horizontalInset * 2, maxHeight - TakiTheme.spacing.xxl)
             .coerceIn(TakiTheme.dimensions.albumHeroArtworkMin, TakiTheme.dimensions.nowPlayingHeroArtworkMax)
         TakiArtwork(
             model = state.artworkModelLarge,
@@ -407,14 +409,14 @@ private fun NowPlayingPlaybackSurface(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = TakiTheme.spacing.xl)
-            .padding(bottom = TakiTheme.spacing.xxl),
+            .padding(bottom = TakiTheme.spacing.xl),
     ) {
         NowPlayingMediaInfo(state = state, actions = actions)
-        Spacer(Modifier.height(TakiTheme.spacing.lg))
+        Spacer(Modifier.height(TakiTheme.spacing.md))
         NowPlayingSeekSection(state = state, progress = progress, actions = actions)
         Spacer(Modifier.height(TakiTheme.spacing.xl))
         NowPlayingTransportRow(state = state, actions = actions)
-        Spacer(Modifier.height(TakiTheme.spacing.md))
+        Spacer(Modifier.height(TakiTheme.spacing.lg))
         NowPlayingUtilityRow(
             sleepTimerState = sleepTimerState,
             sleepTimerDescription = sleepTimerContentDescription(sleepTimerState),
@@ -449,7 +451,7 @@ private fun NowPlayingMediaInfo(state: PlayerUiState, actions: NowPlayingActions
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin)
-                        .wrapContentHeight(Alignment.CenterVertically)
+                        .wrapContentHeight(Alignment.Top)
                         .clickable(role = Role.Button, onClick = actions.onArtistClick),
                 )
             }
@@ -497,7 +499,7 @@ private fun NowPlayingSeekSection(state: PlayerUiState, progress: PlaybackProgre
                 dragPositionMs = null
             },
         )
-        Spacer(Modifier.height(TakiTheme.spacing.xxs))
+        Spacer(Modifier.height(TakiTheme.spacing.xs))
         Row(Modifier.fillMaxWidth()) {
             val elapsed = if (state.hasCurrentTrack) {
                 Util.formatTotalDuration((dragPositionMs?.toLong() ?: progress.positionMs), true)

@@ -97,7 +97,7 @@ private fun NowPlayingUtilityItem(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
             tint = tint,
-            modifier = Modifier.size(TakiTheme.dimensions.iconMd),
+            modifier = Modifier.size(TakiTheme.dimensions.iconSm),
         )
         Spacer(Modifier.height(TakiTheme.spacing.xs))
         Text(
