@@ -66,6 +66,9 @@ data class NowPlayingActions(
     val onArtworkSwipePrevious: () -> Unit,
     val onArtworkSwipeSeekForward: () -> Unit,
     val onArtworkSwipeSeekBack: () -> Unit,
+    /** Tap-to-play on an Up Next preview row (issue #10 phase 4J3); the argument is the item's
+     *  play-order index, the same index space the queue list's tap-to-play uses. */
+    val onPlayUpNext: (playOrderIndex: Int) -> Unit,
 ) {
     companion object {
         val Noop = NowPlayingActions(
@@ -93,6 +96,7 @@ data class NowPlayingActions(
             onArtworkSwipePrevious = {},
             onArtworkSwipeSeekForward = {},
             onArtworkSwipeSeekBack = {},
+            onPlayUpNext = {},
         )
     }
 }

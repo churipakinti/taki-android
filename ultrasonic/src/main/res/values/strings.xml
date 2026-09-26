@@ -364,6 +364,16 @@
     <string name="now_playing.like_description">Like this song</string>
     <string name="now_playing.unlike_description">Unlike this song</string>
     <string name="now_playing.favorite_failed">Setting rating failed</string>
+    <string name="now_playing.tab_up_next">Up next</string>
+    <string name="now_playing.tab_lyrics">Lyrics</string>
+    <string name="now_playing.tab_about">About</string>
+    <string name="now_playing.up_next_label">Up Next</string>
+    <string name="now_playing.sleep_timer_label">Sleep Timer</string>
+    <string name="now_playing.up_next_empty">Nothing queued next</string>
+    <string name="now_playing.open_queue">Show full queue</string>
+    <string name="now_playing.lyrics_open">Open lyrics for this song</string>
+    <string name="now_playing.about_go_album">Go to album</string>
+    <string name="now_playing.about_go_artist">Go to artist</string>
     <string name="common_multiple_years">Multiple Years</string>
     <string name="settings.show_confirmation_dialog">Show confirmation dialog</string>
     <string name="settings.show_confirmation_dialog_summary">Displays a confirmation dialog before deleting downloaded songs</string>

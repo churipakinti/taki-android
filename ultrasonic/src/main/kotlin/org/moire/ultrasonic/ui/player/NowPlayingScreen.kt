@@ -167,25 +167,26 @@ fun NowPlayingScreen(
     actions: NowPlayingActions,
     queueContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    upNext: List<UpNextItem> = emptyList(),
 ) {
     TakiScaffold(modifier = modifier) {
         NowPlayingAtmosphere(model = state.artworkModelLarge)
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+        val showPanel = maxHeight >= TakiTheme.dimensions.nowPlayingPanelMinScreenHeight
         Column(Modifier.fillMaxSize()) {
             NowPlayingTopBar(state = state, actions = actions)
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 Crossfade(targetState = showQueue, label = "now_playing_panel") { queueShown ->
                     if (queueShown) {
-                        // Unlike the hero artwork, the queue is a dense scrollable text list (its
-                        // own legacy header + rows, issue #10 phase 4J) rather than part of the
-                        // artwork-first composition, so it keeps a quiet solid backing - the same
-                        // canvas colour every other Compose list screen sits on - instead of
-                        // floating directly on the atmosphere. That also gives it a clean seam
-                        // against the transparent playback surface below rather than the two
-                        // blending together with no visual boundary.
+                        // The full queue is a dense scrollable list (legacy view, unchanged), so it sits
+                        // on the same quiet rounded surface as the context panel below it rather than
+                        // floating on the atmosphere.
                         Box(
                             Modifier
                                 .fillMaxSize()
-                                .background(TakiTheme.colors.black)
+                                .padding(start = TakiTheme.spacing.lg, end = TakiTheme.spacing.lg, bottom = TakiTheme.spacing.sm)
+                                .clip(TakiTheme.shapes.lg)
+                                .background(TakiTheme.colors.surfaceLowFloating)
                                 .testTag(NOW_PLAYING_QUEUE_PANEL_TEST_TAG),
                         ) {
                             queueContent()
@@ -200,8 +201,11 @@ fun NowPlayingScreen(
                 progress = progress,
                 sleepTimerState = sleepTimerState,
                 showQueue = showQueue,
+                showPanel = showPanel,
+                upNext = upNext,
                 actions = actions,
             )
+        }
         }
     }
 }
@@ -393,33 +397,46 @@ private fun NowPlayingHeroArtwork(state: PlayerUiState, actions: NowPlayingActio
 }
 
 /**
- * Metadata, seek, transport and quick actions (issue #10 phase 4J2): sits directly on the
- * atmosphere with no enclosing card - spacing and typography carry the hierarchy instead of a
- * container. Always present (both with and without the queue shown), matching phase 4J.
+ * Metadata, seek, transport, the labeled utility row and (on screens tall enough, [showPanel])
+ * the UP NEXT / LYRICS / ABOUT context panel (issue #10 phases 4J2/4J3). Metadata, seek and
+ * transport sit directly on the atmosphere with no enclosing card - spacing and typography carry
+ * the hierarchy; only the context panel is a quiet surface. Always present (both with and
+ * without the full queue shown).
  */
+@Suppress("LongParameterList")
 @Composable
 private fun NowPlayingPlaybackSurface(
     state: PlayerUiState,
     progress: PlaybackProgress,
     sleepTimerState: SleepTimerState,
     showQueue: Boolean,
+    showPanel: Boolean,
+    upNext: List<UpNextItem>,
     actions: NowPlayingActions,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = TakiTheme.spacing.xl)
-            .padding(bottom = TakiTheme.spacing.xl),
-    ) {
-        NowPlayingMediaInfo(state = state, actions = actions)
-        Spacer(Modifier.height(TakiTheme.spacing.lg))
-        NowPlayingSeekSection(state = state, progress = progress, actions = actions)
-        Spacer(Modifier.height(TakiTheme.spacing.xl))
-        NowPlayingTransportRow(state = state, actions = actions)
-        Spacer(Modifier.height(TakiTheme.spacing.md))
-        NowPlayingShuffleRepeatRow(state = state, actions = actions)
-        Spacer(Modifier.height(TakiTheme.spacing.xl))
-        NowPlayingQuickActionsRow(sleepTimerState = sleepTimerState, showQueue = showQueue, actions = actions)
+    Column(Modifier.fillMaxWidth().padding(bottom = TakiTheme.spacing.lg)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = TakiTheme.spacing.xl)) {
+            NowPlayingMediaInfo(state = state, actions = actions)
+            Spacer(Modifier.height(TakiTheme.spacing.md))
+            NowPlayingSeekSection(state = state, progress = progress, actions = actions)
+            Spacer(Modifier.height(TakiTheme.spacing.md))
+            NowPlayingTransportRow(state = state, actions = actions)
+            Spacer(Modifier.height(TakiTheme.spacing.sm))
+            NowPlayingUtilityRow(
+                sleepTimerState = sleepTimerState,
+                sleepTimerDescription = sleepTimerContentDescription(sleepTimerState),
+                showQueue = showQueue,
+                actions = actions,
+            )
+        }
+        if (showPanel) {
+            Spacer(Modifier.height(TakiTheme.spacing.md))
+            NowPlayingContextPanel(
+                upNext = upNext,
+                actions = actions,
+                modifier = Modifier.padding(horizontal = TakiTheme.spacing.lg),
+            )
+        }
     }
 }
 
@@ -671,16 +688,25 @@ private fun DrawScope.drawNowPlayingSeekTrack(
     drawCircle(color = activeColor, radius = thumbRadiusPx, center = Offset(size.width * fraction, centerY))
 }
 
-/** Previous / Play-Pause / Next (issue #10 phase 4J2): the most obvious interaction after the
- *  artwork, so it gets the widest spacing and the largest primary button on the screen - no
- *  enclosing card, just the three controls on the atmosphere. */
+/**
+ * Shuffle / Previous / Play-Pause / Next / Repeat on one optical baseline (issue #10 phase 4J3):
+ * Play/Pause dominates, Previous/Next are medium, Shuffle/Repeat are small and subordinate (accent
+ * only when on). No enclosing card - only the central Play/Pause circle has a fill.
+ */
 @Composable
 private fun NowPlayingTransportRow(state: PlayerUiState, actions: NowPlayingActions) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        TakiIconButton(
+            onClick = actions.onToggleShuffle,
+            painter = painterResource(R.drawable.media_shuffle),
+            contentDescription = stringResource(R.string.buttons_shuffle),
+            iconSize = TakiTheme.dimensions.iconMd,
+            selected = state.isShuffleEnabled,
+        )
         NowPlayingSkipButton(
             painter = painterResource(R.drawable.media_backward),
             contentDescription = stringResource(R.string.buttons_previous),
@@ -696,33 +722,12 @@ private fun NowPlayingTransportRow(state: PlayerUiState, actions: NowPlayingActi
             onClick = actions.onNext,
             onRepeat = actions.onSeekForwardRepeat,
         )
-    }
-}
-
-/** Shuffle and repeat (issue #10 phase 4J2): subordinate to the primary transport, so they move
- *  to their own quiet row below it instead of flanking Play/Pause. Selected state still reads
- *  clearly via [TakiIconButton]'s accent tint. */
-@Composable
-private fun NowPlayingShuffleRepeatRow(state: PlayerUiState, actions: NowPlayingActions) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TakiIconButton(
-            onClick = actions.onToggleShuffle,
-            painter = painterResource(R.drawable.media_shuffle),
-            contentDescription = stringResource(R.string.buttons_shuffle),
-            iconSize = TakiTheme.dimensions.iconSm,
-            selected = state.isShuffleEnabled,
-        )
-        Spacer(Modifier.width(TakiTheme.spacing.xxl))
         val (icon, description) = repeatButtonIcon(state.repeatMode)
         TakiIconButton(
             onClick = actions.onCycleRepeat,
             painter = painterResource(icon),
             contentDescription = stringResource(description),
-            iconSize = TakiTheme.dimensions.iconSm,
+            iconSize = TakiTheme.dimensions.iconMd,
             selected = state.repeatMode != RepeatMode.OFF,
         )
     }
@@ -829,47 +834,6 @@ private fun NowPlayingSkipButton(
             contentDescription = null,
             tint = if (enabled) TakiTheme.colors.ivory else TakiTheme.colors.gray,
             modifier = Modifier.size(TakiTheme.dimensions.iconLg),
-        )
-    }
-}
-
-/** Save / Lyrics / Queue / Sleep timer (issue #10 phase 4J2): reachable but visually quiet -
- *  small icons, centred, no labels, sitting last in the composition. */
-@Composable
-private fun NowPlayingQuickActionsRow(
-    sleepTimerState: SleepTimerState,
-    showQueue: Boolean,
-    actions: NowPlayingActions,
-) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-        TakiIconButton(
-            onClick = actions.onSavePlaylist,
-            painter = painterResource(R.drawable.ic_add_white),
-            contentDescription = stringResource(R.string.download_menu_save),
-            iconSize = TakiTheme.dimensions.iconSm,
-        )
-        Spacer(Modifier.width(TakiTheme.spacing.xl))
-        TakiIconButton(
-            onClick = actions.onLyrics,
-            painter = painterResource(R.drawable.ic_library),
-            contentDescription = stringResource(R.string.download_menu_lyrics),
-            iconSize = TakiTheme.dimensions.iconSm,
-        )
-        Spacer(Modifier.width(TakiTheme.spacing.xl))
-        TakiIconButton(
-            onClick = actions.onToggleQueue,
-            painter = painterResource(R.drawable.media_toggle_list),
-            contentDescription = stringResource(R.string.buttons_queue),
-            iconSize = TakiTheme.dimensions.iconSm,
-            selected = showQueue,
-        )
-        Spacer(Modifier.width(TakiTheme.spacing.xl))
-        TakiIconButton(
-            onClick = actions.onSleepTimer,
-            painter = painterResource(R.drawable.ic_sleep_timer),
-            contentDescription = sleepTimerContentDescription(sleepTimerState),
-            iconSize = TakiTheme.dimensions.iconSm,
-            selected = sleepTimerState !is SleepTimerState.Off,
         )
     }
 }

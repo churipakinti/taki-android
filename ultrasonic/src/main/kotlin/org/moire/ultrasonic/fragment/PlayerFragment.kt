@@ -23,6 +23,7 @@ import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,9 +81,11 @@ import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.SleepTimerState
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.NetworkAndStorageChecker
+import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
 import org.moire.ultrasonic.ui.player.NowPlayingActions
 import org.moire.ultrasonic.ui.player.NowPlayingOverflowItem
 import org.moire.ultrasonic.ui.player.NowPlayingScreen
+import org.moire.ultrasonic.ui.player.UpNextItem
 import org.moire.ultrasonic.ui.playback.PlaybackProgress
 import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
 import org.moire.ultrasonic.ui.playback.RepeatMode
@@ -165,6 +168,12 @@ class PlayerFragment :
                         if (trackId == state.trackId) state.copy(isCurrentTrackLiked = liked) else null
                     } ?: state
 
+                    var playlistVersion by remember { mutableIntStateOf(0) }
+                    PlaylistChangeTicker(onChange = { playlistVersion++ })
+                    val upNext = remember(displayState.currentIndex, displayState.trackId, playlistVersion) {
+                        computeUpNext(displayState.currentIndex)
+                    }
+
                     NowPlayingScreen(
                         state = displayState,
                         progress = progress,
@@ -175,6 +184,7 @@ class PlayerFragment :
                             currentlyLiked = displayState.isCurrentTrackLiked,
                         ),
                         queueContent = { QueueView() },
+                        upNext = upNext,
                     )
                 }
             }
@@ -198,6 +208,17 @@ class PlayerFragment :
         // next tick, so the primary button's icon and an unpaused seek bar feel instant.
         LaunchedEffect(isPlaying) {
             onTick(playbackUiStateHolder.snapshotProgress())
+        }
+    }
+
+    /** Bumps a counter whenever the queue changes, so the Up Next preview re-reads the play order
+     *  (the same `RxBus.playlistObservable` the queue view refreshes on). */
+    @Composable
+    private fun PlaylistChangeTicker(onChange: () -> Unit) {
+        LaunchedEffect(Unit) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                RxBus.playlistObservable.asFlow().collect { onChange() }
+            }
         }
     }
 
@@ -276,7 +297,28 @@ class PlayerFragment :
             onArtworkSwipePrevious = { fling(playbackUiStateHolder::onPrevious) },
             onArtworkSwipeSeekForward = { flingSeek(SEEK_FORWARD_MS) },
             onArtworkSwipeSeekBack = { flingSeek(-SEEK_BACK_MS) },
+            onPlayUpNext = { playOrderIndex ->
+                mediaPlayerManager.play(mediaPlayerManager.getUnshuffledIndexOf(playOrderIndex))
+            },
         )
+    }
+
+    /** The Up Next preview (issue #10 phase 4J3): the next [UP_NEXT_PREVIEW_COUNT] items after the
+     *  current one in the shuffle-aware play order - a read-only projection of the same list the
+     *  queue view renders. */
+    private fun computeUpNext(currentIndex: Int): List<UpNextItem> {
+        if (currentIndex < 0) return emptyList()
+        val start = currentIndex + 1
+        return mediaPlayerManager.playlistInPlayOrder.drop(start).take(UP_NEXT_PREVIEW_COUNT)
+            .mapIndexed { offset, item ->
+                val track = item.toTrack()
+                UpNextItem(
+                    title = track.title.orEmpty(),
+                    artist = track.artist,
+                    artworkModel = track.coverArtRequestOrNull(),
+                    playOrderIndex = start + offset,
+                )
+            }
     }
 
     /** Previous/Next from the transport buttons: network-checked, then dispatched through the
@@ -668,6 +710,7 @@ class PlayerFragment :
 
     companion object {
         private const val PROGRESS_TICK_MS = 500L
+        private const val UP_NEXT_PREVIEW_COUNT = 1
         private const val SEEK_FORWARD_MS = 30_000
         private const val SEEK_BACK_MS = 8_000
         private const val ALPHA_FULL = 1f

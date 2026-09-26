@@ -85,6 +85,7 @@ class NowPlayingScreenScreenshotTest {
             showQueue = false,
             actions = NowPlayingActions.Noop,
             queueContent = {},
+            upNext = listOf(UpNextItem("Karma Police", "Radiohead", null, 1)),
         )
     }
 
