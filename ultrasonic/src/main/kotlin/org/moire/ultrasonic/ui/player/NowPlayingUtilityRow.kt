@@ -7,37 +7,25 @@
 
 package org.moire.ultrasonic.ui.player
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.service.SleepTimerState
+import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /**
- * The compact, labeled utility row under the transport (issue #10 phases 4J3/4J4): Up Next,
- * Lyrics and Sleep Timer as icon-over-label items, evenly spaced and quieter than the transport.
- * Up Next is the one permanent queue entry point - it toggles the existing full queue view; Lyrics
- * opens the existing lyrics screen; Sleep Timer opens the existing picker. Accent only marks an
- * active state.
+ * The quiet, icon-only utility row under the transport (issue #10 phases 4J3-4J6): Up Next,
+ * Lyrics and Sleep Timer, evenly spaced with no visible labels. Each is a [TakiIconButton], so it
+ * keeps a 48dp target, button role and selected semantics, and its accessible name comes from the
+ * content description. Up Next is the one permanent queue entry point - it toggles the existing
+ * full queue view; Lyrics opens the existing lyrics screen; Sleep Timer opens the existing
+ * picker. Accent only marks an active state.
  */
 @Composable
 internal fun NowPlayingUtilityRow(
@@ -47,65 +35,27 @@ internal fun NowPlayingUtilityRow(
     actions: NowPlayingActions,
     modifier: Modifier = Modifier,
 ) {
+    val iconSize = TakiTheme.dimensions.nowPlayingUtilityIcon
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        NowPlayingUtilityItem(
-            iconRes = R.drawable.ic_np_up_next,
-            label = stringResource(R.string.now_playing_up_next_label),
-            contentDescription = stringResource(R.string.buttons_queue),
-            selected = showQueue,
+        TakiIconButton(
             onClick = actions.onToggleQueue,
-            modifier = Modifier.weight(1f),
+            painter = painterResource(R.drawable.ic_np_up_next),
+            contentDescription = stringResource(R.string.buttons_queue),
+            iconSize = iconSize,
+            selected = showQueue,
         )
-        NowPlayingUtilityItem(
-            iconRes = R.drawable.ic_np_lyrics,
-            label = stringResource(R.string.download_menu_lyrics),
-            contentDescription = stringResource(R.string.download_menu_lyrics),
-            selected = false,
+        TakiIconButton(
             onClick = actions.onLyrics,
-            modifier = Modifier.weight(1f),
+            painter = painterResource(R.drawable.ic_np_lyrics),
+            contentDescription = stringResource(R.string.download_menu_lyrics),
+            iconSize = iconSize,
         )
-        NowPlayingUtilityItem(
-            iconRes = R.drawable.ic_np_sleep,
-            label = stringResource(R.string.now_playing_sleep_timer_label),
-            contentDescription = sleepTimerDescription,
-            selected = sleepTimerState !is SleepTimerState.Off,
+        TakiIconButton(
             onClick = actions.onSleepTimer,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun NowPlayingUtilityItem(
-    iconRes: Int,
-    label: String,
-    contentDescription: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val tint = if (selected) TakiTheme.colors.accent else TakiTheme.colors.gray
-    Column(
-        modifier = modifier
-            .defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin)
-            .semantics { this.selected = selected }
-            .clickable(role = Role.Button, onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = contentDescription,
-            tint = tint,
-            modifier = Modifier.size(TakiTheme.dimensions.iconSm),
-        )
-        Spacer(Modifier.height(TakiTheme.spacing.xs))
-        Text(
-            text = label,
-            style = TakiTheme.type.caption.copy(color = tint),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
+            painter = painterResource(R.drawable.ic_np_sleep),
+            contentDescription = sleepTimerDescription,
+            iconSize = iconSize,
+            selected = sleepTimerState !is SleepTimerState.Off,
         )
     }
 }

@@ -14,7 +14,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
@@ -491,14 +494,29 @@ class NowPlayingScreenComposeTest {
         compose.onNodeWithContentDescription("Play").assertIsDisplayed()
     }
 
-    // --- phases 4J3/4J4: labeled utility row (no persistent context panel) -----------------
+    // --- phases 4J3-4J6: icon-only utility row (no persistent context panel) -----------------
 
     @Test
-    fun `the utility row shows labels under Up Next, Lyrics and Sleep Timer`() {
+    fun `the utility row shows no visible text labels`() {
         setContent(playing)
-        compose.onNodeWithText("Up Next").assertIsDisplayed()
-        compose.onNodeWithText("Lyrics").assertIsDisplayed()
-        compose.onNodeWithText("Sleep Timer").assertIsDisplayed()
+        compose.onNodeWithText("Up Next").assertDoesNotExist()
+        compose.onNodeWithText("Lyrics").assertDoesNotExist()
+        compose.onNodeWithText("Sleep Timer").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the icon-only utility items keep their accessible names and are clickable`() {
+        setContent(playing)
+        listOf("Queue", "Lyrics", "Sleep timer").forEach {
+            compose.onNodeWithContentDescription(it).assertIsDisplayed().assertHasClickAction()
+        }
+    }
+
+    @Test
+    fun `utility items are unselected by default`() {
+        setContent(playing, showQueue = false, sleepTimerState = SleepTimerState.Off)
+        compose.onNodeWithContentDescription("Queue").assertIsNotSelected()
+        compose.onNodeWithContentDescription("Sleep timer").assertIsNotSelected()
     }
 
     @Test
@@ -518,7 +536,8 @@ class NowPlayingScreenComposeTest {
     fun `utility items keep at least a 48dp touch target`() {
         setContent(playing)
         compose.onNodeWithContentDescription("Lyrics").assertHeightIsAtLeast(48.dp)
-        compose.onNodeWithContentDescription("Queue").assertHeightIsAtLeast(48.dp)
+        compose.onNodeWithContentDescription("Queue").assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
+        compose.onNodeWithContentDescription("Sleep timer").assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
     }
 
     @Test

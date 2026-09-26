@@ -145,6 +145,7 @@ class TakiTokensTest {
         assertEquals(dimenDp("now_playing_hero_artwork_max").dp, dimensions.nowPlayingHeroArtworkMax)
         assertEquals(dimenDp("now_playing_primary_action").dp, dimensions.nowPlayingPrimaryAction)
         assertEquals(dimenDp("now_playing_seek_thumb").dp, dimensions.nowPlayingSeekThumb)
+        assertEquals(dimenDp("now_playing_utility_icon").dp, dimensions.nowPlayingUtilityIcon)
     }
 
     @Test

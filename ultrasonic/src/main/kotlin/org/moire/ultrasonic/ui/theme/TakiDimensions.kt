@@ -109,6 +109,9 @@ data class TakiDimensions(
     val nowPlayingPrimaryAction: Dp = 80.dp,
     /** `now_playing_seek_thumb` - the seek bar's restrained thumb diameter. */
     val nowPlayingSeekThumb: Dp = 12.dp,
+    /** `now_playing_utility_icon` - the icon-only Up Next / Lyrics / Sleep Timer glyphs (issue
+     *  #10 phase 4J6): a step above [iconSm], still below the transport icons. */
+    val nowPlayingUtilityIcon: Dp = 20.dp,
 )
 
 /**
