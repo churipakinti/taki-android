@@ -23,13 +23,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
@@ -55,8 +57,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -65,6 +69,7 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import kotlin.math.abs
 import kotlinx.coroutines.delay
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.EmptyState
@@ -80,14 +85,18 @@ const val LYRICS_RESUME_TEST_TAG = "lyrics_resume"
 private const val POSITION_POLL_MS = 250L
 private const val READING_ZONE_FRACTION = 0.3f
 private const val TAIL_FRACTION = 0.5f
-private const val SYNCED_PAST_ALPHA = 0.75f
-private const val SYNCED_FUTURE_ALPHA = 0.5f
+private const val SYNCED_NEAR_ALPHA = 0.65f
+private const val SYNCED_FAR_ALPHA = 0.35f
+private const val SYNCED_NEAR_DISTANCE = 2
 private const val SYNCED_ACTIVE_WASH_ALPHA = 0.10f
 private const val ACCENT_RULE_ALPHA = 0.4f
 private const val PLAIN_FONT_SP = 19 // taki-raw-ok: lyrics body reading size
 private const val PLAIN_LINE_SP = 32 // taki-raw-ok: lyrics body reading size
 private const val SYNCED_FONT_SP = 24 // taki-raw-ok: lyrics body reading size
 private const val SYNCED_LINE_SP = 34 // taki-raw-ok: lyrics body reading size
+private const val SYNCED_ACTIVE_FONT_SP = 27 // taki-raw-ok: current line is dominant, one step up
+private const val SYNCED_ACTIVE_LINE_SP = 37 // taki-raw-ok: current line is dominant, one step up
+private val SyncedMaxWidth = 480.dp // taki-raw-ok: comfortable centered reading measure
 
 /**
  * Lyrics (issue #10 phase 4K3, given the Taki atmosphere in phase 4K4): a calm reading surface.
@@ -172,6 +181,8 @@ private fun LyricsAtmosphere(model: Any?) {
             .background(
                 Brush.verticalGradient(
                     0f to colors.black.copy(alpha = TakiAtmosphere.LYRICS_SCRIM_ALPHA_TOP),
+                    TakiAtmosphere.LYRICS_SCRIM_STOP_MID to
+                        colors.black.copy(alpha = TakiAtmosphere.LYRICS_SCRIM_ALPHA_MID),
                     1f to colors.black.copy(alpha = TakiAtmosphere.LYRICS_SCRIM_ALPHA_BOTTOM),
                 ),
             ),
@@ -179,9 +190,12 @@ private fun LyricsAtmosphere(model: Any?) {
 }
 
 /**
- * Title, artist and a small accent rule (issue #10 phase 4K4) - compact on its own, but with
- * generous room below before the first lyric ([TakiTheme.spacing.xl]), so it reads as a
- * distinct identity block rather than crowding the reading surface underneath.
+ * Title, artist and a small accent rule (issue #10 phase 4K4, strengthened in 4K5) - compact on
+ * its own, but with generous room below before the first lyric ([TakiTheme.spacing.xl]), so it
+ * reads as a distinct identity block rather than crowding the reading surface underneath. The
+ * title is semibold (stronger than a body row's usual medium weight) and the artist drops the
+ * caption role's default light weight for a plain one, so both stay clearly legible against any
+ * album art - the header scrim's own top stop does the rest (see [LyricsAtmosphere]).
  */
 @Composable
 private fun TrackIdentity(state: LyricsUiState) {
@@ -193,9 +207,19 @@ private fun TrackIdentity(state: LyricsUiState) {
             .padding(bottom = TakiTheme.spacing.xl)
             .semantics(mergeDescendants = true) {},
     ) {
-        Text(text = state.title, style = TakiTheme.type.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = state.title,
+            style = TakiTheme.type.title.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         if (!state.artist.isNullOrEmpty()) {
-            Text(text = state.artist, style = TakiTheme.type.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                text = state.artist,
+                style = TakiTheme.type.caption.copy(fontWeight = FontWeight.Normal),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
         Spacer(Modifier.height(TakiTheme.spacing.sm))
         Box(
@@ -353,7 +377,8 @@ private fun BoxScope.SyncedLines(
             top = TakiTheme.spacing.sm,
             bottom = bottomContentInset,
         ),
-        verticalArrangement = Arrangement.spacedBy(TakiTheme.spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(TakiTheme.spacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         itemsIndexed(lines, key = { index, line -> "$index:${line.startMs}" }) { index, line ->
             SyncedLine(
@@ -366,14 +391,35 @@ private fun BoxScope.SyncedLines(
     }
 }
 
+/**
+ * A small floating chip (issue #10 phase 4K5) - a plain icon glyph on a translucent circle, the
+ * same visual weight as the app's other floating chrome ([TakiTheme.colors.surfaceFloating]),
+ * not a labelled button: it should read as a quiet affordance in the corner of the reading
+ * surface, not a control competing with the lyrics for attention.
+ */
 @Composable
 private fun BoxScope.ResumeFollowChip(visible: Boolean, onResume: () -> Unit) {
+    val label = stringResource(R.string.lyrics_resume_follow)
     AnimatedVisibility(
         visible = visible,
-        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TakiTheme.spacing.xl),
+        modifier = Modifier.align(Alignment.BottomEnd).padding(TakiTheme.spacing.lg),
     ) {
-        TextButton(onClick = onResume, modifier = Modifier.testTag(LYRICS_RESUME_TEST_TAG)) {
-            Text(text = stringResource(R.string.lyrics_resume_follow), style = TakiTheme.type.titleSmall)
+        Box(
+            modifier = Modifier
+                .size(TakiTheme.dimensions.touchTargetMin)
+                .clip(TakiTheme.shapes.circle)
+                .background(TakiTheme.colors.surfaceFloating)
+                .clickable(onClickLabel = label, role = Role.Button, onClick = onResume)
+                .testTag(LYRICS_RESUME_TEST_TAG)
+                .semantics { contentDescription = label },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_expand_more),
+                contentDescription = null,
+                tint = TakiTheme.colors.ivory,
+                modifier = Modifier.size(TakiTheme.dimensions.iconSm),
+            )
         }
     }
 }
@@ -388,28 +434,47 @@ private suspend fun LazyListState.followLine(index: Int) {
 }
 
 /**
- * One synced line (issue #10 phase 4K4): the active line is ivory, semibold, on a faint accent
- * wash - the one deliberately sparing use of the accent colour on this screen, never the
- * reading colour itself. Every other line is muted gray; already-sung lines read a little more
- * clearly than the ones still to come, so the eye finds its way forward at a glance. Only lines
- * whose distance changed recompose their style.
+ * One synced, centred line (issue #10 phase 4K4, centred and re-tiered in 4K5): the active line
+ * is ivory, semibold and a size step larger, on a faint accent wash - the one deliberately
+ * sparing use of the accent colour on this screen, never the reading colour itself. Every other
+ * line is muted gray in one of two tiers by its distance from the active line - near lines stay
+ * readable context, far lines fade further - so the eye reads the current line first and finds
+ * its way to nearby lines at a glance. Capped at [SyncedMaxWidth] and center-aligned so the block
+ * reads as a centred, immersive surface rather than a left-aligned list. Only lines whose
+ * distance changed recompose their style.
  */
 @Composable
 private fun SyncedLine(line: LyricsLineUi, distance: Int, onClick: () -> Unit) {
     val isActive = distance == 0
     val currentLine = stringResource(R.string.lyrics_current_line)
     val seekLabel = stringResource(R.string.lyrics_seek_to_line)
-    val base = TakiTheme.type.body.copy(fontSize = SYNCED_FONT_SP.sp, lineHeight = SYNCED_LINE_SP.sp)
     val style = when {
-        isActive -> base.copy(color = TakiTheme.colors.ivory, fontWeight = FontWeight.SemiBold)
-        distance < 0 -> base.copy(color = TakiTheme.colors.gray.copy(alpha = SYNCED_PAST_ALPHA))
-        else -> base.copy(color = TakiTheme.colors.gray.copy(alpha = SYNCED_FUTURE_ALPHA))
+        isActive -> TakiTheme.type.body.copy(
+            fontSize = SYNCED_ACTIVE_FONT_SP.sp,
+            lineHeight = SYNCED_ACTIVE_LINE_SP.sp,
+            color = TakiTheme.colors.ivory,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+        else -> {
+            val alpha = if (abs(distance) <= SYNCED_NEAR_DISTANCE) {
+                SYNCED_NEAR_ALPHA
+            } else {
+                SYNCED_FAR_ALPHA
+            }
+            TakiTheme.type.body.copy(
+                fontSize = SYNCED_FONT_SP.sp,
+                lineHeight = SYNCED_LINE_SP.sp,
+                color = TakiTheme.colors.gray.copy(alpha = alpha),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
     Text(
         text = line.text.ifBlank { " " },
         style = style,
         modifier = Modifier
-            .fillMaxWidth()
+            .widthIn(max = SyncedMaxWidth)
             .let { if (isActive) it.testTag(LYRICS_ACTIVE_LINE_TEST_TAG) else it }
             .then(
                 if (isActive) {
@@ -421,7 +486,7 @@ private fun SyncedLine(line: LyricsLineUi, distance: Int, onClick: () -> Unit) {
                     Modifier
                 },
             )
-            .padding(vertical = TakiTheme.spacing.xxs)
+            .padding(horizontal = TakiTheme.spacing.sm, vertical = TakiTheme.spacing.xxs)
             .clickable(onClickLabel = seekLabel, role = Role.Button, onClick = onClick)
             .semantics { if (isActive) stateDescription = currentLine },
     )

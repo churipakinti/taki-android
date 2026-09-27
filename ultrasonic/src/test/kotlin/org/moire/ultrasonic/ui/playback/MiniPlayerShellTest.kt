@@ -76,8 +76,11 @@ class MiniPlayerShellTest {
     // --- visibility rule (legacy + Compose destinations alike) ------------------------------
 
     @Test
-    fun `the mini-player is hidden only on the full player and during Search keyboard input`() {
+    fun `the mini-player is hidden on the full player, Lyrics, and during Search keyboard input`() {
         assertTrue(NavigationActivity.miniPlayerHiddenFor(R.id.playerFragment, imeVisible = false))
+        // Lyrics (issue #10 phase 4K5): an immersive reading surface, not a browsing screen - it
+        // already shows the same track's title/artist, so the mini-player would only duplicate it.
+        assertTrue(NavigationActivity.miniPlayerHiddenFor(R.id.lyricsFragment, imeVisible = false))
         assertTrue(NavigationActivity.miniPlayerHiddenFor(R.id.searchFragment, imeVisible = true))
         assertFalse(NavigationActivity.miniPlayerHiddenFor(R.id.searchFragment, imeVisible = false))
     }
@@ -85,7 +88,8 @@ class MiniPlayerShellTest {
     @Test
     fun `the shell does not depend on whether the destination is Compose or legacy`() {
         // Compose screens (Home, Library, Artist List, Playlists, Downloads, Album Detail) and
-        // View / support screens (Settings, About, Equalizer, Server editor, Lyrics) all keep it.
+        // View / support screens (Settings, About, Equalizer, Server editor) all keep it - Lyrics
+        // is the one exception (an immersive reading surface), covered by its own test above.
         val destinations = listOf(
             R.id.homeFragment,
             R.id.mainFragment,
@@ -100,7 +104,6 @@ class MiniPlayerShellTest {
             R.id.equalizerFragment,
             R.id.editServerFragment,
             R.id.serverSelectorFragment,
-            R.id.lyricsFragment,
         )
         destinations.forEach { id ->
             assertFalse(

@@ -729,13 +729,16 @@ class NavigationActivity : ScopeActivity() {
 
     companion object {
         /**
-         * Whether the floating mini-player is hidden on [destinationId] (issue #10 phase 4I): only
-         * on the full player itself, and while Search is showing the keyboard. It is a function of
-         * the destination *id*, never of what renders it, so it is identical over Compose and
-         * legacy screens alike (Settings, Equalizer, Now Playing, ...).
+         * Whether the floating mini-player is hidden on [destinationId] (issue #10 phase 4I;
+         * Lyrics added in phase 4K5): the full player itself, the immersive Lyrics reading
+         * surface (it already shows the same track's title/artist and duplicates that context),
+         * and while Search is showing the keyboard. It is a function of the destination *id*,
+         * never of what renders it, so it is identical over Compose and legacy screens alike
+         * (Settings, Equalizer, Now Playing, ...).
          */
         fun miniPlayerHiddenFor(destinationId: Int, imeVisible: Boolean): Boolean =
             destinationId == R.id.playerFragment ||
+                destinationId == R.id.lyricsFragment ||
                 (destinationId == R.id.searchFragment && imeVisible)
 
         /**

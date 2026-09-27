@@ -111,10 +111,23 @@ object TakiAtmosphere {
     /** The wash is desaturated, not lifted like [FEATURE_SATURATION] - lyrics stays calm. */
     const val LYRICS_SATURATION: Float = 0.75f
 
-    /** Scrim at the top of the screen (behind the header) - well past [NOW_PLAYING_SCRIM_ALPHA_TOP],
-     *  so the net wash reads as a hint, not a hero backdrop. */
-    const val LYRICS_SCRIM_ALPHA_TOP: Float = 0.80f
+    // A three-stop vertical scrim (issue #10 phase 4K5), not a plain two-stop fade: the header
+    // and title/artist block need to stay legible against *any* album art (not just the ones
+    // that happen to be dark at the top), so that zone gets its own near-opaque floor,
+    // independent of how visible the wash is once the reading body actually begins.
 
-    /** Scrim at the bottom, behind the last lines and the floating mini-player. */
+    /** Scrim at the very top of the screen, behind the header and title/artist block - much
+     *  closer to opaque than the body, so metadata contrast never depends on the artwork. */
+    const val LYRICS_SCRIM_ALPHA_TOP: Float = 0.92f
+
+    /** Scrim at [LYRICS_SCRIM_STOP_MID], where the reading body begins - the wash becomes a
+     *  visible (still restrained) hint of mood past the metadata block. */
+    const val LYRICS_SCRIM_ALPHA_MID: Float = 0.78f
+
+    /** Fraction of the screen height at which the scrim eases from [LYRICS_SCRIM_ALPHA_TOP] to
+     *  [LYRICS_SCRIM_ALPHA_MID] - approximately where the header + title/artist block ends. */
+    const val LYRICS_SCRIM_STOP_MID: Float = 0.22f
+
+    /** Scrim at the bottom of the screen. */
     const val LYRICS_SCRIM_ALPHA_BOTTOM: Float = 0.95f
 }
