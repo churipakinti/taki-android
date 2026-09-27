@@ -328,7 +328,7 @@
     </fragment>
     <fragment
         android:id="@+id/lyricsFragment"
-        android:name="org.moire.ultrasonic.fragment.legacy.LyricsFragment">
+        android:name="org.moire.ultrasonic.fragment.LyricsFragment">
         <argument
             android:name="artist"
             app:argType="string" />
