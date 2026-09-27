@@ -93,7 +93,6 @@
     <string name="select_album.no_sdcard">Hiba: SD kártya nem áll rendelkezésre!</string>
     <string name="select_album.play_all">Összes lejátszása</string>
     <string name="select_artist.all_folders">Összes mappa</string>
-    <string name="select_artist.folder">Mappa kiválasztása</string>
     <string name="select_genre.empty">Műfajok nem találhatók!</string>
     <string name="select_playlist.empty">Nincs mentett lejátszási lista a kiszolgálón.</string>
     <string name="settings.cache_location">Gyorsítótár helye</string>

@@ -113,7 +113,6 @@
     <string name="select_album.no_sdcard">Erreur : Aucune carte SD disponible.</string>
     <string name="select_album.play_all">Tout jouer</string>
     <string name="select_artist.all_folders">Tous les dossiers</string>
-    <string name="select_artist.folder">Sélectionner le dossier</string>
     <string name="select_genre.empty">Aucun genre trouvé</string>
     <string name="select_playlist.empty">Pas de listes de lecture enregistrées sur le serveur</string>
     <string name="settings.custom_cache_location">Utiliser un emplacement personnalisé pour le cache </string>

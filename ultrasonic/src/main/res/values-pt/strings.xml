@@ -88,7 +88,6 @@
     <string name="select_album.no_sdcard">Erro: Nenhum cartão SD disponível.</string>
     <string name="select_album.play_all">Tocar Tudo</string>
     <string name="select_artist.all_folders">Todas as Pastas</string>
-    <string name="select_artist.folder">Selecionar Pasta</string>
     <string name="select_genre.empty">Nenhum gênero encontrado</string>
     <string name="select_playlist.empty">Não existe nenhuma playlist no servidor</string>
     <string name="settings.cache_location">Localização do Cache</string>

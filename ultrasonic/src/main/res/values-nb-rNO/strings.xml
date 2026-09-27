@@ -113,7 +113,6 @@
     <string name="search.title">Søk</string>
     <string name="select_album.play_all">Spill alle</string>
     <string name="select_artist.all_folders">Alle mapper</string>
-    <string name="select_artist.folder">Velg mappe</string>
     <string name="select_genre.empty">Fant ingen sjangere</string>
     <string name="select_playlist.empty">Ingen spillelister lagret på tjeneren</string>
     <string name="settings.cache_size_100">100 MB</string>

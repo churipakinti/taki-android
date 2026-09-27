@@ -116,7 +116,6 @@
     <string name="select_album.no_sdcard">Fout: geen SD-kaart beschikbaar.</string>
     <string name="select_album.play_all">Alles afspelen</string>
     <string name="select_artist.all_folders">Alle mappen</string>
-    <string name="select_artist.folder">Map kiezen</string>
     <string name="select_genre.empty">Geen genres gevonden</string>
     <string name="select_playlist.empty">Geen opgeslagen afspeellijsten op server</string>
     <string name="settings.custom_cache_location">Aangepaste cachelocatie gebruiken</string>

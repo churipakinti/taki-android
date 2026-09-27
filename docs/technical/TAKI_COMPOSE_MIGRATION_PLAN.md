@@ -1178,6 +1178,16 @@ Settings, Equalizer, `ServerSelectorFragment`, `EditServerFragment`, About, lega
 opportunistically much later or not at all — they are not music-playback surfaces and carry no
 architectural lessons.
 
+> **Status update (Phase 4L, 2026-09-27):** this original list has been narrowed by events, not by
+> re-litigating the decision. `PlaylistsFragment` (now `PlaylistListFragment`) and
+> `SelectGenreFragment` (now `GenreListFragment`) were migrated to Compose after all — the phase
+> 4C audit found they read as core Library-reachable browsing, not admin/support, and this was
+> confirmed and executed in phases 4F3/4G1/4G2. `LyricsFragment` was also migrated (Compose,
+> baseline commit `275864c6` and refinements through `16ddc285`) once Now Playing/Up Next were
+> stable, superseding this doc's original "out of scope" framing for it. **Genuinely still
+> out-of-scope/intentionally-legacy today:** Settings, Equalizer, `ServerSelectorFragment`,
+> `EditServerFragment`, About — see `TAKI_COMPOSE_COVERAGE_AUDIT.md` §B.5 for the current audit.
+
 ### Order summary
 
 ```

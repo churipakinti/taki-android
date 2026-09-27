@@ -102,7 +102,6 @@
     <string name="select_album.no_sdcard">错误：没有SD卡。</string>
     <string name="select_album.play_all">播放全部</string>
     <string name="select_artist.all_folders">所有文件夹</string>
-    <string name="select_artist.folder">选择文件夹</string>
     <string name="select_genre.empty">找不到流派</string>
     <string name="select_playlist.empty">服务器上没有保存的播放列表</string>
     <string name="settings.custom_cache_location">使用自定义的缓存路径</string>

@@ -146,7 +146,6 @@
 \n 如果您要使用行動數據，您需要在設定中允許使用計量付費網路連線下載。</string>
     <string name="select_album.play_all">播放全部</string>
     <string name="select_artist.all_folders">所有資料夾</string>
-    <string name="select_artist.folder">選擇資料夾</string>
     <string name="select_playlist.empty">伺服器上沒有已保存的播放清單</string>
     <string name="util.zero_time">0:00</string>
     <string name="server_editor.authentication">認證</string>

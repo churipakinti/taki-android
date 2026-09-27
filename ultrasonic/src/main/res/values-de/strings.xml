@@ -115,7 +115,6 @@
     <string name="select_album.no_sdcard">Fehler: Keine SD Karte verfügbar.</string>
     <string name="select_album.play_all">Alles wiedergeben</string>
     <string name="select_artist.all_folders">Alle Ordner</string>
-    <string name="select_artist.folder">Ordner wählen</string>
     <string name="select_genre.empty">Keine Genres gefunden</string>
     <string name="select_playlist.empty">Keine Wiedergabelisten auf dem Server</string>
     <string name="settings.custom_cache_location">Verwende eigenen Cache Ort</string>

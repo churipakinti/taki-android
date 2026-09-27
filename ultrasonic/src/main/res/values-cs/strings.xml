@@ -88,7 +88,6 @@
     <string name="select_album.no_sdcard">Chyba: SD karta nedostupná.</string>
     <string name="select_album.play_all">Přehrát vše</string>
     <string name="select_artist.all_folders">Všechny adresáře</string>
-    <string name="select_artist.folder">Vybrat adresář</string>
     <string name="select_genre.empty">Žánry nenalezeny</string>
     <string name="select_playlist.empty">Žádné uložené playlisty na serveru</string>
     <string name="settings.cache_location">Umístění cache</string>

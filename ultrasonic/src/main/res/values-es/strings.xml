@@ -175,7 +175,6 @@
     <string name="select_album.no_sdcard">Error: no hay tarjeta SD disponible.</string>
     <string name="select_album.play_all">Reproducir todo</string>
     <string name="select_artist.all_folders">Todas las carpetas</string>
-    <string name="select_artist.folder">Seleccionar la carpeta</string>
     <string name="select_genre.empty">No se han encontrado géneros</string>
     <string name="select_playlist.empty">No hay listas de reproducción almacenadas en el servidor</string>
     <string name="settings.custom_cache_location">Usar ubicación de caché personalizada</string>

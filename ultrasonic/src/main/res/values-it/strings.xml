@@ -87,7 +87,6 @@
     <string name="select_album.no_sdcard">Errore: Nessuna memoria SD disponibile.</string>
     <string name="select_album.play_all">Riproduci tutto</string>
     <string name="select_artist.all_folders">Tutte le cartelle</string>
-    <string name="select_artist.folder">Seleziona cartella</string>
     <string name="select_genre.empty">Nessun genere trovato</string>
     <string name="select_playlist.empty">Nessuna playlist salvata sul server</string>
     <string name="settings.cache_location">Posizione Cache</string>

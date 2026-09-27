@@ -90,7 +90,6 @@
     <string name="select_album.no_sdcard">エラー: SDカードが利用できません。</string>
     <string name="select_album.play_all">すべて再生</string>
     <string name="select_artist.all_folders">すべてのフォルダ</string>
-    <string name="select_artist.folder">フォルダを選択</string>
     <string name="settings.custom_cache_location">キャッシュの場所をカスタムする</string>
     <string name="settings.cache_location">キャッシュの場所</string>
     <string name="settings.cache_location_error">キャッシュの場所が無効です。デフォルトを使用します。</string>

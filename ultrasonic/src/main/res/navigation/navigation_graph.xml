@@ -14,9 +14,6 @@
         android:id="@+id/toDownloadedAlbum"
         app:destination="@id/downloadedAlbumFragment" />
     <action
-        android:id="@+id/toMediaLibrary"
-        app:destination="@id/mediaLibraryFragment" />
-    <action
         android:id="@+id/toAlbumList"
         app:destination="@id/albumListFragment" />
     <action
@@ -52,10 +49,6 @@
         android:name="org.moire.ultrasonic.fragment.HomeFragment"
         android:label="@string/button_bar.home" />
 
-    <fragment
-        android:id="@+id/mediaLibraryFragment"
-        android:name="org.moire.ultrasonic.fragment.ArtistListFragment"
-        android:label="@string/music_library.label" />
     <fragment
         android:id="@+id/artistListFragment"
         android:name="org.moire.ultrasonic.fragment.ArtistListFragment">
@@ -207,9 +200,6 @@
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
-        <action
-            android:id="@+id/albumListToTrackCollection"
-            app:destination="@id/trackCollectionFragment" />
     </fragment>
     <!-- Collections/Box Sets. Reached from Library's "Box Sets" row (MainFragment);
          collectionDetailFragment's "grouping" argument is the exact CollectionResolver-resolved
@@ -229,13 +219,6 @@
         <argument
             android:name="grouping"
             app:argType="string" />
-    </fragment>
-    <fragment
-        android:id="@+id/entryListFragment"
-        android:name="org.moire.ultrasonic.fragment.EntryListFragment">
-        <action
-            android:id="@+id/entryListToTrackCollection"
-            app:destination="@id/trackCollectionFragment" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"

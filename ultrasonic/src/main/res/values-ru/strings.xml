@@ -107,7 +107,6 @@
     <string name="select_album.no_sdcard">Ошибка: нет SD-карты</string>
     <string name="select_album.play_all">Воспроизвести все</string>
     <string name="select_artist.all_folders">Все папки</string>
-    <string name="select_artist.folder">Выбрать папку</string>
     <string name="select_genre.empty">Жанры не найдены</string>
     <string name="select_playlist.empty">Нет сохраненных плейлистов на сервере</string>
     <string name="settings.cache_location">Расположение кэша</string>

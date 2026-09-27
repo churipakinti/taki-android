@@ -116,7 +116,6 @@
 \n Se estás a usar datos do móbil, poderías ter que ir aos axustes e permitir a descarga en conexións cuantificadas.</string>
     <string name="select_album.no_sdcard">Erro: non hai tarxeta SD dispoñible.</string>
     <string name="select_artist.all_folders">Todos os cartafoles</string>
-    <string name="select_artist.folder">Elexir cartafol</string>
     <string name="select_genre.empty">Non hai xéneros</string>
     <string name="select_playlist.empty">Non listas gardadas no servidor</string>
     <string name="settings.custom_cache_location">Usar localización personalizada para a caché</string>

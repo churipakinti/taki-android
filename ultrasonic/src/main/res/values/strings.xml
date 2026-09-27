@@ -267,7 +267,6 @@
     <string name="select_album.no_sdcard">Error: No SD card available.</string>
     <string name="select_album.play_all">Play All</string>
     <string name="select_artist.all_folders">All Folders</string>
-    <string name="select_artist.folder">Select Folder</string>
     <string name="select_genre.empty">No genres found</string>
     <string name="select_playlist.empty">No saved playlists in this library</string>
     <string name="playlist.add_to_title">Add to playlist</string>
