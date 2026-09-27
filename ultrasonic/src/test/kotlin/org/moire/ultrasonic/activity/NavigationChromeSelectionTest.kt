@@ -47,12 +47,14 @@ class NavigationChromeSelectionTest {
         albumDetail: Boolean = false,
         lightweightHeaderTrackCollection: Boolean = false,
         playlistDetail: Boolean = false,
+        folderBrowser: Boolean = false,
     ) = NavigationActivity.hidesSupportActionBar(
         id,
         libraryTrackCollection,
         albumDetail,
         lightweightHeaderTrackCollection,
         playlistDetail,
+        folderBrowser,
     )
 
     @Test
@@ -107,6 +109,14 @@ class NavigationChromeSelectionTest {
     @Test
     fun `genre and daily mix hide the shared toolbar - they draw their own lightweight header`() {
         assertTrue(hides(R.id.trackCollectionFragment, lightweightHeaderTrackCollection = true))
+    }
+
+    // --- isFolderBrowser (issue #10 phase 4M1) ------------------------------------------------
+
+    @Test
+    fun `folder browsing hides the shared toolbar - it draws its own lightweight header`() {
+        assertFalse(hides(R.id.trackCollectionFragment))
+        assertTrue(hides(R.id.trackCollectionFragment, folderBrowser = true))
     }
 
     @Test

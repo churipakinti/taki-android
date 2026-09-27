@@ -1,10 +1,11 @@
 # Taki Compose Migration — Coverage Audit (Issue #10)
 
-**Status:** final audit pass (phase 4L), audit + small proven cleanup only. Baseline: `develop` at
-`16ddc285` (Migrate Sleep Timer to Compose sheet). This supersedes the phase-4C version of this
-document (baseline `5f8bdc6a`), which is now stale — nearly every `MIGRATE_IN_#10` row it listed
-has since shipped (Artist List, Album List, all `TrackCollectionFragment` browsing modes except
-one, Playlists, Genres, Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer).
+**Status:** updated through phase 4M1 (folder/non-ID3 browsing migrated to Compose). Phase 4L
+baseline: `develop` at `16ddc285` (Migrate Sleep Timer to Compose sheet); phase 4M1 baseline:
+`768a2a0f` (Finalize Compose migration coverage audit). This supersedes the phase-4C version of
+this document (baseline `5f8bdc6a`), which is now stale — nearly every `MIGRATE_IN_#10` row it
+listed has since shipped (Artist List, Album List, all `TrackCollectionFragment` browsing modes,
+Playlists, Genres, Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer).
 
 Sources used: `ultrasonic/src/main/res/navigation/navigation_graph.xml` (read directly, not
 recalled), every Fragment class reachable from the graph, `NavigationActivity.kt`'s
@@ -20,16 +21,17 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 | Metric | Count |
 |---|---:|
 | Total reachable UI surfaces classified | 27 |
-| — Compose | 18 |
+| — Compose | 19 |
 | — Hybrid (Compose + View by design) | 1 |
-| — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 3 |
+| — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 2 |
 | — Legacy View/XML, intentionally out of scope | 5 |
-| Dead / unreachable, removed this pass | 2 (nav nodes) + 2 (dead adapter/binder classes) |
+| Dead / unreachable, removed phase 4L | 2 (nav nodes) + 2 (dead adapter/binder classes) |
 | Dead / unreachable, product decision required | 1 (Videos mode) |
 | Unclassified | **0** |
 
-Arithmetic: 18 + 1 + 3 + 5 = 27 reachable surfaces. Videos is excluded from "reachable" because it
-has zero live callers (confirmed by exhaustive grep — see §F).
+Arithmetic: 19 + 1 + 2 + 5 = 27 reachable surfaces. Videos is excluded from "reachable" because it
+has zero live callers (confirmed by exhaustive grep — see §F). Phase 4M1 moved folder/non-ID3
+browsing from legacy to Compose (18→19, 3→2); see §B.1/§B.3 and §L below.
 
 ---
 
@@ -57,6 +59,7 @@ has zero live callers (confirmed by exhaustive grep — see §F).
 | Up Next | embedded in `playerFragment` (not a separate destination) | Fragment | |
 | Lyrics | `lyricsFragment` | Fragment | |
 | Sleep Timer | bottom sheet launched from `playerFragment` | Fragment/dialog | baseline commit `16ddc285` |
+| Folder/non-ID3 browsing (mixed directory + track rows) | `trackCollectionFragment` (`isAlbum=false`, no `playlistId`, not a library-track-rows mode) | Fragment | phase 4M1 — reached only from Compose Artist List's "Index" row tap; every deeper directory tap routes to the already-Compose Album Detail (phase 4H1 handles further nesting) |
 
 ### B.2 — Hybrid by design
 
@@ -68,11 +71,14 @@ has zero live callers (confirmed by exhaustive grep — see §F).
 
 | Surface | Destination / Mode | Current UI | Reachability | Classification |
 |---|---|---|---|---|
-| Folder/non-ID3 browsing (mixes Album + Track rows) | `trackCollectionFragment`, fallthrough case: `isAlbum=false`, no `playlistId`, `useLibraryTrackRows=false` — i.e. `parentId`-driven folder/index navigation on non-ID3 servers | View (`TrackViewBinder` + `AlbumRowDelegate`, `MultiListFragment`'s default `list_layout_generic`) | Live, reachable on any server without ID3 tagging | `SMALL_BLOCKER_FOR_#10` — genuinely the last real `TrackCollectionFragment` gap; needs a discriminated-union row type (mixed Album/Track), the one thing not yet proven in Compose here |
 | Create/Edit Playlist | `createPlaylistFragment` | View (`RecyclerView` track editor) | Live, reached from Compose Playlists list's "create" action | `SMALL_BLOCKER_FOR_#10` — one screen, management flow not browsing |
 | Save Playlist dialog | `PlayerFragment.showSavePlaylistDialog()` (inline `AlertDialog`, `R.layout.save_playlist`) | View | Live, reached from Now Playing's (Compose) overflow menu | `SMALL_BLOCKER_FOR_#10` — one dialog embedded in an otherwise-Compose screen |
 
-All three are confirmed live via direct grep of their call sites (`AlbumListFragment`/`PlaylistListFragment`/`PlayerFragment`), not inferred. None was migrated in this pass — building new Compose surfaces is implementation work, out of scope for an audit-and-cleanup phase per this task's own instructions.
+Folder/non-ID3 browsing (the third §B.3 row from the phase 4L version of this audit) was migrated
+to Compose in phase 4M1 — see §B.1. Both remaining rows are confirmed live via direct grep of
+their call sites (`PlaylistListFragment`/`PlayerFragment`), not inferred. Neither was migrated in
+this pass — building new Compose surfaces is implementation work, out of scope for an
+audit-and-cleanup phase per that task's own instructions.
 
 ### B.4 — Intentionally legacy / out of scope for #10
 
@@ -298,9 +304,63 @@ conversation.
 
 ---
 
-## K. Next action
+## K. Next action (superseded by §L for folder browsing — kept for history)
 
-`READY_TO_CLOSE_#10 = NO`. Recommended next phase: **4M — close out the three remaining
-`TrackCollectionFragment`-adjacent legacy surfaces** (folder/non-ID3 browsing, Create/Edit
-Playlist, Save Playlist dialog), each independently shippable, after which #10's acceptance
-criteria are met with zero remaining core-browsing gaps and the issue can close.
+`READY_TO_CLOSE_#10 = NO` as of phase 4L. Recommended next phase: **4M — close out the three
+remaining `TrackCollectionFragment`-adjacent legacy surfaces** (folder/non-ID3 browsing,
+Create/Edit Playlist, Save Playlist dialog), each independently shippable, after which #10's
+acceptance criteria are met with zero remaining core-browsing gaps and the issue can close.
+
+---
+
+## L. Phase 4M1 — Folder/non-ID3 browsing migrated
+
+Baseline `768a2a0f`. Migrated the last surviving legacy `TrackCollectionFragment` mode
+(`isAlbum=false`, no `playlistId`, not a library-track-rows mode) to Compose.
+
+**Reachability, precisely traced (not assumed):** this mode is reached from exactly one live
+entry point — Compose Artist List's "Index" row tap (`ArtistListFragment.onEntryClick`,
+`row.isIndex` — folder-grouping entries returned by the non-ID3 `getIndexes()` call, mixed with
+real leaf `Artist` rows in the same list). Every directory tapped *from inside* this screen
+navigates with `isAlbum=true` (the legacy `onItemClick`'s directory branch, ported unchanged),
+which routes straight to the already-Compose Album Detail — proven by phase 4H1's own kdoc
+("a folder-mode directory that contains sub-folders... now shows them as tappable folder rows").
+So this screen only ever renders one level; it never navigates to itself.
+
+**Architecture:** a new, dedicated `FolderBrowserViewModel`/`FolderBrowserUiState`/
+`FolderBrowserActions`/`FolderBrowserScreen` (`ui/folderbrowser/`), not a `TrackListScreen` mode
+(mixed row types) and not folded into `AlbumDetailViewModel` (no hero/disc/notes/star apply to a
+bare directory). Reuses existing primitives rather than inventing new ones: `TakiEntryRow` for
+directory rows (already supported title+subtitle+artwork+tap-only — no dedicated `TakiFolderRow`
+needed), `TakiLibraryTrackRow` for track rows (heart + context menu, same as the shared Track
+List), and the exact `TrackContextAction`/`TrackContextMenuState` shared type + `R.menu
+.context_menu_track_collection` eight-action menu Album Detail/Track List already dispatch through
+`ContextMenuUtil`. The directory loader (`service.getMusicDirectory`) is a direct port of
+`AlbumDetailViewModel`'s own folder-mode `albumLoader` seam. `MediaPlayerManager`/queue/playback
+ownership untouched — the ViewModel only reads; the Fragment still dispatches every playback call.
+
+**A real chrome bug found and fixed:** the first live Pixel pass showed a duplicated header — the
+new screen's own `TakiScreenHeader` *and* the shared Material toolbar both rendering "01" at once.
+`NavigationActivity`'s `hidesSupportActionBar` didn't recognize this destination shape (it fell
+through to the shown-toolbar default, the same as the old legacy screen, which never drew a
+separate header of its own and only ever showed the one shared toolbar). Fixed with a new
+`isFolderBrowser` flag, added to `hidesSupportActionBar`'s signature exactly like the existing
+`isLightweightHeaderTrackCollection` (Genre/Daily Mix) precedent — same treatment, same reasoning,
+same deliberate exclusion from `libraryOnlyDestination`/`showsContentBackButton`. Locked by two new
+`NavigationChromeSelectionTest` cases. Re-verified live after the fix: single header, correct back
+stack, correct mini-player/bottom-nav visibility.
+
+**Legacy cleanup — found, not removed (deferred, substantial):** with this mode migrated,
+`AlbumRowDelegate`, `TrackViewBinder`, `HeaderViewBinder`, and `DiscHeaderBinder` (confirmed by
+grep: each is instantiated *only* inside `TrackCollectionFragment.kt`, nowhere else in the app) —
+plus the ~200-line `super.onViewCreated()` legacy View-setup branch itself — are now unreachable
+for every *live* purpose. The only remaining paths into that branch are the dead `getVideos` mode
+and a defensive "id==null" ViewPager-bug fallback, neither with a live caller (confirmed phase 4L
+and re-confirmed here). This is a real, substantial cleanup opportunity, but removing four adapter
+classes plus a large Fragment branch is more than "small and obvious" for an implementation phase
+whose own brief said "if cleanup becomes substantial, defer it." **Not removed in this pass** —
+flagged for a follow-up (naturally adjacent to #23's existing `TrackCollectionFragment`-family
+cleanup scope, or a new dedicated issue).
+
+**Remaining #10 blockers after this phase:** 2 (Create/Edit Playlist, Save Playlist dialog) — down
+from 3. `READY_TO_CLOSE_#10` is still `NO`.

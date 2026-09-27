@@ -54,6 +54,7 @@ import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.model.AlbumDetailViewModel
+import org.moire.ultrasonic.model.FolderBrowserViewModel
 import org.moire.ultrasonic.model.PlaylistDetailViewModel
 import org.moire.ultrasonic.model.TrackListViewModel
 import org.moire.ultrasonic.service.DownloadService
@@ -63,6 +64,10 @@ import org.moire.ultrasonic.ui.album.AlbumDetailArgs
 import org.moire.ultrasonic.ui.album.AlbumDetailScreen
 import org.moire.ultrasonic.ui.album.AlbumOverflowItem
 import org.moire.ultrasonic.ui.album.TrackContextAction
+import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserActions
+import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserArgs
+import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserRow
+import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserScreen
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailActions
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailArgs
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailScreen
@@ -225,6 +230,27 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private val isComposeLibraryTrackListMode: Boolean
         get() = useLibraryTrackRows
 
+    // --- Compose Folder Browser (issue #10 phase 4M1) --------------------------------------
+    // The last surviving legacy mode: folder/non-ID3 browsing (`isAlbum=false`, no `playlistId`,
+    // not a library-track-rows mode). Reached only from Compose Artist List's "Index" row tap
+    // (`ArtistListFragment.onEntryClick`, `row.isIndex`) - every deeper directory tap routes to
+    // the already-Compose Album Detail (`isAlbum=true`), so this screen only ever renders one
+    // level. `navArgs.id != null` and the `!displayRandom()`/`!displayAllSongs()` guards keep the
+    // dead `getVideos` branch and the defensive "id==null" ViewPager-bug fallback on the legacy
+    // path untouched, exactly as intended - neither has a live caller (confirmed by the phase 4L
+    // audit for `getVideos`; `getRandom`/bare `id==null` were never wired to a folder-browsing
+    // entry point either).
+    private val folderBrowserViewModel: FolderBrowserViewModel by viewModels()
+
+    private val isComposeFolderBrowserMode: Boolean
+        get() = navArgs.id != null &&
+            !navArgs.isAlbum &&
+            navArgs.playlistId == null &&
+            !useLibraryTrackRows &&
+            !navArgs.getVideos &&
+            !displayRandom() &&
+            !displayAllSongs()
+
     private val isMediaLibrarySongs: Boolean
         get() = parentFragment is MainFragment || navArgs.libraryRoot || navArgs.getStarred
 
@@ -274,6 +300,10 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
         if (isComposeLibraryTrackListMode) {
             bindComposeTrackList()
+            return
+        }
+        if (isComposeFolderBrowserMode) {
+            bindComposeFolderBrowser()
             return
         }
         super.onViewCreated(view, savedInstanceState)
@@ -1374,6 +1404,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         if (isComposeAlbumMode) return createComposeAlbumView()
         if (isComposePlaylistDetailMode) return createComposePlaylistDetailView()
         if (isComposeLibraryTrackListMode) return createComposeTrackListView()
+        if (isComposeFolderBrowserMode) return createComposeFolderBrowserView()
         val layout = if (navArgs.libraryRoot) R.layout.list_layout_track_filterable else mainLayout
         return inflater.inflate(layout, container, false)
     }
@@ -2159,6 +2190,140 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             pendingFilterSelection = null
             getLiveData(refresh = true)
         }
+    }
+
+    // ---- Compose Folder Browser (issue #10 phase 4M1) ---------------------------------------
+
+    private fun createComposeFolderBrowserView(): View {
+        val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
+            ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by folderBrowserViewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    FolderBrowserScreen(
+                        state = state,
+                        actions = folderBrowserActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun bindComposeFolderBrowser() {
+        // Never visibly shown - the shared toolbar/back bar are both hidden for this destination
+        // (NavigationActivity's chrome rules don't recognize it, so it falls through with no
+        // chrome of its own outside this screen's own TakiScreenHeader), kept only for parity
+        // with the legacy (also invisible) title, exactly like AlbumListFragment/ArtistListFragment.
+        setTitle(navArgs.name)
+
+        val id = navArgs.id ?: return
+        folderBrowserViewModel.load(
+            FolderBrowserArgs(
+                id = id,
+                name = navArgs.name,
+                online = !isOffline(),
+            )
+        )
+
+        rxBusSubscription += RxBus.activeServerChangedObservable.subscribe {
+            folderBrowserViewModel.refresh()
+        }
+    }
+
+    private val folderBrowserActions: FolderBrowserActions by lazy {
+        FolderBrowserActions(
+            onDirectoryClick = ::onFolderBrowserDirectoryClick,
+            onTrackClick = ::onFolderBrowserTrackClick,
+            onContextAction = ::onFolderBrowserContextAction,
+            trackContextMenuState = { row -> resolveFolderBrowserContextMenuState(row.id) },
+            onHeartToggle = ::onFolderBrowserHeartToggle,
+            onRefresh = folderBrowserViewModel::refresh,
+            onBack = { findNavController().navigateUp() },
+        )
+    }
+
+    /** The exact legacy `onItemClick` directory-tap navigation (`isAlbum = true`): every
+     *  sub-directory - however deep - opens as Compose Album Detail, which has handled further
+     *  folder-mode nesting since issue #10 phase 4H1. This screen never navigates to itself. */
+    private fun onFolderBrowserDirectoryClick(row: FolderBrowserRow.Directory) {
+        val action = NavigationGraphDirections.toTrackCollection(
+            id = row.id,
+            isAlbum = true,
+            name = row.title,
+            parentId = row.parent,
+        )
+        findNavController().navigate(action)
+    }
+
+    private fun onFolderBrowserTrackClick(row: FolderBrowserRow.Track) {
+        val track = folderBrowserViewModel.itemFor(row.id) ?: return
+        if (track.isVideo) {
+            VideoPlayer.playVideo(requireContext(), track)
+            return
+        }
+        playFolderBrowserTrackFromHere(track)
+    }
+
+    private fun playFolderBrowserTrackFromHere(track: Track) {
+        PerfMetrics.mark("play_tap")
+        val allTracks = folderBrowserViewModel.tracksSnapshot()
+        val startIndex = allTracks.indexOfFirst { it === track }
+        if (startIndex < 0) return
+        mediaPlayerManager.addToPlaylist(
+            songs = allTracks,
+            autoPlay = false,
+            shuffle = false,
+            insertionMode = MediaPlayerManager.InsertionMode.CLEAR,
+            startIndex = startIndex
+        )
+    }
+
+    private fun onFolderBrowserHeartToggle(row: FolderBrowserRow.Track) {
+        val newStarred = folderBrowserViewModel.toggleHeartOptimistic(row.id) ?: return
+        RxBus.ratingSubmitter.onNext(RatingUpdate(row.id, HeartRating(newStarred)))
+    }
+
+    /**
+     * Reuses the unchanged [ContextMenuUtil.handleContextMenuTracks] dispatch with a real
+     * [MenuItem] taken from a never-shown [PopupMenu], the same pattern Compose Album Detail's
+     * [runTrackContextAction] and Track List's own handler already established.
+     * `PLAY_FROM_HERE`/`ADD_TO_PLAYLIST` are intercepted first, exactly like the legacy
+     * `onContextMenuItemSelected`.
+     */
+    private fun onFolderBrowserContextAction(row: FolderBrowserRow.Track, action: TrackContextAction) {
+        val track = folderBrowserViewModel.itemFor(row.id) ?: return
+        when (action) {
+            TrackContextAction.PLAY_FROM_HERE -> playFolderBrowserTrackFromHere(track)
+            TrackContextAction.ADD_TO_PLAYLIST -> addTracksToPlaylist(listOf(track))
+            else -> runTrackContextAction(action.toMenuItemId(), listOf(track))
+        }
+    }
+
+    /** `Utils.createPopupMenu`'s per-track gating, resolved once when the menu opens - a point
+     *  read of the download state + offline flag, exactly like the legacy popup. */
+    private fun resolveFolderBrowserContextMenuState(trackId: String): TrackContextMenuState {
+        val online = !isOffline()
+        val downloadState = DownloadService.getDownloadState(
+            folderBrowserViewModel.itemFor(trackId) ?: return TrackContextMenuState(),
+        )
+        val isDownloaded = downloadState == DownloadState.DONE || downloadState == DownloadState.PINNED
+        val canDownload = downloadState == DownloadState.IDLE ||
+            downloadState == DownloadState.FAILED ||
+            downloadState == DownloadState.CANCELLED
+        return TrackContextMenuState(
+            canAddToPlaylist = online,
+            canDownload = canDownload && online,
+            canDelete = isDownloaded,
+        )
     }
 
     companion object {

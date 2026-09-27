@@ -261,6 +261,20 @@ class NavigationActivity : ScopeActivity() {
                         !arguments?.getString("genreName").isNullOrEmpty()
                     )
 
+            // Folder/non-ID3 browsing (issue #10 phase 4M1): the last surviving legacy
+            // TrackCollectionFragment mode, now Compose. Gets the exact same "Fragment draws its
+            // own TakiScreenHeader, shared toolbar hidden" treatment as Genre/Daily Mix above -
+            // same reasoning, same deliberate exclusion from libraryOnlyDestination/
+            // showsContentBackButton (this destination is reached only from Compose Artist
+            // List's own row tap, never from Library directly).
+            val isFolderBrowser = destination.id == R.id.trackCollectionFragment &&
+                arguments?.getBoolean("isAlbum") != true &&
+                arguments?.getString("playlistId").isNullOrEmpty() &&
+                !isLibraryTrackCollection &&
+                !isLightweightHeaderTrackCollection &&
+                arguments?.getBoolean("getVideos") != true &&
+                !arguments?.getString("id").isNullOrEmpty()
+
             // The nav graph is flat, so AndroidX's setupWithNavController() only checks
             // destination.id against the 4 top-level menu items themselves - it can't know that
             // e.g. trackCollectionFragment(libraryRoot=true) is "Songs", reached only from
@@ -292,6 +306,7 @@ class NavigationActivity : ScopeActivity() {
                 isAlbumDetail,
                 isLightweightHeaderTrackCollection,
                 isPlaylistDetail,
+                isFolderBrowser,
             )
             if (usesContentHeader) {
                 supportActionBar?.hide()
@@ -804,9 +819,12 @@ class NavigationActivity : ScopeActivity() {
          * this mode needs a visible title next to the back arrow. [isPlaylistDetail] (issue #10
          * phase 4F3) gets the exact same treatment as [isAlbumDetail] - the shared
          * `content_navigation_header` back bar, no Fragment-owned header - since Playlist
-         * Detail's hero already carries its own title, same as Album Detail's. Pure so
-         * `NavigationChromeSelectionTest` can lock it; the Activity still applies it in
-         * `onDestinationChanged` (only runtime validation proves the `ActionBar.hide()` call).
+         * Detail's hero already carries its own title, same as Album Detail's.
+         * [isFolderBrowser] (issue #10 phase 4M1) gets the exact same treatment as
+         * [isLightweightHeaderTrackCollection] - a Fragment-owned `TakiScreenHeader`, not the
+         * shared `content_navigation_header`. Pure so `NavigationChromeSelectionTest` can lock
+         * it; the Activity still applies it in `onDestinationChanged` (only runtime validation
+         * proves the `ActionBar.hide()` call).
          */
         fun hidesSupportActionBar(
             destinationId: Int,
@@ -814,6 +832,7 @@ class NavigationActivity : ScopeActivity() {
             isAlbumDetail: Boolean,
             isLightweightHeaderTrackCollection: Boolean = false,
             isPlaylistDetail: Boolean = false,
+            isFolderBrowser: Boolean = false,
         ): Boolean = destinationId in setOf(
             R.id.homeFragment,
             R.id.mainFragment,
@@ -832,7 +851,7 @@ class NavigationActivity : ScopeActivity() {
             R.id.editServerFragment,
             R.id.aboutFragment,
         ) || isLibraryTrackCollection || isAlbumDetail || isLightweightHeaderTrackCollection ||
-            isPlaylistDetail ||
+            isPlaylistDetail || isFolderBrowser ||
             destinationId == R.id.settingsFragment ||
             destinationId == R.id.equalizerFragment
     }
