@@ -103,7 +103,6 @@ const val NOW_PLAYING_SEEK_TEST_TAG = "now_playing_seek"
 private const val SWIPE_PERCENT_OF_SCREEN = 0.05f
 private const val INITIAL_REPEAT_DELAY_MS = 1000L
 private const val REPEAT_INTERVAL_MS = 300L
-private const val MILLIS_PER_MINUTE = 60_000L
 private const val PERCENT_MAX = 100f
 
 /** A finished touch on the hero artwork panel (legacy `PlayerFragment.onFling`). */
@@ -812,6 +811,3 @@ private fun sleepTimerContentDescription(state: SleepTimerState): String = when 
         stringResource(R.string.sleep_timer_title_active, remaining)
     }
 }
-
-private fun ceilMinutes(remainingMs: Long): Int =
-    ((remainingMs + MILLIS_PER_MINUTE - 1) / MILLIS_PER_MINUTE).toInt().coerceAtLeast(1)

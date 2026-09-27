@@ -17,12 +17,15 @@ import android.view.WindowManager
 import android.widget.EditText
 import androidx.compose.runtime.Composable
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
@@ -30,7 +33,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.HeartRating
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.Date
@@ -58,13 +60,14 @@ import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
-import org.moire.ultrasonic.service.SleepTimerState
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.NetworkAndStorageChecker
 import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
 import org.moire.ultrasonic.ui.player.NowPlayingActions
 import org.moire.ultrasonic.ui.player.NowPlayingOverflowItem
 import org.moire.ultrasonic.ui.player.NowPlayingScreen
+import org.moire.ultrasonic.ui.player.SleepTimerActions
+import org.moire.ultrasonic.ui.player.SleepTimerSheet
 import org.moire.ultrasonic.ui.upnext.QueueEntry
 import org.moire.ultrasonic.ui.upnext.UpNextActions
 import org.moire.ultrasonic.ui.upnext.UpNextCurrentUi
@@ -131,6 +134,10 @@ class PlayerFragment :
     private val showUpNext = mutableStateOf(false)
     private var upNextBackCallback: OnBackPressedCallback? = null
 
+    /** Whether the Sleep Timer sheet is open - transient UI over Now Playing/Up Next, not a
+     *  navigation destination (issue #10 phase 4K6). */
+    private val showSleepTimer = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         applyTheme(this.context)
         super.onCreate(savedInstanceState)
@@ -158,22 +165,34 @@ class PlayerFragment :
                         if (trackId == state.trackId) state.copy(isCurrentTrackLiked = liked) else null
                     } ?: state
 
-                    if (showUpNext.value) {
-                        UpNextHost(
-                            displayState = displayState,
-                            progressFraction = {
-                                if (progress.durationMs > 0) progress.positionMs.toFloat() / progress.durationMs else 0f
-                            },
-                        )
-                    } else {
-                        NowPlayingScreen(
-                            state = displayState,
-                            progress = progress,
-                            sleepTimerState = sleepTimerState,
-                            actions = nowPlayingActions(
-                                onOpenUpNext = { setUpNextOpen(true) },
-                                currentlyLiked = displayState.isCurrentTrackLiked,
-                            ),
+                    Box(Modifier.fillMaxSize()) {
+                        if (showUpNext.value) {
+                            UpNextHost(
+                                displayState = displayState,
+                                progressFraction = {
+                                    if (progress.durationMs > 0) {
+                                        progress.positionMs.toFloat() / progress.durationMs
+                                    } else {
+                                        0f
+                                    }
+                                },
+                            )
+                        } else {
+                            NowPlayingScreen(
+                                state = displayState,
+                                progress = progress,
+                                sleepTimerState = sleepTimerState,
+                                actions = nowPlayingActions(
+                                    onOpenUpNext = { setUpNextOpen(true) },
+                                    currentlyLiked = displayState.isCurrentTrackLiked,
+                                ),
+                            )
+                        }
+                        SleepTimerSheet(
+                            visible = showSleepTimer.value,
+                            state = sleepTimerState,
+                            hasCurrentTrack = displayState.hasCurrentTrack,
+                            actions = sleepTimerActions(),
                         )
                     }
                 }
@@ -272,7 +291,7 @@ class PlayerFragment :
             onSavePlaylist = { offerSavePlaylist() },
             onLyrics = { goToLyrics(currentTrack()) },
             onOpenUpNext = onOpenUpNext,
-            onSleepTimer = ::showSleepTimerDialog,
+            onSleepTimer = { showSleepTimer.value = true },
             onOverflowItem = { item -> handleOverflow(item, currentTrack()) },
             equalizerAvailable = { isEqualizerAvailable },
             keepScreenOnActive = { mediaPlayerManager.keepScreenOn },
@@ -442,56 +461,29 @@ class PlayerFragment :
     }
 
     /**
-     * Sleep timer picker: a plain single-choice `MaterialAlertDialog`, unchanged - reusing the
-     * legacy flow verbatim rather than building a Compose dialog (issue #10 phase 4J scope).
+     * Sleep timer sheet actions (issue #10 phase 4K6): dispatches straight to the unchanged
+     * `PlaybackUiStateHolder` / `SleepTimerController` path the legacy single-choice
+     * `AlertDialog` used, then dismisses the sheet - the same "select and immediately apply"
+     * behavior, and the same confirmation toasts, the legacy dialog had.
      */
-    private fun showSleepTimerDialog() {
-        val hasCurrentSong = mediaPlayerManager.currentMediaItem != null
-        val labels = mutableListOf(getString(R.string.sleep_timer_off))
-        for (minutes in SLEEP_TIMER_DURATIONS_MINUTES) {
-            labels += resources.getQuantityString(R.plurals.sleep_timer_option_minutes, minutes, minutes)
-        }
-        if (hasCurrentSong) labels += getString(R.string.sleep_timer_end_of_song)
-
-        val timerState = mediaPlayerManager.sleepTimerState
-        val checkedIndex = when (timerState) {
-            SleepTimerState.Off -> 0
-            is SleepTimerState.EndOfTrack -> if (hasCurrentSong) labels.lastIndex else -1
-            is SleepTimerState.Duration -> {
-                val presetIndex = SLEEP_TIMER_DURATIONS_MINUTES.indexOf(timerState.presetMinutes)
-                if (presetIndex >= 0) presetIndex + 1 else -1
-            }
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.sleep_timer_title)
-            .setSingleChoiceItems(labels.toTypedArray(), checkedIndex) { dialog, which ->
-                dialog.dismiss()
-                onSleepTimerOptionSelected(which, hasCurrentSong)
-            }
-            .setNegativeButton(R.string.common_cancel, null)
-            .show()
-    }
-
-    private fun onSleepTimerOptionSelected(which: Int, hasCurrentSong: Boolean) {
-        when {
-            which == 0 -> {
-                playbackUiStateHolder.onCancelSleepTimer()
-                toast(R.string.sleep_timer_confirm_cancelled)
-            }
-
-            which <= SLEEP_TIMER_DURATIONS_MINUTES.size -> {
-                val minutes = SLEEP_TIMER_DURATIONS_MINUTES[which - 1]
-                playbackUiStateHolder.onSetSleepTimer(minutes)
-                toast(resources.getQuantityString(R.plurals.sleep_timer_confirm_minutes, minutes, minutes))
-            }
-
-            hasCurrentSong -> {
-                playbackUiStateHolder.onSetSleepTimerEndOfTrack()
-                toast(R.string.sleep_timer_confirm_end_of_song)
-            }
-        }
-    }
+    private fun sleepTimerActions(): SleepTimerActions = SleepTimerActions(
+        onSelectDuration = { minutes ->
+            playbackUiStateHolder.onSetSleepTimer(minutes)
+            toast(resources.getQuantityString(R.plurals.sleep_timer_confirm_minutes, minutes, minutes))
+            showSleepTimer.value = false
+        },
+        onSelectEndOfTrack = {
+            playbackUiStateHolder.onSetSleepTimerEndOfTrack()
+            toast(R.string.sleep_timer_confirm_end_of_song)
+            showSleepTimer.value = false
+        },
+        onCancel = {
+            playbackUiStateHolder.onCancelSleepTimer()
+            toast(R.string.sleep_timer_confirm_cancelled)
+            showSleepTimer.value = false
+        },
+        onDismiss = { showSleepTimer.value = false },
+    )
 
     // --- Up Next (issue #10 phase 4K1) -----------------------------------------------------
 
@@ -595,6 +587,5 @@ class PlayerFragment :
         private const val PROGRESS_TICK_MS = 500L
         private const val SEEK_FORWARD_MS = 30_000
         private const val SEEK_BACK_MS = 8_000
-        private val SLEEP_TIMER_DURATIONS_MINUTES = listOf(15, 30, 45, 60)
     }
 }

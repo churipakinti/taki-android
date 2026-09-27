@@ -69,7 +69,6 @@
     <string name="sleep_timer.title">Temporizador</string>
     <string name="sleep_timer.title_active">Temporizador · %1$s</string>
     <string name="sleep_timer.title_end_of_song">Temporizador · Fin de la canción</string>
-    <string name="sleep_timer.off">Desactivado</string>
     <string name="sleep_timer.end_of_song">Al terminar la canción actual</string>
     <string name="sleep_timer.confirm_end_of_song">El temporizador se detendrá al terminar esta canción</string>
     <string name="sleep_timer.confirm_cancelled">Temporizador cancelado</string>

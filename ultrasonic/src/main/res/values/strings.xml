@@ -136,13 +136,19 @@
     <string name="sleep_timer.title">Sleep timer</string>
     <string name="sleep_timer.title_active">Sleep timer · %1$s</string>
     <string name="sleep_timer.title_end_of_song">Sleep timer · End of song</string>
-    <string name="sleep_timer.off">Off</string>
     <string name="sleep_timer.end_of_song">End of current song</string>
     <string name="sleep_timer.confirm_end_of_song">Sleep timer will stop after this song</string>
     <string name="sleep_timer.confirm_cancelled">Sleep timer cancelled</string>
+    <string name="sleep_timer.stops_after_song">Stops after this song</string>
+    <string name="sleep_timer.no_active">No active timer</string>
+    <string name="sleep_timer.cancel">Cancel timer</string>
     <plurals name="sleep_timer_remaining_short">
         <item quantity="one">%d min</item>
         <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="sleep_timer_remaining_full">
+        <item quantity="one">%d min remaining</item>
+        <item quantity="other">%d min remaining</item>
     </plurals>
     <plurals name="sleep_timer_option_minutes">
         <item quantity="one">%d minute</item>
