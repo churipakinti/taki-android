@@ -12,7 +12,6 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -33,7 +32,7 @@ import org.robolectric.annotation.Config
 
 /**
  * Up Next (issue #10 phase 4K1) as a pure projection of [UpNextUiState]: structure, tap-to-play,
- * reorder (drag handle and accessibility actions), removal (swipe and accessibility action), the
+ * reorder (long-press drag and accessibility actions), removal (swipe and accessibility action), the
  * long-press menu, empty/terminal states and semantics. The runtime is a recorder - the screen
  * owns no playback.
  */
@@ -200,19 +199,21 @@ class UpNextScreenComposeTest {
         assertEquals(listOf("move:5>4"), recorder.events)
     }
 
-    // --- reorder: drag handle ------------------------------------------------------------------------
+    // --- reorder: long-press + drag on the row -------------------------------------------------------
 
     @Test
-    fun `every upcoming row has a reorder handle`() {
+    fun `rows render no drag handle`() {
         show(populated)
-        compose.onAllNodesWithTag(UP_NEXT_HANDLE_TEST_TAG, useUnmergedTree = true).assertCountEquals(3)
+        compose.onAllNodesWithTag("up_next_handle", useUnmergedTree = true).assertCountEquals(0)
     }
 
     @Test
-    fun `dragging a handle past the next row commits one move and never plays the row`() {
+    fun `long-pressing then dragging a row past the next one commits one move and never plays`() {
         val recorder = show(populated)
-        compose.onAllNodesWithTag(UP_NEXT_HANDLE_TEST_TAG, useUnmergedTree = true)[0].performTouchInput {
-            down(center)
+        val row = compose.onNodeWithText("Immigrant Song")
+        row.performTouchInput { down(center) }
+        compose.mainClock.advanceTimeBy(1000)
+        row.performTouchInput {
             moveBy(Offset(0f, 400f))
             up()
         }
@@ -220,7 +221,28 @@ class UpNextScreenComposeTest {
         val moves = recorder.events.filter { it.startsWith("move") }
         assertEquals("events were ${recorder.events}", 1, moves.size)
         assertTrue("moved down from position 3: $moves", moves.single().startsWith("move:3>"))
-        assertTrue("a drag must not play: ${recorder.events}", recorder.events.none { it.startsWith("play") })
+        assertTrue("a drag must not play or open a menu: ${recorder.events}", recorder.events.none { it.startsWith("play") })
+        compose.onNodeWithText("Lyrics").assertDoesNotExist()
+    }
+
+    @Test
+    fun `a quick vertical drag without a long press does not reorder`() {
+        val recorder = show(populated)
+        compose.onNodeWithText("Immigrant Song").performTouchInput {
+            down(center)
+            moveBy(Offset(0f, 400f))
+            up()
+        }
+        compose.waitForIdle()
+        assertTrue("no reorder without a long press: ${recorder.events}", recorder.events.none { it.startsWith("move") })
+    }
+
+    @Test
+    fun `a long press released without dragging opens the menu and moves nothing`() {
+        val recorder = show(populated)
+        compose.onNodeWithText("Black Dog").performTouchInput { longClick() }
+        compose.onNodeWithText("Lyrics").assertIsDisplayed()
+        assertTrue(recorder.events.isEmpty())
     }
 
     // --- swipe to remove -------------------------------------------------------------------------------
@@ -249,11 +271,9 @@ class UpNextScreenComposeTest {
     }
 
     @Test
-    fun `upcoming rows and handles keep at least a 48dp touch target`() {
+    fun `upcoming rows keep at least a 48dp touch target`() {
         show(populated)
         compose.onNodeWithText("Black Dog").assertHeightIsAtLeast(48.dp)
-        compose.onAllNodesWithTag(UP_NEXT_HANDLE_TEST_TAG, useUnmergedTree = true)[0]
-            .assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
     }
 
     @Test

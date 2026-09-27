@@ -9,14 +9,16 @@ package org.moire.ultrasonic.ui.upnext
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,26 +51,32 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
+import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -80,11 +88,12 @@ import org.moire.ultrasonic.ui.theme.TakiTheme
 
 const val UP_NEXT_LIST_TEST_TAG = "up_next_list"
 const val UP_NEXT_CURRENT_TEST_TAG = "up_next_current"
-const val UP_NEXT_HANDLE_TEST_TAG = "up_next_handle"
 
 private const val SECTION_LETTER_SPACING_EM = 0.08f
 private const val RESYNC_DELAY_MS = 600L
 private const val EDGE_SCROLL_STEP_PX = 24f
+private const val DRAG_SCALE = 1.02f
+private const val DRAG_SHADOW_DP = 6f
 private const val FOOTER_KEY = "footer"
 private const val CURRENT_KEY = "current"
 private const val NOW_HEADER_KEY = "now_header"
@@ -92,8 +101,8 @@ private const val NEXT_HEADER_KEY = "next_header"
 
 /**
  * Up Next (issue #10 phase 4K1): the queue as a dedicated, calm playback sub-surface - a Taki
- * header, the currently playing track, then the upcoming tracks in play order with a drag handle
- * (reorder), swipe-to-remove and a long-press menu. Replaces the legacy `current_playlist.xml`
+ * header, the currently playing track, then the upcoming tracks in play order with long-press
+ * drag (reorder), swipe-to-remove and a menu. Replaces the legacy `current_playlist.xml`
  * RecyclerView; the runtime queue (`MediaPlayerManager`) stays the only source of truth - this is
  * a pure projection of [UpNextUiState], and the local order kept while a drag is in flight is
  * reconciled with the runtime right after the drop.
@@ -250,7 +259,12 @@ private fun UpNextList(
                 onDragEnd = controller::endDrag,
                 onDragCancel = { controller.cancelDrag(latestUpcoming) },
                 modifier = if (dragging) {
-                    Modifier.zIndex(1f).graphicsLayer { translationY = drag.offsetY }
+                    Modifier.zIndex(1f).graphicsLayer {
+                        translationY = drag.offsetY
+                        scaleX = DRAG_SCALE
+                        scaleY = DRAG_SCALE
+                        shadowElevation = DRAG_SHADOW_DP.dp.toPx()
+                    }
                 } else {
                     Modifier.animateItem()
                 },
@@ -406,6 +420,7 @@ private fun UpNextRow(
     val moveUpLabel = stringResource(R.string.up_next_move_up)
     val moveDownLabel = stringResource(R.string.up_next_move_down)
     var menuOpen by remember { mutableStateOf(false) }
+    val haptics = LocalHapticFeedback.current
 
     SwipeToDismissBox(
         state = dismissState,
@@ -416,9 +431,19 @@ private fun UpNextRow(
         Row(
             Modifier
                 .fillMaxWidth()
-                .background(TakiTheme.colors.black)
-                .combinedClickable(role = Role.Button, onClick = onPlay, onLongClick = { menuOpen = true })
+                .background(if (dragging) TakiTheme.colors.surface else TakiTheme.colors.black)
+                .clickable(role = Role.Button, onClick = onPlay)
+                .reorderOnLongPress(
+                    key = row.key,
+                    onArm = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                    onDragStart = onDragStart,
+                    onDrag = onDrag,
+                    onDragEnd = onDragEnd,
+                    onDragCancel = onDragCancel,
+                    onLongPressRelease = { menuOpen = true },
+                )
                 .semantics {
+                    onLongClick { menuOpen = true; true }
                     customActions = buildList {
                         add(CustomAccessibilityAction(removeLabel) { onRemove(); true })
                         if (canMoveUp) add(CustomAccessibilityAction(moveUpLabel) { onMoveBy(-1); true })
@@ -426,7 +451,7 @@ private fun UpNextRow(
                     }
                 }
                 .heightIn(min = TakiTheme.dimensions.rowMd)
-                .padding(start = TakiTheme.spacing.lg),
+                .padding(horizontal = TakiTheme.spacing.lg),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TakiArtwork(
@@ -442,53 +467,73 @@ private fun UpNextRow(
                     Text(text = row.artist, style = TakiTheme.type.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            DragHandle(
-                key = row.key,
-                onDragStart = onDragStart,
-                onDrag = onDrag,
-                onDragEnd = onDragEnd,
-                onDragCancel = onDragCancel,
-            )
             RowMenu(expanded = menuOpen, items = row.menuItems, onDismiss = { menuOpen = false }, onItem = onMenuItem)
         }
     }
 }
 
-@Composable
-private fun RowScope.DragHandle(
+/**
+ * Long-press-then-drag on the whole row. Arbitration: a tap plays (plain `clickable`), a horizontal
+ * swipe before the long-press timeout belongs to swipe-to-remove (this detector gives up without
+ * consuming), and once the long press fires the row is "armed": vertical travel beyond touch slop
+ * reorders, while releasing without that travel opens the row menu. The armed gesture consumes its
+ * events, including the release, so it never also counts as a tap.
+ */
+@Suppress("LongParameterList")
+private fun Modifier.reorderOnLongPress(
     key: String,
+    onArm: () -> Unit,
     onDragStart: () -> Unit,
     onDrag: (Float) -> Unit,
     onDragEnd: () -> Unit,
     onDragCancel: () -> Unit,
-) {
+    onLongPressRelease: () -> Unit,
+): Modifier = composed {
+    val arm by rememberUpdatedState(onArm)
     val start by rememberUpdatedState(onDragStart)
     val move by rememberUpdatedState(onDrag)
     val end by rememberUpdatedState(onDragEnd)
     val cancel by rememberUpdatedState(onDragCancel)
-    Box(
-        modifier = Modifier
-            .size(TakiTheme.dimensions.touchTargetMin)
-            .clearAndSetSemantics { testTag = UP_NEXT_HANDLE_TEST_TAG }
-            .pointerInput(key) {
-                detectDragGestures(
-                    onDragStart = { start() },
-                    onDrag = { change, amount ->
-                        change.consume()
-                        move(amount.y)
-                    },
-                    onDragEnd = { end() },
-                    onDragCancel = { cancel() },
-                )
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_drag_vertical),
-            contentDescription = null,
-            tint = TakiTheme.colors.gray,
-            modifier = Modifier.size(TakiTheme.dimensions.iconMd),
+    val release by rememberUpdatedState(onLongPressRelease)
+    pointerInput(key) {
+        detectLongPressReorder(
+            onArm = { arm() },
+            onDragStart = { start() },
+            onDrag = { move(it) },
+            onFinish = { dragged -> if (dragged) end() else release() },
+            onCancel = { dragged -> if (dragged) cancel() },
         )
+    }
+}
+
+private suspend fun PointerInputScope.detectLongPressReorder(
+    onArm: () -> Unit,
+    onDragStart: () -> Unit,
+    onDrag: (Float) -> Unit,
+    onFinish: (dragged: Boolean) -> Unit,
+    onCancel: (dragged: Boolean) -> Unit,
+) {
+    val slop = viewConfiguration.touchSlop
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false)
+        val armed = awaitLongPressOrCancellation(down.id) ?: return@awaitEachGesture
+        onArm()
+        var travelled = 0f
+        var dragging = false
+        val finished = drag(armed.id) { change ->
+            val dy = change.positionChange().y
+            change.consume()
+            travelled += dy
+            if (dragging) {
+                onDrag(dy)
+            } else if (abs(travelled) > slop) {
+                dragging = true
+                onDragStart()
+                onDrag(travelled)
+            }
+        }
+        currentEvent.changes.forEach { it.consume() }
+        if (finished) onFinish(dragging) else onCancel(dragging)
     }
 }
 
