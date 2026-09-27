@@ -94,20 +94,27 @@ object TakiAtmosphere {
     const val NOW_PLAYING_SCRIM_ALPHA_BOTTOM: Float = 0.93f
 
     // Lyrics' backdrop (issue #10 phase 4K4): a reading surface, not a hero - the same small
-    // blurred-wash technique as Now Playing's, but pushed much further towards flat black. The
+    // blurred-wash technique as Now Playing's, but read through a much heavier scrim. The
     // artwork should read as a hint of mood glimpsed behind the text, never a picture competing
-    // with it, so both the artwork presence and its saturation are well below Now Playing's.
+    // with it - critically, that scrim (not the raw artwork alpha) is what has to carry the
+    // restraint: an on-device check found that fading the raw wash alone (e.g. ~0.12) while
+    // *also* stacking a near-opaque scrim (~0.90+) on top crushes the net contribution to under
+    // 1-2% - imperceptible for anything but the brightest covers, i.e. no atmosphere at all.
+    // [LYRICS_ARTWORK_ALPHA] is therefore close to Now Playing's own wash; [LYRICS_SCRIM_ALPHA_TOP]
+    // does the actual work of making the result read as "a reading surface", not the wash alpha.
 
-    /** How much of the (blurred) artwork is present before the scrim - deliberately faint
-     *  (~10%), unlike [NOW_PLAYING_ARTWORK_ALPHA]'s hero-level wash. */
-    const val LYRICS_ARTWORK_ALPHA: Float = 0.12f
+    /** How much of the (blurred) artwork is present before the scrim - similar to
+     *  [NOW_PLAYING_ARTWORK_ALPHA] itself; see the note above on why the scrim, not this, is
+     *  what keeps the net result restrained. */
+    const val LYRICS_ARTWORK_ALPHA: Float = 0.36f
 
     /** The wash is desaturated, not lifted like [FEATURE_SATURATION] - lyrics stays calm. */
-    const val LYRICS_SATURATION: Float = 0.85f
+    const val LYRICS_SATURATION: Float = 0.75f
 
-    /** Scrim at the top of the screen (behind the header). */
-    const val LYRICS_SCRIM_ALPHA_TOP: Float = 0.90f
+    /** Scrim at the top of the screen (behind the header) - well past [NOW_PLAYING_SCRIM_ALPHA_TOP],
+     *  so the net wash reads as a hint, not a hero backdrop. */
+    const val LYRICS_SCRIM_ALPHA_TOP: Float = 0.80f
 
     /** Scrim at the bottom, behind the last lines and the floating mini-player. */
-    const val LYRICS_SCRIM_ALPHA_BOTTOM: Float = 0.97f
+    const val LYRICS_SCRIM_ALPHA_BOTTOM: Float = 0.95f
 }
