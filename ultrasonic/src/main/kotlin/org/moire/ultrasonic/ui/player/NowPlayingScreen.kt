@@ -8,7 +8,6 @@
 package org.moire.ultrasonic.ui.player
 
 import android.os.SystemClock
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -97,7 +96,6 @@ import org.moire.ultrasonic.util.Util
 
 /** Lets tests find the artwork/queue panel, the seek bar and the overflow menu trigger. */
 const val NOW_PLAYING_ARTWORK_TEST_TAG = "now_playing_artwork"
-const val NOW_PLAYING_QUEUE_PANEL_TEST_TAG = "now_playing_queue_panel"
 const val NOW_PLAYING_SEEK_TEST_TAG = "now_playing_seek"
 
 /** The legacy `PlayerFragment.PERCENTAGE_OF_SCREEN_FOR_SWIPE`: both the fling distance and
@@ -148,13 +146,10 @@ fun resolvePlayerFlingGesture(
  *
  * Phase 4J2 turned the screen into one continuous artwork-first composition instead of
  * "artwork + opaque control panel": a subtle top bar, a dominant hero artwork (or the legacy
- * embedded queue view, toggled by [showQueue]), and metadata/seek/transport sitting directly on
+ * (Up Next is a separate surface the host opens), and metadata/seek/transport sitting directly on
  * the full-bleed artwork-derived atmosphere - no card, no boxed groups. Every command and test
  * tag from phase 4J is unchanged; this is a visual pass only.
  *
- * [queueContent] hosts the legacy `current_playlist.xml` queue (drag-reorder, swipe-to-delete,
- * tap-to-play) unchanged, via an `AndroidView` the Fragment builds - deliberately not
- * reimplemented in Compose (issue #10 phase 4J scope: parity first, no new queue UI).
  */
 @Suppress("LongParameterList")
 @OptIn(ExperimentalFoundationApi::class)
@@ -163,9 +158,7 @@ fun NowPlayingScreen(
     state: PlayerUiState,
     progress: PlaybackProgress,
     sleepTimerState: SleepTimerState,
-    showQueue: Boolean,
     actions: NowPlayingActions,
-    queueContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TakiScaffold(modifier = modifier) {
@@ -173,30 +166,12 @@ fun NowPlayingScreen(
         Column(Modifier.fillMaxSize()) {
             NowPlayingTopBar(state = state, actions = actions)
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                Crossfade(targetState = showQueue, label = "now_playing_panel") { queueShown ->
-                    if (queueShown) {
-                        // The full queue is a dense scrollable list (legacy view, unchanged), so it sits
-                        // on a quiet rounded surface rather than floating on the atmosphere.
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .padding(start = TakiTheme.spacing.lg, end = TakiTheme.spacing.lg, bottom = TakiTheme.spacing.sm)
-                                .clip(TakiTheme.shapes.lg)
-                                .background(TakiTheme.colors.surfaceLowFloating)
-                                .testTag(NOW_PLAYING_QUEUE_PANEL_TEST_TAG),
-                        ) {
-                            queueContent()
-                        }
-                    } else {
-                        NowPlayingHeroArtwork(state = state, actions = actions)
-                    }
-                }
+                NowPlayingHeroArtwork(state = state, actions = actions)
             }
             NowPlayingPlaybackSurface(
                 state = state,
                 progress = progress,
                 sleepTimerState = sleepTimerState,
-                showQueue = showQueue,
                 actions = actions,
             )
         }
@@ -402,7 +377,6 @@ private fun NowPlayingPlaybackSurface(
     state: PlayerUiState,
     progress: PlaybackProgress,
     sleepTimerState: SleepTimerState,
-    showQueue: Boolean,
     actions: NowPlayingActions,
 ) {
     Column(
@@ -420,7 +394,6 @@ private fun NowPlayingPlaybackSurface(
         NowPlayingUtilityRow(
             sleepTimerState = sleepTimerState,
             sleepTimerDescription = sleepTimerContentDescription(sleepTimerState),
-            showQueue = showQueue,
             actions = actions,
         )
     }

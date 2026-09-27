@@ -51,8 +51,8 @@ data class NowPlayingActions(
     val onArtistClick: () -> Unit,
     val onSavePlaylist: () -> Unit,
     val onLyrics: () -> Unit,
-    /** Toggles the artwork/queue panel - the legacy `ViewFlipper` flip. */
-    val onToggleQueue: () -> Unit,
+    /** Opens the Up Next surface (the queue), issue #10 phase 4K1. */
+    val onOpenUpNext: () -> Unit,
     val onSleepTimer: () -> Unit,
     val onOverflowItem: (NowPlayingOverflowItem) -> Unit,
     /** A point read of whether the equalizer is currently available on this device
@@ -84,7 +84,7 @@ data class NowPlayingActions(
             onArtistClick = {},
             onSavePlaylist = {},
             onLyrics = {},
-            onToggleQueue = {},
+            onOpenUpNext = {},
             onSleepTimer = {},
             onOverflowItem = {},
             equalizerAvailable = { false },

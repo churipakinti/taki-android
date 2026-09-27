@@ -7,7 +7,6 @@
 
 package org.moire.ultrasonic.ui.player
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -94,7 +93,7 @@ class NowPlayingScreenComposeTest {
             onArtistClick = { events += "artist" },
             onSavePlaylist = { events += "savePlaylist" },
             onLyrics = { events += "lyrics" },
-            onToggleQueue = { events += "toggleQueue" },
+            onOpenUpNext = { events += "openUpNext" },
             onSleepTimer = { events += "sleepTimer" },
             onOverflowItem = { events += "overflow:$it" },
             equalizerAvailable = { true },
@@ -111,7 +110,6 @@ class NowPlayingScreenComposeTest {
         recorder: Recorder = Recorder(),
         progress: PlaybackProgress = PlaybackProgress(100_000L, 500_000L, 40),
         sleepTimerState: SleepTimerState = SleepTimerState.Off,
-        showQueue: Boolean = false,
     ): Recorder {
         compose.setContent {
             TakiTheme {
@@ -119,9 +117,7 @@ class NowPlayingScreenComposeTest {
                     state = state,
                     progress = progress,
                     sleepTimerState = sleepTimerState,
-                    showQueue = showQueue,
                     actions = recorder.actions(),
-                    queueContent = { Text("QUEUE_CONTENT") },
                 )
             }
         }
@@ -343,25 +339,10 @@ class NowPlayingScreenComposeTest {
     }
 
     @Test
-    fun `the queue button toggles the panel and its own selected state`() {
-        val recorder = setContent(playing, showQueue = false)
+    fun `the Up Next utility item opens Up Next`() {
+        val recorder = setContent(playing)
         compose.onNodeWithContentDescription("Queue").performClick()
-        assertEquals(listOf("toggleQueue"), recorder.events)
-    }
-
-    @Test
-    fun `showQueue true renders the queue content slot instead of the artwork`() {
-        setContent(playing, showQueue = true)
-        compose.onNodeWithTag(NOW_PLAYING_QUEUE_PANEL_TEST_TAG).assertIsDisplayed()
-        compose.onNodeWithText("QUEUE_CONTENT").assertIsDisplayed()
-        compose.onNodeWithTag(NOW_PLAYING_ARTWORK_TEST_TAG).assertDoesNotExist()
-    }
-
-    @Test
-    fun `showQueue false renders the artwork instead of the queue content slot`() {
-        setContent(playing, showQueue = false)
-        compose.onNodeWithTag(NOW_PLAYING_ARTWORK_TEST_TAG).assertIsDisplayed()
-        compose.onNodeWithText("QUEUE_CONTENT").assertDoesNotExist()
+        assertEquals(listOf("openUpNext"), recorder.events)
     }
 
     @Test
@@ -417,12 +398,10 @@ class NowPlayingScreenComposeTest {
                     state = playing,
                     progress = PlaybackProgress(),
                     sleepTimerState = SleepTimerState.Off,
-                    showQueue = false,
                     actions = NowPlayingActions.Noop.copy(
                         equalizerAvailable = { false },
                         keepScreenOnActive = { true },
                     ),
-                    queueContent = {},
                 )
             }
         }
@@ -479,9 +458,7 @@ class NowPlayingScreenComposeTest {
                     state = state,
                     progress = PlaybackProgress(),
                     sleepTimerState = SleepTimerState.Off,
-                    showQueue = false,
                     actions = NowPlayingActions.Noop,
-                    queueContent = {},
                 )
             }
         }
@@ -514,16 +491,9 @@ class NowPlayingScreenComposeTest {
 
     @Test
     fun `utility items are unselected by default`() {
-        setContent(playing, showQueue = false, sleepTimerState = SleepTimerState.Off)
+        setContent(playing, sleepTimerState = SleepTimerState.Off)
         compose.onNodeWithContentDescription("Queue").assertIsNotSelected()
         compose.onNodeWithContentDescription("Sleep timer").assertIsNotSelected()
-    }
-
-    @Test
-    fun `the Up Next utility item toggles the queue and reflects the shown state`() {
-        val recorder = setContent(playing, showQueue = true)
-        compose.onNodeWithContentDescription("Queue").assertIsSelected().performClick()
-        assertEquals(listOf("toggleQueue"), recorder.events)
     }
 
     @Test

@@ -82,9 +82,7 @@ class NowPlayingScreenScreenshotTest {
             state = state,
             progress = progress,
             sleepTimerState = SleepTimerState.Off,
-            showQueue = false,
             actions = NowPlayingActions.Noop,
-            queueContent = {},
         )
     }
 

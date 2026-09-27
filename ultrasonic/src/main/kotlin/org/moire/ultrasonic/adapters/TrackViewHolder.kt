@@ -59,7 +59,6 @@ class TrackViewHolder(val view: View) :
     var entry: Track? = null
         private set
     private var songLayout: LinearLayout = view.findViewById(R.id.song_layout)
-    private val imageLoaderProvider: ImageLoaderProvider by inject()
 
     var check: CheckedTextView = view.findViewById(R.id.song_check)
     var drag: ImageView = view.findViewById(R.id.song_drag)
@@ -70,7 +69,6 @@ class TrackViewHolder(val view: View) :
     private var track: TextView = view.findViewById(R.id.song_track)
     private var title: TextView = view.findViewById(R.id.song_title)
     private val defaultTitleColors: ColorStateList = title.textColors
-    private val albumArt: ImageView? = view.findViewById(R.id.song_album_art)
     private var artist: TextView = view.findViewById(R.id.song_artist)
     private var duration: TextView = view.findViewById(R.id.song_duration)
     private var statusImage: ImageView = view.findViewById(R.id.song_status_image)
@@ -87,7 +85,6 @@ class TrackViewHolder(val view: View) :
     // already resolves this asynchronously for the row's own status icon.
     val downloadState: DownloadState get() = cachedStatus
     private var isPlayingCached = false
-    private var usesQueueStyle = false
 
     private var rxBusSubscription: CompositeDisposable? = null
 
@@ -99,12 +96,10 @@ class TrackViewHolder(val view: View) :
         isSelected: Boolean = false,
         showArtist: Boolean = true,
         showRating: Boolean = true,
-        queueStyle: Boolean = false,
         trackNumberText: String? = null,
         showRowActions: Boolean = false
     ) {
         entry = song
-        usesQueueStyle = queueStyle
 
         // Reset the recycled row's download-status indicators synchronously. The real status
         // is looked up async below (RxBus round-trip through DownloadService), so without this
@@ -117,20 +112,13 @@ class TrackViewHolder(val view: View) :
         statusImage.isGone = true
         progressIndicator.isGone = true
 
-        albumArt?.let { cover ->
-            imageLoaderProvider.executeOn {
-                it.loadImage(cover, song, false, 0, R.drawable.unknown_album)
-            }
-        }
-
         menu.isVisible = showRowActions
 
         // Create new Disposable for the new Subscriptions
         rxBusSubscription = CompositeDisposable()
         rxBusSubscription!! += RxBus.playerStateObservable.subscribe {
             val sameTrack = it.track?.id == song.id
-            val sameQueueOccurrence = !usesQueueStyle || it.index == bindingAdapterPosition
-            setPlayIcon(sameTrack && sameQueueOccurrence)
+            setPlayIcon(sameTrack)
         }
 
         rxBusSubscription!! += RxBus.trackDownloadStateObservable.subscribe {
@@ -209,7 +197,6 @@ class TrackViewHolder(val view: View) :
 
     @Suppress("MagicNumber")
     private fun setPlayIcon(isPlaying: Boolean) {
-        if (usesQueueStyle) title.isSelected = isPlaying
         if (isPlaying && !isPlayingCached) {
             isPlayingCached = true
             title.setCompoundDrawablesWithIntrinsicBounds(

@@ -24,25 +24,23 @@ import org.moire.ultrasonic.ui.theme.TakiTheme
  * Lyrics and Sleep Timer, evenly spaced with no visible labels. Each is a [TakiIconButton], so it
  * keeps a 48dp target, button role and selected semantics, and its accessible name comes from the
  * content description. Up Next is the one permanent queue entry point - it toggles the existing
- * full queue view; Lyrics opens the existing lyrics screen; Sleep Timer opens the existing
+ * Up Next screen; Lyrics opens the existing lyrics screen; Sleep Timer opens the existing
  * picker. Accent only marks an active state.
  */
 @Composable
 internal fun NowPlayingUtilityRow(
     sleepTimerState: SleepTimerState,
     sleepTimerDescription: String,
-    showQueue: Boolean,
     actions: NowPlayingActions,
     modifier: Modifier = Modifier,
 ) {
     val iconSize = TakiTheme.dimensions.nowPlayingUtilityIcon
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
         TakiIconButton(
-            onClick = actions.onToggleQueue,
+            onClick = actions.onOpenUpNext,
             painter = painterResource(R.drawable.ic_np_up_next),
             contentDescription = stringResource(R.string.buttons_queue),
             iconSize = iconSize,
-            selected = showQueue,
         )
         TakiIconButton(
             onClick = actions.onLyrics,

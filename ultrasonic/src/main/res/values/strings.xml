@@ -106,7 +106,6 @@
     <string name="download.empty">Nothing is downloading</string>
     <string name="album.remove_download_description">Remove downloaded album</string>
     <string name="playlist.empty">Playlist is empty</string>
-    <string name="playlist.move">Reorder song</string>
     <string name="download.jukebox_not_authorized">Remote control is not allowed. Please enable jukebox mode in <b>Users &gt; Settings</b> on your Subsonic server.</string>
     <string name="download.jukebox_offline">Remote control is not available in offline mode.</string>
     <string name="download.lyrics_offline">Lyrics are not available in offline mode.</string>
@@ -364,6 +363,17 @@
     <string name="now_playing.like_description">Like this song</string>
     <string name="now_playing.unlike_description">Unlike this song</string>
     <string name="now_playing.favorite_failed">Setting rating failed</string>
+    <string name="up_next.title">Up Next</string>
+    <string name="up_next.now_playing">Now playing</string>
+    <string name="up_next.next">Next</string>
+    <string name="up_next.nothing">Nothing up next</string>
+    <string name="up_next.remove">Remove from queue</string>
+    <string name="up_next.move_up">Move up</string>
+    <string name="up_next.move_down">Move down</string>
+    <plurals name="up_next_remaining">
+        <item quantity="one">%d track remaining</item>
+        <item quantity="other">%d tracks remaining</item>
+    </plurals>
     <string name="common_multiple_years">Multiple Years</string>
     <string name="settings.show_confirmation_dialog">Show confirmation dialog</string>
     <string name="settings.show_confirmation_dialog_summary">Displays a confirmation dialog before deleting downloaded songs</string>

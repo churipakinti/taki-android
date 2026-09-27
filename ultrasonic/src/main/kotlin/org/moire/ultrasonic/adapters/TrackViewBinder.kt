@@ -1,9 +1,7 @@
 package org.moire.ultrasonic.adapters
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
@@ -25,7 +23,6 @@ class TrackViewBinder(
     val layout: Int = R.layout.list_item_track,
     val showArtist: (Track) -> Boolean = { true },
     val showRating: Boolean = true,
-    val queueStyle: Boolean = false,
     val trackNumberText: ((Track) -> String?)? = null,
     // Selection here means "tap toggles a checkbox instead of playing" -- off by default, only
     // entered via long-press (see onEnterSelectionMode), not an always-on mode like it used to be.
@@ -41,12 +38,9 @@ class TrackViewBinder(
 ) : ItemViewBinder<Identifiable, TrackViewHolder>(),
     KoinComponent {
 
-    var startDrag: ((TrackViewHolder) -> Unit)? = null
-
     override fun onCreateViewHolder(inflater: LayoutInflater, parent: ViewGroup): TrackViewHolder =
         TrackViewHolder(inflater.inflate(layout, parent, false))
 
-    @SuppressLint("ClickableViewAccessibility")
     @Suppress("LongMethod")
     override fun onBindViewHolder(holder: TrackViewHolder, item: Identifiable) {
         val diffAdapter = adapter as BaseAdapter<*>
@@ -64,7 +58,6 @@ class TrackViewBinder(
             isSelected = diffAdapter.isSelected(track.longId),
             showArtist = showArtist(track),
             showRating = showRating,
-            queueStyle = queueStyle,
             trackNumberText = trackNumberText?.invoke(track),
             showRowActions = checkable && !selecting && onContextMenuClick != null
         )
@@ -104,13 +97,6 @@ class TrackViewBinder(
             popup.setOnMenuItemClickListener { menuItem ->
                 onContextMenuClick.invoke(menuItem, track)
             }
-        }
-
-        holder.drag.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                startDrag?.invoke(holder)
-            }
-            false
         }
 
         // Notify the adapter of selection changes

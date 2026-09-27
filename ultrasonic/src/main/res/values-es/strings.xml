@@ -45,7 +45,6 @@
     <string name="album.go_to_artist">Ir al artista</string>
     <string name="library.liked_albums">Álbumes que me gustan</string>
     <string name="playlist.empty">La lista de reproducción está vacía</string>
-    <string name="playlist.move">Reordenar canción</string>
     <string name="download.jukebox_not_authorized">El control remoto no está activado. Activa el modo gramola (jukebox) en <b>Usuarios &gt; Configuración</b> en tu servidor Subsonic.</string>
     <string name="download.jukebox_offline">Control remoto no disponible en modo sin conexión.</string>
     <string name="download.jukebox_server_too_old">No se admite el control remoto. Por favor actualiza tu servidor Subsonic.</string>
