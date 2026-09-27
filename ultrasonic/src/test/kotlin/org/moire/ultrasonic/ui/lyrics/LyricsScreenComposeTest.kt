@@ -39,9 +39,17 @@ class LyricsScreenComposeTest {
         state: LyricsUiState,
         positionMs: () -> Long = { 0L },
         actions: LyricsActions = noopActions(),
+        artworkModel: Any? = null,
     ) {
         compose.setContent {
-            TakiTheme { LyricsScreen(state = state, positionMs = positionMs, actions = actions) }
+            TakiTheme {
+                LyricsScreen(
+                    state = state,
+                    positionMs = positionMs,
+                    actions = actions,
+                    artworkModel = artworkModel,
+                )
+            }
         }
     }
 
@@ -78,7 +86,7 @@ class LyricsScreenComposeTest {
     @Test
     fun `no lyrics from the server shows the empty state`() {
         setContent(LyricsUiState(content = LyricsContent.Empty))
-        compose.onNodeWithText("No lyrics found").assertIsDisplayed()
+        compose.onNodeWithText("No lyrics available").assertIsDisplayed()
     }
 
     @Test
@@ -136,5 +144,16 @@ class LyricsScreenComposeTest {
         setContent(LyricsUiState(content = LyricsContent.Synced(lines)))
 
         compose.onNodeWithTag(LYRICS_RESUME_TEST_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `the atmosphere backdrop does not affect lyrics rendering when an artwork model is supplied`() {
+        setContent(
+            LyricsUiState(title = "Bohemian Rhapsody", artist = "Queen", content = LyricsContent.Plain(listOf("A line"))),
+            artworkModel = "fake-cover-key",
+        )
+
+        compose.onNodeWithText("Bohemian Rhapsody").assertIsDisplayed()
+        compose.onNodeWithText("A line").assertIsDisplayed()
     }
 }

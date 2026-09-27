@@ -8,6 +8,7 @@
 package org.moire.ultrasonic.ui.lyrics
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -49,15 +56,21 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import kotlinx.coroutines.delay
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.EmptyState
 import org.moire.ultrasonic.ui.components.TakiScaffold
 import org.moire.ultrasonic.ui.components.TakiScreenHeader
+import org.moire.ultrasonic.ui.theme.TakiAtmosphere
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 const val LYRICS_LIST_TEST_TAG = "lyrics_list"
@@ -67,21 +80,24 @@ const val LYRICS_RESUME_TEST_TAG = "lyrics_resume"
 private const val POSITION_POLL_MS = 250L
 private const val READING_ZONE_FRACTION = 0.3f
 private const val TAIL_FRACTION = 0.5f
-private const val PAST_ALPHA = 0.5f
-private const val FAR_ALPHA = 0.55f
-private const val NEAR_ALPHA = 0.8f
-private const val PLAIN_FONT_SP = 18 // taki-raw-ok: lyrics body reading size
-private const val PLAIN_LINE_SP = 28 // taki-raw-ok: lyrics body reading size
+private const val SYNCED_PAST_ALPHA = 0.75f
+private const val SYNCED_FUTURE_ALPHA = 0.5f
+private const val SYNCED_ACTIVE_WASH_ALPHA = 0.10f
+private const val ACCENT_RULE_ALPHA = 0.4f
+private const val PLAIN_FONT_SP = 19 // taki-raw-ok: lyrics body reading size
+private const val PLAIN_LINE_SP = 32 // taki-raw-ok: lyrics body reading size
 private const val SYNCED_FONT_SP = 24 // taki-raw-ok: lyrics body reading size
 private const val SYNCED_LINE_SP = 34 // taki-raw-ok: lyrics body reading size
 
 /**
- * Lyrics (issue #10 phase 4K3): a calm reading surface. A minimal Taki header, the track's
- * title/artist, then the lyrics - [LyricsContent.Plain] as generously spaced static text,
- * [LyricsContent.Synced] with the current line emphasised and followed as playback moves. It is a
- * pure projection of [state]; the only thing it reads outside it is [positionMs], polled at a
- * relaxed cadence and only while synced lyrics are shown, so playback ticks never recompose the
- * whole list - only the active index changes, once per line.
+ * Lyrics (issue #10 phase 4K3, given the Taki atmosphere in phase 4K4): a calm reading surface.
+ * A minimal Taki header, the track's title/artist, then the lyrics - [LyricsContent.Plain] as
+ * generously spaced static text, [LyricsContent.Synced] with the current line emphasised and
+ * followed as playback moves. It is a pure projection of [state]; the only things it reads
+ * outside it are [positionMs] (polled at a relaxed cadence and only while synced lyrics are
+ * shown, so playback ticks never recompose the whole list - only the active index changes, once
+ * per line) and [artworkModel] (the current track's cover, for [LyricsAtmosphere] only - never
+ * refetched or recomposed on a tick, only when the artwork itself changes).
  *
  * Unlike the legacy screen, there is no static synced/unsynced badge: the emphasised, following
  * active line already tells synced and plain lyrics apart, so the badge would be redundant chrome.
@@ -92,8 +108,11 @@ fun LyricsScreen(
     positionMs: () -> Long,
     actions: LyricsActions,
     modifier: Modifier = Modifier,
+    artworkModel: Any? = null,
+    bottomContentInset: Dp = TakiTheme.dimensions.contentInsetFloatingChrome,
 ) {
     TakiScaffold(modifier = modifier) {
+        LyricsAtmosphere(model = artworkModel)
         Column(Modifier.fillMaxSize()) {
             TakiScreenHeader(onBack = actions.onBack, title = stringResource(R.string.download_menu_lyrics))
             TrackIdentity(state)
@@ -111,27 +130,80 @@ fun LyricsScreen(
                     onAction = actions.onRetry,
                     modifier = Modifier.fillMaxSize(),
                 )
-                is LyricsContent.Plain -> PlainBody(state.trackId, content)
-                is LyricsContent.Synced -> SyncedBody(state.trackId, content, positionMs, actions.onSeek)
+                is LyricsContent.Plain -> PlainBody(state.trackId, content, bottomContentInset)
+                is LyricsContent.Synced ->
+                    SyncedBody(state.trackId, content, positionMs, actions.onSeek, bottomContentInset)
             }
         }
     }
 }
 
+/**
+ * Lyrics' backdrop (issue #10 phase 4K4): the same small-blurred-wash technique as
+ * [org.moire.ultrasonic.ui.player.NowPlayingScreen]'s atmosphere, but pushed far more towards
+ * flat black - lyrics is a reading surface, so the artwork is a hint of mood glimpsed behind the
+ * text, not a picture. Recomposes only when [model] (the artwork request) changes, never on a
+ * position tick. A flat black canvas (from [TakiScaffold]) with no [model].
+ */
+@Composable
+private fun LyricsAtmosphere(model: Any?) {
+    if (model == null) return
+    val colors = TakiTheme.colors
+    val desaturate = remember {
+        ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(TakiAtmosphere.LYRICS_SATURATION) })
+    }
+    AsyncImage(
+        model = ImageRequest.Builder(LocalPlatformContext.current)
+            .data(model)
+            .size(TakiAtmosphere.ATMOSPHERE_SOURCE_PX)
+            .crossfade(false)
+            .build(),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        colorFilter = desaturate,
+        modifier = Modifier
+            .fillMaxSize()
+            .blur(TakiAtmosphere.featureBlurRadius)
+            .alpha(TakiAtmosphere.LYRICS_ARTWORK_ALPHA),
+    )
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0f to colors.black.copy(alpha = TakiAtmosphere.LYRICS_SCRIM_ALPHA_TOP),
+                    1f to colors.black.copy(alpha = TakiAtmosphere.LYRICS_SCRIM_ALPHA_BOTTOM),
+                ),
+            ),
+    )
+}
+
+/**
+ * Title, artist and a small accent rule (issue #10 phase 4K4) - compact on its own, but with
+ * generous room below before the first lyric ([TakiTheme.spacing.xl]), so it reads as a
+ * distinct identity block rather than crowding the reading surface underneath.
+ */
 @Composable
 private fun TrackIdentity(state: LyricsUiState) {
     if (state.title.isEmpty()) return
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = TakiTheme.spacing.lg)
-            .padding(bottom = TakiTheme.spacing.md)
+            .padding(horizontal = TakiTheme.spacing.xl)
+            .padding(bottom = TakiTheme.spacing.xl)
             .semantics(mergeDescendants = true) {},
     ) {
         Text(text = state.title, style = TakiTheme.type.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (!state.artist.isNullOrEmpty()) {
             Text(text = state.artist, style = TakiTheme.type.caption, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+        Spacer(Modifier.height(TakiTheme.spacing.sm))
+        Box(
+            Modifier
+                .width(TakiTheme.spacing.xxl)
+                .height(TakiTheme.dimensions.borderThin)
+                .background(TakiTheme.colors.accent.copy(alpha = ACCENT_RULE_ALPHA)),
+        )
     }
 }
 
@@ -156,20 +228,29 @@ private fun LoadingBody() {
     }
 }
 
-/** Unsynced lyrics: static, source line breaks preserved, no active line, no playback coupling. */
+/**
+ * Unsynced lyrics: static, source line breaks preserved, no active line, no playback coupling.
+ * [bottomContentInset] (issue #10 phase 4K4) reserves room for the floating mini-player so the
+ * last line can scroll clear of it, exactly like every other detail screen's scrollable body.
+ */
 @Composable
-private fun PlainBody(trackId: String?, content: LyricsContent.Plain) {
+private fun PlainBody(trackId: String?, content: LyricsContent.Plain, bottomContentInset: Dp) {
     val listState = rememberLazyListState()
     // A new track starts at the top.
     LaunchedEffect(trackId) { listState.scrollToItem(0) }
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize().testTag(LYRICS_LIST_TEST_TAG),
-        contentPadding = PaddingValues(horizontal = TakiTheme.spacing.lg, vertical = TakiTheme.spacing.md),
+        contentPadding = PaddingValues(
+            start = TakiTheme.spacing.xl,
+            end = TakiTheme.spacing.xl,
+            top = TakiTheme.spacing.sm,
+            bottom = bottomContentInset,
+        ),
     ) {
         itemsIndexed(content.lines) { _, line ->
             if (line.isBlank()) {
-                Spacer(Modifier.height(TakiTheme.spacing.lg))
+                Spacer(Modifier.height(TakiTheme.spacing.xl))
             } else {
                 Text(
                     text = line,
@@ -177,7 +258,6 @@ private fun PlainBody(trackId: String?, content: LyricsContent.Plain) {
                 )
             }
         }
-        item { Spacer(Modifier.height(TakiTheme.spacing.xxl)) }
     }
 }
 
@@ -193,6 +273,7 @@ private fun SyncedBody(
     content: LyricsContent.Synced,
     positionMs: () -> Long,
     onSeek: (Long) -> Unit,
+    bottomContentInset: Dp,
 ) {
     val lines = content.lines
     val listState = rememberLazyListState()
@@ -222,7 +303,7 @@ private fun SyncedBody(
     }
 
     Box(Modifier.fillMaxSize()) {
-        SyncedLines(lines, active, listState) { index, line ->
+        SyncedLines(lines, active, listState, bottomContentInset) { index, line ->
             onSeek(line.startMs)
             active = index
             following = true
@@ -260,13 +341,19 @@ private fun BoxScope.SyncedLines(
     lines: List<LyricsLineUi>,
     active: Int,
     listState: LazyListState,
+    bottomContentInset: Dp,
     onLineClick: (index: Int, line: LyricsLineUi) -> Unit,
 ) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize().testTag(LYRICS_LIST_TEST_TAG),
-        contentPadding = PaddingValues(horizontal = TakiTheme.spacing.lg, vertical = TakiTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(TakiTheme.spacing.md),
+        contentPadding = PaddingValues(
+            start = TakiTheme.spacing.xl,
+            end = TakiTheme.spacing.xl,
+            top = TakiTheme.spacing.sm,
+            bottom = bottomContentInset,
+        ),
+        verticalArrangement = Arrangement.spacedBy(TakiTheme.spacing.lg),
     ) {
         itemsIndexed(lines, key = { index, line -> "$index:${line.startMs}" }) { index, line ->
             SyncedLine(
@@ -301,9 +388,11 @@ private suspend fun LazyListState.followLine(index: Int) {
 }
 
 /**
- * One synced line. Emphasis follows its distance from the active line: the active line is
- * semibold ivory, the lines around it recede in steps. Only lines whose distance changed
- * recompose their style.
+ * One synced line (issue #10 phase 4K4): the active line is ivory, semibold, on a faint accent
+ * wash - the one deliberately sparing use of the accent colour on this screen, never the
+ * reading colour itself. Every other line is muted gray; already-sung lines read a little more
+ * clearly than the ones still to come, so the eye finds its way forward at a glance. Only lines
+ * whose distance changed recompose their style.
  */
 @Composable
 private fun SyncedLine(line: LyricsLineUi, distance: Int, onClick: () -> Unit) {
@@ -312,10 +401,9 @@ private fun SyncedLine(line: LyricsLineUi, distance: Int, onClick: () -> Unit) {
     val seekLabel = stringResource(R.string.lyrics_seek_to_line)
     val base = TakiTheme.type.body.copy(fontSize = SYNCED_FONT_SP.sp, lineHeight = SYNCED_LINE_SP.sp)
     val style = when {
-        isActive -> base.copy(fontWeight = FontWeight.SemiBold)
-        distance in -1..1 -> base.copy(color = base.color.copy(alpha = NEAR_ALPHA))
-        distance < 0 -> base.copy(color = base.color.copy(alpha = PAST_ALPHA))
-        else -> base.copy(color = base.color.copy(alpha = FAR_ALPHA))
+        isActive -> base.copy(color = TakiTheme.colors.ivory, fontWeight = FontWeight.SemiBold)
+        distance < 0 -> base.copy(color = TakiTheme.colors.gray.copy(alpha = SYNCED_PAST_ALPHA))
+        else -> base.copy(color = TakiTheme.colors.gray.copy(alpha = SYNCED_FUTURE_ALPHA))
     }
     Text(
         text = line.text.ifBlank { " " },
@@ -323,6 +411,17 @@ private fun SyncedLine(line: LyricsLineUi, distance: Int, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .let { if (isActive) it.testTag(LYRICS_ACTIVE_LINE_TEST_TAG) else it }
+            .then(
+                if (isActive) {
+                    Modifier.background(
+                        TakiTheme.colors.accent.copy(alpha = SYNCED_ACTIVE_WASH_ALPHA),
+                        TakiTheme.shapes.xs,
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .padding(vertical = TakiTheme.spacing.xxs)
             .clickable(onClickLabel = seekLabel, role = Role.Button, onClick = onClick)
             .semantics { if (isActive) stateDescription = currentLine },
     )

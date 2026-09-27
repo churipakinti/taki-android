@@ -92,4 +92,22 @@ object TakiAtmosphere {
 
     /** Scrim at the bottom, behind the metadata and transport controls. */
     const val NOW_PLAYING_SCRIM_ALPHA_BOTTOM: Float = 0.93f
+
+    // Lyrics' backdrop (issue #10 phase 4K4): a reading surface, not a hero - the same small
+    // blurred-wash technique as Now Playing's, but pushed much further towards flat black. The
+    // artwork should read as a hint of mood glimpsed behind the text, never a picture competing
+    // with it, so both the artwork presence and its saturation are well below Now Playing's.
+
+    /** How much of the (blurred) artwork is present before the scrim - deliberately faint
+     *  (~10%), unlike [NOW_PLAYING_ARTWORK_ALPHA]'s hero-level wash. */
+    const val LYRICS_ARTWORK_ALPHA: Float = 0.12f
+
+    /** The wash is desaturated, not lifted like [FEATURE_SATURATION] - lyrics stays calm. */
+    const val LYRICS_SATURATION: Float = 0.85f
+
+    /** Scrim at the top of the screen (behind the header). */
+    const val LYRICS_SCRIM_ALPHA_TOP: Float = 0.90f
+
+    /** Scrim at the bottom, behind the last lines and the floating mini-player. */
+    const val LYRICS_SCRIM_ALPHA_BOTTOM: Float = 0.97f
 }

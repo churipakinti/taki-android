@@ -159,7 +159,7 @@
     <string name="jukebox.is_default">Jukebox By Default</string>
     <string name="jukebox.summary_is_default">Plays music through the server\'s own speakers instead of streaming it to this device.</string>
     <string name="jukebox.unsupported">This server doesn\'t support jukebox mode.</string>
-    <string name="lyrics.nomatch">No lyrics found</string>
+    <string name="lyrics.nomatch">No lyrics available</string>
     <string name="lyrics.loading">Loading lyrics</string>
     <string name="lyrics.error">Couldn\'t load lyrics</string>
     <string name="lyrics.retry">Retry</string>
