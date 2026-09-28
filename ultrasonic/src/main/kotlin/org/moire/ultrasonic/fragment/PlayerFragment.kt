@@ -7,14 +7,12 @@
 
 package org.moire.ultrasonic.fragment
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.EditText
 import androidx.compose.runtime.Composable
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
@@ -66,6 +64,8 @@ import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
 import org.moire.ultrasonic.ui.player.NowPlayingActions
 import org.moire.ultrasonic.ui.player.NowPlayingOverflowItem
 import org.moire.ultrasonic.ui.player.NowPlayingScreen
+import org.moire.ultrasonic.ui.player.SavePlaylistActions
+import org.moire.ultrasonic.ui.player.SavePlaylistSheet
 import org.moire.ultrasonic.ui.player.SleepTimerActions
 import org.moire.ultrasonic.ui.player.SleepTimerSheet
 import org.moire.ultrasonic.ui.upnext.QueueEntry
@@ -81,7 +81,6 @@ import org.moire.ultrasonic.ui.playback.PlayerUiState
 import org.moire.ultrasonic.ui.playback.RepeatMode
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.CommunicationError
-import org.moire.ultrasonic.util.ConfirmationDialog
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util.applyTheme
 import org.moire.ultrasonic.util.Util.toast
@@ -138,6 +137,14 @@ class PlayerFragment :
      *  navigation destination (issue #10 phase 4K6). */
     private val showSleepTimer = mutableStateOf(false)
 
+    /** Whether the Save Playlist sheet is open (issue #10 phase 4M3), replacing the legacy
+     *  `AlertDialog`. [savePlaylistName] is host-owned, matching every other migrated screen's
+     *  "Compose reads, host owns the value" contract - seeded from
+     *  `MediaPlayerManager.suggestedPlaylistName` or today's date on open, exactly like the
+     *  legacy dialog's `EditText.setText`. */
+    private val showSavePlaylist = mutableStateOf(false)
+    private val savePlaylistName = mutableStateOf("")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         applyTheme(this.context)
         super.onCreate(savedInstanceState)
@@ -193,6 +200,11 @@ class PlayerFragment :
                             state = sleepTimerState,
                             hasCurrentTrack = displayState.hasCurrentTrack,
                             actions = sleepTimerActions(),
+                        )
+                        SavePlaylistSheet(
+                            visible = showSavePlaylist.value,
+                            name = savePlaylistName.value,
+                            actions = savePlaylistActions(),
                         )
                     }
                 }
@@ -408,32 +420,20 @@ class PlayerFragment :
     }
 
     private fun offerSavePlaylist() {
-        if (mediaPlayerManager.playlistSize > 0) showSavePlaylistDialog()
+        if (mediaPlayerManager.playlistSize <= 0) return
+        savePlaylistName.value = mediaPlayerManager.suggestedPlaylistName
+            ?: DateFormat.format("yyyy-MM-dd", Date()).toString()
+        showSavePlaylist.value = true
     }
 
-    @SuppressLint("InflateParams")
-    private fun showSavePlaylistDialog() {
-        val layout = LayoutInflater.from(this.context).inflate(R.layout.save_playlist, null)
-        val playlistNameView = layout.findViewById<EditText>(R.id.save_playlist_name)
-
-        val builder = ConfirmationDialog.Builder(requireContext())
-        builder.setTitle(R.string.download_playlist_title)
-        builder.setMessage(R.string.download_playlist_name)
-        builder.setPositiveButton(R.string.common_save) { _, _ ->
-            savePlaylistInBackground(playlistNameView.text.toString())
-        }
-        builder.setNegativeButton(R.string.common_cancel) { dialog, _ -> dialog.cancel() }
-        builder.setView(layout)
-        builder.setCancelable(true)
-        val dialog = builder.create()
-        val playlistName = mediaPlayerManager.suggestedPlaylistName
-        if (playlistName != null) {
-            playlistNameView.setText(playlistName)
-        } else {
-            playlistNameView.setText(DateFormat.format("yyyy-MM-dd", Date()))
-        }
-        dialog.show()
-    }
+    private fun savePlaylistActions(): SavePlaylistActions = SavePlaylistActions(
+        onNameChange = { savePlaylistName.value = it },
+        onSave = {
+            showSavePlaylist.value = false
+            savePlaylistInBackground(savePlaylistName.value)
+        },
+        onDismiss = { showSavePlaylist.value = false },
+    )
 
     private fun savePlaylistInBackground(playlistName: String) {
         toast(resources.getString(R.string.download_playlist_saving, playlistName))

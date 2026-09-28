@@ -1,13 +1,14 @@
 # Taki Compose Migration — Coverage Audit (Issue #10)
 
-**Status:** updated through phase 4M2 (Create/Edit Playlist migrated to Compose). Phase 4L
-baseline: `develop` at `16ddc285` (Migrate Sleep Timer to Compose sheet); phase 4M1 baseline:
-`768a2a0f` (Finalize Compose migration coverage audit); phase 4M2 baseline: `9b6a8de6` (Migrate
-folder browsing to Compose). This supersedes the phase-4C version of this document (baseline
-`5f8bdc6a`), which is now stale — nearly every `MIGRATE_IN_#10` row it listed has since shipped
-(Artist List, Album List, all `TrackCollectionFragment` browsing modes, Playlists, Genres,
-Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer, folder browsing, Create
-Playlist).
+**Status:** updated through phase 4M3 (final playlist dialogs migrated to Compose — Save Playlist
+and the Create Playlist naming dialog). Phase 4L baseline: `develop` at `16ddc285` (Migrate Sleep
+Timer to Compose sheet); phase 4M1 baseline: `768a2a0f` (Finalize Compose migration coverage
+audit); phase 4M2 baseline: `9b6a8de6` (Migrate folder browsing to Compose); phase 4M3 baseline:
+`5bdb486b` (Migrate playlist editor to Compose). This supersedes the phase-4C version of this
+document (baseline `5f8bdc6a`), which is now stale — every `MIGRATE_IN_#10` row it listed has
+since shipped (Artist List, Album List, all `TrackCollectionFragment` browsing modes, Playlists,
+Genres, Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer, folder browsing, Create
+Playlist, Save Playlist, Create Playlist naming).
 
 Sources used: `ultrasonic/src/main/res/navigation/navigation_graph.xml` (read directly, not
 recalled), every Fragment class reachable from the graph, `NavigationActivity.kt`'s
@@ -23,19 +24,25 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 | Metric | Count |
 |---|---:|
 | Total reachable UI surfaces classified | 27 |
-| — Compose | 20 |
+| — Compose | 21 |
 | — Hybrid (Compose + View by design) | 1 |
-| — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 1 |
+| — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 0 |
 | — Legacy View/XML, intentionally out of scope | 5 |
 | Dead / unreachable, removed phase 4L | 2 (nav nodes) + 2 (dead adapter/binder classes) |
 | Dead / unreachable, removed phase 4M2 | 3 (dead adapter/layout files, Create/Edit Playlist picker) |
+| Dead / unreachable, removed phase 4M3 | 1 (`save_playlist.xml`) |
 | Dead / unreachable, product decision required | 1 (Videos mode) |
 | Unclassified | **0** |
 
-Arithmetic: 20 + 1 + 1 + 5 = 27 reachable surfaces. Videos is excluded from "reachable" because it
+Arithmetic: 21 + 1 + 0 + 5 = 27 reachable surfaces. Videos is excluded from "reachable" because it
 has zero live callers (confirmed by exhaustive grep — see §F). Phase 4M1 moved folder/non-ID3
 browsing from legacy to Compose (18→19, 3→2); phase 4M2 moved Create/Edit Playlist from legacy to
-Compose (19→20, 2→1); see §B.1/§B.3, §L, and §M below.
+Compose (19→20, 2→1); phase 4M3 moved the last matrix-listed blocker, Save Playlist, from legacy to
+Compose (20→21, 1→0) and additionally migrated the Create Playlist naming `AlertDialog` — a live
+transient dialog discovered during 4M2 that was never counted as its own matrix row (see §M's own
+note) and is not counted as one here either, to keep this arithmetic reconciling with the
+historical row-based count; it is documented as a migrated transient sub-surface in §N instead. See
+§B.1/§B.3, §L, §M, and §N below.
 
 ---
 
@@ -65,6 +72,7 @@ Compose (19→20, 2→1); see §B.1/§B.3, §L, and §M below.
 | Sleep Timer | bottom sheet launched from `playerFragment` | Fragment/dialog | baseline commit `16ddc285` |
 | Folder/non-ID3 browsing (mixed directory + track rows) | `trackCollectionFragment` (`isAlbum=false`, no `playlistId`, not a library-track-rows mode) | Fragment | phase 4M1 — reached only from Compose Artist List's "Index" row tap; every deeper directory tap routes to the already-Compose Album Detail (phase 4H1 handles further nesting) |
 | Create Playlist (track picker) | `createPlaylistFragment` | Fragment | phase 4M2 — always *creates* (no edit mode exists in the legacy screen or this port); draws no header of its own, relies on the shared Material toolbar exactly like the legacy screen did |
+| Save Playlist (transient sheet over Now Playing) | `PlayerFragment.offerSavePlaylist()` (not a nav destination) | Fragment-hosted Compose sheet | phase 4M3 — replaces the legacy `AlertDialog`; saves the current playback queue, unchanged server call |
 
 ### B.2 — Hybrid by design
 
@@ -74,15 +82,8 @@ Compose (19→20, 2→1); see §B.1/§B.3, §L, and §M below.
 
 ### B.3 — Legacy, still core browsing (`MIGRATE_IN_#10` remaining)
 
-| Surface | Destination / Mode | Current UI | Reachability | Classification |
-|---|---|---|---|---|
-| Save Playlist dialog | `PlayerFragment.showSavePlaylistDialog()` (inline `AlertDialog`, `R.layout.save_playlist`) | View | Live, reached from Now Playing's (Compose) overflow menu | `SMALL_BLOCKER_FOR_#10` — one dialog embedded in an otherwise-Compose screen |
-
-Folder/non-ID3 browsing and Create/Edit Playlist (the phase-4L version of this audit's other two
-§B.3 rows) were migrated to Compose in phases 4M1/4M2 — see §B.1. The one remaining row is
-confirmed live via direct grep of its call site (`PlayerFragment.showSavePlaylistDialog`), not
-inferred. Not migrated in this pass — building a new Compose surface is implementation work, out
-of scope for an audit-and-cleanup phase per that task's own instructions.
+**None.** Every row this section ever listed (folder/non-ID3 browsing, Create/Edit Playlist, Save
+Playlist dialog) has been migrated to Compose — see §B.1 and §N.
 
 ### B.4 — Intentionally legacy / out of scope for #10
 
@@ -417,3 +418,150 @@ hint) once the Fragment stopped inflating them. Deleted. `PLAYLIST_CREATED_RESUL
 
 **Remaining #10 blockers after this phase:** 1 (Save Playlist dialog) — down from 2.
 `READY_TO_CLOSE_#10` is still `NO`.
+
+---
+
+## N. Phase 4M3 — Final playlist dialogs migrated; #10 acceptance audit
+
+Baseline `5bdb486b`. Migrated the last two live legacy playlist dialogs to Compose.
+
+### Scope: two dialogs, one newly discovered
+
+**Save Playlist** (`PlayerFragment.showSavePlaylistDialog()`) — the matrix-listed §B.3 blocker.
+Audited fully before touching it: it saves the *entire current playback queue*
+(`mediaPlayerManager.playlist`, in queue order, unfiltered) as a new server playlist via
+`createPlaylist(id = null, ...)` — this is not the Compose track-picker flow from phase 4M2, a
+genuinely different feature that happens to share a similarly-named legacy string. No blank-name
+validation exists in the legacy dialog (it would happily submit an empty name), so none was
+invented here. The dialog closes immediately on Save, before the network call resolves — preserved
+exactly (the sheet does the same).
+
+**Create Playlist naming** (`PlaylistListFragment.showCreatePlaylistDialog()`) — discovered during
+phase 4M2's own audit, never a standalone §B.3 matrix row. Collects and validates (non-blank,
+trimmed) the name for a new playlist, then navigates to the already-Compose `createPlaylistFragment`
+picker — the two-step flow (name first, then track picker) is unchanged; this phase only replaces
+the naming dialog's implementation, not the flow shape.
+
+A third, related legacy dialog was found and *deliberately not touched*:
+`TrackCollectionFragment.showRenamePlaylistDialog()` reuses the same `R.layout.create_playlist`
+XML to rename an *existing* playlist from Playlist Detail — a different feature, at a different
+call site, not named in this task's scope. `create_playlist.xml` therefore stays (still live via
+that path); only `save_playlist.xml` (confirmed zero remaining references) was deleted.
+
+### Architecture
+
+Two new transient Compose overlays, both following the exact pattern
+[`SleepTimerSheet`](../../../ultrasonic/src/main/kotlin/org/moire/ultrasonic/ui/player/SleepTimerSheet.kt)
+established in phase 4K6 (scrim + sliding panel, composed as the last child of the host screen's
+own root `Box`, not a system dialog or a new nav destination): `SavePlaylistSheet`/
+`SavePlaylistActions` (`ui/player/`) and `CreatePlaylistNameSheet`/`CreatePlaylistNameActions`
+(`ui/playlistlist/`). Both are presentation-only — no ViewModel of their own; the host Fragment
+(`PlayerFragment`/`PlaylistListFragment`) owns the name/error `mutableStateOf` and every server/
+navigation call, unchanged from the legacy dialogs' own division of responsibility. A new shared
+`TakiTextField` (`ui/components/`) backs both sheets' input — a labelled, Taki-colored
+`OutlinedTextField` with an inline error slot, since neither existing text input
+(`TakiSearchField`, hint-only) fit a field that needs a label and a validation error.
+
+### A real ArchitectureGuardTest violation caught before it shipped
+
+`TakiTextField`'s first draft imported `MaterialTheme` directly for its text style — the project's
+own `ArchitectureGuardTest` (`no raw dp/sp literals outside ui theme` / `MaterialTheme is only
+imported inside ui theme`) failed immediately, exactly as designed. Fixed by using
+`TakiTheme.type.body` instead, matching every other Compose file in the app.
+
+### Legacy cleanup
+
+Deleted `save_playlist.xml` — confirmed by grep to have zero references (`R.layout.save_playlist`,
+`R.id.save_playlist_name`) outside its own definition once `PlayerFragment` stopped inflating it.
+`create_playlist.xml` was **not** deleted (still live via `showRenamePlaylistDialog`, out of this
+phase's scope — see above).
+
+### Tests / gates
+
+- Tests: 1126 → 1142 (+16: 6 `SavePlaylistSheetComposeTest`, 7 `CreatePlaylistNameSheetComposeTest`,
+  1 `SavePlaylistSheetScreenshotTest`, 2 `CreatePlaylistNameSheetScreenshotTest`), 0 failures
+- `assembleDebug`/`assembleRelease`/`lintDebug`: green
+- `detekt -Pqc`: 42 in `:ultrasonic` (baseline, zero new) + 1 pre-existing unrelated in
+  `:core:subsonic-api`
+- Roborazzi verify: green (3 new goldens — the populated Save Playlist sheet, the blank and
+  validation-error states of the Create Playlist naming sheet)
+
+### Pixel 7 validation — not completed this session
+
+The Pixel 7 (`2B191FDH200E36`) that every prior phase in this range validated against disconnected
+partway through this phase, before live device validation of these two new sheets could run
+(`adb devices` returned empty after repeated retries; not a code issue - the device simply dropped
+off USB). This matters concretely: phase 4M2's own live Pixel pass on this exact device caught a
+real crash (an uncaught `SocketTimeoutException` from a coroutine-scope bug) that all 16 of that
+phase's unit tests had missed. Save Playlist's flow touches the same
+`createPlaylist`/network-call shape Create Playlist's picker does, so the same *class* of bug is
+structurally possible here even though the code was written with that exact failure mode already
+front of mind and no equivalent scope-crossing rethrow exists in either new sheet (verified by
+reading, not just testing — see §N's own architecture description above: both sheets are
+presentation-only and dispatch every network call through the Fragment's own already-toasting-safe
+`launchWithToast`/`toastingExceptionHandler` paths, never through a sheet-owned coroutine). Unit
+tests, Compose interaction tests, and Roborazzi goldens all pass, but per this project's own
+demonstrated risk pattern, live validation is treated as a precondition for closing #10, not an
+optional nice-to-have - see §O's verdict.
+
+### Remaining #10 blockers after this phase
+
+**Zero** matrix-listed (§B.3) surfaces remain. The one open item is verification, not
+implementation: live Pixel validation of these two sheets.
+
+---
+
+## O. Issue #10 final acceptance audit (phase 4M3)
+
+Every criterion from issue #10's own body, re-read directly (not recalled), assessed against the
+current tree:
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Home, Library, Search migrated | ✅ | §B.1 |
+| Detail browsing (Album/Artist/Collection/Playlist Detail) migrated | ✅ | §B.1 |
+| Lists (Album/Artist/Playlists/Genres/Downloads/folder browsing) migrated | ✅ | §B.1, phases 4E–4M1 |
+| Mini-player coherent throughout | ✅ | verified every phase through 4M1's live crawl |
+| Playback/runtime contracts unchanged | ✅ | `MediaPlayerManager`/`PlaybackService` untouched this entire range (verified by diff, not assumption, each phase) |
+| Now Playing migrated after lower-risk surfaces | ✅ | phase 4K, after all browsing phases |
+| Up Next Compose | ✅ | §B.1 |
+| Lyrics Compose | ✅ | §B.1 |
+| Sleep Timer Compose | ✅ | §B.1 |
+| Folder/non-ID3 browser Compose | ✅ | phase 4M1 |
+| Create Playlist picker Compose | ✅ | phase 4M2 |
+| Playlist naming transient Compose | ✅ | phase 4M3 |
+| Save Playlist transient Compose | ✅ | phase 4M3 |
+| No remaining reachable legacy core-browsing/playback surface inside #10 scope | ✅ (implementation) / ⚠️ (verification) | §B.3 is empty; live device confirmation of the two newest surfaces is outstanding |
+
+**Intentionally legacy (allowed, verified against #10's own acceptance text, unchanged):**
+Settings, About, Server Selector, Edit Server, Equalizer — §B.4.
+
+**Hybrid Box Sets** remains intended by design (§B.2), not a gap.
+
+**Videos** remains dead/unreachable, classified `REMOVE_FROM_TAKI` (§F), not implemented (removal
+spans multiple files, out of this task's explicit scope), not a #10 blocker either way since it was
+never reachable during the migration.
+
+**Known debt, all non-blocking, reconciled:**
+
+| Item | Status | Blocker for #10? |
+|---|---|---|
+| #21 Artist Radio StrictMode | Open, unaddressed, explicitly decoupled from this migration | No |
+| #22 Album List folder-change reload | Open, unaddressed, pre-existing | No |
+| #23 Dead Artist/Album list legacy cleanup | Open, correctly untouched this entire range | No |
+| #24 Visualizer | Explicitly out of scope for #10 | No |
+| Online ID3 Album Detail missing per-row download indicator | Confirmed real (phase 4L), cosmetic | No |
+| Up Next reorder-under-shuffle | Not reproduced (phase 4L), no issue filed | No |
+| Dead TrackCollection/binder cleanup (`AlbumRowDelegate`/`TrackViewBinder`/`HeaderViewBinder`/`DiscHeaderBinder`) | Confirmed dead (phase 4M1), deliberately deferred - substantial, not small | No - #10's acceptance criteria are about reachable UI, not internal dead code |
+| Videos removal | Recommended, not implemented (scope) | No - already unreachable |
+
+### `READY_TO_CLOSE_#10 = NO`
+
+**Exact blocker:** live Pixel 7 validation of the two surfaces built in this phase (`SavePlaylistSheet`,
+`CreatePlaylistNameSheet`) has not been performed - the validation device disconnected mid-session.
+Every other #10 acceptance criterion is met in the code as written and verified by unit/Compose/
+Roborazzi tests, but this project's own track record in this exact range (a real crash phase 4M2's
+tests missed and only a live device pass caught) is the reason this audit does not treat
+test-green as sufficient by itself for the *final* phase closing out the issue. This is a narrow,
+concrete, one-session gap - not an architectural or implementation gap - and is expected to close
+as soon as a Pixel (or equivalent physical device) is available again.

@@ -19,8 +19,11 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -45,6 +48,8 @@ import org.moire.ultrasonic.model.PlaylistListViewModel
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameActions
+import org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameSheet
 import org.moire.ultrasonic.ui.playlistlist.PlaylistContextAction
 import org.moire.ultrasonic.ui.playlistlist.PlaylistListActions
 import org.moire.ultrasonic.ui.playlistlist.PlaylistListRow
@@ -84,6 +89,13 @@ class PlaylistListFragment : Fragment() {
     private val rxBusSubscription = CompositeDisposable()
     private val fallbackChromeInset = MutableStateFlow(0)
 
+    /** Whether the Create Playlist naming sheet is open (issue #10 phase 4M3), replacing the
+     *  legacy `AlertDialog`. [createPlaylistName]/[createPlaylistError] are host-owned, matching
+     *  every other migrated screen's "Compose reads, host owns the value" contract. */
+    private val showCreatePlaylistSheet = mutableStateOf(false)
+    private val createPlaylistName = mutableStateOf("")
+    private val createPlaylistError = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         rxBusSubscription += RxBus.trackDownloadStateObservable.subscribe { event ->
@@ -109,11 +121,19 @@ class PlaylistListFragment : Fragment() {
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    PlaylistListScreen(
-                        state = state,
-                        actions = playlistListActions,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        PlaylistListScreen(
+                            state = state,
+                            actions = playlistListActions,
+                            bottomContentInset = bottomInset,
+                        )
+                        CreatePlaylistNameSheet(
+                            visible = showCreatePlaylistSheet.value,
+                            name = createPlaylistName.value,
+                            errorMessage = createPlaylistError.value,
+                            actions = createPlaylistNameActions(),
+                        )
+                    }
                 }
             }
         }
@@ -217,32 +237,30 @@ class PlaylistListFragment : Fragment() {
             .show()
     }
 
-    // ---- Create (legacy showCreatePlaylistDialog, reused verbatim) ----------------------------
+    // ---- Create (issue #10 phase 4M3: Compose naming sheet, replacing the legacy AlertDialog) --
 
     private fun showCreatePlaylistDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.create_playlist, null)
-        val nameInput = dialogView.findViewById<EditText>(R.id.create_playlist_name)
-        val inputLayout = dialogView as com.google.android.material.textfield.TextInputLayout
-        val dialog = ConfirmationDialog.Builder(requireContext())
-            .setTitle(R.string.playlist_create)
-            .setView(dialogView)
-            .setPositiveButton(R.string.playlist_create_action, null)
-            .setNegativeButton(R.string.common_cancel, null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val name = nameInput.text?.toString()?.trim().orEmpty()
-                if (name.isBlank()) {
-                    inputLayout.error = getString(R.string.playlist_name_required)
-                } else {
-                    dialog.dismiss()
-                    findNavController().navigate(NavigationGraphDirections.toCreatePlaylist(name))
-                }
-            }
-        }
-        dialog.show()
+        createPlaylistName.value = ""
+        createPlaylistError.value = null
+        showCreatePlaylistSheet.value = true
     }
+
+    private fun createPlaylistNameActions(): CreatePlaylistNameActions = CreatePlaylistNameActions(
+        onNameChange = {
+            createPlaylistName.value = it
+            createPlaylistError.value = null
+        },
+        onCreate = {
+            val name = createPlaylistName.value.trim()
+            if (name.isBlank()) {
+                createPlaylistError.value = getString(R.string.playlist_name_required)
+            } else {
+                showCreatePlaylistSheet.value = false
+                findNavController().navigate(NavigationGraphDirections.toCreatePlaylist(name))
+            }
+        },
+        onDismiss = { showCreatePlaylistSheet.value = false },
+    )
 
     // ---- Info / Update info / Delete (legacy displayPlaylistInfo/updatePlaylistInfo/deletePlaylist) ----
 
