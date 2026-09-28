@@ -1,11 +1,13 @@
 # Taki Compose Migration — Coverage Audit (Issue #10)
 
-**Status:** updated through phase 4M1 (folder/non-ID3 browsing migrated to Compose). Phase 4L
+**Status:** updated through phase 4M2 (Create/Edit Playlist migrated to Compose). Phase 4L
 baseline: `develop` at `16ddc285` (Migrate Sleep Timer to Compose sheet); phase 4M1 baseline:
-`768a2a0f` (Finalize Compose migration coverage audit). This supersedes the phase-4C version of
-this document (baseline `5f8bdc6a`), which is now stale — nearly every `MIGRATE_IN_#10` row it
-listed has since shipped (Artist List, Album List, all `TrackCollectionFragment` browsing modes,
-Playlists, Genres, Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer).
+`768a2a0f` (Finalize Compose migration coverage audit); phase 4M2 baseline: `9b6a8de6` (Migrate
+folder browsing to Compose). This supersedes the phase-4C version of this document (baseline
+`5f8bdc6a`), which is now stale — nearly every `MIGRATE_IN_#10` row it listed has since shipped
+(Artist List, Album List, all `TrackCollectionFragment` browsing modes, Playlists, Genres,
+Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer, folder browsing, Create
+Playlist).
 
 Sources used: `ultrasonic/src/main/res/navigation/navigation_graph.xml` (read directly, not
 recalled), every Fragment class reachable from the graph, `NavigationActivity.kt`'s
@@ -21,17 +23,19 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 | Metric | Count |
 |---|---:|
 | Total reachable UI surfaces classified | 27 |
-| — Compose | 19 |
+| — Compose | 20 |
 | — Hybrid (Compose + View by design) | 1 |
-| — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 2 |
+| — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 1 |
 | — Legacy View/XML, intentionally out of scope | 5 |
 | Dead / unreachable, removed phase 4L | 2 (nav nodes) + 2 (dead adapter/binder classes) |
+| Dead / unreachable, removed phase 4M2 | 3 (dead adapter/layout files, Create/Edit Playlist picker) |
 | Dead / unreachable, product decision required | 1 (Videos mode) |
 | Unclassified | **0** |
 
-Arithmetic: 19 + 1 + 2 + 5 = 27 reachable surfaces. Videos is excluded from "reachable" because it
+Arithmetic: 20 + 1 + 1 + 5 = 27 reachable surfaces. Videos is excluded from "reachable" because it
 has zero live callers (confirmed by exhaustive grep — see §F). Phase 4M1 moved folder/non-ID3
-browsing from legacy to Compose (18→19, 3→2); see §B.1/§B.3 and §L below.
+browsing from legacy to Compose (18→19, 3→2); phase 4M2 moved Create/Edit Playlist from legacy to
+Compose (19→20, 2→1); see §B.1/§B.3, §L, and §M below.
 
 ---
 
@@ -60,6 +64,7 @@ browsing from legacy to Compose (18→19, 3→2); see §B.1/§B.3 and §L below.
 | Lyrics | `lyricsFragment` | Fragment | |
 | Sleep Timer | bottom sheet launched from `playerFragment` | Fragment/dialog | baseline commit `16ddc285` |
 | Folder/non-ID3 browsing (mixed directory + track rows) | `trackCollectionFragment` (`isAlbum=false`, no `playlistId`, not a library-track-rows mode) | Fragment | phase 4M1 — reached only from Compose Artist List's "Index" row tap; every deeper directory tap routes to the already-Compose Album Detail (phase 4H1 handles further nesting) |
+| Create Playlist (track picker) | `createPlaylistFragment` | Fragment | phase 4M2 — always *creates* (no edit mode exists in the legacy screen or this port); draws no header of its own, relies on the shared Material toolbar exactly like the legacy screen did |
 
 ### B.2 — Hybrid by design
 
@@ -71,14 +76,13 @@ browsing from legacy to Compose (18→19, 3→2); see §B.1/§B.3 and §L below.
 
 | Surface | Destination / Mode | Current UI | Reachability | Classification |
 |---|---|---|---|---|
-| Create/Edit Playlist | `createPlaylistFragment` | View (`RecyclerView` track editor) | Live, reached from Compose Playlists list's "create" action | `SMALL_BLOCKER_FOR_#10` — one screen, management flow not browsing |
 | Save Playlist dialog | `PlayerFragment.showSavePlaylistDialog()` (inline `AlertDialog`, `R.layout.save_playlist`) | View | Live, reached from Now Playing's (Compose) overflow menu | `SMALL_BLOCKER_FOR_#10` — one dialog embedded in an otherwise-Compose screen |
 
-Folder/non-ID3 browsing (the third §B.3 row from the phase 4L version of this audit) was migrated
-to Compose in phase 4M1 — see §B.1. Both remaining rows are confirmed live via direct grep of
-their call sites (`PlaylistListFragment`/`PlayerFragment`), not inferred. Neither was migrated in
-this pass — building new Compose surfaces is implementation work, out of scope for an
-audit-and-cleanup phase per that task's own instructions.
+Folder/non-ID3 browsing and Create/Edit Playlist (the phase-4L version of this audit's other two
+§B.3 rows) were migrated to Compose in phases 4M1/4M2 — see §B.1. The one remaining row is
+confirmed live via direct grep of its call site (`PlayerFragment.showSavePlaylistDialog`), not
+inferred. Not migrated in this pass — building a new Compose surface is implementation work, out
+of scope for an audit-and-cleanup phase per that task's own instructions.
 
 ### B.4 — Intentionally legacy / out of scope for #10
 
@@ -364,3 +368,52 @@ cleanup scope, or a new dedicated issue).
 
 **Remaining #10 blockers after this phase:** 2 (Create/Edit Playlist, Save Playlist dialog) — down
 from 3. `READY_TO_CLOSE_#10` is still `NO`.
+
+---
+
+## M. Phase 4M2 — Create/Edit Playlist migrated
+
+Baseline `9b6a8de6`. Migrated the legacy `CreatePlaylistFragment` track picker to Compose.
+
+**Audit finding that reframed the task: there is no edit mode.** The legacy screen (and this port)
+always *creates* — `getMusicService().createPlaylist(id = null, ...)` is the only call it ever
+makes. It never loads an existing playlist's membership, never updates or deletes one, and has no
+reorder. The playlist's *name* is chosen one screen earlier, in a small legacy `AlertDialog`
+(`PlaylistListFragment.showCreatePlaylistDialog()`, `R.layout.create_playlist`) that validates
+non-blank/trimmed input and then navigates here with the name fixed as a nav arg — that dialog is
+a separate, still-legacy artifact, explicitly out of this phase's scope (not `CreatePlaylistFragment`
+itself), noted here so it isn't mistaken for forgotten work.
+
+**Architecture:** a new `CreatePlaylistViewModel`/`CreatePlaylistUiState`/`CreatePlaylistActions`/
+`CreatePlaylistScreen` (`ui/createplaylist/`). The paged All Songs/By Artist/By Genre loaders (with
+their exact offset/`canLoadMore` bookkeeping) are adapted from `TrackListViewModel`'s own port of
+the same `TrackCollectionModel` methods — not shared directly, since this screen additionally needs
+per-track selection state and a free-text search mode neither Track List nor its ViewModel have.
+Selection is a `LinkedHashMap`, matching the legacy `selectedTracks` field exactly: re-selecting a
+deselected track moves it to the *end* of the order, because that order becomes the created
+playlist's own track order. Reuses `TakiSearchField`/`TakiSortMenu`/`TakiArtwork` rather than
+inventing new components; a small dedicated checkable row replaces the legacy `PlaylistTrackPickerBinder`
+(tap-to-toggle, no playback, no context menu — deliberately not `TakiLibraryTrackRow`, whose
+tap-to-play/heart/menu semantics don't fit a selection picker). Draws no Compose header — this
+destination relies on the shared Material toolbar exactly like the legacy screen did, so no new
+`NavigationActivity` chrome flag was needed (confirmed live: single header, no duplication).
+
+**A real crash found and fixed live:** the first Pixel pass crashed the app (`FATAL EXCEPTION`,
+uncaught `SocketTimeoutException`) while submitting a search. Root cause: `onSearchSubmit()`
+launched its own child coroutine inside `viewModelScope` and *rethrew* a caught exception from
+inside it, intending the Fragment's `toastingExceptionHandler`-wrapped launch to catch it — but
+that launch is a different coroutine scope entirely and can never observe it, so the rethrow had
+no handler and crashed the process. Fixed by swallowing the exception there instead (`return@launch`),
+matching every other load path in the class (`dispatchLoad`), at the cost of a failed search going
+silently empty rather than surfacing a toast — documented in the ViewModel's own kdoc as a
+deliberate, necessary correction, not a shortcut. Re-verified live after the fix: the same search
+against the same (network-flaky) test server now fails to an empty state with zero crashes.
+
+**Legacy cleanup — removed (small, directly-owned, proven dead):** `PlaylistTrackPickerBinder.kt`,
+`create_playlist_editor.xml`, and `list_item_playlist_track_picker.xml` — each confirmed by grep to
+have zero references outside their own definitions (and one now-dead `tools:listitem` design-time
+hint) once the Fragment stopped inflating them. Deleted. `PLAYLIST_CREATED_RESULT`'s contract with
+`PlaylistListFragment` (the `savedStateHandle` refresh signal) is unchanged.
+
+**Remaining #10 blockers after this phase:** 1 (Save Playlist dialog) — down from 2.
+`READY_TO_CLOSE_#10` is still `NO`.
