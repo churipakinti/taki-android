@@ -1,15 +1,18 @@
 # Taki Compose Migration — Coverage Audit (Issue #10)
 
-**Status:** updated through phase 4M4 (Rename Playlist migrated to Compose — the third and last
-reachable playlist transient dialog — plus live-validated closure of issue #10). Phase 4L baseline:
-`develop` at `16ddc285` (Migrate Sleep Timer to Compose sheet); phase 4M1 baseline: `768a2a0f`
-(Finalize Compose migration coverage audit); phase 4M2 baseline: `9b6a8de6` (Migrate folder
-browsing to Compose); phase 4M3 baseline: `5bdb486b` (Migrate playlist editor to Compose); phase
-4M4 baseline: `73920322` (Migrate final playlist dialogs to Compose). This supersedes the phase-4C
-version of this document (baseline `5f8bdc6a`), which is now stale — every `MIGRATE_IN_#10` row it
-listed has since shipped (Artist List, Album List, all `TrackCollectionFragment` browsing modes,
-Playlists, Genres, Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer, folder
-browsing, Create Playlist, Save Playlist, Create Playlist naming, Rename Playlist).
+**Status:** issue #10 is CLOSED as completed (phase 4M4, `READY_TO_CLOSE_#10 = YES` — see §P).
+Everything below §P describes **post-#10 residual UI migration** (the two remaining non-Compose
+surfaces #10 itself classified as out of scope: the intentionally-hybrid Box Sets shell and the
+intentionally-legacy About screen), not a reopening of #10. Phase 5A1 baseline: `589f24f0`
+(Migrate rename playlist dialog to Compose). Phase 4L baseline: `develop` at `16ddc285` (Migrate
+Sleep Timer to Compose sheet); phase 4M1 baseline: `768a2a0f` (Finalize Compose migration coverage
+audit); phase 4M2 baseline: `9b6a8de6` (Migrate folder browsing to Compose); phase 4M3 baseline:
+`5bdb486b` (Migrate playlist editor to Compose); phase 4M4 baseline: `73920322` (Migrate final
+playlist dialogs to Compose). This supersedes the phase-4C version of this document (baseline
+`5f8bdc6a`), which is now stale — every `MIGRATE_IN_#10` row it listed has since shipped (Artist
+List, Album List, all `TrackCollectionFragment` browsing modes, Playlists, Genres, Downloads,
+mini-player, Now Playing, Up Next, Lyrics, Sleep Timer, folder browsing, Create Playlist, Save
+Playlist, Create Playlist naming, Rename Playlist).
 
 Sources used: `ultrasonic/src/main/res/navigation/navigation_graph.xml` (read directly, not
 recalled), every Fragment class reachable from the graph, `NavigationActivity.kt`'s
@@ -21,6 +24,25 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 ---
 
 ## A. Executive summary
+
+**Current (post-phase 5A1):**
+
+| Metric | Count |
+|---|---:|
+| Total reachable UI surfaces classified | 27 |
+| — Compose | 23 |
+| — Hybrid (Compose + View by design) | 0 |
+| — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 0 |
+| — Legacy View/XML, intentionally out of scope | 4 |
+| Unclassified | **0** |
+
+Arithmetic: 23 + 0 + 0 + 4 = 27. Phase 5A1 (§Q) moved the two surfaces #10 itself left non-Compose —
+the hybrid Box Sets shell and the legacy About screen — to full Compose, 21/1/5 → 23/0/4. Remaining
+intentionally-legacy surfaces: Settings, Server Selector, Edit Server, Equalizer (§B.4). See §Q for
+the full before/after detail. Everything below this line up to §P is the historical record as of
+issue #10's closure and is preserved unedited; §Q appends the post-#10 update.
+
+**As of #10's closure (phase 4M4, historical):**
 
 | Metric | Count |
 |---|---:|
@@ -78,12 +100,14 @@ below.
 | Folder/non-ID3 browsing (mixed directory + track rows) | `trackCollectionFragment` (`isAlbum=false`, no `playlistId`, not a library-track-rows mode) | Fragment | phase 4M1 — reached only from Compose Artist List's "Index" row tap; every deeper directory tap routes to the already-Compose Album Detail (phase 4H1 handles further nesting) |
 | Create Playlist (track picker) | `createPlaylistFragment` | Fragment | phase 4M2 — always *creates* (no edit mode exists in the legacy screen or this port); draws no header of its own, relies on the shared Material toolbar exactly like the legacy screen did |
 | Save Playlist (transient sheet over Now Playing) | `PlayerFragment.offerSavePlaylist()` (not a nav destination) | Fragment-hosted Compose sheet | phase 4M3 — replaces the legacy `AlertDialog`; saves the current playback queue, unchanged server call |
+| Box Sets list | `collectionListFragment` | Fragment | **phase 5A1** (post-#10) — was the hybrid XML-shell-over-`RecyclerView` row in §B.2 below; now full Compose (`CollectionListScreen`) |
+| About | `aboutFragment` | Fragment | **phase 5A1** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`AboutScreen`) |
 
 ### B.2 — Hybrid by design
 
-| Surface | Destination | Detail |
-|---|---|---|
-| Box Sets shell | `collectionListFragment` | XML shell (`ComposeView` header declared in the XML layout) over an unchanged XML `RecyclerView` body. Intended end state since phase 4B, not a migration gap. |
+**None as of phase 5A1.** The one row this section ever listed, Box Sets, moved to full Compose
+(§B.1) — see §Q. Kept as a heading for historical navigability; the original row text is preserved
+in §Q's before/after table rather than deleted here.
 
 ### B.3 — Legacy, still core browsing (`MIGRATE_IN_#10` remaining)
 
@@ -92,10 +116,12 @@ Playlist dialog) has been migrated to Compose — see §B.1 and §N.
 
 ### B.4 — Intentionally legacy / out of scope for #10
 
+**Updated in phase 5A1 (post-#10):** About moved to full Compose — see §Q. The remaining four rows
+are unchanged.
+
 | Surface | Destination | Verified via |
 |---|---|---|
 | Settings | `settingsFragment` | `NavigationActivity.hidesSupportActionBar`/`updateChromeVisibility` still special-case it; Pixel-verified, tokenized dark theme, no toolbar, correct back nav |
-| About | `aboutFragment` | same |
 | Server Selector | `serverSelectorFragment` | same |
 | Edit Server | `editServerFragment` | same |
 | Equalizer | `equalizerFragment` | same |
@@ -785,3 +811,147 @@ is Compose, playback/runtime ownership is unchanged throughout, the mini-player 
 (and is now verified compatible with every transient sheet that can open over it), and live Pixel 7
 validation - including a real defect this exact validation step was designed to catch - passed
 after the fix. Issue #10 is closed as completed.
+
+---
+
+## Q. Phase 5A1 — About + Box Sets residual migration (post-#10)
+
+Baseline `589f24f0` (Migrate rename playlist dialog to Compose). This is **not** a reopening of
+issue #10 — #10 closed at phase 4M4 (§P) with these two surfaces already correctly classified as
+out of scope (Box Sets as intentionally hybrid, §B.2; About as intentionally legacy, §B.4). This
+phase is the first step of a post-#10 residual UI migration toward removing every non-essential
+non-Compose surface before beta.
+
+### What migrated
+
+**About** (`aboutFragment`): `AboutFragment` is now a thin Compose host (`ComposeView`, no XML) →
+new `AboutScreen`/`AboutActions` (`ui/about/`). Content is unchanged from the legacy `help.xml`:
+app name, version (`Util.getVersionName`), tagline, and the free-text blurb (`about.text`'s
+embedded `<b>Taki</b>` tag stripped via `HtmlCompat.fromHtml`, matching the existing app-wide
+convention in `ArtistDetailViewModel`/`AlbumDetailViewModel`/`TrackCollectionFragment` rather than
+rendering styled text). One visible action, "Report a problem" (`about.report` →
+`Intent.ACTION_VIEW` on `about.report.url`). The legacy "Visit website" button was found to be
+**permanently `android:visibility="gone"` in production** (confirmed: no code path ever set it
+visible) — preserved exactly as still-off (`SHOW_WEBSITE_ACTION = false` in `AboutScreen.kt`,
+hide-don't-delete), with `AboutActions.onWebsite`/the Fragment's Intent-launch still wired so a
+future flip is a one-line change, not a re-implementation. No credits, licenses, social links, or
+update checker were added — none existed in the legacy screen. `NavigationActivity`'s
+`showsContentBackButton` inline destination set was extracted into a pure, testable companion
+function of the same name and `aboutFragment` removed from it (About now draws its own
+`TakiScreenHeader` back arrow, so the shared `content_navigation_header` bar would otherwise
+double it up); `hidesSupportActionBar` already included `aboutFragment` and needed no change.
+Bottom-nav/mini-player visibility rules for `aboutFragment` in `updateChromeVisibility` were not
+touched (bottom nav already hidden, mini-player already not hidden, unchanged from before).
+
+**Box Sets** (`collectionListFragment`): fully Compose, ending the hybrid shell. New
+`CollectionListViewModel` (`StateFlow<CollectionListUiState>`, replacing the legacy `LiveData`-based
+`CollectionListModel` 1:1 in loading semantics — same `AlbumDao.withGrouping()` +
+`CollectionResolver.resolve` read, same "don't reload if already loaded once" guard, now also with
+`loadFailed` bookkeeping for parity with every other migrated list ViewModel, a gap the legacy
+class had) + `CollectionListScreen`/`CollectionListUiState`/`CollectionListActions`
+(`ui/collectionlist/`). The screen keeps its own `TakiScreenHeader` ("Box Sets" + back), a 2-column
+`TakiEntryGrid`, `PullToRefreshBox`, and the `EmptyState`/`collection_empty` empty state — all
+already established patterns from Genres/Playlists List. The grid card's diagonal 3-cover stack is
+a direct geometric port of the legacy `view_stacked_artwork.xml`'s percent-bias `ConstraintLayout`
+(back top-start, middle centre, front bottom-end, each 82% of the square cell,
+`TakiTheme.shapes.sm` matching the legacy `radius_sm`) — a new private `CollectionStackedArtwork`
+composable in `CollectionListScreen.kt`, **not** a reuse of `CollectionDetailScreen`'s
+`CollectionIdentityMark` (that composable fans covers **horizontally** for the Detail header, a
+different, already-established visual for a different context; this audit found
+`StackedArtworkBinder`'s own kdoc claim that the two screens shared it was already stale before
+this phase — Collection Detail stopped using it when it migrated in phase 4B). Layer visibility
+(`back` only if >2 albums, `middle` only if >1) is preserved exactly. Navigation to Collection
+Detail is unchanged: `CollectionListFragmentDirections.toCollectionDetail(row.title)`, `row.title`
+being the exact `MusicCollection.title` `CollectionResolver` resolved, never a display-only copy —
+locked by a new `CollectionListNavigationTest`. `CollectionListFragment` now threads
+`NavigationActivity.contentBottomInset` into `bottomContentInset: Dp` exactly like
+`CollectionDetailFragment`, replacing the legacy `bindFloatingChromeInset` RecyclerView-padding
+call — `collectionListFragment` was never in `updateChromeVisibility`'s `hideForDestination` set,
+so bottom nav/mini-player visibility rules are unchanged. No context menu, no long-press — the
+legacy screen never had either.
+
+### Legacy cleanup
+
+Deleted (confirmed by grep to have zero remaining references before deletion): `help.xml`,
+`collection_list_layout.xml`, `list_item_collection.xml`, `view_stacked_artwork.xml`,
+`CollectionRowAdapter.kt`, `StackedArtworkBinder.kt`, `CollectionListModel.kt`. `R.id.stack_*`,
+`R.layout.list_item_collection`, and `R.layout.view_stacked_artwork` are now fully unreferenced.
+Kept: `list_layout_generic.xml`/`list_parts_empty_view.xml`/`list_parts_recycler.xml` (shared with
+other list screens), `R.drawable.ic_empty`/`R.drawable.unknown_album` (shared broadly),
+`R.plurals.n_discs` (still used by both List and Detail), `R.string.library_box_sets`/
+`R.string.collection_empty` (still the screen's title/empty-state strings, now read from Compose
+instead of XML), `about.webpage`/`about.webpage.url` (kept per hide-don't-delete, see above).
+
+### Tests
+
+Baseline 1155 → **1190** (+35), 0 failures:
+- 10 `CollectionListViewModelTest`, 8 `CollectionListScreenComposeTest`, 2
+  `CollectionListScreenScreenshotTest`, 3 `CollectionListNavigationTest`
+- 7 `AboutScreenComposeTest`, 1 `AboutScreenScreenshotTest`
+- 4 `NavigationChromeSelectionTest` (locking the `showsContentBackButton` extraction and the
+  `aboutFragment` removal from it)
+
+### Gates
+
+- `compileDebugKotlin`/`compileDebugUnitTestKotlin`: green
+- `testDebugUnitTest` (includes Roborazzi verify): green, 1190/1190 (4 new goldens recorded:
+  `about_standard`, `collection_list_standard`, `collection_list_empty`, plus the existing
+  `CollectionListScreenScreenshotTest` empty-state golden)
+- `assembleDebug`/`assembleRelease`: green
+- `lintDebug`: green, zero new findings (baseline `lint-baseline.xml` unchanged); `lintVitalRelease`:
+  no errors or warnings
+- `detekt -Pqc`: **42** in `:ultrasonic` — byte-identical finding set to the pre-phase baseline,
+  zero new issues from any file this phase touched or added
+- `ArchitectureGuardTest`/`TakiTokensTest`/`NavigationChromeSelectionTest`: green — no raw
+  dp/sp/Color literals, no `MaterialTheme` import, and no Media3 import in either new `ui/about` or
+  `ui/collectionlist` package
+
+### Pixel 7 validation (device `2B191FDH200E36`)
+
+Live crawl via `adb`/`uiautomator` against the freshly assembled debug build, against a real
+Navidrome server with real Box Sets data (Bach 333 / 222 discs, Chanson française / 2 discs, The
+Complete Mozart Edition / 2 discs).
+
+**Box Sets:** Library → Box Sets shows exactly one header (0 Toolbar nodes, one "Box Sets" title,
+one "Go back" affordance), the 2-column grid with correct diagonal stacked covers (3 layers for
+Bach 333, 2 for the others, real artwork loaded), correct disc counts ("222 discs" / "2 discs"),
+mini-player and bottom nav both visible throughout. Tapping "Bach 333" opened Collection Detail
+with the correct grouping/title and disc count; a pull-down gesture completed without error or
+data loss; the header's own back arrow returned to Library (not just system back, which was also
+separately verified to return to the Box Sets list with all three collections still shown — no
+reload/scroll-reset regression). No crashes, no ANRs, no clipping.
+
+**About:** Library overflow (⋮) → About shows exactly one header (0 Toolbar nodes), correct live
+version ("Version 0.1.0-beta"), the tagline and HTML-stripped blurb, and exactly one visible action
+("Report a problem" — "Visit website" correctly absent). Tapping "Report a problem" launched an
+external handler for the GitHub issues URL (resolved to the installed GitHub app rather than a
+browser, standard Android link-verification behavior for a github.com URL — no issue was actually
+filed). The header's own back arrow returned to Library. Bottom nav confirmed hidden (0
+`bottom_navigation` nodes), mini-player confirmed still visible — both unchanged from the
+pre-phase behavior. `adb logcat -b crash`/`*:E` filtered to the app's own package showed zero
+Taki-attributable entries across the entire session.
+
+### Coverage accounting
+
+| | Before 5A1 | After 5A1 |
+|---|---:|---:|
+| Compose | 21 | 23 |
+| Hybrid | 1 | 0 |
+| Intentionally legacy | 5 | 4 |
+| Total reachable | 27 | 27 |
+
+Arithmetic: 21 + 1 + 5 = 27 → 23 + 0 + 4 = 27. Remaining intentionally-legacy surfaces: Settings,
+Server Selector, Edit Server, Equalizer (§B.4, updated). Videos remains separately tracked as
+unreachable/dead product cleanup (§F/§B.5), not part of the reachable-surface count either before
+or after this phase.
+
+### Known debt (unchanged, non-blocking)
+
+Everything §P's own table listed (#21–#24, the online-download-indicator gap, the deferred
+`TrackCollectionFragment`/binder cleanup, Videos removal) remains open and unaffected by this
+phase. No new debt was found or introduced.
+
+### Next phase
+
+**Phase 5A2 — migrate Server Selector to Compose**, continuing the post-#10 residual migration in
+the same low-risk-first order this phase established. Not started as part of this phase.

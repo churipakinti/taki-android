@@ -57,6 +57,13 @@ class NavigationChromeSelectionTest {
         folderBrowser,
     )
 
+    private fun showsBackBar(
+        id: Int,
+        libraryTrackCollection: Boolean = false,
+        albumDetail: Boolean = false,
+        playlistDetail: Boolean = false,
+    ) = NavigationActivity.showsContentBackButton(id, libraryTrackCollection, albumDetail, playlistDetail)
+
     @Test
     fun `collection detail hides the shared toolbar - it draws its own Compose top row`() {
         assertTrue(hides(R.id.collectionDetailFragment))
@@ -222,5 +229,41 @@ class NavigationChromeSelectionTest {
         )
         assertTrue(hides(R.id.downloadedAlbumFragment, albumDetail = downloaded))
         assertTrue(hides(R.id.trackCollectionFragment, albumDetail = online))
+    }
+
+    // --- About (post-issue-#10 residual migration, phase 5A1) ---------------------------------
+
+    @Test
+    fun `about still hides the shared toolbar - unchanged by phase 5A1`() {
+        assertTrue(hides(R.id.aboutFragment))
+    }
+
+    @Test
+    fun `about no longer shows the shared back bar - it draws its own TakiScreenHeader`() {
+        assertFalse(showsBackBar(R.id.aboutFragment))
+    }
+
+    @Test
+    fun `about is the only destination this phase removed from the shared back bar`() {
+        // Regression guard: every other destination that showed the shared back bar before
+        // phase 5A1 must still show it - only aboutFragment's entry was removed.
+        assertTrue(showsBackBar(R.id.playlistsFragment))
+        assertTrue(showsBackBar(R.id.artistListFragment))
+        assertTrue(showsBackBar(R.id.albumListFragment))
+        assertTrue(showsBackBar(R.id.selectGenreFragment))
+        assertTrue(showsBackBar(R.id.serverSelectorFragment))
+        assertTrue(showsBackBar(R.id.editServerFragment))
+        assertTrue(showsBackBar(R.id.downloadsFragment))
+        assertTrue(showsBackBar(R.id.settingsFragment))
+        assertTrue(showsBackBar(R.id.equalizerFragment))
+        assertTrue(showsBackBar(R.id.trackCollectionFragment, libraryTrackCollection = true))
+        assertTrue(showsBackBar(R.id.trackCollectionFragment, albumDetail = true))
+        assertTrue(showsBackBar(R.id.trackCollectionFragment, playlistDetail = true))
+    }
+
+    @Test
+    fun `box sets list still draws its own header, not the shared back bar - unaffected by phase 5A1`() {
+        assertFalse(showsBackBar(R.id.collectionListFragment))
+        assertTrue(hides(R.id.collectionListFragment))
     }
 }

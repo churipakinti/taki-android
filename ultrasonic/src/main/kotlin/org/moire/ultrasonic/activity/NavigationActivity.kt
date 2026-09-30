@@ -313,20 +313,14 @@ class NavigationActivity : ScopeActivity() {
             } else {
                 supportActionBar?.show()
             }
-            val showsContentBackButton = destination.id in setOf(
-                R.id.playlistsFragment,
-                R.id.artistListFragment,
-                R.id.albumListFragment,
-                R.id.selectGenreFragment,
-                R.id.serverSelectorFragment,
-                R.id.editServerFragment,
-                R.id.aboutFragment,
-                R.id.downloadsFragment
-            ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail ||
-                destination.id == R.id.settingsFragment ||
-                destination.id == R.id.equalizerFragment
+            val showsBackButton = showsContentBackButton(
+                destination.id,
+                isLibraryTrackCollection,
+                isAlbumDetail,
+                isPlaylistDetail,
+            )
             contentNavigationHeader?.visibility =
-                if (showsContentBackButton) View.VISIBLE else View.GONE
+                if (showsBackButton) View.VISIBLE else View.GONE
             invalidateOptionsMenu()
             updateChromeVisibility()
         }
@@ -804,6 +798,31 @@ class NavigationActivity : ScopeActivity() {
             destinationId in albumDetailDestinationIds && isAlbumArg
 
         /**
+         * Whether [destinationId] shows the shared `content_navigation_header` back-only bar
+         * (a bare 48dp back arrow, no title - see `navigation_activity.xml`) instead of, or in
+         * addition to, a Fragment-owned header. `aboutFragment` was removed from this set in
+         * phase 5A1: it now draws its own [org.moire.ultrasonic.ui.components.TakiScreenHeader]
+         * (back + "About" title), so showing the shared bar too would draw two back arrows.
+         * Pure so `NavigationChromeSelectionTest` can lock it.
+         */
+        fun showsContentBackButton(
+            destinationId: Int,
+            isLibraryTrackCollection: Boolean,
+            isAlbumDetail: Boolean,
+            isPlaylistDetail: Boolean,
+        ): Boolean = destinationId in setOf(
+            R.id.playlistsFragment,
+            R.id.artistListFragment,
+            R.id.albumListFragment,
+            R.id.selectGenreFragment,
+            R.id.serverSelectorFragment,
+            R.id.editServerFragment,
+            R.id.downloadsFragment,
+        ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail ||
+            destinationId == R.id.settingsFragment ||
+            destinationId == R.id.equalizerFragment
+
+        /**
          * Whether a destination draws its own top chrome and the shared Material toolbar must
          * be hidden (`supportActionBar?.hide()`). Every Compose screen owns its header, so it
          * belongs here - including the Box Sets list (`collectionListFragment`),
@@ -822,9 +841,13 @@ class NavigationActivity : ScopeActivity() {
          * Detail's hero already carries its own title, same as Album Detail's.
          * [isFolderBrowser] (issue #10 phase 4M1) gets the exact same treatment as
          * [isLightweightHeaderTrackCollection] - a Fragment-owned `TakiScreenHeader`, not the
-         * shared `content_navigation_header`. Pure so `NavigationChromeSelectionTest` can lock
-         * it; the Activity still applies it in `onDestinationChanged` (only runtime validation
-         * proves the `ActionBar.hide()` call).
+         * shared `content_navigation_header`. `aboutFragment` (phase 5A1) gets the same
+         * Fragment-owned-header treatment as `isLightweightHeaderTrackCollection`/
+         * [isFolderBrowser] - it was already in this set before phase 5A1 (the toolbar was
+         * already hidden), but [showsContentBackButton] no longer shows the shared back bar for
+         * it, since its own `TakiScreenHeader` now draws the back arrow. Pure so
+         * `NavigationChromeSelectionTest` can lock it; the Activity still applies it in
+         * `onDestinationChanged` (only runtime validation proves the `ActionBar.hide()` call).
          */
         fun hidesSupportActionBar(
             destinationId: Int,
