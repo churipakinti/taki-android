@@ -188,8 +188,6 @@
     <string name="server_editor.required">Dieses Feld wird benötigt</string>
     <string name="server_menu.edit">Bearbeiten</string>
     <string name="server_menu.delete">Löschen</string>
-    <string name="server_menu.move_up">Hochschieben</string>
-    <string name="server_menu.move_down">Herunterschieben</string>
     <string name="server_editor.authentication">Authentifizierung</string>
     <string name="server_editor.advanced">Erweiterte Einstellungen</string>
     <string name="about.webpage">Website besuchen</string>

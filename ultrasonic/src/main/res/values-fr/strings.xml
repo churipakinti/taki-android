@@ -182,8 +182,6 @@
     <string name="server_editor.required">Ce champ est requis</string>
     <string name="server_menu.edit">Éditer</string>
     <string name="server_menu.delete">Supprimer</string>
-    <string name="server_menu.move_up">Déplacer vers le haut</string>
-    <string name="server_menu.move_down">Déplacer vers le bas</string>
     <string name="server_editor.authentication">Authentification</string>
     <string name="server_editor.advanced">Paramètres avancés</string>
     <string name="about.webpage">Visiter la page web</string>

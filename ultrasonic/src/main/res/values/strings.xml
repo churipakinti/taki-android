@@ -396,6 +396,8 @@
     <string name="notification.permission_required">Notifications are required for media playback. You can grant the permission anytime in the Android settings.</string>
     <string name="server_selector.label">Configured libraries</string>
     <string name="server_selector.delete_confirmation">Are you sure you want to remove this library?</string>
+    <string name="server_selector.row_menu">More options for %1$s</string>
+    <string name="server_selector.active">Active</string>
     <string name="server_editor.label">Editing library</string>
     <string name="server_editor.new_label">Add library</string>
     <string name="server_editor.leave_confirmation">Are you sure you want to leave and lose your changes?</string>
@@ -403,8 +405,6 @@
     <string name="server_editor.connect">Connect</string>
     <string name="server_menu.edit">Edit</string>
     <string name="server_menu.delete">Delete</string>
-    <string name="server_menu.move_up">Move up</string>
-    <string name="server_menu.move_down">Move down</string>
     <string name="server_editor.authentication">Sign-in</string>
     <string name="server_editor.advanced">Advanced settings</string>
     <string name="server_editor.connection_checking">Checking connection…</string>

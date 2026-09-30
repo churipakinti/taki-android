@@ -143,8 +143,6 @@
     <string name="server_editor.required">Este campo é necessário</string>
     <string name="server_menu.edit">Editar</string>
     <string name="server_menu.delete">Apagar</string>
-    <string name="server_menu.move_up">Para cima</string>
-    <string name="server_menu.move_down">Para baixo</string>
     <string name="server_editor.authentication">Authentication</string>
     <string name="server_editor.advanced">Configurações avançadas</string>
     <plurals name="n_songs">

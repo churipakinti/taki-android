@@ -150,8 +150,6 @@
     <string name="server_editor.required">Toto pole je vyžadováno</string>
     <string name="server_menu.edit">Upravit</string>
     <string name="server_menu.delete">Smazat</string>
-    <string name="server_menu.move_up">Posunout výš</string>
-    <string name="server_menu.move_down">Posunout níž</string>
     <string name="server_editor.authentication">Ověření</string>
     <string name="server_editor.advanced">Rozšířené možnosti</string>
     <plurals name="n_songs">

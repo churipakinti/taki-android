@@ -257,8 +257,6 @@
     <string name="server_editor.required">Este campo es requerido</string>
     <string name="server_menu.edit">Editar</string>
     <string name="server_menu.delete">Eliminar</string>
-    <string name="server_menu.move_up">Subir</string>
-    <string name="server_menu.move_down">Bajar</string>
     <string name="server_editor.authentication">Autenticación</string>
     <string name="server_editor.advanced">Configuración avanzada</string>
     <string name="server_editor.connection_checking">Comprobando conexión…</string>

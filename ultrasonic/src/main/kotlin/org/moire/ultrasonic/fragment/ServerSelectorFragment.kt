@@ -1,116 +1,99 @@
+/*
+ * ServerSelectorFragment.kt
+ * Copyright (C) 2009-2026 Ultrasonic developers
+ *
+ * Distributed under terms of the GNU GPLv3 license.
+ */
+
 package org.moire.ultrasonic.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.moire.ultrasonic.R
-import org.moire.ultrasonic.adapters.ServerRowAdapter
-import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.data.ActiveServerProvider.Companion.OFFLINE_DB_ID
-import org.moire.ultrasonic.model.ServerSettingsModel
-import org.moire.ultrasonic.util.ErrorDialog
-import org.moire.ultrasonic.util.Util
-import timber.log.Timber
+import org.moire.ultrasonic.activity.NavigationActivity
+import org.moire.ultrasonic.model.ServerSelectorViewModel
+import org.moire.ultrasonic.ui.serverselector.ServerSelectorActions
+import org.moire.ultrasonic.ui.serverselector.ServerSelectorRow
+import org.moire.ultrasonic.ui.serverselector.ServerSelectorScreen
+import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /**
- * Displays the list of configured servers, they can be selected or edited
+ * Displays the list of configured servers, they can be selected or edited.
+ *
+ * Post-issue-#10 residual migration (phase 5A2): now a thin Compose host, the same shape as
+ * [CollectionListFragment] - it threads the live floating-chrome inset into
+ * [ServerSelectorScreen] and owns navigation (select -> Home, Add/Edit -> the still-legacy
+ * `editServerFragment`). Data and delete/select semantics live in [ServerSelectorViewModel],
+ * unchanged from the legacy `ServerSettingsModel`/`ActiveServerProvider` calls.
  */
 class ServerSelectorFragment : Fragment() {
 
-    private var listView: RecyclerView? = null
-    private val serverSettingsModel: ServerSettingsModel by viewModel()
-    private val activeServerProvider: ActiveServerProvider by inject()
-    private var serverRowAdapter: ServerRowAdapter? = null
-
-    @Override
-    override fun onCreate(savedInstanceState: Bundle?) {
-        Util.applyTheme(this.context)
-        super.onCreate(savedInstanceState)
-    }
+    private val viewModel: ServerSelectorViewModel by viewModels()
+    private val fallbackChromeInset = MutableStateFlow(0)
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.server_selector, container, false)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        FragmentTitle.setTitle(this, R.string.server_selector_label)
-
-        listView = view.findViewById(R.id.server_list)
-        serverRowAdapter = ServerRowAdapter(
-            view.context,
-            serverSettingsModel,
-            onItemClick = { server ->
-                activeServerProvider.setActiveServerById(server.id)
-                findNavController().popBackStack(R.id.homeFragment, false)
-            },
-            ::deleteServerById,
-            ::editServerByIndex
-        )
-
-        listView?.layoutManager = LinearLayoutManager(requireContext())
-        listView?.adapter = serverRowAdapter
-
-        val fab = view.findViewById<FloatingActionButton>(R.id.server_add_fab)
-        fab.setOnClickListener {
-            editServerByIndex(-1)
+    ): View {
+        val chromeInsetFlow =
+            (activity as? NavigationActivity)?.contentBottomInset ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    ServerSelectorScreen(
+                        state = state,
+                        actions = serverSelectorActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        val serverList = serverSettingsModel.getServerList()
-        serverList.observe(
-            this
-        ) { t ->
-            serverRowAdapter!!.setData(t.toTypedArray())
-        }
+        // Matches the legacy Fragment's own onResume-driven getServerList() call, so returning
+        // from Edit Server (add/edit/delete) always shows fresh data (docs section 18).
+        viewModel.reload()
     }
 
-    /**
-     * This Callback handles the deletion of a Server Setting
-     */
-    private fun deleteServerById(id: Int) {
-        // FIXME
-        ErrorDialog.Builder(requireContext())
-            .setTitle(R.string.server_menu_delete)
-            .setMessage(R.string.server_selector_delete_confirmation)
-            .setPositiveButton(R.string.common_delete) { dialog, _ ->
-                dialog.dismiss()
-
-                // Get the id of the current active server
-                val activeServerId = ActiveServerProvider.getActiveServerId()
-
-                // If the currently active server is deleted, go offline
-                if (id == activeServerId) activeServerProvider.setActiveServerById(OFFLINE_DB_ID)
-
-                serverSettingsModel.deleteItemById(id)
-
-                // Clear the metadata cache
-                activeServerProvider.deleteMetaDatabase(activeServerId)
-
-                Timber.i("Server deleted, id: $id")
-            }
-            .setNegativeButton(R.string.common_cancel) { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
+    private val serverSelectorActions: ServerSelectorActions by lazy {
+        ServerSelectorActions(
+            onBack = { findNavController().navigateUp() },
+            onServerClick = ::onServerClick,
+            onAddServer = { editServerByIndex(-1) },
+            onEditServer = { row -> editServerByIndex(row.position) },
+            onDeleteRequested = viewModel::requestDelete,
+            onDeleteConfirm = viewModel::confirmDelete,
+            onDeleteCancel = viewModel::cancelDelete,
+        )
     }
 
-    /**
-     * Starts the Edit Server Fragment to edit the details of a server
-     */
+    private fun onServerClick(row: ServerSelectorRow) {
+        viewModel.selectServer(row)
+        findNavController().popBackStack(R.id.homeFragment, false)
+    }
+
     private fun editServerByIndex(index: Int) {
         val action = ServerSelectorFragmentDirections.toEditServer(index)
         findNavController().navigate(action)

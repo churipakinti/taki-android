@@ -145,7 +145,6 @@
     <string name="server_editor.required">この項目は必須です</string>
     <string name="server_menu.edit">編集</string>
     <string name="server_menu.delete">削除</string>
-    <string name="server_menu.move_up">上に移動</string>
     <string name="server_editor.advanced">詳細設定</string>
     <string name="about.webpage">Webページにアクセス</string>
     <string name="about.report">バグを報告</string>
@@ -225,7 +224,6 @@
     <string name="settings.debug.log_summary">%1$s 個のログファイルが ディレクトリ %3$s で ~%2$s MBの容量を使用しています。これらを保持しますか\?</string>
     <string name="notification.downloading_title">バックグラウンドでメディアをダウンロード中…</string>
     <string name="server_editor.label">サーバーの編集</string>
-    <string name="server_menu.move_down">下に移動</string>
     <string name="server_editor.authentication">認証</string>
     <string name="about.text"><b>Taki</b> はフリーでオープンソースであり、Subsonic API (バージョン 1.7.0 以上) 互換サーバーに対応した音楽ストリーミングAndroidクライアントです。
 \n

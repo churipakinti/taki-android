@@ -41,12 +41,10 @@
     <string name="select_album.empty">Fant ingen mediefiler</string>
     <string name="settings.cache_size_unlimited">Ubegrenset</string>
     <string name="download.menu_clear_playlist">Tøm spilleliste</string>
-    <string name="server_menu.move_up">Flytt oppover</string>
     <string name="settings.clear_search_history">Tøm søkehistorikk</string>
     <string name="server_editor.required">Påkrevd felt</string>
     <string name="server_menu.edit">Rediger</string>
     <string name="server_menu.delete">Slett</string>
-    <string name="server_menu.move_down">Flytt nedover</string>
     <string name="common.various_artists">Ymse artister</string>
     <string name="delete_playlist">Slett %1$s\?</string>
     <string name="download.jukebox_offline">Fjernkontroll er ikke tilgjengelig i frakoblet modus.</string>

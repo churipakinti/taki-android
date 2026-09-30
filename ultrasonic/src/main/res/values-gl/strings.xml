@@ -148,7 +148,6 @@
     <string name="settings.debug.log_deleted">Eliminados os ficheiros de rexistro.</string>
     <string name="server_menu.edit">Editar</string>
     <string name="server_menu.delete">Retirar</string>
-    <string name="server_menu.move_up">Mover arriba</string>
     <string name="about.report">Informar de fallos</string>
     <string name="about.text"><b>Taki</b> é un cliente Android libre e de código aberto para a API de servidores compatibles Subsonic (versión 1.7.0 ou superior).
 \n
@@ -237,7 +236,6 @@
     <string name="server_editor.new_label">Engadir servidor</string>
     <string name="server_editor.required">Requírese este campo</string>
     <string name="api.subsonic.generic.no.message">non se recibiu mensaxe desde o servidor</string>
-    <string name="server_menu.move_down">Mover abaixo</string>
     <string name="server_editor.authentication">Autenticación</string>
     <string name="about.webpage">Visitar páxina web</string>
     <string name="server_editor.leave_confirmation">Tes a certeza de querer saír sen gardar os cambios?</string>

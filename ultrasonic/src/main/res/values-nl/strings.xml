@@ -191,8 +191,6 @@
     <string name="server_editor.required">Dit veld is vereist</string>
     <string name="server_menu.edit">Bewerken</string>
     <string name="server_menu.delete">Verwijderen</string>
-    <string name="server_menu.move_up">Omhoog</string>
-    <string name="server_menu.move_down">Omlaag</string>
     <string name="server_editor.authentication">Authenticatie</string>
     <string name="server_editor.advanced">Geavanceerde instellingen</string>
     <string name="about.webpage">Website openen</string>

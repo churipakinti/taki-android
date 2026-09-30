@@ -803,6 +803,9 @@ class NavigationActivity : ScopeActivity() {
          * addition to, a Fragment-owned header. `aboutFragment` was removed from this set in
          * phase 5A1: it now draws its own [org.moire.ultrasonic.ui.components.TakiScreenHeader]
          * (back + "About" title), so showing the shared bar too would draw two back arrows.
+         * `serverSelectorFragment` was removed the same way in phase 5A2 - it now draws its own
+         * `TakiScreenHeader` too. `editServerFragment` stays in this set unchanged: it remains
+         * legacy (out of phase 5A2's scope) and still relies on the shared bar exactly as before.
          * Pure so `NavigationChromeSelectionTest` can lock it.
          */
         fun showsContentBackButton(
@@ -815,7 +818,6 @@ class NavigationActivity : ScopeActivity() {
             R.id.artistListFragment,
             R.id.albumListFragment,
             R.id.selectGenreFragment,
-            R.id.serverSelectorFragment,
             R.id.editServerFragment,
             R.id.downloadsFragment,
         ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail ||

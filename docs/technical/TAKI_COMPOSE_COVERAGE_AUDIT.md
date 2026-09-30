@@ -25,22 +25,22 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 
 ## A. Executive summary
 
-**Current (post-phase 5A1):**
+**Current (post-phase 5A2):**
 
 | Metric | Count |
 |---|---:|
 | Total reachable UI surfaces classified | 27 |
-| — Compose | 23 |
+| — Compose | 24 |
 | — Hybrid (Compose + View by design) | 0 |
 | — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 0 |
-| — Legacy View/XML, intentionally out of scope | 4 |
+| — Legacy View/XML, intentionally out of scope | 3 |
 | Unclassified | **0** |
 
-Arithmetic: 23 + 0 + 0 + 4 = 27. Phase 5A1 (§Q) moved the two surfaces #10 itself left non-Compose —
-the hybrid Box Sets shell and the legacy About screen — to full Compose, 21/1/5 → 23/0/4. Remaining
-intentionally-legacy surfaces: Settings, Server Selector, Edit Server, Equalizer (§B.4). See §Q for
-the full before/after detail. Everything below this line up to §P is the historical record as of
-issue #10's closure and is preserved unedited; §Q appends the post-#10 update.
+Arithmetic: 24 + 0 + 0 + 3 = 27. Phase 5A1 (§Q) moved Box Sets (hybrid) and About (legacy) to full
+Compose, 21/1/5 → 23/0/4. Phase 5A2 (§R) moved Server Selector to full Compose, 23/0/4 → 24/0/3.
+Remaining intentionally-legacy surfaces: Settings, Edit Server, Equalizer (§B.4). See §Q/§R for the
+full before/after detail of each phase. Everything below this line up to §P is the historical record
+as of issue #10's closure and is preserved unedited; §Q and §R append the post-#10 updates.
 
 **As of #10's closure (phase 4M4, historical):**
 
@@ -102,6 +102,7 @@ below.
 | Save Playlist (transient sheet over Now Playing) | `PlayerFragment.offerSavePlaylist()` (not a nav destination) | Fragment-hosted Compose sheet | phase 4M3 — replaces the legacy `AlertDialog`; saves the current playback queue, unchanged server call |
 | Box Sets list | `collectionListFragment` | Fragment | **phase 5A1** (post-#10) — was the hybrid XML-shell-over-`RecyclerView` row in §B.2 below; now full Compose (`CollectionListScreen`) |
 | About | `aboutFragment` | Fragment | **phase 5A1** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`AboutScreen`) |
+| Server Selector | `serverSelectorFragment` | Fragment | **phase 5A2** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`ServerSelectorScreen`), including the delete confirmation (`DeleteServerSheet`, replacing the legacy `ErrorDialog`) |
 
 ### B.2 — Hybrid by design
 
@@ -116,13 +117,13 @@ Playlist dialog) has been migrated to Compose — see §B.1 and §N.
 
 ### B.4 — Intentionally legacy / out of scope for #10
 
-**Updated in phase 5A1 (post-#10):** About moved to full Compose — see §Q. The remaining four rows
-are unchanged.
+**Updated in phase 5A1 (post-#10):** About moved to full Compose — see §Q. **Updated in phase 5A2
+(post-#10):** Server Selector moved to full Compose — see §R. The remaining three rows are
+unchanged.
 
 | Surface | Destination | Verified via |
 |---|---|---|
 | Settings | `settingsFragment` | `NavigationActivity.hidesSupportActionBar`/`updateChromeVisibility` still special-case it; Pixel-verified, tokenized dark theme, no toolbar, correct back nav |
-| Server Selector | `serverSelectorFragment` | same |
 | Edit Server | `editServerFragment` | same |
 | Equalizer | `equalizerFragment` | same |
 
@@ -951,7 +952,161 @@ Everything §P's own table listed (#21–#24, the online-download-indicator gap,
 `TrackCollectionFragment`/binder cleanup, Videos removal) remains open and unaffected by this
 phase. No new debt was found or introduced.
 
-### Next phase
+### Next phase (superseded by §R)
 
 **Phase 5A2 — migrate Server Selector to Compose**, continuing the post-#10 residual migration in
 the same low-risk-first order this phase established. Not started as part of this phase.
+
+---
+
+## R. Phase 5A2 — Server Selector residual migration (post-#10)
+
+Baseline `a6e4f743` (Migrate About and Box Sets to Compose). Not a reopening of issue #10 — Server
+Selector was already correctly classified as intentionally legacy at #10's closure (§B.4).
+
+### Audit findings
+
+Full source of `ServerSelectorFragment`/`ServerRowAdapter`/`ServerSettingsModel`/
+`ActiveServerProvider`/`ServerSetting` read directly (not recalled). Key findings:
+
+- **List**: `ServerSettingsModel.getServerList()` (`repository.loadAllServerSettings()`, no
+  `ORDER BY`), loaded only from the Fragment's `onResume` (never `onViewCreated`) - preserved
+  exactly, including the timing, so returning from Edit Server always shows fresh data.
+- **Offline row**: never a DB row - `ActiveServerProvider.OFFLINE_DB` is synthesized as row 0 on
+  every load, non-editable, non-deletable, its `url` ("http://localhost") never shown.
+- **Active indication**: `setting.id == ActiveServerProvider.getActiveServerId()`, a plain 2dp
+  stroke in the legacy View - re-created as an "Active" accent-colored label in Compose (no
+  content description existed for it before; still none needed, since the label text itself is
+  now in the accessibility tree).
+- **A real, verified, pre-existing bug in the Edit contract**: the legacy `ServerRowAdapter` feeds
+  the on-screen RecyclerView **position** into `EditServerFragment`'s `index` nav argument, which
+  is looked up against the `ServerSetting.index` **DB column** - not `ServerSetting.id`, and not
+  reliably the same value once a reorder has happened. **Preserved exactly, not fixed**: the new
+  `ServerSelectorRow.position` field carries the identical on-screen-position value into the same
+  `index` nav argument, since fixing `EditServerFragment`'s own contract is explicitly out of this
+  phase's scope (Edit Server stays legacy).
+- **A real, verified, pre-existing bug in the Delete sequence**: `deleteMetaDatabase` is called
+  with the *pre-delete active server's id*, not the deleted server's own id. When deleting a
+  non-active server, this clears the *surviving* active server's metadata cache for no reason and
+  leaves the deleted server's own cache file orphaned. **Preserved exactly, not fixed** -
+  documented in `ServerSelectorViewModel.confirmDelete`'s own kdoc and locked by a regression test
+  (`CollectionListViewModelTest`-style: `deleteMetaDatabase receives the pre-delete active id`).
+- **Reorder ("Move up"/"Move down") was found to be already non-functional**: the underlying query
+  has no `ORDER BY`, so swapping the `index` column value never changes the on-screen order - its
+  only real effect was silently desyncing the index-based value `EditServerFragment` reads. **Not
+  carried forward** into the Compose row's menu (Edit/Delete only) - this is a product-direction
+  simplification consistent with the task's own "simple libraries screen" framing, not a silent
+  feature drop, and it also removes the only mechanism that could desync the Edit contract above.
+  `ServerSettingsModel.moveItemUp`/`moveItemDown` are left in place, unused - `ServerSettingsModel`
+  itself is explicitly retained per scope, and these two methods are harmless dead code, not
+  removed in this pass.
+- **Delete restrictions**: none exist in the legacy screen (no guard against deleting the last or
+  the active server) - none were added.
+- **A real, pre-existing accessibility mismatch found and fixed**: the legacy row's "⋮" button
+  reused `server_editor.advanced` ("Advanced settings", the *Edit Server* screen's own section
+  label) as its content description, despite opening an Edit/Delete/reorder menu, not advanced
+  settings. Fixed with a new, correctly-scoped string (`server_selector.row_menu`, "More options
+  for %1$s").
+
+### Compose implementation
+
+`ServerSelectorFragment` -> thin Compose host -> new `ServerSelectorScreen`/`ServerSelectorUiState`/
+`ServerSelectorActions` (`ui/serverselector/`), backed by a new `ServerSelectorViewModel`
+(`model/`) - a StateFlow port of the legacy Fragment's own logic, reusing `ServerSettingsModel`/
+`ActiveServerProvider` as the sole data source (no second repository). Test seams
+(`serverListLoader`/`activeServerIdReader`/`setActiveServer`/`deleteServerById`/
+`deleteMetaDatabase`) let `ServerSelectorViewModelTest` exercise every path deterministically
+without touching Koin or Room. The screen draws its own `TakiScreenHeader` ("Configured
+libraries" - the exact existing, if previously invisible, title string - plus back), a
+`LazyColumn` of server rows (color swatch, name, url, "Active" label, an overflow "⋮" ->
+Edit/Delete), and an inline "Add library" row (no FAB - Compose migrated screens in this codebase
+don't use one, and an inline row sidesteps the phase-4M4 floating-chrome-collision class of bug
+entirely). Delete confirmation is a new `DeleteServerSheet` (`ui/serverselector/`), the same
+scrim + sliding-panel pattern every other migrated transient overlay uses, replacing the legacy
+`ErrorDialog`-based `AlertDialog` with the exact same title/message copy.
+`ServerSelectorFragment.onResume` threads `NavigationActivity.contentBottomInset` into
+`bottomContentInset` exactly like `CollectionListFragment`/`CollectionDetailFragment`, and calls
+`viewModel.reload()` - preserving the legacy's own onResume-only refresh timing.
+
+**A real bug found and fixed during testing (not a legacy behavior change)**: the row's color
+swatch initially reused the legacy `ServerColor.getBackgroundColor`/`getForegroundColor` helpers,
+which call `MaterialColors.getColor`/`harmonizeWithPrimary` - both resolve the XML theme attribute
+`?attr/colorPrimary`, which only exists on a real themed Activity. This crashed every Compose test
+that rendered a row (`IllegalArgumentException`), since a plain Compose test host has no such
+theme. Fixed by reimplementing the same swatch logic natively in Compose
+(`TakiTheme.colors.accent` as the neutral fallback - textually the exact color `ServerColor`'s own
+fallback comment already named as its intent - plus a pure luminance calculation for the glyph
+tint), removing the dependency on `ServerColor`/Activity theming entirely from the new code.
+`ServerColor.kt` itself is untouched and still used by the still-legacy `EditServerFragment`.
+
+### Legacy cleanup
+
+Deleted (confirmed by grep to have zero remaining references before deletion): `ServerRowAdapter
+.kt`, `server_selector.xml`, `server_row.xml`, `circle.xml` (the round swatch background drawable,
+referenced only by the two deleted files). Removed the now-genuinely-dead `server_menu.move_up`/
+`server_menu.move_down` strings from all 15 locale files that had them (their only caller was the
+deleted adapter's reorder menu). Retained (confirmed still needed): `ServerSettingsModel`,
+`ActiveServerProvider`, `ServerColor.kt`, `ic_menu_server`/`ic_menu_screen_on_off` (now used from
+Compose instead), `server_editor.new_label`/`server_editor.advanced` (still used by the
+still-legacy Edit Server screen), `ErrorDialog`/`Dialogs.kt` (used by Settings, `EditServerFragment`,
+and `CommunicationError` - not migrated globally just because this screen stopped using it).
+
+### Tests
+
+Baseline 1190 -> **1232** (+42), 0 failures: 16 `ServerSelectorViewModelTest`, 17
+`ServerSelectorScreenComposeTest`, 2 `ServerSelectorScreenScreenshotTest`, 4
+`ServerSelectorNavigationTest`, 3 `NavigationChromeSelectionTest` (locking the
+`showsContentBackButton` update and the `aboutFragment`/`serverSelectorFragment` split).
+
+### Gates
+
+- `compileDebugKotlin`/`compileDebugUnitTestKotlin`: green
+- `testDebugUnitTest` (includes Roborazzi verify): green, 1232/1232 (2 new goldens:
+  `server_selector_standard`, `server_selector_delete_confirmation`)
+- `assembleDebug`/`assembleRelease`: green
+- `lintDebug`: one real new finding caught and fixed (`EmptySuperCall` - a redundant
+  `super.onCleared()` call in `ServerSelectorViewModel`, since `AndroidViewModel.onCleared()` is
+  `@EmptySuper`); green after the fix, zero new findings remaining, baseline `lint-baseline.xml`
+  unchanged; `lintVitalRelease`: no errors or warnings
+- `detekt -Pqc`: **42** in `:ultrasonic` - byte-identical to the pre-phase baseline, zero new
+  issues from any file this phase touched or added
+- `ArchitectureGuardTest`/`TakiTokensTest`/`NavigationChromeSelectionTest`: green - no raw
+  dp/sp/Color literals, no `MaterialTheme` import, no Media3 import, and (per the swatch fix
+  above) no XML-theme-attribute dependency in the new `ui/serverselector` package
+
+### Pixel 7 validation
+
+**Not performed this session** - the validation device (`2B191FDH200E36`) was not connected when
+this phase reached the live-validation step (`adb devices` returned empty after repeated retries
+and a daemon restart), the same disconnection this project's own record shows happening mid-session
+before (phase 4M3, §N). All other gates - unit, Compose interaction, navigation, and Roborazzi
+tests - are green, and the two recorded goldens were visually inspected and match the intended
+design. Per this project's own precedent, live device validation is still treated as a precondition
+for full confidence, not an optional nice-to-have; it is called out here as an explicit outstanding
+item rather than assumed or fabricated.
+
+### Coverage accounting
+
+| | Before 5A2 | After 5A2 |
+|---|---:|---:|
+| Compose | 23 | 24 |
+| Hybrid | 0 | 0 |
+| Intentionally legacy | 4 | 3 |
+| Total reachable | 27 | 27 |
+
+Arithmetic: 23 + 0 + 4 = 27 -> 24 + 0 + 3 = 27. Remaining intentionally-legacy surfaces: Settings,
+Edit Server, Equalizer (§B.4, updated).
+
+### Known debt
+
+No new debt beyond what was already documented and preserved-not-fixed above (the Edit
+`index`-vs-`id` contract and the `deleteMetaDatabase` pre-delete-id quirk, both pre-existing and
+now explicitly recorded rather than silently carried forward unnoticed). One outstanding item:
+live Pixel 7 validation, not performed this session (see above) - recommended before this phase is
+treated as fully closed out, consistent with this project's own precedent.
+
+### Next phase
+
+**Phase 5A3 — migrate Edit Server to Compose.** This would also be the natural point to revisit
+the Edit `index`-vs-`id` contract this phase's audit flagged, since fixing it properly requires
+changing `EditServerFragment`'s own nav-argument semantics. Not started as part of this phase.

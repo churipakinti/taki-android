@@ -169,8 +169,6 @@
     <string name="server_editor.required">Это поле является обязательным</string>
     <string name="server_menu.edit">Редактировать</string>
     <string name="server_menu.delete">Удалить</string>
-    <string name="server_menu.move_up">Поднять</string>
-    <string name="server_menu.move_down">Опустить</string>
     <string name="server_editor.authentication">Аутентификация</string>
     <string name="server_editor.advanced">Дополнительные настройки</string>
     <plurals name="n_songs">

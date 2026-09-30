@@ -244,14 +244,14 @@ class NavigationChromeSelectionTest {
     }
 
     @Test
-    fun `about is the only destination this phase removed from the shared back bar`() {
+    fun `about is the only destination phase 5A1 removed from the shared back bar`() {
         // Regression guard: every other destination that showed the shared back bar before
-        // phase 5A1 must still show it - only aboutFragment's entry was removed.
+        // phase 5A1 must still show it - only aboutFragment's entry was removed there.
+        // serverSelectorFragment is asserted separately below (removed in phase 5A2, not 5A1).
         assertTrue(showsBackBar(R.id.playlistsFragment))
         assertTrue(showsBackBar(R.id.artistListFragment))
         assertTrue(showsBackBar(R.id.albumListFragment))
         assertTrue(showsBackBar(R.id.selectGenreFragment))
-        assertTrue(showsBackBar(R.id.serverSelectorFragment))
         assertTrue(showsBackBar(R.id.editServerFragment))
         assertTrue(showsBackBar(R.id.downloadsFragment))
         assertTrue(showsBackBar(R.id.settingsFragment))
@@ -259,6 +259,24 @@ class NavigationChromeSelectionTest {
         assertTrue(showsBackBar(R.id.trackCollectionFragment, libraryTrackCollection = true))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, albumDetail = true))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, playlistDetail = true))
+    }
+
+    // --- Server Selector (post-issue-#10 residual migration, phase 5A2) -----------------------
+
+    @Test
+    fun `server selector still hides the shared toolbar - unchanged by phase 5A2`() {
+        assertTrue(hides(R.id.serverSelectorFragment))
+    }
+
+    @Test
+    fun `server selector no longer shows the shared back bar - it draws its own TakiScreenHeader`() {
+        assertFalse(showsBackBar(R.id.serverSelectorFragment))
+    }
+
+    @Test
+    fun `edit server is unaffected by phase 5A2 - it remains legacy with the shared back bar`() {
+        assertTrue(showsBackBar(R.id.editServerFragment))
+        assertTrue(hides(R.id.editServerFragment))
     }
 
     @Test

@@ -155,8 +155,6 @@
     <string name="server_editor.required">Kötelező mező</string>
     <string name="server_menu.edit">Szerkeszt</string>
     <string name="server_menu.delete">Töröl</string>
-    <string name="server_menu.move_up">Feljebb mozgat</string>
-    <string name="server_menu.move_down">Lejjebb mozgat</string>
     <string name="server_editor.authentication">Bejelentkezés</string>
     <string name="server_editor.advanced">Haladó beállítások</string>
     <plurals name="n_songs">

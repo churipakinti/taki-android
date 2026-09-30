@@ -143,8 +143,6 @@
     <string name="server_editor.required">To pole jest wymagane</string>
     <string name="server_menu.edit">Edytuj</string>
     <string name="server_menu.delete">Usuń</string>
-    <string name="server_menu.move_up">Przesuń się w górę</string>
-    <string name="server_menu.move_down">Przesuń się w dół</string>
     <string name="server_editor.authentication">Authentication</string>
     <string name="server_editor.advanced">Ustawienia zaawansowane</string>
     <plurals name="n_songs">
