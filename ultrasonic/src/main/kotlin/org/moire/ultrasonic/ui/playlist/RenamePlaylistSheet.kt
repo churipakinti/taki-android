@@ -1,11 +1,11 @@
 /*
- * CreatePlaylistNameSheet.kt
+ * RenamePlaylistSheet.kt
  * Copyright (C) 2009-2026 Ultrasonic developers
  *
  * Distributed under terms of the GNU GPLv3 license.
  */
 
-package org.moire.ultrasonic.ui.playlistlist
+package org.moire.ultrasonic.ui.playlist
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -51,56 +51,61 @@ import org.moire.ultrasonic.ui.components.TakiTextField
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /** Lets tests find the sheet and its actions. */
-const val CREATE_PLAYLIST_NAME_SHEET_TEST_TAG = "create_playlist_name_sheet"
-const val CREATE_PLAYLIST_NAME_FIELD_TEST_TAG = "create_playlist_name_field"
-const val CREATE_PLAYLIST_NAME_SCRIM_TEST_TAG = "create_playlist_name_scrim"
+const val RENAME_PLAYLIST_SHEET_TEST_TAG = "rename_playlist_sheet"
+const val RENAME_PLAYLIST_NAME_FIELD_TEST_TAG = "rename_playlist_name_field"
+const val RENAME_PLAYLIST_SCRIM_TEST_TAG = "rename_playlist_scrim"
 
 private const val SHEET_ANIMATION_MS = 200
 
 /**
- * What the sheet does (issue #10 phase 4M3). Validation and the resulting navigation to
- * `createPlaylistFragment` both stay in [org.moire.ultrasonic.fragment.PlaylistListFragment],
- * unchanged from the legacy `AlertDialog`: [onCreate] is called on every tap of the primary
- * action / every IME submit, and the host decides whether that closes the sheet (valid,
- * trimmed, non-blank name - matches `NavigationGraphDirections.toCreatePlaylist`) or instead sets
- * an error message and keeps it open (blank after trim) - this file owns no validation logic of
- * its own, only presentation.
+ * What the sheet does (issue #10 phase 4M4). Validation and the resulting
+ * `updatePlaylist(id, name, null, null)` call both stay in
+ * [org.moire.ultrasonic.fragment.TrackCollectionFragment] (`renamePlaylist`), unchanged from the
+ * legacy `AlertDialog`: [onRename] is called on every tap of the primary action / every IME
+ * submit, and the host decides whether that closes the sheet (valid, trimmed, non-blank name)
+ * or instead sets an error message and keeps it open (blank after trim) - this file owns no
+ * validation logic of its own, only presentation, matching
+ * [org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameSheet]'s own contract.
  */
-data class CreatePlaylistNameActions(
+data class RenamePlaylistActions(
     val onNameChange: (String) -> Unit,
-    val onCreate: () -> Unit,
+    val onRename: () -> Unit,
     val onDismiss: () -> Unit,
 ) {
     companion object {
-        val Noop = CreatePlaylistNameActions(
+        val Noop = RenamePlaylistActions(
             onNameChange = {},
-            onCreate = {},
+            onRename = {},
             onDismiss = {},
         )
     }
 }
 
 /**
- * A compact bottom-sheet-style overlay (issue #10 phase 4M3) replacing the legacy `AlertDialog`
- * (`R.layout.create_playlist`) that collects and validates the name for a new playlist before
- * navigating to the Compose `createPlaylistFragment` track picker. The same plain scrim + sliding
- * panel pattern [org.moire.ultrasonic.ui.player.SleepTimerSheet]/
- * [org.moire.ultrasonic.ui.player.SavePlaylistSheet] use, composed as the last child of
- * [org.moire.ultrasonic.ui.playlistlist.PlaylistListScreen]'s own root `Box` - transient UI over
- * the Playlists list, not a new destination. [name]/[errorMessage] are host-owned; this file owns
- * no text-field or validation state of its own.
+ * A compact bottom-sheet-style overlay (issue #10 phase 4M4) replacing the legacy `AlertDialog`
+ * (`R.layout.create_playlist`, reused for renaming) that renames an existing playlist from
+ * Playlist Detail. The same plain scrim + sliding panel pattern
+ * [org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameSheet]/
+ * [org.moire.ultrasonic.ui.player.SavePlaylistSheet]/
+ * [org.moire.ultrasonic.ui.player.SleepTimerSheet] all use, composed as a child of the same `Box`
+ * [org.moire.ultrasonic.ui.playlist.PlaylistDetailScreen] renders in. [name]/[errorMessage] are
+ * host-owned, matching every other migrated sheet's "Compose reads, host owns the value" contract
+ * - the host seeds [name] with the playlist's current name (the legacy dialog's
+ * `EditText.setText(navArgs.playlistName)`), not an empty field.
  *
- * [bottomContentInset] must match [PlaylistListScreen]'s own `bottomContentInset` (issue #10 phase
- * 4M4 fix): `NavigationActivity`'s bottom nav/mini-player are Activity-owned overlays drawn above
- * this Fragment-hosted sheet, so without it the sheet's Cancel/Create row renders underneath that
- * chrome - untappable whenever a track is loaded and the Playlists list is showing (found live).
+ * [bottomContentInset] must be the same value the host screen behind it (e.g.
+ * [org.moire.ultrasonic.ui.playlist.PlaylistDetailScreen]'s own `bottomContentInset`) uses to
+ * clear the floating bottom nav/mini-player chrome - found live (issue #10 phase 4M4) to be
+ * required, not optional: `NavigationActivity`'s bottom nav and mini-player are Activity-owned
+ * overlay views drawn *above* this Fragment-hosted sheet, so without this inset the sheet's own
+ * Cancel/Rename row renders underneath that chrome and is untappable whenever a track is loaded.
  */
 @Composable
-fun BoxScope.CreatePlaylistNameSheet(
+fun BoxScope.RenamePlaylistSheet(
     visible: Boolean,
     name: String,
     errorMessage: String?,
-    actions: CreatePlaylistNameActions,
+    actions: RenamePlaylistActions,
     bottomContentInset: Dp,
     modifier: Modifier = Modifier,
 ) {
@@ -115,7 +120,7 @@ fun BoxScope.CreatePlaylistNameSheet(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .testTag(CREATE_PLAYLIST_NAME_SCRIM_TEST_TAG)
+                    .testTag(RENAME_PLAYLIST_SCRIM_TEST_TAG)
                     .background(TakiTheme.colors.black.copy(alpha = SCRIM_ALPHA))
                     .clickable(
                         interactionSource = dismissInteraction,
@@ -131,17 +136,17 @@ fun BoxScope.CreatePlaylistNameSheet(
                 enter = slideInVertically(tween(SHEET_ANIMATION_MS)) { it },
                 exit = slideOutVertically(tween(SHEET_ANIMATION_MS)) { it },
             ) {
-                CreatePlaylistNameSheetContent(name, errorMessage, actions, bottomContentInset)
+                RenamePlaylistSheetContent(name, errorMessage, actions, bottomContentInset)
             }
         }
     }
 }
 
 @Composable
-private fun CreatePlaylistNameSheetContent(
+private fun RenamePlaylistSheetContent(
     name: String,
     errorMessage: String?,
-    actions: CreatePlaylistNameActions,
+    actions: RenamePlaylistActions,
     bottomContentInset: Dp,
 ) {
     Column(
@@ -149,14 +154,14 @@ private fun CreatePlaylistNameSheetContent(
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS))
             .background(TakiTheme.colors.surface)
-            .testTag(CREATE_PLAYLIST_NAME_SHEET_TEST_TAG)
+            .testTag(RENAME_PLAYLIST_SHEET_TEST_TAG)
             .padding(horizontal = TakiTheme.spacing.xl)
             .padding(top = TakiTheme.spacing.sm, bottom = TakiTheme.spacing.xl + bottomContentInset),
     ) {
         DragHandle()
         Spacer(Modifier.height(TakiTheme.spacing.md))
         Text(
-            text = stringResource(R.string.playlist_create),
+            text = stringResource(R.string.playlist_rename_action),
             style = TakiTheme.type.title,
             modifier = Modifier.semantics { heading() },
         )
@@ -165,11 +170,11 @@ private fun CreatePlaylistNameSheetContent(
             value = name,
             onValueChange = actions.onNameChange,
             label = stringResource(R.string.download_playlist_name),
-            modifier = Modifier.testTag(CREATE_PLAYLIST_NAME_FIELD_TEST_TAG),
+            modifier = Modifier.testTag(RENAME_PLAYLIST_NAME_FIELD_TEST_TAG),
             isError = errorMessage != null,
             errorMessage = errorMessage,
             imeAction = ImeAction.Done,
-            onImeAction = actions.onCreate,
+            onImeAction = actions.onRename,
         )
         Spacer(Modifier.height(TakiTheme.spacing.lg))
         Row(
@@ -184,21 +189,24 @@ private fun CreatePlaylistNameSheetContent(
             }
             Spacer(Modifier.width(TakiTheme.spacing.sm))
             Button(
-                onClick = actions.onCreate,
+                onClick = actions.onRename,
                 modifier = Modifier.defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = TakiTheme.colors.accent,
                     contentColor = TakiTheme.colors.onAccent,
                 ),
             ) {
-                Text(text = stringResource(R.string.playlist_create_action), style = TakiTheme.type.titleSmall)
+                Text(
+                    text = stringResource(R.string.playlist_rename_confirm_action),
+                    style = TakiTheme.type.titleSmall,
+                )
             }
         }
     }
 }
 
-/** Purely decorative, matching [org.moire.ultrasonic.ui.player.SleepTimerSheet]'s own drag
- *  handle - the scrim tap and system back already dismiss the sheet. */
+/** Purely decorative, matching [org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameSheet]'s
+ *  own drag handle - the scrim tap and system back already dismiss the sheet. */
 @Composable
 private fun DragHandle() {
     Box(

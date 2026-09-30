@@ -132,6 +132,7 @@ class PlaylistListFragment : Fragment() {
                             name = createPlaylistName.value,
                             errorMessage = createPlaylistError.value,
                             actions = createPlaylistNameActions(),
+                            bottomContentInset = bottomInset,
                         )
                     }
                 }

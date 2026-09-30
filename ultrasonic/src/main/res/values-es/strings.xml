@@ -135,7 +135,6 @@
     <string name="playlist.label">Listas de reproducción</string>
     <string name="playlist.create">Nueva lista</string>
     <string name="playlist.create_action">Crear</string>
-    <string name="playlist.create_name">Nombre de la lista</string>
     <string name="playlist.name_required">Introduce un nombre para la lista.</string>
     <string name="playlist.created">Lista de reproducción creada.</string>
     <string name="playlist.create_error">No se pudo crear la lista de reproducción.</string>

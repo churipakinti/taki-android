@@ -109,6 +109,17 @@ class PlaylistDetailViewModel(application: Application) : AndroidViewModel(appli
         load(args)
     }
 
+    /**
+     * Rename Playlist (issue #10 phase 4M4): an in-memory-only title update, mirroring the legacy
+     * `TrackCollectionFragment.renamePlaylist`'s own success path (`FragmentTitle.setTitle(name)`)
+     * one for one - `updatePlaylist` never re-sends track membership/order, so no track re-fetch
+     * happens here either, same as [removeTrackAt]. The Fragment calls this only after the
+     * `updatePlaylist` network call actually succeeds.
+     */
+    fun applyRename(name: String) {
+        _uiState.update { it.copy(title = name) }
+    }
+
     /** All playlist tracks in order - the Fragment's playback commands read this. */
     fun tracksSnapshot(): List<Track> = rawTracks
 

@@ -14,11 +14,13 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.PopupMenu
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -39,7 +41,6 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputLayout
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.Collections
 import java.util.Locale
@@ -71,6 +72,8 @@ import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserScreen
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailActions
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailArgs
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailScreen
+import org.moire.ultrasonic.ui.playlist.RenamePlaylistActions
+import org.moire.ultrasonic.ui.playlist.RenamePlaylistSheet
 import org.moire.ultrasonic.ui.tracklist.TrackListActions
 import org.moire.ultrasonic.ui.tracklist.TrackListRow
 import org.moire.ultrasonic.ui.tracklist.TrackListScreen
@@ -212,6 +215,15 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     // `confirmDeletePlaylist` remain very much alive - they are reused as-is by
     // `playlistDetailActions` below (see that property's kdoc).
     private val playlistDetailViewModel: PlaylistDetailViewModel by viewModels()
+
+    /** Whether the Rename Playlist sheet (`showRenamePlaylistDialog`, issue #10 phase 4M4) is
+     *  open, replacing the legacy `AlertDialog` that reused `R.layout.create_playlist`.
+     *  [renamePlaylistName]/[renamePlaylistError] are host-owned, matching
+     *  [org.moire.ultrasonic.fragment.PlaylistListFragment]'s own
+     *  `showCreatePlaylistSheet`/`createPlaylistName`/`createPlaylistError` contract. */
+    private val showRenamePlaylistSheet = mutableStateOf(false)
+    private val renamePlaylistName = mutableStateOf("")
+    private val renamePlaylistError = mutableStateOf<String?>(null)
 
     private val isComposePlaylistDetailMode: Boolean
         get() = navArgs.playlistId != null
@@ -900,32 +912,32 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
-    private fun showRenamePlaylistDialog() {
-        val playlistId = navArgs.playlistId ?: return
-        val dialogView = layoutInflater.inflate(R.layout.create_playlist, null)
-        val nameInput = dialogView.findViewById<EditText>(R.id.create_playlist_name)
-        nameInput.setText(navArgs.playlistName)
-        val inputLayout = dialogView as TextInputLayout
-        val dialog = ConfirmationDialog.Builder(requireContext())
-            .setTitle(R.string.playlist_rename_action)
-            .setView(dialogView)
-            .setPositiveButton(R.string.common_ok, null)
-            .setNegativeButton(R.string.common_cancel, null)
-            .create()
+    // ---- Rename (issue #10 phase 4M4: Compose sheet, replacing the legacy AlertDialog) --------
 
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val name = nameInput.text?.toString()?.trim().orEmpty()
-                if (name.isBlank()) {
-                    inputLayout.error = getString(R.string.playlist_name_required)
-                } else {
-                    dialog.dismiss()
-                    renamePlaylist(playlistId, name)
-                }
-            }
-        }
-        dialog.show()
+    private fun showRenamePlaylistDialog() {
+        if (navArgs.playlistId == null) return
+        renamePlaylistName.value = navArgs.playlistName.orEmpty()
+        renamePlaylistError.value = null
+        showRenamePlaylistSheet.value = true
     }
+
+    private fun renamePlaylistActions(): RenamePlaylistActions = RenamePlaylistActions(
+        onNameChange = {
+            renamePlaylistName.value = it
+            renamePlaylistError.value = null
+        },
+        onRename = {
+            val playlistId = navArgs.playlistId
+            val name = renamePlaylistName.value.trim()
+            if (name.isBlank()) {
+                renamePlaylistError.value = getString(R.string.playlist_name_required)
+            } else if (playlistId != null) {
+                showRenamePlaylistSheet.value = false
+                renamePlaylist(playlistId, name)
+            }
+        },
+        onDismiss = { showRenamePlaylistSheet.value = false },
+    )
 
     private fun renamePlaylist(id: String, name: String) {
         viewLifecycleOwner.lifecycleScope.launch(
@@ -935,6 +947,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 MusicServiceFactory.getMusicService().updatePlaylist(id, name, null, null)
             }
             setTitle(name)
+            playlistDetailViewModel.applyRename(name)
             toast(getString(R.string.playlist_updated_info, name))
         }
     }
@@ -1713,12 +1726,21 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    PlaylistDetailScreen(
-                        state = state,
-                        actions = playlistDetailActions,
-                        currentTrackId = player.trackId,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        PlaylistDetailScreen(
+                            state = state,
+                            actions = playlistDetailActions,
+                            currentTrackId = player.trackId,
+                            bottomContentInset = bottomInset,
+                        )
+                        RenamePlaylistSheet(
+                            visible = showRenamePlaylistSheet.value,
+                            name = renamePlaylistName.value,
+                            errorMessage = renamePlaylistError.value,
+                            actions = renamePlaylistActions(),
+                            bottomContentInset = bottomInset,
+                        )
+                    }
                 }
             }
         }

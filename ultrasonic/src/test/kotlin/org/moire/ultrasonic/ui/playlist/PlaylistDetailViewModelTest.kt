@@ -241,4 +241,18 @@ class PlaylistDetailViewModelTest {
         assertEquals(1, model.uiState.value.songCount)
         assertEquals(listOf("b"), model.tracksSnapshot().map { it.id })
     }
+
+    @Test
+    fun `applyRename updates only the title, in place, no reload`() = runTest {
+        val model = vm { _, _ -> listOf(track("a"), track("b")) }
+        model.load(args(playlistName = "Road Trip"))
+        advanceUntilIdle()
+
+        model.applyRename("Summer Mix")
+
+        val state = model.uiState.value
+        assertEquals("Summer Mix", state.title)
+        assertEquals(listOf("a", "b"), state.rows.map { it.id })
+        assertEquals(2, state.songCount)
+    }
 }

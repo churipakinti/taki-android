@@ -1,11 +1,11 @@
 /*
- * CreatePlaylistNameSheetScreenshotTest.kt
+ * RenamePlaylistSheetScreenshotTest.kt
  * Copyright (C) 2009-2026 Ultrasonic developers
  *
  * Distributed under terms of the GNU GPLv3 license.
  */
 
-package org.moire.ultrasonic.ui.playlistlist
+package org.moire.ultrasonic.ui.playlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -28,17 +28,17 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * Roborazzi goldens for the Compose Create Playlist naming sheet (issue #10 phase 4M3),
- * replacing the legacy `AlertDialog`: the blank/default state and the validation-error state
- * (both visually meaningful - the error message is a real, distinct rendering, not just a state
- * flag). Fully deterministic - `Noop` actions.
+ * Roborazzi goldens for the Compose Rename Playlist sheet (issue #10 phase 4M4), replacing the
+ * legacy `AlertDialog` (`R.layout.create_playlist`, reused for renaming): the name pre-filled with
+ * the playlist's current name, and the validation-error state (a real, distinct rendering, not
+ * just a state flag). Fully deterministic - `Noop` actions.
  * Record with:
  *   ./gradlew :ultrasonic:testDebugUnitTest -Proborazzi.test.record=true
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w420dp-h800dp-xxhdpi")
-class CreatePlaylistNameSheetScreenshotTest {
+class RenamePlaylistSheetScreenshotTest {
 
     @get:Rule
     val compose = createComposeRule()
@@ -61,23 +61,23 @@ class CreatePlaylistNameSheetScreenshotTest {
     }
 
     @Test
-    fun createPlaylistNameSheet() = capture("create_playlist_name_sheet_golden") {
-        CreatePlaylistNameSheet(
+    fun renamePlaylistSheet() = capture("rename_playlist_sheet_golden") {
+        RenamePlaylistSheet(
             visible = true,
-            name = "",
+            name = "Road Trip",
             errorMessage = null,
-            actions = CreatePlaylistNameActions.Noop,
+            actions = RenamePlaylistActions.Noop,
             bottomContentInset = 0.dp,
         )
     }
 
     @Test
-    fun createPlaylistNameSheetError() = capture("create_playlist_name_sheet_error_golden") {
-        CreatePlaylistNameSheet(
+    fun renamePlaylistSheetError() = capture("rename_playlist_sheet_error_golden") {
+        RenamePlaylistSheet(
             visible = true,
             name = "",
             errorMessage = "Enter a playlist name.",
-            actions = CreatePlaylistNameActions.Noop,
+            actions = RenamePlaylistActions.Noop,
             bottomContentInset = 0.dp,
         )
     }

@@ -1,14 +1,15 @@
 # Taki Compose Migration — Coverage Audit (Issue #10)
 
-**Status:** updated through phase 4M3 (final playlist dialogs migrated to Compose — Save Playlist
-and the Create Playlist naming dialog). Phase 4L baseline: `develop` at `16ddc285` (Migrate Sleep
-Timer to Compose sheet); phase 4M1 baseline: `768a2a0f` (Finalize Compose migration coverage
-audit); phase 4M2 baseline: `9b6a8de6` (Migrate folder browsing to Compose); phase 4M3 baseline:
-`5bdb486b` (Migrate playlist editor to Compose). This supersedes the phase-4C version of this
-document (baseline `5f8bdc6a`), which is now stale — every `MIGRATE_IN_#10` row it listed has
-since shipped (Artist List, Album List, all `TrackCollectionFragment` browsing modes, Playlists,
-Genres, Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer, folder browsing, Create
-Playlist, Save Playlist, Create Playlist naming).
+**Status:** updated through phase 4M4 (Rename Playlist migrated to Compose — the third and last
+reachable playlist transient dialog — plus live-validated closure of issue #10). Phase 4L baseline:
+`develop` at `16ddc285` (Migrate Sleep Timer to Compose sheet); phase 4M1 baseline: `768a2a0f`
+(Finalize Compose migration coverage audit); phase 4M2 baseline: `9b6a8de6` (Migrate folder
+browsing to Compose); phase 4M3 baseline: `5bdb486b` (Migrate playlist editor to Compose); phase
+4M4 baseline: `73920322` (Migrate final playlist dialogs to Compose). This supersedes the phase-4C
+version of this document (baseline `5f8bdc6a`), which is now stale — every `MIGRATE_IN_#10` row it
+listed has since shipped (Artist List, Album List, all `TrackCollectionFragment` browsing modes,
+Playlists, Genres, Downloads, mini-player, Now Playing, Up Next, Lyrics, Sleep Timer, folder
+browsing, Create Playlist, Save Playlist, Create Playlist naming, Rename Playlist).
 
 Sources used: `ultrasonic/src/main/res/navigation/navigation_graph.xml` (read directly, not
 recalled), every Fragment class reachable from the graph, `NavigationActivity.kt`'s
@@ -31,6 +32,7 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 | Dead / unreachable, removed phase 4L | 2 (nav nodes) + 2 (dead adapter/binder classes) |
 | Dead / unreachable, removed phase 4M2 | 3 (dead adapter/layout files, Create/Edit Playlist picker) |
 | Dead / unreachable, removed phase 4M3 | 1 (`save_playlist.xml`) |
+| Dead / unreachable, removed phase 4M4 | 1 (`create_playlist.xml`, `playlist.create_name`) |
 | Dead / unreachable, product decision required | 1 (Videos mode) |
 | Unclassified | **0** |
 
@@ -41,8 +43,11 @@ Compose (19→20, 2→1); phase 4M3 moved the last matrix-listed blocker, Save P
 Compose (20→21, 1→0) and additionally migrated the Create Playlist naming `AlertDialog` — a live
 transient dialog discovered during 4M2 that was never counted as its own matrix row (see §M's own
 note) and is not counted as one here either, to keep this arithmetic reconciling with the
-historical row-based count; it is documented as a migrated transient sub-surface in §N instead. See
-§B.1/§B.3, §L, §M, and §N below.
+historical row-based count; it is documented as a migrated transient sub-surface in §N instead.
+Phase 4M4 migrated the third such transient, Rename Playlist (discovered during 4M3's own audit and
+deliberately deferred — see §N), also not counted as a standalone matrix row for the same reason;
+see §P. The matrix totals (21/1/0/5/27) are unchanged since 4M3. See §B.1/§B.3, §L, §M, §N, and §P
+below.
 
 ---
 
@@ -474,7 +479,7 @@ imported inside ui theme`) failed immediately, exactly as designed. Fixed by usi
 Deleted `save_playlist.xml` — confirmed by grep to have zero references (`R.layout.save_playlist`,
 `R.id.save_playlist_name`) outside its own definition once `PlayerFragment` stopped inflating it.
 `create_playlist.xml` was **not** deleted (still live via `showRenamePlaylistDialog`, out of this
-phase's scope — see above).
+phase's scope — see above). It was later deleted in phase 4M4 once Rename migrated too — see §P.
 
 ### Tests / gates
 
@@ -555,7 +560,7 @@ never reachable during the migration.
 | Dead TrackCollection/binder cleanup (`AlbumRowDelegate`/`TrackViewBinder`/`HeaderViewBinder`/`DiscHeaderBinder`) | Confirmed dead (phase 4M1), deliberately deferred - substantial, not small | No - #10's acceptance criteria are about reachable UI, not internal dead code |
 | Videos removal | Recommended, not implemented (scope) | No - already unreachable |
 
-### `READY_TO_CLOSE_#10 = NO`
+### `READY_TO_CLOSE_#10 = NO` (superseded by §P)
 
 **Exact blocker:** live Pixel 7 validation of the two surfaces built in this phase (`SavePlaylistSheet`,
 `CreatePlaylistNameSheet`) has not been performed - the validation device disconnected mid-session.
@@ -565,3 +570,218 @@ tests missed and only a live device pass caught) is the reason this audit does n
 test-green as sufficient by itself for the *final* phase closing out the issue. This is a narrow,
 concrete, one-session gap - not an architectural or implementation gap - and is expected to close
 as soon as a Pixel (or equivalent physical device) is available again.
+
+---
+
+## P. Phase 4M4 — Rename Playlist migrated; live validation completed; #10 closed
+
+Baseline `73920322`. Migrated the third and last reachable legacy playlist dialog
+(`TrackCollectionFragment.showRenamePlaylistDialog()`, discovered during 4M3's own audit and
+deliberately deferred - see §N), then performed the live Pixel 7 validation 4M3 could not complete,
+across all three playlist transient sheets.
+
+### Rename Playlist: full audit before implementation
+
+`TrackCollectionFragment.showRenamePlaylistDialog()` reused `R.layout.create_playlist` to rename an
+*existing* playlist from Playlist Detail - a different feature from both Create Playlist naming
+(4M3) and Save Playlist (4M3) despite sharing that layout with the former. Traced in full:
+playlist ID from `navArgs.playlistId` (returns early if null); name prefilled from
+`navArgs.playlistName`; validation is trim + non-blank only (no dedup), matching Create's own
+rules; the dialog dismisses *before* the network result (matching Save Playlist's own timing, not
+Create's, which waits); the server call is `updatePlaylist(id, name, null, null)` - `null` track
+list/order means membership and ordering are never touched, matching "rename only"; success calls
+`FragmentTitle.setTitle(name)` (the legacy Activity toolbar) and toasts
+`playlist.updated_info`; failure toasts `playlist.updated_info_error` via the existing
+`toastingExceptionHandler`, the same non-throwing, Fragment-owned path every other playlist action
+in this class already uses; cancel/Back/outside-tap all dismiss without saving
+(`ConfirmationDialog.Builder`'s `setCancelable(true)`, confirmed by reading `Dialogs.kt`). Playlist
+Detail (Compose since phase 4F3) never refreshes its track list on rename - by design, matching the
+legacy screen's own scope (rename only touches the name).
+
+### What migrated
+
+New `RenamePlaylistSheet`/`RenamePlaylistActions` (`ui/playlist/`), following the exact
+scrim + sliding-panel pattern `CreatePlaylistNameSheet`/`SavePlaylistSheet` established in 4M3 -
+presentation-only, host-owned `mutableStateOf` name/error state in `TrackCollectionFragment`
+(`showRenamePlaylistSheet`/`renamePlaylistName`/`renamePlaylistError`), every server/toast call
+unchanged in `renamePlaylist()`. `PlaylistDetailViewModel` gained one new method, `applyRename`, an
+in-memory-only title update (no re-fetch) that is the Compose equivalent of the legacy
+`FragmentTitle.setTitle(name)` call - the Compose screen owns the visible title now that the
+Activity toolbar is hidden in this mode, so *something* had to carry that one line of legacy
+behavior across; everything else about `renamePlaylist()` is untouched.
+
+**Shared-primitive audit (task requirement):** `RenamePlaylistSheet` and `CreatePlaylistNameSheet`
+are structurally close (title + labelled field + Cancel/primary row), but 4M3 already chose not to
+share `SavePlaylistSheet`/`CreatePlaylistNameSheet` despite the same closeness, to keep each sheet's
+validation and copy independently readable. `RenamePlaylistSheet` follows that same precedent
+(duplicated, not extracted) rather than introducing a shared `PlaylistNameSheetContent` this phase
+would be the first to actually need - reconsider only if a fourth sheet makes the duplication cost
+clearly outweigh the extra indirection.
+
+### A real bug found during required live validation, not before
+
+Live Pixel 7 validation of Create Playlist naming (§14.A) surfaced a genuine defect neither 4M3's
+nor this phase's own unit/Compose/Roborazzi tests could have caught: `NavigationActivity`'s bottom
+nav and mini-player are Activity-owned overlay views, drawn **above** every Fragment's own content
+in the view hierarchy (`mini-player stays Activity-owned`, per the phase 4A/4I architecture).
+Neither `CreatePlaylistNameSheet` nor the new `RenamePlaylistSheet` accounted for that live chrome
+band - both anchored their Cancel/primary row to `Alignment.BottomCenter` of a plain
+`fillMaxSize()` Box with only `.navigationBarsPadding()` (the system gesture bar), not the app's own
+mini-player + bottom-nav footprint stacked above it. On a real device, with a track loaded (the
+ordinary case), the row rendered *underneath* that chrome and was confirmed untappable - a tap on
+the visible "Create"/"Rename" button's own screen coordinates was swallowed by the mini-player,
+opening Now Playing instead. `SavePlaylistSheet` never showed the symptom because it only opens
+from `playerFragment` (Now Playing), where `NavigationActivity.miniPlayerHiddenFor` already hides
+both bars - the two sheets that do open over ordinary browsing screens (Playlists list, Playlist
+Detail) were the ones exposed.
+
+**Fix:** both sheets now take a required `bottomContentInset: Dp` parameter - the exact same value
+their host screen (`PlaylistListScreen`/`PlaylistDetailScreen`) already threads from
+`NavigationActivity.contentBottomInset` to clear this chrome for its own scrollable content -
+applied as the sheet's own bottom padding in place of `.navigationBarsPadding()` (the inset already
+includes the system bar; see `contentBottomInsetFor`'s own kdoc). `PlaylistListFragment` and
+`TrackCollectionFragment` now pass their already-computed `bottomInset` through to the sheet calls.
+Locked with a new Compose test per sheet (`RenamePlaylistSheetComposeTest`/
+`CreatePlaylistNameSheetComposeTest`) asserting the primary button's `boundsInRoot` clears a
+non-zero synthetic inset - a real cross-view-hierarchy touch conflict like this can't be
+reproduced in a Robolectric-only Compose tree (there is no Activity chrome to collide with), so the
+test locks the *contract* (the sheet actually reserves the space it's given), not the live-device
+symptom itself; only the Pixel crawl in §14 below can confirm the symptom is actually gone.
+
+This was not part of this phase's planned implementation scope - it was a live-validation finding
+in code this task explicitly required exercising end to end before closing #10. Both affected
+sheets (`CreatePlaylistNameSheet`, `SavePlaylistSheet`-adjacent pattern, `RenamePlaylistSheet`) are
+fixed; retested live below.
+
+### Legacy cleanup
+
+Deleted `create_playlist.xml` - confirmed by grep to have zero remaining references
+(`R.layout.create_playlist`, `R.id.create_playlist_name`) once `showRenamePlaylistDialog` stopped
+inflating it (the only remaining hits were historical kdoc mentions in `CreatePlaylistNameSheet.kt`
+and this document, left as-is). Removing it made `R.string.playlist.create_name` ("Playlist name",
+the layout's own `hint`) newly unused - lint's `UnusedResources` caught this immediately (not part
+of the 42-issue baseline), confirming it had no other caller (not even Compose, which reuses
+`download.playlist_name` for all three sheets' field labels); deleted from `values/` and the one
+translated `values-es/` entry. No other resource depended on either file.
+
+### Tests / gates
+
+- Tests: 1142 → 1155 (+13: 1 `PlaylistDetailViewModelTest` (`applyRename`), 9
+  `RenamePlaylistSheetComposeTest` (8 behavioral + 1 inset-contract regression test), 2
+  `RenamePlaylistSheetScreenshotTest`, 1 `CreatePlaylistNameSheetComposeTest` (matching
+  inset-contract regression test)), 0 failures
+- `assembleDebug`/`assembleRelease`/`lintDebug`: green, zero new findings (baseline
+  `lint-baseline.xml` actually shrank - several previously-baselined findings are no longer
+  reproduced, unrelated to this phase)
+- `detekt -Pqc`: 42 in `:ultrasonic` (baseline, zero new, confirmed byte-identical finding set) + 1
+  pre-existing unrelated finding in `:core:subsonic-api`
+- Roborazzi verify: green (2 new goldens - the populated Rename sheet and its validation-error
+  state)
+- `ArchitectureGuardTest`/`TakiTokensTest`/`NavigationChromeSelectionTest`: green (the guard test's
+  raw-`.dp`-literal rule initially flagged this phase's own draft `= 0.dp` default parameter value,
+  exactly as designed - fixed by making `bottomContentInset` a required parameter instead, matching
+  `PlaylistListScreen`/`PlaylistDetailScreen`'s own convention of never defaulting it)
+
+### Pixel 7 validation - completed this session
+
+The device reconnected (required a physical unlock - it had locked behind the screen-lock code,
+which this session correctly did not attempt to bypass) and was used for the full crawl §14
+requires:
+
+**Create Playlist naming:** confirmed the touch-conflict bug live (tapping the visible "Create"
+button's own coordinates opened Now Playing instead, with a track loaded and the Playlists list
+showing) before the inset fix; confirmed fixed after (button `boundsInRoot` now ends well above the
+mini-player's own top edge, tap lands correctly). End-to-end: named and created a disposable
+playlist ("ZZDisposable", 3 songs) via the IME "Done" submit path, landed on the Compose track
+picker, selected songs, saved - "Playlist created." toast, zero crashes, no legacy `AlertDialog`,
+no duplicate toolbar.
+
+**Save Playlist:** opened from Now Playing's overflow menu; sheet pre-filled with today's date
+exactly like the legacy dialog; no mini-player/bottom-nav present in this context (`playerFragment`
+is in `NavigationActivity`'s `hideForDestination` set), so the inset fix is a no-op here and the
+sheet rendered correctly with `.navigationBarsPadding()`'s prior behavior unchanged. No legacy
+`AlertDialog`, no crash.
+
+**Rename Playlist:** opened via Playlist Detail's overflow ("Rename playlist"); sheet correctly
+prefilled with the playlist's *current* name (read from `navArgs.playlistName`, the same nav
+argument the legacy dialog itself read - confirmed this is not a regression but a faithful port,
+including its one pre-existing quirk: the prefill reflects the nav argument at entry, not any
+server-verified live name); Cancel/Rename row correctly clears the mini-player after the fix;
+renamed a pre-existing disposable test playlist ("Test_2" → "ZZRenamed"), confirmed the success
+toast (`Updated playlist information for ZZRenamed`), confirmed the Compose header updated
+immediately via `applyRename` (no reload), confirmed server-side persistence (a second toast-
+confirmed rename call, back to "Test_2", would fail identically if the first had not actually
+persisted), then renamed it back to restore original state. Playlists list does **not** pick up the
+rename without a manual refresh - confirmed as pre-existing, unchanged behavior (no such hook
+exists for Create Playlist's own creation-refresh path to reuse; not invented here either).
+
+**Cleanup / incidental findings:** the disposable playlist and its downloaded copy were removed
+after testing. One incidental operator error during manual testing (a mistaken tap hit "Download"
+instead of "Delete" once) left three pre-existing library playlists locally partially-downloaded
+(cached audio only, no server-side or naming change); left as-is - reversible, non-destructive, and
+clearing it is a normal Downloads-screen action available to the user at any time. A second
+"ZZDisposable, 0 songs" list row was observed after a Save Playlist attempt whose typed name did
+not survive an automation artifact (likely on-device IME autocomplete substituting a previously-
+typed suggestion) - a delete attempt against it failed with "Requested data was not found",
+confirming the row was already-stale client-side list cache rather than a real server-side
+playlist; a full app restart confirmed the live server state matches the pre-session state exactly
+(8 playlists, `Test_2` unchanged). No crash, no ANR, and no data-integrity issue at any point -
+confirmed via `adb logcat` across the entire session (zero `FATAL`/`AndroidRuntime` entries).
+
+**Final representative crawl (§15):** Home, Library, Search, Playlists, Playlist Detail, Now
+Playing, Up Next, Sleep Timer all checked live post-fix - correct chrome (no duplicate headers, no
+stray toolbars), correct mini-player visibility rules, playback uninterrupted throughout, no
+crashes or ANRs.
+
+### Corrected playlist transient UI accounting (task-required correction to §N)
+
+§N's own text already disclosed Rename as a deliberately deferred third transient (not silently
+omitted), but the historical `2 Compose legacy dialogs migrated this phase` framing in 4M3's own
+summary reads, in isolation, as if playlist transient UI migration were complete after 4M3. It was
+not - explicitly, in full:
+
+| Surface | Before 4M3 | After 4M3 | After 4M4 |
+|---|---|---|---|
+| Create Playlist naming | Legacy `AlertDialog` | **Compose** (`CreatePlaylistNameSheet`) | Compose |
+| Save Playlist | Legacy `AlertDialog` | **Compose** (`SavePlaylistSheet`) | Compose |
+| Rename Playlist | Legacy `AlertDialog` | Legacy `AlertDialog` (deferred, documented in §N) | **Compose** (`RenamePlaylistSheet`) |
+
+Before 4M4: 2 Compose / 1 legacy. After 4M4: **3 Compose / 0 legacy** - all reachable
+playlist-management transient UI in #10's scope is now Compose. None of these three were ever a
+standalone row in the canonical 21/1/0/5/27 matrix (§A/§B.1); that arithmetic is unchanged by either
+phase.
+
+### Remaining #10 blockers after this phase
+
+**Zero.** Every matrix-listed (§B.3) surface has been Compose since 4M1; every playlist transient
+dialog is Compose as of this phase; the live-validation gap 4M3 left open (§N) is closed by the
+Pixel crawl above, which additionally caught and fixed a real defect neither prior phase's tests
+could have - the last in-scope category of risk this migration's own precedent (phase 4M2's caught
+crash) said to specifically watch for.
+
+### Final #10 acceptance audit
+
+Every criterion from §O re-checked against the tree as it stands after this phase's fixes - all
+unchanged from §O's own table except the two rows §O itself marked provisional:
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Playlist naming transient Compose | ✅ | phase 4M3, live-validated this phase |
+| Save Playlist transient Compose | ✅ | phase 4M3, live-validated this phase |
+| Rename Playlist transient Compose | ✅ | phase 4M4 |
+| No remaining reachable legacy core-browsing/playback surface inside #10 scope | ✅ | §B.3 is empty; all three playlist transients live-validated |
+| Every other §O criterion | ✅ | unchanged, re-confirmed by the §15 representative crawl this phase |
+
+**Known debt** is unchanged from §O's own table (#21-#24, the online-download-indicator gap, Up
+Next's unreproduced shuffle-reorder question, the deferred `TrackCollectionFragment`/binder
+cleanup, Videos) - all still open, all still confirmed non-blocking for #10 specifically, because
+#10's acceptance criteria are about reachable UI migration, not this project's full backlog.
+
+### `READY_TO_CLOSE_#10 = YES`
+
+Every implementation, test, gate, and live-validation requirement in #10's own acceptance text and
+in this task's explicit closure checklist is met: all reachable browsing and playlist-management UI
+is Compose, playback/runtime ownership is unchanged throughout, the mini-player remains coherent
+(and is now verified compatible with every transient sheet that can open over it), and live Pixel 7
+validation - including a real defect this exact validation step was designed to catch - passed
+after the fix. Issue #10 is closed as completed.
