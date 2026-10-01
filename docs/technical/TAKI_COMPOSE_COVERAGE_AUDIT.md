@@ -1076,14 +1076,45 @@ Baseline 1190 -> **1232** (+42), 0 failures: 16 `ServerSelectorViewModelTest`, 1
 
 ### Pixel 7 validation
 
-**Not performed this session** - the validation device (`2B191FDH200E36`) was not connected when
-this phase reached the live-validation step (`adb devices` returned empty after repeated retries
-and a daemon restart), the same disconnection this project's own record shows happening mid-session
-before (phase 4M3, §N). All other gates - unit, Compose interaction, navigation, and Roborazzi
-tests - are green, and the two recorded goldens were visually inspected and match the intended
-design. Per this project's own precedent, live device validation is still treated as a precondition
-for full confidence, not an optional nice-to-have; it is called out here as an explicit outstanding
-item rather than assumed or fabricated.
+Completed in a follow-up pass once the device (`2B191FDH200E36`) reconnected (it had merely
+disconnected mid-session, as noted above - not a lasting problem). Installed the already-built
+debug APK and validated live via `adb`/`uiautomator` against the real configured server, recording
+the active server first (`100.80.152.121`, confirmed via the Library Hub's disabled "current
+collection" menu item) so it could be confirmed unchanged afterward.
+
+**Main selector:** Library -> Switch collection shows exactly one header (0 Toolbar nodes),
+"Configured libraries" title, both rows (Offline, the one real server with its name/URL/"Active"
+label and accent-colored swatch), mini-player visible, bottom nav correctly absent, no clipping.
+Only one real server is configured, so the server-switch branch was not exercised live (per the
+task's own instruction not to manufacture a second server merely to test it) - it is covered by
+`ServerSelectorViewModelTest`'s `selecting a server calls setActiveServer with that server's id`.
+
+**Add:** tapped "Add library" -> opened the legacy Edit Server screen in new-server mode (empty
+URL/username/password fields, "Connect" button) - confirmed correct. Backed out via system back,
+which surfaced the legacy screen's own pre-existing "leave and lose your changes?" confirmation
+(unrelated to this migration); confirmed "OK", landed back on Server Selector with its list intact.
+
+**Edit:** opened the real server's "⋮" overflow (content description correctly read "More options
+for 100.80.152.121", confirming the accessibility-label fix) -> Edit -> confirmed the legacy Edit
+Server screen opened pre-filled with that exact server's own real name/URL/username/password, not
+a different or blank entry - the position-based nav-argument contract (documented above as a
+preserved, not fixed, legacy fragility) resolved correctly for this single-server case. Backed out
+without changing or saving anything.
+
+**Delete:** opened the overflow -> Delete -> confirmed the new `DeleteServerSheet` renders with the
+exact legacy copy ("Delete" / "Are you sure you want to remove this library?") and the exact
+correct target server name ("100.80.152.121"), scrim and sliding-panel matching every other
+migrated transient sheet. Tapped **Cancel** (the real production server was not deleted, per the
+task's explicit instruction); confirmed the server remained in the list afterward, still marked
+Active. Full confirm-and-delete behavior was not live-exercised (no disposable second server
+existed) - it is covered by `ServerSelectorViewModelTest`'s delete-sequence tests, including the
+regression test locking the pre-delete-active-id quirk.
+
+**Stability:** zero crashes, zero ANRs; `adb logcat -b crash`/`*:E` filtered to the app's own
+package showed no Taki-attributable entries across the entire session (the one `E`-level hit was
+the same benign `WindowOrganizerController` task-reparenting warning seen during phase 5A1's own
+validation, not an app error). The active server was never actually changed during this
+validation, so no restoration step was needed.
 
 ### Coverage accounting
 
@@ -1101,9 +1132,8 @@ Edit Server, Equalizer (§B.4, updated).
 
 No new debt beyond what was already documented and preserved-not-fixed above (the Edit
 `index`-vs-`id` contract and the `deleteMetaDatabase` pre-delete-id quirk, both pre-existing and
-now explicitly recorded rather than silently carried forward unnoticed). One outstanding item:
-live Pixel 7 validation, not performed this session (see above) - recommended before this phase is
-treated as fully closed out, consistent with this project's own precedent.
+now explicitly recorded rather than silently carried forward unnoticed). Live Pixel 7 validation
+is complete (see above) - no outstanding items.
 
 ### Next phase
 
