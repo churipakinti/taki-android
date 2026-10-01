@@ -25,22 +25,23 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 
 ## A. Executive summary
 
-**Current (post-phase 5A2):**
+**Current (post-phase 5A3):**
 
 | Metric | Count |
 |---|---:|
 | Total reachable UI surfaces classified | 27 |
-| — Compose | 24 |
+| — Compose | 25 |
 | — Hybrid (Compose + View by design) | 0 |
 | — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 0 |
-| — Legacy View/XML, intentionally out of scope | 3 |
+| — Legacy View/XML, intentionally out of scope | 2 |
 | Unclassified | **0** |
 
-Arithmetic: 24 + 0 + 0 + 3 = 27. Phase 5A1 (§Q) moved Box Sets (hybrid) and About (legacy) to full
+Arithmetic: 25 + 0 + 0 + 2 = 27. Phase 5A1 (§Q) moved Box Sets (hybrid) and About (legacy) to full
 Compose, 21/1/5 → 23/0/4. Phase 5A2 (§R) moved Server Selector to full Compose, 23/0/4 → 24/0/3.
-Remaining intentionally-legacy surfaces: Settings, Edit Server, Equalizer (§B.4). See §Q/§R for the
-full before/after detail of each phase. Everything below this line up to §P is the historical record
-as of issue #10's closure and is preserved unedited; §Q and §R append the post-#10 updates.
+Phase 5A3 (§S) moved Edit Server to full Compose, 24/0/3 → 25/0/2. Remaining intentionally-legacy
+surfaces: Settings, Equalizer (§B.4). See §Q/§R/§S for the full before/after detail of each phase.
+Everything below this line up to §P is the historical record as of issue #10's closure and is
+preserved unedited; §Q, §R and §S append the post-#10 updates.
 
 **As of #10's closure (phase 4M4, historical):**
 
@@ -103,6 +104,7 @@ below.
 | Box Sets list | `collectionListFragment` | Fragment | **phase 5A1** (post-#10) — was the hybrid XML-shell-over-`RecyclerView` row in §B.2 below; now full Compose (`CollectionListScreen`) |
 | About | `aboutFragment` | Fragment | **phase 5A1** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`AboutScreen`) |
 | Server Selector | `serverSelectorFragment` | Fragment | **phase 5A2** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`ServerSelectorScreen`), including the delete confirmation (`DeleteServerSheet`, replacing the legacy `ErrorDialog`) |
+| Edit Server | `editServerFragment` | Fragment | **phase 5A3** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`EditServerScreen`), both New (onboarding) and Existing (full editor) modes, plus the discard-changes confirmation (`DiscardServerChangesSheet`, replacing the legacy `AlertDialog`) |
 
 ### B.2 — Hybrid by design
 
@@ -118,13 +120,12 @@ Playlist dialog) has been migrated to Compose — see §B.1 and §N.
 ### B.4 — Intentionally legacy / out of scope for #10
 
 **Updated in phase 5A1 (post-#10):** About moved to full Compose — see §Q. **Updated in phase 5A2
-(post-#10):** Server Selector moved to full Compose — see §R. The remaining three rows are
-unchanged.
+(post-#10):** Server Selector moved to full Compose — see §R. **Updated in phase 5A3 (post-#10):**
+Edit Server moved to full Compose — see §S. The remaining two rows are unchanged.
 
 | Surface | Destination | Verified via |
 |---|---|---|
 | Settings | `settingsFragment` | `NavigationActivity.hidesSupportActionBar`/`updateChromeVisibility` still special-case it; Pixel-verified, tokenized dark theme, no toolbar, correct back nav |
-| Edit Server | `editServerFragment` | same |
 | Equalizer | `equalizerFragment` | same |
 
 Confirmed against issue #10's acceptance criteria (§H below): none of these are "core browsing" or
@@ -1140,3 +1141,208 @@ is complete (see above) - no outstanding items.
 **Phase 5A3 — migrate Edit Server to Compose.** This would also be the natural point to revisit
 the Edit `index`-vs-`id` contract this phase's audit flagged, since fixing it properly requires
 changing `EditServerFragment`'s own nav-argument semantics. Not started as part of this phase.
+
+---
+
+## S. Phase 5A3 — Edit Server residual migration (post-#10)
+
+Baseline `5b632a26` (Record phase 5A2 Pixel 7 live validation results). Not a reopening of issue
+#10 — Edit Server was already correctly classified as intentionally legacy at #10's closure (§B.4).
+The highest-risk surface of the post-#10 residual migration: first-connection onboarding and the
+only way to edit the real, already-configured production server.
+
+### Audit findings
+
+Full source of `EditServerFragment`/`EditServerModel`/`ServerSettingsModel`/`ServerSetting`/
+`ActiveServerProvider`/`MusicServiceFactory`/`RxBus`, the nav graph, `ServerSelectorFragment`'s
+caller, `server_edit.xml`, and the third-party `ColorPickerDialog` read directly. Key findings:
+
+- **A real, pre-existing contract fragility, confirmed and fixed (authorized in advance)**: the
+  legacy `editServerFragment` destination's `index` nav argument was looked up against
+  `ServerSetting.index`, a screen-position-derived DB column with no stable meaning once rows are
+  added/removed/reordered — the exact fragility §R's audit flagged and explicitly deferred.
+  Grepped every caller of this destination: **exactly 3 call sites** — two in
+  `NavigationActivity.kt` (first-run auto-nav, Library Hub's "Add" menu item), both always passing
+  `-1` (new-server mode), and `ServerSelectorFragment`'s own edit action, the **only** call site
+  that ever passes a real value, and that value was the on-screen row **position**, not an id.
+  Fixed at the root: the nav argument is renamed `index` → `serverId`, `ServerSettingDao`'s query
+  changed from `WHERE [index] = :index` to `WHERE [id] = :id`
+  (`getLiveServerSettingByIndex`→`getLiveServerSettingById`), `ServerSettingsModel` updated to
+  match, and `ServerSelectorFragment.editServer` now passes `row.id` instead of `row.position`
+  (`ServerSelectorRow.position` removed from the data class entirely, since nothing reads it
+  anymore). Proven, not just asserted: `ServerSelectorNavigationTest` has a regression test opening
+  the *second* displayed row and asserting the destination receives *that row's own id*,
+  independent of its on-screen position, plus a test confirming the old `index` argument no longer
+  exists on the destination at all.
+- **Product direction confirmed via the legacy screen itself**: `server_edit.xml`'s own
+  `View.GONE`/`setVisibility` logic already hides name/color/advanced/self-signed/plaintext/jukebox
+  for new-server mode — the task's "simple onboarding" direction for New mode is not a new product
+  decision, it is what the legacy screen already does, now made structural (two distinct
+  composables) instead of runtime visibility toggles on one shared layout.
+- **Validation/URL-normalization rules ported rule-for-rule**: `getFields()`'s exact sequence
+  (address required → must parse as a URL with a non-blank host → name auto-fills from the URL host
+  when hidden or blank → username required, password unconstrained) and `correctServerAddress()`'s
+  exact `trim(' ', '/')` normalization, called on address-field focus loss.
+- **`minimumApiVersion` reset preserved exactly**: loading an existing server whose
+  `minimumApiVersion` is already cached clears it and re-persists, so the next connection re-probes
+  the server's real API level — unchanged from legacy, now living in
+  `EditServerViewModel.onExistingServerLoaded`.
+- **Connect/Save sequencing preserved exactly**, including the active-server-reset-then-RxBus-
+  publish ordering: Save → `updateServer` → if the edited server is the active one,
+  `resetMusicService()` then `RxBus.activeServerChangedPublisher` → navigate up. Connect (new mode)
+  → validate → test → `saveNewServer` → `setActiveServerById` → navigate home.
+- **The phase 4M2 "scope-crossing rethrow" bug class, explicitly avoided**: navigation-completion
+  signaling was first attempted with the standard `Channel`+`receiveAsFlow()` pattern, but proved
+  untestable in this project's Robolectric+coroutines-test harness (events silently vanished in 4
+  separate test cases regardless of dispatcher choice). Replaced with a direct synchronous callback
+  field (`EditServerViewModel.onNavigate: (EditServerNavigationEvent) -> Unit`), assigned by the
+  Fragment in `onViewCreated` and explicitly cleared (`= {}`) in a new `onDestroyView` override —
+  deterministic regardless of which coroutine scope calls it, and a late callback after the view is
+  destroyed is a safe no-op instead of a crash on a stale `findNavController()`.
+- **`deleteMetaDatabase`'s pre-delete-active-id quirk (§R) is unrelated to this screen and was not
+  touched**, per the task's explicit scope boundary — it lives entirely in
+  `ServerSelectorViewModel.confirmDelete`.
+
+### Compose implementation
+
+`EditServerFragment` → thin Compose host (the same shape as `ServerSelectorFragment`) → new
+`EditServerScreen`/`EditServerUiState`/`EditServerActions` (`ui/serverselector/`), backed by a new
+`EditServerViewModel` (`model/`) — a `StateFlow` port of the legacy Fragment's own form/validation/
+connection/save logic, reusing `ServerSettingsModel`/`ActiveServerProvider`/`EditServerModel` as the
+sole data sources (no duplicate persistence logic). Test seams
+(`serverSettingLoader`/`connectionTester`/`saveNewServer`/`updateServer`/`setActiveServer`/
+`resetMusicService`/`publishActiveServerChanged`) let `EditServerViewModelTest` exercise every path
+deterministically without touching Koin or Room. New mode renders only address/username/password
+and a "Connect" button (`OnboardingFields`); Existing mode renders the full editor — a Library
+section (name, address), a Sign-in section (username, password), an Appearance row (color swatch,
+opens the retained third-party `ColorPickerDialog`), a collapsible Advanced section (self-signed,
+plain-password, jukebox-by-default toggles, auto-expanded if any is already on — matching the
+legacy `selfSignedSwitch`/`jukeboxSwitch`-only check), and Test Connection/Save actions. Back (both
+the header's own back action and the system Back gesture) now routes through the same
+`requestBack()`/`hasUnsavedChanges()` dirty-check, fixing a documented legacy gap where only system
+Back triggered the leave-confirmation. The discard confirmation is a new `DiscardServerChangesSheet`
+(`ui/serverselector/`), the same scrim + sliding-panel pattern every other migrated transient
+overlay in this codebase uses, replacing the legacy `AlertDialog` with the exact same copy.
+
+**A real bug found and fixed during the required live Pixel 7 validation, not before**: Compose's
+`onFocusChanged` reports a field's *initial* (unfocused) state once on composition — this is not a
+real focus-loss transition, but the address field's `onFocusChanged` callback didn't distinguish the
+two, so `onAddressFocusLost()` (which trims `' '`/`'/'` from both ends) fired the instant the New
+Server screen opened, before the user touched anything, turning the virgin `"http://"` seed into
+`"http:"` and simultaneously marking the untouched form as dirty — pressing Back on a screen nobody
+had edited incorrectly surfaced the discard-changes confirmation. Not caught by
+`EditServerScreenScreenshotTest`'s or any Compose test's prior goldens/assertions because
+Robolectric's Compose test harness does not reproduce this initial-callback behavior the same way
+a real device does (verified: the existing golden already rendered `"http://"` correctly, and only
+disappeared on the real device). Fixed in `EditServerScreen.kt`'s `AddressField` with a
+`wasFocused` guard that only forwards a *true* focused→unfocused transition. A new regression test,
+`EditServerScreenComposeTest`'s "opening the screen does not fire onAddressFocusLost", was verified
+to fail without the guard and pass with it before being kept.
+
+### Legacy cleanup
+
+Deleted (confirmed by grep to have zero remaining references before deletion): `server_edit.xml`,
+`rounded_swatch_fill.xml`, `rounded_border.xml` (both drawables referenced only by the deleted
+layout), and — a direct, incidental consequence of deleting `server_edit.xml` (the only remaining
+user of these four resources) — `ic_lyrics_synced.xml`, `ic_lyrics_unsynced.xml`, and the
+`Ultrasonic.AllCapsLabel`/`Ultrasonic.AllCapsLabel.Inset` styles, all caught by `lintDebug`'s
+`UnusedResources` check after the rest of the phase was otherwise gate-clean, re-confirmed orphaned
+by grep before removal. Retained (confirmed still needed): `ServerSettingsModel`,
+`ActiveServerProvider`, `EditServerModel`, `ServerColor.kt` (the color-picker's initial-color
+helper), the third-party `ColorPickerDialog`/`BubbleFlag` dependency (kept by explicit task
+direction, option A — not worth a subproject to replace).
+
+### Tests
+
+Baseline 1232 → **1291** (+59), 0 failures: 29 `EditServerViewModelTest` (new/existing mode,
+validation, URL normalization, `minimumApiVersion` reset, Connect/Save sequencing, discard/dirty-
+check), 24 `EditServerScreenComposeTest` (including the `onAddressFocusLost` regression test above),
+3 `EditServerScreenScreenshotTest` (New mode, Existing mode, Advanced expanded), plus updates to
+`ServerSelectorNavigationTest` (the second-row-opens-its-own-id regression test and the obsolete-
+`index`-argument regression test) and `NavigationChromeSelectionTest` (asserting `editServerFragment`
+now hides chrome exactly like every other Compose-migrated destination).
+
+### Gates
+
+- `compileDebugKotlin`/`compileDebugUnitTestKotlin`: green
+- `testDebugUnitTest` (includes Roborazzi verify): green, 1291/1291, all 3 new goldens recorded and
+  visually verified
+- `assembleDebug`/`assembleRelease`: green
+- `lintDebug`: 4 real new `UnusedResources` findings caught (the two lyrics-icon drawables and the
+  two `AllCapsLabel` styles, orphaned by this phase's own `server_edit.xml` deletion — see Legacy
+  cleanup above); green after removing all four, zero new findings remaining,
+  `lint-baseline.xml` unchanged; `lintVitalRelease`: no errors or warnings
+- `detekt -Pqc`: **42** in `:ultrasonic` — byte-identical to the pre-phase baseline, zero new issues
+  from any file this phase touched or added
+- `ArchitectureGuardTest`/`TakiTokensTest`/`NavigationChromeSelectionTest`: green — no raw dp/sp/
+  Color literals outside an explicit `// taki-raw-ok` escape hatch, no `MaterialTheme` import, no
+  Media3 import in the new `ui/serverselector` additions
+
+### Pixel 7 validation
+
+Completed live against device `2B191FDH200E36` with the real configured production server
+(`100.80.152.121`, `http://100.80.152.121:4533`, username `Joseph`), recorded first so it could be
+confirmed unchanged afterward.
+
+**New mode:** Library → "Switch collection" → "Add library" showed exactly the onboarding form
+(Library Address pre-filled `http://`, Username, Password, "Connect") with no name/color/advanced
+fields — confirmed correct. **This is where the `onAddressFocusLost` bug above was actually found**:
+pressing Back on this completely untouched form surfaced the discard-changes confirmation, which it
+should not have. Fixed in-session (see Compose implementation above), APK rebuilt and reinstalled,
+and re-validated: Back on an untouched New mode form now returns directly to Server Selector with no
+confirmation, and the address field correctly displays `http://` (not `http:`) on open.
+
+**Existing mode:** opened the real server's "⋮" → Edit → confirmed every field showed the exact real
+data (name `100.80.152.121`, address `http://100.80.152.121:4533`, username `Joseph`, password
+masked, Library color swatch, Advanced collapsed) — not a different or blank entry, proving the
+`serverId`-based navigation fix resolved correctly against the live database.
+
+**Safe save round-trip:** appended a harmless suffix to the display name only (address/username/
+password untouched), Save → confirmed Server Selector showed the new name as the Active server →
+reopened Edit, cleared the name field, retyped the exact original value `100.80.152.121`, Save again
+→ confirmed Server Selector shows the original name restored exactly, still Active.
+
+**Connection Test:** ran against the real server from Existing mode → "Connection successful" and
+"This server doesn't support jukebox mode" (live-probed feature detection) — both correct for this
+server's real capabilities.
+
+**Back/discard flow:** modified the username field (`Joseph`→`JosephX`, harmless, never saved) →
+Back → discard-changes confirmation appeared correctly → Cancel → confirmed the editor stayed open
+with the modification still present (unsaved) → Back again → OK (discard) → confirmed Server
+Selector → reopened Edit → confirmed the username reverted to exactly `Joseph`, proving the discard
+path never persisted the change.
+
+**Stability:** the app process (`pidof`) stayed the same single PID across the entire validation
+session — no crash-triggered restart; `adb logcat -d *:E` filtered for
+`org.moire.ultrasonic|io.github.churipakinti|AndroidRuntime|FATAL|ANR` across the whole session
+returned nothing.
+
+**Confirmed afterward**: the production server's name, address, username, and password are
+unchanged from before this validation session began.
+
+### Coverage accounting
+
+| | Before 5A3 | After 5A3 |
+|---|---:|---:|
+| Compose | 24 | 25 |
+| Hybrid | 0 | 0 |
+| Intentionally legacy | 3 | 2 |
+| Total reachable | 27 | 27 |
+
+Arithmetic: 24 + 0 + 3 = 27 → 25 + 0 + 2 = 27. Remaining intentionally-legacy surfaces: Settings,
+Equalizer (§B.4, updated).
+
+### Known debt
+
+The `index`-vs-`id` navigation contract fragility §R flagged is now **resolved**, not merely
+preserved — proven by regression tests, not just asserted. The `deleteMetaDatabase` pre-delete-
+active-id quirk (§R) is explicitly **unchanged and still open** — out of this phase's scope by the
+task's own instruction. `ServerSettingsModel.moveItemUp`/`moveItemDown` remain dead code (§R,
+unaffected by this phase — `ServerSettingsModel` itself is retained per scope). The Videos-mode
+product decision (§B.5) remains open and unrelated to this surface. No new debt was introduced by
+this phase; the one real bug found during live validation (the `onFocusChanged` initial-state issue
+above) was fixed and regression-tested within this same session, not deferred.
+
+### Next phase
+
+**Phase 5A4 — migrate Settings to Compose.** Not started as part of this phase.

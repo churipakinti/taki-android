@@ -44,13 +44,11 @@ class ServerSelectorScreenComposeTest {
     private fun row(
         id: Int,
         name: String,
-        position: Int = id,
         description: String? = "https://$name.example.com",
         isOffline: Boolean = false,
         isActive: Boolean = false,
     ) = ServerSelectorRow(
         id = id,
-        position = position,
         name = name,
         description = description,
         color = null,
@@ -58,9 +56,9 @@ class ServerSelectorScreenComposeTest {
         isActive = isActive,
     )
 
-    private val offline = row(id = -1, name = "Offline", position = 0, description = null, isOffline = true)
-    private val home = row(id = 1, name = "Home", position = 1, isActive = true)
-    private val away = row(id = 2, name = "Away", position = 2)
+    private val offline = row(id = -1, name = "Offline", description = null, isOffline = true)
+    private val home = row(id = 1, name = "Home", isActive = true)
+    private val away = row(id = 2, name = "Away")
 
     private val loaded = ServerSelectorUiState(rows = persistentListOf(offline, home, away))
 

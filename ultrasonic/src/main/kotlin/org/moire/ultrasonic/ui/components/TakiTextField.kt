@@ -15,7 +15,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusState
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /**
@@ -23,10 +27,16 @@ import org.moire.ultrasonic.ui.theme.TakiTheme
  * Material3 [OutlinedTextField] with every color remapped to Taki tokens (ivory text/border-on-
  * focus, gray label/border-at-rest, the shared error color) rather than Material's defaults, so it
  * reads as part of the same dark surface every other Taki sheet/screen uses. Used by
- * [org.moire.ultrasonic.ui.player.SavePlaylistSheet] and
- * [org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameSheet] - both need a labelled field with
+ * [org.moire.ultrasonic.ui.player.SavePlaylistSheet],
+ * [org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameSheet], and (issue #10 phase 5A3)
+ * [org.moire.ultrasonic.ui.serverselector.EditServerScreen] - both need a labelled field with
  * an inline error, which [org.moire.ultrasonic.ui.components.TakiSearchField] (hint-only, no
  * label/error, Search-specific styling) doesn't offer.
+ *
+ * [keyboardType]/[visualTransformation]/[trailingIcon]/[onFocusChanged] were added in phase 5A3
+ * for Edit Server's URL/password fields (a password show/hide toggle, address-appropriate
+ * keyboard, and focus-loss URL normalization) - all default to the exact prior behavior, so the
+ * three existing callers above are unaffected.
  */
 @Composable
 fun TakiTextField(
@@ -38,17 +48,25 @@ fun TakiTextField(
     errorMessage: String? = null,
     imeAction: ImeAction = ImeAction.Done,
     onImeAction: () -> Unit = {},
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    onFocusChanged: ((FocusState) -> Unit)? = null,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .let { if (onFocusChanged != null) it.onFocusChanged(onFocusChanged) else it },
         label = { Text(label) },
         singleLine = true,
         isError = isError,
         supportingText = errorMessage?.let { { Text(it) } },
-        keyboardOptions = KeyboardOptions(imeAction = imeAction),
+        keyboardOptions = KeyboardOptions(imeAction = imeAction, keyboardType = keyboardType),
         keyboardActions = KeyboardActions(onDone = { onImeAction() }, onGo = { onImeAction() }),
+        visualTransformation = visualTransformation,
+        trailingIcon = trailingIcon,
         textStyle = TakiTheme.type.body.copy(color = TakiTheme.colors.ivory),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = TakiTheme.colors.ivory,

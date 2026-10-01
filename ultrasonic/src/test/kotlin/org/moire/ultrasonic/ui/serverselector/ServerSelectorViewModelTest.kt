@@ -90,14 +90,15 @@ class ServerSelectorViewModelTest {
     }
 
     @Test
-    fun `each row's position is its index in the combined Offline-plus-servers list`() {
-        // This is the exact value the legacy adapter fed into EditServerFragment's index arg.
-        val model = vm(servers = listOf(server(1, "Home"), server(2, "Away")))
+    fun `each row's id is the real ServerSetting id, independent of its on-screen position`() {
+        // issue #10 phase 5A3: navigation to Edit Server now uses this stable id directly,
+        // not the row's on-screen position (the legacy index-based contract this replaced).
+        val model = vm(servers = listOf(server(7, "Home"), server(3, "Away")))
         model.reload()
         val rows = model.uiState.value.rows
-        assertEquals(0, rows[0].position)
-        assertEquals(1, rows[1].position)
-        assertEquals(2, rows[2].position)
+        assertEquals(ActiveServerProvider.OFFLINE_DB_ID, rows[0].id)
+        assertEquals(7, rows[1].id)
+        assertEquals(3, rows[2].id)
     }
 
     @Test

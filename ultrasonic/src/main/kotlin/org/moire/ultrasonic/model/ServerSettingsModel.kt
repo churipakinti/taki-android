@@ -44,11 +44,16 @@ class ServerSettingsModel(
     }
 
     /**
-     * Retrieves a single Server Setting by its index
+     * Retrieves a single Server Setting by its stable, unique id.
      * This function is asynchronous, uses LiveData to provide the Setting.
+     *
+     * Added in issue #10 phase 5A3 to replace a fragile `index`-based lookup
+     * (`getLiveServerSettingByIndex`, removed) that `EditServerFragment` used to resolve
+     * against `ServerSetting.index` - a plain application-maintained ordering column, not a
+     * stable identity. Server Selector now navigates with `ServerSetting.id` directly.
      */
-    fun getServerSetting(index: Int): LiveData<ServerSetting?> =
-        repository.getLiveServerSettingByIndex(index)
+    fun getServerSettingById(id: Int): LiveData<ServerSetting?> =
+        repository.getLiveServerSettingById(id)
 
     /**
      * Moves a Setting up in the Server List by decreasing its index

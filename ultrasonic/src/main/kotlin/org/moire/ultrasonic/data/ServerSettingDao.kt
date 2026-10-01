@@ -51,11 +51,11 @@ interface ServerSettingDao {
     suspend fun findByIndex(index: Int): ServerSetting?
 
     /**
-     * Finds a Server Setting by its Index in the Select List
+     * Finds a Server Setting by its unique Id
      * @return LiveData of the ServerSetting
      */
-    @Query("SELECT * FROM serverSetting WHERE [index] = :index")
-    fun getLiveServerSettingByIndex(index: Int): LiveData<ServerSetting?>
+    @Query("SELECT * FROM serverSetting WHERE [id] = :id")
+    fun getLiveServerSettingById(id: Int): LiveData<ServerSetting?>
 
     /**
      * Retrieves the count of rows in the table

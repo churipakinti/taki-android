@@ -29,16 +29,16 @@ data class ServerSelectorUiState(
 )
 
 /**
- * One server row, including the always-present, non-editable Offline entry (position 0). [position]
- * is the row's index within this same combined [Offline, ...real servers] list - the exact value
- * the legacy `ServerRowAdapter` fed into `EditServerFragment`'s `index` nav argument (itself a
- * lookup against `ServerSetting.index`, not `id` - see the phase 5A2 audit). Preserved unchanged
- * here since fixing that contract is `EditServerFragment`'s scope, not this phase's.
+ * One server row, including the always-present, non-editable Offline entry. [id] is
+ * [org.moire.ultrasonic.data.ServerSetting.id] (or
+ * [org.moire.ultrasonic.data.ActiveServerProvider.OFFLINE_DB_ID] for the Offline row) - a stable
+ * identity, used directly for navigation to Edit Server (issue #10 phase 5A3; this row used to
+ * also carry a `position` field fed into a fragile `ServerSetting.index`-based nav argument,
+ * removed once the editor started resolving by `id` instead - see the phase 5A3 audit).
  */
 @Immutable
 data class ServerSelectorRow(
     val id: Int,
-    val position: Int,
     val name: String,
     /** Null/not shown for the Offline row, matching the legacy `holder.description.isGone`. */
     val description: String?,

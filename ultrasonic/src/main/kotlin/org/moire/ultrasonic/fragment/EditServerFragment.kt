@@ -1,6 +1,6 @@
 /*
  * EditServerFragment.kt
- * Copyright (C) 2009-2023 Ultrasonic developers
+ * Copyright (C) 2009-2026 Ultrasonic developers
  *
  * Distributed under terms of the GNU GPLv3 license.
  */
@@ -8,103 +8,65 @@
 package org.moire.ultrasonic.fragment
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.constraintlayout.widget.Group
-import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.google.android.material.switchmaterial.SwitchMaterial
-import com.google.android.material.textfield.TextInputLayout
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.flag.BubbleFlag
 import com.skydoves.colorpickerview.flag.FlagMode
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
-import java.net.MalformedURLException
-import java.net.URL
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.moire.ultrasonic.R
-import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.data.ServerSetting
-import org.moire.ultrasonic.model.EditServerModel
-import org.moire.ultrasonic.model.ServerSettingsModel
-import org.moire.ultrasonic.service.MusicServiceFactory
-import org.moire.ultrasonic.service.RxBus
-import org.moire.ultrasonic.util.CommunicationError.getErrorMessage
-import org.moire.ultrasonic.util.ErrorDialog
+import org.moire.ultrasonic.activity.NavigationActivity
+import org.moire.ultrasonic.model.EditServerViewModel
+import org.moire.ultrasonic.ui.serverselector.EditServerActions
+import org.moire.ultrasonic.ui.serverselector.EditServerMode
+import org.moire.ultrasonic.ui.serverselector.EditServerNavigationEvent
+import org.moire.ultrasonic.ui.serverselector.EditServerScreen
+import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.ServerColor
 import org.moire.ultrasonic.util.Util
-import org.moire.ultrasonic.util.Util.themeColor
-import timber.log.Timber
 
-private const val DIALOG_PADDING = 12
-private const val ADVANCED_TOGGLE_DURATION_MS = 180L
-private const val HALF_TURN_DEGREES = 180f
+private const val COLOR_PICKER_DIALOG_PADDING = 12
 
 /**
- * Displays a form where server settings can be created / edited
+ * Displays a form where server settings can be created / edited.
+ *
+ * Post-issue-#10 residual migration (phase 5A3): now a thin Compose host, the same shape as
+ * [ServerSelectorFragment] - it threads the live floating-chrome inset into [EditServerScreen]
+ * and owns the one piece of UI that stays a View dialog ([showColorPicker], the third-party
+ * `ColorPickerDialog`) plus the `OnBackPressedCallback`, which now routes to
+ * [EditServerViewModel.requestBack] exactly like the header's own back action - both trigger the
+ * same dirty-check, fixing the legacy gap where only system Back did (see the phase 5A3 report).
+ * Navigation resolves the destination's `serverId` argument (a stable
+ * [org.moire.ultrasonic.data.ServerSetting.id], replacing the legacy position-derived `index`) in
+ * [onViewCreated] and otherwise owns no business logic - that lives in [EditServerViewModel].
  */
 class EditServerFragment : Fragment() {
 
-    private val serverSettingsModel: ServerSettingsModel by viewModel()
-    private val activeServerProvider: ActiveServerProvider by inject()
-
-    private var currentServerSetting: ServerSetting? = null
-
-    private var serverNameEditText: TextInputLayout? = null
-    private var serverAddressEditText: TextInputLayout? = null
-    private var serverColorImageView: ImageView? = null
-    private var userNameEditText: TextInputLayout? = null
-    private var passwordEditText: TextInputLayout? = null
-    private var selfSignedSwitch: SwitchMaterial? = null
-    private var plaintextSwitch: SwitchMaterial? = null
-    private var jukeboxSwitch: SwitchMaterial? = null
-    private var jukeboxDescriptionText: TextView? = null
-    private var saveButton: Button? = null
-    private var testButton: Button? = null
-    private var advancedToggle: View? = null
-    private var advancedChevron: ImageView? = null
-    private var advancedGroup: Group? = null
-    private var advancedExpanded: Boolean = false
-    private var connectionStatusRow: View? = null
-    private var connectionProgress: ProgressBar? = null
-    private var connectionIcon: ImageView? = null
-    private var connectionStatusText: TextView? = null
-    private var isInstanceStateSaved: Boolean = false
-    private var currentColor: Int = 0
-    private var selectedColor: Int? = null
-
+    private val viewModel: EditServerViewModel by viewModels()
     private val navArgs by navArgs<EditServerFragmentArgs>()
-    val model: EditServerModel by viewModels()
+    private val fallbackChromeInset = MutableStateFlow(0)
 
-    @Override
-    override fun onCreate(savedInstanceState: Bundle?) {
-        Util.applyTheme(this.context)
-        super.onCreate(savedInstanceState)
+    private val backCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            viewModel.requestBack()
+        }
     }
 
     override fun onAttach(context: Context) {
-        requireActivity().onBackPressedDispatcher.addCallback(
-            this,
-            confirmCloseCallback
-        )
+        requireActivity().onBackPressedDispatcher.addCallback(this, backCallback)
         super.onAttach(context)
     }
 
@@ -112,460 +74,111 @@ class EditServerFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.server_edit, container, false)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        serverNameEditText = view.findViewById(R.id.edit_server_name)
-        serverAddressEditText = view.findViewById(R.id.edit_server_address)
-        serverColorImageView = view.findViewById(R.id.edit_server_color_picker)
-        userNameEditText = view.findViewById(R.id.edit_server_username)
-        passwordEditText = view.findViewById(R.id.edit_server_password)
-        selfSignedSwitch = view.findViewById(R.id.edit_self_signed)
-        plaintextSwitch = view.findViewById(R.id.edit_plaintext)
-        jukeboxSwitch = view.findViewById(R.id.edit_jukebox)
-        jukeboxDescriptionText = view.findViewById(R.id.edit_jukebox_description)
-        saveButton = view.findViewById(R.id.edit_save)
-        testButton = view.findViewById(R.id.edit_test)
-        advancedToggle = view.findViewById(R.id.edit_advanced_toggle)
-        advancedChevron = view.findViewById(R.id.edit_advanced_chevron)
-        advancedGroup = view.findViewById(R.id.edit_advanced_group)
-        connectionStatusRow = view.findViewById(R.id.edit_connection_status)
-        connectionProgress = view.findViewById(R.id.edit_connection_progress)
-        connectionIcon = view.findViewById(R.id.edit_connection_icon)
-        connectionStatusText = view.findViewById(R.id.edit_connection_text)
-
-        advancedToggle?.setOnClickListener { toggleAdvancedSection(!advancedExpanded) }
-
-        if (navArgs.index != -1) {
-            // Editing an existing server
-            FragmentTitle.setTitle(this, R.string.server_editor_label)
-            val serverSetting = serverSettingsModel.getServerSetting(navArgs.index)
-            serverSetting.observe(
-                viewLifecycleOwner
-            ) { t ->
-                if (t != null) {
-                    currentServerSetting = t
-                    if (!isInstanceStateSaved) setFields()
-                    // Remove the minimum API version so it can be detected again
-                    if (currentServerSetting?.minimumApiVersion != null) {
-                        currentServerSetting!!.minimumApiVersion = null
-                        serverSettingsModel.updateItem(currentServerSetting)
-                        if (
-                            activeServerProvider.getActiveServer().id ==
-                            currentServerSetting!!.id
-                        ) {
-                            MusicServiceFactory.resetMusicService()
-                        }
+    ): View {
+        val chromeInsetFlow =
+            (activity as? NavigationActivity)?.contentBottomInset ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
                     }
+                    EditServerScreen(
+                        state = state,
+                        actions = editServerActions,
+                        bottomContentInset = bottomInset,
+                    )
                 }
             }
-            saveButton!!.setOnClickListener {
-                if (currentServerSetting != null) {
-                    if (getFields()) {
-                        serverSettingsModel.updateItem(currentServerSetting)
-                        // Apply modifications if the current server was modified
-                        if (
-                            activeServerProvider.getActiveServer().id ==
-                            currentServerSetting!!.id
-                        ) {
-                            MusicServiceFactory.resetMusicService()
-                            RxBus.activeServerChangedPublisher.onNext(currentServerSetting!!)
-                        }
-                        findNavController().navigateUp()
-                    }
-                }
-            }
-        } else {
-            // Creating a new server: this is the first-connection screen, so keep it to
-            // address/username/password and a single Connect action. Collection name is
-            // derived from the URL host, and advanced options only appear when editing a
-            // saved library afterward.
-            FragmentTitle.setTitle(this, R.string.server_editor_new_label)
-            updateColor(null)
-            currentServerSetting = ServerSetting()
-            configureOnboardingUi()
-            saveButton!!.setOnClickListener {
-                if (getFields()) {
-                    testConnection {
-                        serverSettingsModel.saveNewItem(currentServerSetting) { saved ->
-                            activeServerProvider.setActiveServerById(saved.id)
-                            findNavController().popBackStack(R.id.homeFragment, false)
-                        }
-                    }
-                }
-            }
-        }
-
-        testButton!!.setOnClickListener {
-            if (getFields()) {
-                testConnection()
-            }
-        }
-
-        serverColorImageView!!.setOnClickListener {
-            val bubbleFlag = BubbleFlag(context)
-            bubbleFlag.flagMode = FlagMode.LAST
-            ColorPickerDialog.Builder(context).apply {
-                this.colorPickerView.setInitialColor(currentColor)
-                this.colorPickerView.flagView = bubbleFlag
-            }
-                .attachAlphaSlideBar(false)
-                .setPositiveButton(
-                    getString(R.string.common_ok),
-                    ColorEnvelopeListener { envelope, _ ->
-                        selectedColor = envelope.color
-                        updateColor(envelope.color)
-                    }
-                )
-                .setNegativeButton(getString(R.string.common_cancel)) { dialogInterface, _ ->
-                    dialogInterface.dismiss()
-                }
-                .setBottomSpace(DIALOG_PADDING)
-                .show()
-        }
-
-        serverAddressEditText?.editText?.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) correctServerAddress()
         }
     }
 
-    private val confirmCloseCallback = object : OnBackPressedCallback(
-        // default to enabled
-        true
-    ) {
-        override fun handleOnBackPressed() {
-            finishActivity()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val mode = if (navArgs.serverId != -1) {
+            EditServerMode.Existing(navArgs.serverId)
+        } else {
+            EditServerMode.New
         }
+        viewModel.load(mode)
+        viewModel.onNavigate = ::handleNavigationEvent
+    }
+
+    override fun onDestroyView() {
+        // Clears the callback before the view (and findNavController()'s backing NavHostFragment
+        // view) goes away - a late save-flow callback becomes a safe no-op instead of a crash.
+        viewModel.onNavigate = {}
+        super.onDestroyView()
     }
 
     override fun onStop() {
         Util.hideKeyboard(activity)
-        confirmCloseCallback.isEnabled = false
+        backCallback.isEnabled = false
         super.onStop()
     }
 
     override fun onResume() {
-        confirmCloseCallback.isEnabled = true
         super.onResume()
+        backCallback.isEnabled = true
     }
 
-    private fun correctServerAddress() {
-        serverAddressEditText?.editText?.setText(
-            serverAddressEditText?.editText?.text?.trim(' ', '/')
+    private fun handleNavigationEvent(event: EditServerNavigationEvent) {
+        when (event) {
+            EditServerNavigationEvent.NavigateUp -> findNavController().navigateUp()
+            EditServerNavigationEvent.NavigateHome ->
+                findNavController().popBackStack(R.id.homeFragment, false)
+        }
+    }
+
+    private val editServerActions: EditServerActions by lazy {
+        EditServerActions(
+            onBack = viewModel::requestBack,
+            onNameChange = viewModel::onNameChange,
+            onAddressChange = viewModel::onAddressChange,
+            onAddressFocusLost = viewModel::onAddressFocusLost,
+            onUsernameChange = viewModel::onUsernameChange,
+            onPasswordChange = viewModel::onPasswordChange,
+            onSelfSignedChange = viewModel::onSelfSignedChange,
+            onPlaintextChange = viewModel::onPlaintextChange,
+            onJukeboxChange = viewModel::onJukeboxChange,
+            onToggleAdvanced = viewModel::onToggleAdvanced,
+            onPickColor = ::showColorPicker,
+            onTestConnection = viewModel::onTestConnection,
+            onConnectOrSave = viewModel::onConnectOrSave,
+            onDiscardConfirm = viewModel::confirmDiscard,
+            onDiscardCancel = viewModel::cancelDiscard,
         )
     }
 
-    private fun updateColor(color: Int?) {
-        // Was R.drawable.thumb_drawable - a switch/slider thumb shape (44dp corners, sized to
-        // read as a pill) - which made this color swatch visually indistinguishable from the
-        // real SwitchMaterial toggles right below it on this same screen. This is a plain filled
-        // rounded rectangle instead, matching the border shape already drawn on top of it
-        // (R.drawable.rounded_border, set as this view's `src` in server_edit.xml).
-        val image = ContextCompat.getDrawable(requireContext(), R.drawable.rounded_swatch_fill)
-        currentColor = color ?: ServerColor.getBackgroundColor(requireContext(), null)
-        image?.setTint(currentColor)
-        serverColorImageView?.background = image
-    }
-    override fun onSaveInstanceState(savedInstanceState: Bundle) {
-        savedInstanceState.putString(
-            ::serverNameEditText.name,
-            serverNameEditText!!.editText?.text.toString()
-        )
-        savedInstanceState.putString(
-            ::serverAddressEditText.name,
-            serverAddressEditText!!.editText?.text.toString()
-        )
-        savedInstanceState.putString(
-            ::userNameEditText.name,
-            userNameEditText!!.editText?.text.toString()
-        )
-        savedInstanceState.putString(
-            ::passwordEditText.name,
-            passwordEditText!!.editText?.text.toString()
-        )
-        savedInstanceState.putBoolean(
-            ::selfSignedSwitch.name,
-            selfSignedSwitch!!.isChecked
-        )
-        savedInstanceState.putBoolean(
-            ::plaintextSwitch.name,
-            plaintextSwitch!!.isChecked
-        )
-        savedInstanceState.putBoolean(
-            ::jukeboxSwitch.name,
-            jukeboxSwitch!!.isChecked
-        )
-        savedInstanceState.putInt(
-            ::serverColorImageView.name,
-            currentColor
-        )
-        if (selectedColor != null) {
-            savedInstanceState.putInt(
-                ::selectedColor.name,
-                selectedColor!!
+    /**
+     * The one legacy View dialog this phase deliberately keeps (docs section 18, option A): a
+     * bounded, already-themed third-party color picker, triggered here and reporting back into
+     * [EditServerViewModel.onColorPicked] on confirm. Unchanged from the legacy
+     * `serverColorImageView` click listener.
+     */
+    private fun showColorPicker() {
+        val initialColor = viewModel.uiState.value.color
+            ?: ServerColor.getBackgroundColor(requireContext(), null)
+        val bubbleFlag = BubbleFlag(context)
+        bubbleFlag.flagMode = FlagMode.LAST
+        ColorPickerDialog.Builder(context).apply {
+            colorPickerView.setInitialColor(initialColor)
+            colorPickerView.flagView = bubbleFlag
+        }
+            .attachAlphaSlideBar(false)
+            .setPositiveButton(
+                getString(R.string.common_ok),
+                ColorEnvelopeListener { envelope, _ -> viewModel.onColorPicked(envelope.color) }
             )
-        }
-        savedInstanceState.putBoolean(
-            ::isInstanceStateSaved.name,
-            true
-        )
-
-        super.onSaveInstanceState(savedInstanceState)
-    }
-
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-
-        if (savedInstanceState == null) return
-
-        serverNameEditText!!.editText?.setText(
-            savedInstanceState.getString(::serverNameEditText.name)
-        )
-        serverAddressEditText!!.editText?.setText(
-            savedInstanceState.getString(::serverAddressEditText.name)
-        )
-        userNameEditText!!.editText?.setText(
-            savedInstanceState.getString(::userNameEditText.name)
-        )
-        passwordEditText!!.editText?.setText(
-            savedInstanceState.getString(::passwordEditText.name)
-        )
-        selfSignedSwitch!!.isChecked = savedInstanceState.getBoolean(::selfSignedSwitch.name)
-        plaintextSwitch!!.isChecked = savedInstanceState.getBoolean(::plaintextSwitch.name)
-        jukeboxSwitch!!.isChecked = savedInstanceState.getBoolean(::jukeboxSwitch.name)
-        updateColor(savedInstanceState.getInt(::serverColorImageView.name))
-        if (savedInstanceState.containsKey(::selectedColor.name)) {
-            selectedColor = savedInstanceState.getInt(::selectedColor.name)
-        }
-        isInstanceStateSaved = savedInstanceState.getBoolean(::isInstanceStateSaved.name)
-        syncAdvancedSectionVisibility()
-    }
-
-    /**
-     * Sets the values of the Form from the current Server Setting instance
-     */
-    private fun setFields() {
-        if (currentServerSetting == null) return
-
-        serverNameEditText!!.editText?.setText(currentServerSetting!!.name)
-        serverAddressEditText!!.editText?.setText(currentServerSetting!!.url)
-        userNameEditText!!.editText?.setText(currentServerSetting!!.userName)
-        passwordEditText!!.editText?.setText(currentServerSetting!!.password)
-        selfSignedSwitch!!.isChecked = currentServerSetting!!.allowSelfSignedCertificate
-        plaintextSwitch!!.isChecked = currentServerSetting!!.forcePlainTextPassword
-        jukeboxSwitch!!.isChecked = currentServerSetting!!.jukeboxByDefault
-        updateColor(currentServerSetting!!.color)
-        syncAdvancedSectionVisibility()
-    }
-
-    /**
-     * Expands the "Advanced settings" section whenever a setting inside it is already active,
-     * so editing a server never hides an in-effect option from the user.
-     */
-    private fun syncAdvancedSectionVisibility() {
-        val shouldExpand = selfSignedSwitch?.isChecked == true || jukeboxSwitch?.isChecked == true
-        if (shouldExpand) toggleAdvancedSection(true)
-    }
-
-    /**
-     * Hides fields that don't belong on the first-connection screen (Collection name,
-     * Advanced settings, the separate Test button) and turns Save into a single Connect action.
-     */
-    private fun configureOnboardingUi() {
-        serverNameEditText?.isVisible = false
-        advancedToggle?.isVisible = false
-        testButton?.isVisible = false
-        saveButton?.text = getString(R.string.server_editor_connect)
-    }
-
-    private fun toggleAdvancedSection(expand: Boolean) {
-        advancedExpanded = expand
-        advancedGroup?.isVisible = expand
-        advancedChevron?.animate()
-            ?.rotation(if (expand) HALF_TURN_DEGREES else 0f)
-            ?.setDuration(ADVANCED_TOGGLE_DURATION_MS)
-            ?.start()
-    }
-
-    /**
-     * Retrieves the values in the Form to the current Server Setting instance
-     * This function also does some basic validation on the fields
-     */
-    private fun getFields(): Boolean {
-        if (currentServerSetting == null) return false
-        var isValid = true
-        var url: URL? = null
-
-        if (serverAddressEditText!!.editText?.text.isNullOrBlank()) {
-            serverAddressEditText!!.error = getString(R.string.server_editor_required)
-            isValid = false
-        } else {
-            try {
-                correctServerAddress()
-                val urlString = serverAddressEditText!!.editText?.text.toString()
-                url = URL(urlString)
-                if (
-                    urlString != urlString.trim(' ') ||
-                    url.host.isNullOrBlank()
-                ) {
-                    throw MalformedURLException()
-                }
-                serverAddressEditText!!.error = null
-            } catch (exception: MalformedURLException) {
-                serverAddressEditText!!.error = getString(R.string.settings_invalid_url)
-                isValid = false
+            .setNegativeButton(getString(R.string.common_cancel)) { dialogInterface, _ ->
+                dialogInterface.dismiss()
             }
-        }
-
-        // On the first-connection screen the name field is hidden entirely, so it must keep
-        // tracking the current host rather than freezing on whatever host was typed the first
-        // time this ran - otherwise a failed attempt followed by a corrected address saves the
-        // stale, never-connected host as the library's name.
-        if (
-            serverNameEditText?.isVisible == false ||
-            serverNameEditText!!.editText?.text.isNullOrBlank()
-        ) {
-            if (isValid && url != null) {
-                serverNameEditText!!.editText?.setText(url.host)
-            }
-        }
-
-        if (userNameEditText!!.editText?.text.isNullOrBlank()) {
-            userNameEditText!!.error = getString(R.string.server_editor_required)
-            isValid = false
-        } else {
-            userNameEditText!!.error = null
-        }
-
-        if (isValid) {
-            currentServerSetting!!.name = serverNameEditText!!.editText?.text.toString()
-            currentServerSetting!!.url = serverAddressEditText!!.editText?.text.toString()
-            currentServerSetting!!.color = selectedColor ?: currentColor
-            currentServerSetting!!.userName = userNameEditText!!.editText?.text.toString()
-            currentServerSetting!!.password = passwordEditText!!.editText?.text.toString()
-            currentServerSetting!!.allowSelfSignedCertificate = selfSignedSwitch!!.isChecked
-            currentServerSetting!!.forcePlainTextPassword = plaintextSwitch!!.isChecked
-            currentServerSetting!!.jukeboxByDefault = jukeboxSwitch!!.isChecked
-        }
-
-        return isValid
-    }
-
-    /**
-     * Checks whether any value in the fields are changed according to their original values.
-     */
-    private fun areFieldsChanged(): Boolean {
-        if (currentServerSetting == null || currentServerSetting!!.id == -1) {
-            return serverNameEditText!!.editText?.text!!.isNotBlank() ||
-                serverAddressEditText!!.editText?.text.toString() != "http://" ||
-                userNameEditText!!.editText?.text!!.isNotBlank() ||
-                passwordEditText!!.editText?.text!!.isNotBlank()
-        }
-
-        return currentServerSetting!!.name != serverNameEditText!!.editText?.text.toString() ||
-            currentServerSetting!!.url != serverAddressEditText!!.editText?.text.toString() ||
-            currentServerSetting!!.userName != userNameEditText!!.editText?.text.toString() ||
-            currentServerSetting!!.password != passwordEditText!!.editText?.text.toString() ||
-            currentServerSetting!!.allowSelfSignedCertificate != selfSignedSwitch!!.isChecked ||
-            currentServerSetting!!.forcePlainTextPassword != plaintextSwitch!!.isChecked ||
-            currentServerSetting!!.jukeboxByDefault != jukeboxSwitch!!.isChecked
-    }
-
-    /**
-     * Tests if the network connection to the entered Server Settings can be made
-     */
-    @Suppress("TooGenericExceptionCaught")
-    private fun testConnection(onSuccess: (() -> Unit)? = null) {
-        val testSetting = ServerSetting()
-        showConnectionChecking()
-
-        lifecycleScope.launch {
-            try {
-                val flow = model.queryFeatureSupport(currentServerSetting!!).flowOn(Dispatchers.IO)
-
-                flow.collect {
-                    model.storeFeatureSupport(testSetting, it)
-                    Timber.w("${it.type} support: ${it.supported}")
-                }
-
-                currentServerSetting!!.videoSupport = testSetting.videoSupport
-                currentServerSetting!!.jukeboxSupport = testSetting.jukeboxSupport
-
-                showConnectionSuccess(testSetting.jukeboxSupport)
-                onSuccess?.invoke()
-            } catch (cancellationException: CancellationException) {
-                Timber.i(cancellationException)
-            } catch (exception: Exception) {
-                Timber.w(exception)
-                showConnectionFailed()
-                ErrorDialog.Builder(requireContext())
-                    .setTitle(R.string.error_label)
-                    .setMessage(getErrorMessage(exception))
-                    .show()
-            }
-        }
-    }
-
-    private fun showConnectionChecking() {
-        connectionStatusRow?.isVisible = true
-        connectionProgress?.isVisible = true
-        connectionIcon?.isVisible = false
-        connectionStatusText?.text = getString(R.string.server_editor_connection_checking)
-    }
-
-    private fun showConnectionSuccess(jukeboxSupported: Boolean?) {
-        connectionProgress?.isVisible = false
-        connectionIcon?.apply {
-            isVisible = true
-            setImageResource(R.drawable.ic_lyrics_synced)
-            imageTintList = ColorStateList.valueOf(
-                requireContext().themeColor(androidx.appcompat.R.attr.colorPrimary)
-            )
-        }
-        connectionStatusText?.text = getString(R.string.server_editor_connection_success)
-
-        if (jukeboxSupported == false) {
-            jukeboxDescriptionText?.text = getString(R.string.jukebox_unsupported)
-            // Advanced settings aren't shown on the first-connection screen; only expand
-            // them here when their toggle header is actually visible (i.e. editing a server).
-            if (advancedToggle?.isVisible == true) toggleAdvancedSection(true)
-        } else {
-            jukeboxDescriptionText?.text = getString(R.string.jukebox_summary_is_default)
-        }
-    }
-
-    private fun showConnectionFailed() {
-        connectionProgress?.isVisible = false
-        connectionIcon?.apply {
-            isVisible = true
-            setImageResource(R.drawable.ic_lyrics_unsynced)
-            imageTintList = ColorStateList.valueOf(
-                requireContext().themeColor(androidx.appcompat.R.attr.colorError)
-            )
-        }
-        connectionStatusText?.text = getString(R.string.server_editor_connection_failed)
-    }
-
-    /**
-     * Finishes the Activity, after confirmation from the user if needed
-     */
-    private fun finishActivity() {
-        if (areFieldsChanged()) {
-            ErrorDialog.Builder(requireContext())
-                .setTitle(R.string.common_confirm)
-                .setMessage(R.string.server_editor_leave_confirmation)
-                .setPositiveButton(R.string.common_ok) { dialog, _ ->
-                    dialog.dismiss()
-                    findNavController().navigateUp()
-                }
-                .setNegativeButton(R.string.common_cancel) { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .show()
-        } else {
-            findNavController().navigateUp()
-        }
+            .setBottomSpace(COLOR_PICKER_DIALOG_PADDING)
+            .show()
     }
 }

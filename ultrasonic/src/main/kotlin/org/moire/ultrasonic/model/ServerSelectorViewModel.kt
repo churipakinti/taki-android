@@ -122,15 +122,14 @@ class ServerSelectorViewModel(application: Application) :
         val rows = buildList {
             add(ActiveServerProvider.OFFLINE_DB)
             addAll(list)
-        }.mapIndexed { position, setting -> setting.toRow(position, activeId) }
+        }.map { it.toRow(activeId) }
         _uiState.update { it.copy(rows = rows.toImmutableList()) }
     }
 
-    private fun ServerSetting.toRow(position: Int, activeId: Int): ServerSelectorRow {
+    private fun ServerSetting.toRow(activeId: Int): ServerSelectorRow {
         val isOffline = id == ActiveServerProvider.OFFLINE_DB_ID
         return ServerSelectorRow(
             id = id,
-            position = position,
             name = name,
             description = if (isOffline) null else url,
             color = color,

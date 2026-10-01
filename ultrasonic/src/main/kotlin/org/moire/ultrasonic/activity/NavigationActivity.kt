@@ -337,7 +337,7 @@ class NavigationActivity : ScopeActivity() {
             if (serverSettingDao.count() == 0) {
                 navController.navigate(
                     R.id.editServerFragment,
-                    Bundle().apply { putInt("index", -1) }
+                    Bundle().apply { putInt("serverId", -1) }
                 )
             }
         }
@@ -390,7 +390,7 @@ class NavigationActivity : ScopeActivity() {
 
                 R.id.library_hub_add -> navController.navigate(
                     R.id.editServerFragment,
-                    Bundle().apply { putInt("index", -1) }
+                    Bundle().apply { putInt("serverId", -1) }
                 )
 
                 R.id.library_hub_settings -> navController.navigate(R.id.settingsFragment)
@@ -803,10 +803,11 @@ class NavigationActivity : ScopeActivity() {
          * addition to, a Fragment-owned header. `aboutFragment` was removed from this set in
          * phase 5A1: it now draws its own [org.moire.ultrasonic.ui.components.TakiScreenHeader]
          * (back + "About" title), so showing the shared bar too would draw two back arrows.
-         * `serverSelectorFragment` was removed the same way in phase 5A2 - it now draws its own
-         * `TakiScreenHeader` too. `editServerFragment` stays in this set unchanged: it remains
-         * legacy (out of phase 5A2's scope) and still relies on the shared bar exactly as before.
-         * Pure so `NavigationChromeSelectionTest` can lock it.
+         * `serverSelectorFragment` was removed the same way in phase 5A2, and `editServerFragment`
+         * in phase 5A3 - its own header's back action now routes through the same dirty-check as
+         * system Back (`EditServerViewModel.requestBack`), fixing a real gap the shared bar's
+         * click listener had no way to participate in (it only ever called `navigateUp()`
+         * directly). Pure so `NavigationChromeSelectionTest` can lock it.
          */
         fun showsContentBackButton(
             destinationId: Int,
@@ -818,7 +819,6 @@ class NavigationActivity : ScopeActivity() {
             R.id.artistListFragment,
             R.id.albumListFragment,
             R.id.selectGenreFragment,
-            R.id.editServerFragment,
             R.id.downloadsFragment,
         ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail ||
             destinationId == R.id.settingsFragment ||

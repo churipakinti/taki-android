@@ -1,5 +1,5 @@
 /*
- * ServerSelectorScreenScreenshotTest.kt
+ * EditServerScreenScreenshotTest.kt
  * Copyright (C) 2009-2026 Ultrasonic developers
  *
  * Distributed under terms of the GNU GPLv3 license.
@@ -18,7 +18,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
-import kotlinx.collections.immutable.persistentListOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,39 +27,27 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * Roborazzi goldens for Server Selector (post-issue-#10 residual migration, phase 5A2): the
- * populated list with an active + an inactive server, and the delete confirmation. Fully
- * deterministic - fake [ServerSelectorUiState], no network. Record with:
+ * Roborazzi goldens for Edit Server (issue #10 phase 5A3): the onboarding form, the existing-
+ * server editor, and its Advanced section expanded. Fully deterministic - fake
+ * [EditServerUiState], no network. Record with:
  *   ./gradlew :ultrasonic:testDebugUnitTest -Proborazzi.test.record=true
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w420dp-h1200dp-xxhdpi")
-class ServerSelectorScreenScreenshotTest {
+class EditServerScreenScreenshotTest {
 
     @get:Rule
     val compose = createComposeRule()
 
-    private fun row(
-        id: Int,
-        name: String,
-        description: String? = "https://$name.example.com",
-        isOffline: Boolean = false,
-        isActive: Boolean = false,
-    ) = ServerSelectorRow(
-        id = id,
-        name = name,
-        description = description,
-        color = null,
-        isOffline = isOffline,
-        isActive = isActive,
+    private val newState = EditServerUiState(mode = EditServerMode.New)
+    private val existingState = EditServerUiState(
+        mode = EditServerMode.Existing(1),
+        name = "Home Server",
+        address = "https://home.example.com",
+        username = "joseph",
+        password = "secret",
     )
-
-    private val offline = row(id = -1, name = "Offline", description = null, isOffline = true)
-    private val home = row(id = 1, name = "Home Server", isActive = true)
-    private val office = row(id = 2, name = "Office Server")
-
-    private val standard = ServerSelectorUiState(rows = persistentListOf(offline, home, office))
 
     private fun capture(tag: String, content: @Composable () -> Unit) {
         compose.setContent {
@@ -79,14 +66,17 @@ class ServerSelectorScreenScreenshotTest {
         compose.onNodeWithTag(tag).captureRoboImage("src/test/screenshots/$tag.png")
     }
 
-    private fun screen(state: ServerSelectorUiState): @Composable () -> Unit =
-        { ServerSelectorScreen(state = state, actions = ServerSelectorActions.Noop, bottomContentInset = 0.dp) }
+    private fun screen(state: EditServerUiState): @Composable () -> Unit =
+        { EditServerScreen(state = state, actions = EditServerActions.Noop, bottomContentInset = 0.dp) }
 
     @Test
-    fun serverSelectorStandard() = capture("server_selector_standard") { screen(standard)() }
+    fun editServerNewMode() = capture("edit_server_new_mode") { screen(newState)() }
 
     @Test
-    fun serverSelectorDeleteConfirmation() = capture("server_selector_delete_confirmation") {
-        screen(standard.copy(pendingDelete = office))()
+    fun editServerExistingMode() = capture("edit_server_existing_mode") { screen(existingState)() }
+
+    @Test
+    fun editServerAdvancedExpanded() = capture("edit_server_advanced_expanded") {
+        screen(existingState.copy(advancedExpanded = true, allowSelfSignedCertificate = true))()
     }
 }

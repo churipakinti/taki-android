@@ -81,8 +81,12 @@ class ServerSelectorFragment : Fragment() {
         ServerSelectorActions(
             onBack = { findNavController().navigateUp() },
             onServerClick = ::onServerClick,
-            onAddServer = { editServerByIndex(-1) },
-            onEditServer = { row -> editServerByIndex(row.position) },
+            onAddServer = { editServer(-1) },
+            // issue #10 phase 5A3: row.id (ServerSetting's stable primary key), not
+            // row.position - the legacy screen-position/index contract this replaced could
+            // desync from the actual DB row once ordering assumptions didn't hold (see the
+            // phase 5A3 audit).
+            onEditServer = { row -> editServer(row.id) },
             onDeleteRequested = viewModel::requestDelete,
             onDeleteConfirm = viewModel::confirmDelete,
             onDeleteCancel = viewModel::cancelDelete,
@@ -94,8 +98,8 @@ class ServerSelectorFragment : Fragment() {
         findNavController().popBackStack(R.id.homeFragment, false)
     }
 
-    private fun editServerByIndex(index: Int) {
-        val action = ServerSelectorFragmentDirections.toEditServer(index)
+    private fun editServer(serverId: Int) {
+        val action = ServerSelectorFragmentDirections.toEditServer(serverId)
         findNavController().navigate(action)
     }
 }
