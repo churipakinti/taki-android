@@ -25,23 +25,24 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 
 ## A. Executive summary
 
-**Current (post-phase 5A3):**
+**Current (post-phase 5A4):**
 
 | Metric | Count |
 |---|---:|
 | Total reachable UI surfaces classified | 27 |
-| — Compose | 25 |
+| — Compose | 26 |
 | — Hybrid (Compose + View by design) | 0 |
 | — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 0 |
-| — Legacy View/XML, intentionally out of scope | 2 |
+| — Legacy View/XML, intentionally out of scope | 1 |
 | Unclassified | **0** |
 
-Arithmetic: 25 + 0 + 0 + 2 = 27. Phase 5A1 (§Q) moved Box Sets (hybrid) and About (legacy) to full
+Arithmetic: 26 + 0 + 0 + 1 = 27. Phase 5A1 (§Q) moved Box Sets (hybrid) and About (legacy) to full
 Compose, 21/1/5 → 23/0/4. Phase 5A2 (§R) moved Server Selector to full Compose, 23/0/4 → 24/0/3.
-Phase 5A3 (§S) moved Edit Server to full Compose, 24/0/3 → 25/0/2. Remaining intentionally-legacy
-surfaces: Settings, Equalizer (§B.4). See §Q/§R/§S for the full before/after detail of each phase.
-Everything below this line up to §P is the historical record as of issue #10's closure and is
-preserved unedited; §Q, §R and §S append the post-#10 updates.
+Phase 5A3 (§S) moved Edit Server to full Compose, 24/0/3 → 25/0/2. Phase 5A4 (§T) moved Settings to
+full Compose, 25/0/2 → 26/0/1. Remaining intentionally-legacy surface: Equalizer (§B.4). See
+§Q/§R/§S/§T for the full before/after detail of each phase. Everything below this line up to §P is
+the historical record as of issue #10's closure and is preserved unedited; §Q, §R, §S and §T append
+the post-#10 updates.
 
 **As of #10's closure (phase 4M4, historical):**
 
@@ -105,6 +106,7 @@ below.
 | About | `aboutFragment` | Fragment | **phase 5A1** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`AboutScreen`) |
 | Server Selector | `serverSelectorFragment` | Fragment | **phase 5A2** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`ServerSelectorScreen`), including the delete confirmation (`DeleteServerSheet`, replacing the legacy `ErrorDialog`) |
 | Edit Server | `editServerFragment` | Fragment | **phase 5A3** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`EditServerScreen`), both New (onboarding) and Existing (full editor) modes, plus the discard-changes confirmation (`DiscardServerChangesSheet`, replacing the legacy `AlertDialog`) |
+| Settings | `settingsFragment` | Fragment | **phase 5A4** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`SettingsScreen`), top level + all 6 nested groups rendered from one static `SettingsDefinitions` tree, plus three new transient sheets (`SettingsChoiceSheet`/`SettingsConfirmSheet`/`SettingsInfoSheet`) replacing the legacy `ListPreference` dialogs and `ConfirmationDialog`/`InfoDialog`/`ErrorDialog` usages |
 
 ### B.2 — Hybrid by design
 
@@ -121,12 +123,12 @@ Playlist dialog) has been migrated to Compose — see §B.1 and §N.
 
 **Updated in phase 5A1 (post-#10):** About moved to full Compose — see §Q. **Updated in phase 5A2
 (post-#10):** Server Selector moved to full Compose — see §R. **Updated in phase 5A3 (post-#10):**
-Edit Server moved to full Compose — see §S. The remaining two rows are unchanged.
+Edit Server moved to full Compose — see §S. **Updated in phase 5A4 (post-#10):** Settings moved to
+full Compose — see §T. The remaining row is unchanged.
 
 | Surface | Destination | Verified via |
 |---|---|---|
-| Settings | `settingsFragment` | `NavigationActivity.hidesSupportActionBar`/`updateChromeVisibility` still special-case it; Pixel-verified, tokenized dark theme, no toolbar, correct back nav |
-| Equalizer | `equalizerFragment` | same |
+| Equalizer | `equalizerFragment` | `NavigationActivity.hidesSupportActionBar`/`updateChromeVisibility` still special-case it; Pixel-verified, tokenized dark theme, no toolbar, correct back nav |
 
 Confirmed against issue #10's acceptance criteria (§H below): none of these are "core browsing" or
 "playback-heavy" surfaces the issue names. `docs/technical/TAKI_COMPOSE_MIGRATION_PLAN.md`'s "Out
@@ -1346,3 +1348,263 @@ above) was fixed and regression-tested within this same session, not deferred.
 ### Next phase
 
 **Phase 5A4 — migrate Settings to Compose.** Not started as part of this phase.
+
+---
+
+## T. Phase 5A4 — Settings residual migration (post-#10)
+
+Baseline `55c49f75` (Migrate Edit Server to Compose). Not a reopening of issue #10 — Settings was
+already correctly classified as intentionally legacy at #10's closure (§B.4).
+
+### Audit findings
+
+Full source of `SettingsFragment`, `R.xml.settings`, `Settings.kt`, `setting_keys.xml`, `arrays.xml`,
+`SelectCacheActivityContract`, `FileLoggerTree`, `NavigationActivity`'s chrome logic, and the nav
+graph read directly. Key findings:
+
+- **Full tree inventory**: top level (5 rows: Playback nav, Downloads nav, Override-language choice,
+  Advanced nav, About nav) → 3 levels of nesting deep at the extreme (`advanced_group` →
+  `music_cache_group`/`library_group`/`debug_group`). 6 nested `PreferenceScreen` groups, ~20 leaf
+  rows total: 2 navigation-to-Equalizer/About rows, 6 `ListPreference` choices, 9 `SwitchPreferenceCompat`
+  toggles, 4 non-persisted action rows (`clear_downloads`/`clear_search_history`/`clear_image_cache`/
+  `cache_location`), 2 `PreferenceCategory` visual-only labels. **Zero `EditTextPreference` rows
+  exist** in `settings.xml` — the task's suggested "Value" item type has no live representative; the
+  legacy Fragment's own `is EditTextPreference` branch in `updatePreferenceSummaries` was already
+  dead code, confirmed by full-file read, not ported.
+- **Exactly one external entry point and one internal self-navigation**: `R.id.library_hub_settings`
+  (always top-level, no args) and the self-referencing `settingsToGroup` action (only ever called
+  from `onPreferenceTreeClick`). No hidden deep-link callers.
+- **`groupTitle` nav argument dropped as a legitimate simplification**: the legacy nav graph threaded
+  both `rootKey` and `groupTitle` (the clicked row's own title text, captured at click time) through
+  navigation. Since [SettingsDefinitions] now derives a screen's title purely from `rootKey` (a pure,
+  static lookup, not a runtime-captured string), `groupTitle` has nothing left to carry — removed from
+  the `settingsFragment` destination entirely, a real but narrow contract simplification, not a
+  behavior change (the displayed title text is identical).
+- **A real, verified, pre-existing dead setting**: `showConfirmationDialog`'s own summary string
+  claims it "Displays a confirmation dialog before deleting downloaded songs" - but grepped and
+  confirmed **zero reads** of `Settings.showConfirmationDialog` anywhere in the app. The actual
+  "Clear All Downloads" confirmation is unconditional, hard-coded, gated by nothing. **Preserved
+  exactly, not fixed** - the toggle still persists its value; classified `DEFER` /
+  `PRODUCT_DECISION_REQUIRED`, not silently removed or silently wired up, per the task's explicit
+  instruction not to make product decisions unilaterally.
+- **The ID3 dependency**: `useId3TagsOffline`'s enabled-state is driven by `id3_tags` (online)'s
+  current value, re-derived on every preference change - ported declaratively into
+  `SettingsRowState.ToggleRow.enabled`, Pixel-verified live (toggling online off/on correctly
+  disables/re-enables the offline row while preserving its own stored value).
+- **Cache location**: `cacheLocationUri` and the `cache_location` row's own persisted key are the
+  *same* string ("cacheLocation") by design in the legacy screen - preserved exactly; the row is
+  visible only while `customCacheLocation` is on, matching `setupCacheLocationPreference()`'s
+  `isVisible` guard exactly.
+- **Debug logging**: toggling on plants the `FileLoggerTree` immediately; toggling off uproots it
+  *immediately* (logging stops right away) and *separately* asks whether to delete the
+  already-stopped log files - these are two independent effects, not one gated behind the other,
+  ported exactly as two separate steps in `onDebugLogToggled`.
+- **`FileLoggerTree.plantToTimberForest()` is also called unconditionally at app startup**
+  (`UApp.onCreate`) when the preference is already on - confirmed the Settings screen itself never
+  re-plants on open, only on an explicit user toggle, matching the task's "do not activate logging
+  simply by opening Settings" requirement without needing any new guard.
+
+### Compose architecture
+
+`SettingsFragment` → thin Compose host (same shape as `ServerSelectorFragment`/`EditServerFragment`)
+→ `SettingsScreen`/`SettingsUiState`/`SettingsActions` (`ui/settings/`), backed by a new
+`SettingsViewModel` (`model/`) - a pure projection over the real `Settings`/`SharedPreferences`
+storage, never a second persistence layer. A small, closed item model
+(`SettingsItem`: `Toggle`/`Choice`/`Navigation`/`Action`/`Category`) replaces the inflated XML
+`PreferenceScreen` tree; a new `SettingsDefinitions` object is a 1:1 static transcription of
+`R.xml.settings`, resolved by `rootKey` exactly like
+`PreferenceFragmentCompat.setPreferencesFromResource(R.xml.settings, rootKey)`'s own null-means-root
+convention - one `SettingsViewModel` instance per screen (top level or nested group), matching the
+legacy self-navigating destination's one-Fragment-instance-per-level behavior. The
+`OnSharedPreferenceChangeListener` is registered in `init`/unregistered in `onCleared` (not the
+legacy Fragment's `onResume`/`onPause`) - this ViewModel's own lifecycle is already the correct scope
+and stays live reactively across external preference changes (another screen, a picker result,
+side-effect code), confirmed by a dedicated test and live on-device (the ID3 dependency toggle test).
+Three new transient sheets replace every legacy dialog this screen owned: `SettingsChoiceSheet` (a
+scrollable radio list, not a `TakiSortMenu`-style anchored dropdown - cache size has 18 entries,
+language has 15, too long for a small menu), and two generic reusable sheets, `SettingsConfirmSheet`
+(two-button, stands in for the clear-downloads/clear-image-cache/debug-log-delete confirmations) and
+`SettingsInfoSheet` (one-button, stands in for the debug-log-deleted and cache-location-error
+messages) - `ConfirmAction`/the overlay's own resource ids select the copy and the gated
+`SettingsViewModel.onConfirm` branch. `SettingsFragment` keeps exactly the one piece of platform
+plumbing that must stay Fragment-side: the `SelectCacheActivityContract` `ActivityResultLauncher`
+(unchanged); the ViewModel emits a `SettingsEffect.LaunchCacheLocationPicker` one-shot callback
+(`onEffect`, assigned in `onViewCreated`/cleared in `onDestroyView`) rather than touching
+`ActivityResultLauncher` itself - the same precedent `EditServerViewModel.onNavigate` established in
+phase 5A3.
+
+### Behavior parity
+
+Every toggle/choice/action's exact persisted key, default value, and side effect preserved:
+validation-free (Settings has no field validation), URL-free. Choice rows now display the
+human-readable current-value label (resolved by zipping `entries`/`values` and matching the stored
+raw string) instead of the legacy's own dynamic-summary-overwrite mechanism - a deliberate, requested
+UI improvement (Taki rows show "current value," not "static description + raw key"), not a behavior
+regression; a stale/invalid stored value (proven by a dedicated test writing a bogus string directly)
+is carried through without crashing, simply showing no resolved label. Destructive actions
+(clear-downloads, clear-image-cache) keep their exact confirmation copy and gated side effects; the
+debug-log keep/delete prompt keeps its exact file-count/size message and both outcomes. Cache
+location keeps the exact system-picker contract, the exact cancel/failure fallback (force
+`customCacheLocation` off only if the URI is still unset), and the exact visibility rule. The ID3
+online/offline dependency is preserved exactly as a reactive enabled-state, not a one-time check.
+
+### Dead/stale settings
+
+- `showConfirmationDialog` - **DEFER / PRODUCT_DECISION_REQUIRED**: toggle persists, is displayed,
+  but gates nothing; its own summary string overpromises. Not silently removed or silently wired up.
+- The `EditTextPreference`-handling branch in the legacy `updatePreferenceSummaries` - **REMOVE_NOW**
+  (already not ported): zero `EditTextPreference` rows exist in `settings.xml`, confirmed by a full
+  read of the file: this was dead code in the legacy Fragment itself, not a setting.
+- Every other key: **KEEP**, live and read somewhere in the app (`Settings.kt`/`ActiveServerProvider`/
+  `PlaybackService`/`NavigationActivity`/`Util`), confirmed by grep per-key during the audit.
+
+### Legacy cleanup
+
+Deleted (confirmed by grep to have zero remaining references before deletion): `R.xml.settings`,
+`settings_fragment.xml`. The live Settings path no longer imports or uses
+`PreferenceFragmentCompat`/`SwitchPreferenceCompat`/`ListPreference`/`EditTextPreference`/
+`PreferenceScreen` - confirmed by grep, only kdoc-comment mentions of these class names remain, zero
+real code references. The `androidx.preference` Gradle dependency is **retained** - `Settings.kt` and
+`SettingsDelegate.kt` both still call `PreferenceManager.getDefaultSharedPreferences`, confirmed by
+grep before keeping it. `R.array.*`/`setting_keys.xml` resources all retained (still referenced by
+the new Compose code). `ConfirmationDialog`/`ErrorDialog`/`InfoDialog`(`Dialogs.kt`) retained -
+`PlaylistListFragment`/`TrackCollectionFragment`/`CoroutinePatterns.kt` still use them, confirmed by
+grep before keeping.
+
+### Tests
+
+Baseline 1291 → **1341** (+50), 0 failures: 23 `SettingsViewModelTest` (screen resolution per
+`rootKey`, a dedicated test locking every hardcoded persisted-key literal against its real
+`R.string.setting_key_*` resource value, toggle writes, the ID3 enabled-state dependency, external
+preference-change reactivity, choice writes + stale-value handling, cache-location visibility/toggle/
+picker-result/cancel, clear-search/clear-image-cache/clear-downloads action seams, debug-log
+plant/uproot/confirm/delete/keep), 21 `SettingsScreenComposeTest` (top level, one representative
+nested group per interaction type, toggle single-fire with no double-toggle, disabled-toggle
+no-op, choice sheet open/select/dismiss, confirm sheet, info sheet, hidden/visible action rows,
+category rows, navigation dispatch by target, back), 3 `SettingsScreenScreenshotTest` (top level,
+Advanced - the one screen exercising every row type, the choice sheet), plus 3 new
+`NavigationChromeSelectionTest` cases (Settings toolbar-hidden unchanged, Settings no longer shows
+the shared back bar, Equalizer explicitly confirmed unaffected).
+
+A real cross-test state-leak bug was found and fixed *in the test suite itself* during this phase:
+`Settings`'s delegate-backed properties (`cacheLocationUri`, `isWifiRequiredForDownload`, ...) each
+lazily cache their own `SharedPreferences` reference once and never re-resolve it, while
+`Settings.preferences` is a fresh computed property on every access - clearing state only via
+`Settings.preferences.edit().clear()` in `@Before` left the delegate-cached properties unreset,
+causing values written in one test to leak into later tests. Fixed by also resetting every
+delegate-backed property this suite touches directly in `@Before`. A second, real production-code bug
+was also found and fixed: `clearAllDownloads()` wrapped its track-loading call in
+`withContext(Dispatchers.IO)` directly rather than inside the `offlineTracksLoader` seam, so a test
+override never actually dispatched onto a real thread `advanceUntilIdle()` could see, making that one
+test flaky - fixed by moving the dispatcher hop into the seam's own default implementation, matching
+`EditServerViewModel.connectionTester`'s established precedent.
+
+### Gates
+
+- `compileDebugKotlin`/`compileDebugUnitTestKotlin`: green
+- `testDebugUnitTest` (includes Roborazzi verify): green, 1341/1341, all 3 new goldens recorded and
+  visually verified
+- `assembleDebug`/`assembleRelease`: green
+- `lintDebug`: two real new findings caught and fixed during development - `EmptySuperCall`
+  (`SettingsViewModel.onCleared()`'s redundant `super.onCleared()` call, the same finding phase 5A2
+  hit) and `UseKtx` (three raw `SharedPreferences.edit().put...().apply()` calls, converted to the
+  KTX `edit { }` form); green after both fixes, zero new findings remaining, `lint-baseline.xml`
+  unchanged; `lintVitalRelease`: no errors or warnings
+- `detekt -Pqc`: **42** in `:ultrasonic` - byte-identical to the pre-phase baseline (one `LongMethod`
+  finding was introduced and then eliminated by extracting `ConfirmSheetActions` out of
+  `SettingsConfirmSheet`, not suppressed)
+- `ArchitectureGuardTest`/`TakiTokensTest`/`NavigationChromeSelectionTest`: green - one raw `.dp`
+  literal caught and fixed with an explicit `// taki-raw-ok` escape hatch
+  (`SettingsChoiceSheet`'s sheet-height cap), no `MaterialTheme` import, no Media3 import in the new
+  `ui/settings` package
+- Grep assertions (required by the task): zero live `PreferenceFragmentCompat`/
+  `SwitchPreferenceCompat`/`ListPreference`/`EditTextPreference`/`PreferenceScreen` usage in
+  `ultrasonic/src/main/kotlin` (only kdoc-comment mentions remain); `R.xml.settings`/
+  `settings_fragment.xml` confirmed deleted from disk
+
+### Pixel 7 validation
+
+Completed live against device `2B191FDH200E36`. The device was in active personal use when first
+checked (Instagram/ChatGPT in the foreground) - confirmed with the user before proceeding rather than
+forcing it.
+
+**Top level:** single Taki header ("Settings", 0 Toolbar nodes), all 5 rows, no clipping, correct
+mini-player-absent layout (Settings hides bottom chrome, matching legacy).
+
+**Nested groups:** opened all 6 - Playback, Downloads, Advanced, Storage & cache, Library
+compatibility, Diagnostics - each showing its own title, the exact expected rows (choices showing
+live-resolved current-value summaries, e.g. "Maximum · 320 Kbps", "Original · No limit"), and correct
+back behavior (back from a sub-group returns to its *parent* group, not the top level, proving the
+back stack nests correctly through all 3 levels) with no duplicate header at any level.
+
+**Safe toggle:** "Download on Wi-Fi only" - recorded off, tapped once (fired exactly once, no
+double-toggle from the whole-row + switch both being hit targets), confirmed on, tapped again,
+confirmed restored to off.
+
+**Choice:** ReplayGain Mode - opened the sheet (all 6 options shown), selected "Track Only", sheet
+closed and the row's summary updated live, reopened and restored to "Disabled" (the original value).
+
+**Cache location:** confirmed the `Cache Location` row is hidden by default (`customCacheLocation`
+off); toggling it on launched the real Android system folder picker; backed out without selecting a
+folder (system Back) - the app correctly showed "Invalid cache location. Using default." and silently
+reset `customCacheLocation` back off, confirmed via the row's visibility and the switch state
+afterward. The real on-disk cache location was never touched. `Clear Image Cache` showed a real,
+correctly-formatted dynamic summary ("Delete 17.17 MB of cached images") against the device's actual
+image cache.
+
+**ID3 dependency, live:** toggled "Browse Using ID3 Tags" off - "Use ID3 method also when offline"
+immediately became visually disabled while keeping its own checked state; toggled back on - instantly
+re-enabled. Both restored to their original (on) values.
+
+**Debug logging, live:** toggled on - the row immediately showed the real log file path
+(`/storage/emulated/0/Android/data/io.github.churipakinti.taki.debug/files/ultrasonic.*.log`);
+toggled off - the keep/delete confirmation appeared with the real file count and size ("There are 1
+log files taking up ~1.0 MB space in the ... directory."); tapped **Keep files** (no deletion),
+restored to the original off state with no path shown.
+
+**Destructive actions:** `Clear Image Cache` and `Clear All Downloads` both opened their exact
+confirmation copy; **Cancel** tapped both times - the real image cache size and the real downloaded
+songs were never touched. `Clear Search History` has no confirmation in the legacy design (an
+unconditional action) - per the task's "do not clear real user data" instruction, it was **not**
+actually triggered live; its logic is covered by a dedicated seam-based unit test instead.
+
+**Navigation:** Settings → Equalizer → Back (single back arrow, Equalizer's own unaffected legacy
+chrome, correct return to Playback) and Settings → About → Back (single back arrow, no duplicate
+header, correct return to the Settings top level) both verified.
+
+**Stability:** the app process (`pidof`) stayed the same single PID across the entire validation
+session - no crash-triggered restart; `adb logcat -d *:E` filtered for
+`org.moire.ultrasonic|io.github.churipakinti|AndroidRuntime|FATAL|ANR` across the whole session
+returned nothing.
+
+**Confirmed afterward**: every intentionally-changed setting was restored to its exact original value
+- `wifiRequiredForDownload`=off, `replayGain`="Disabled", `customCacheLocation`=off (and the real
+on-disk cache location untouched), `useId3Tags`/`useId3TagsOffline`=on/on, `debugLogToFile`=off,
+`showConfirmationDialog`=off (never touched), `overrideLanguage`="System default" (never touched),
+`cacheSize`="500 MB" (never touched). No downloaded songs or image-cache entries were deleted.
+
+### Coverage
+
+| | Before 5A4 | After 5A4 |
+|---|---:|---:|
+| Compose | 25 | 26 |
+| Hybrid | 0 | 0 |
+| Intentionally legacy | 2 | 1 |
+| Total reachable | 27 | 27 |
+
+Arithmetic: 25 + 0 + 2 = 27 → 26 + 0 + 1 = 27. Remaining intentionally-legacy surface: Equalizer
+(§B.4, updated).
+
+### Known debt
+
+`showConfirmationDialog` remains dead (preserved, not fixed - a product decision, not this phase's
+to make). The `deleteMetaDatabase` pre-delete-active-id quirk (§R) and the `index`-vs-`id` contract
+(resolved in §S) are both unrelated to this surface and untouched. `ServerSettingsModel.moveItemUp`/
+`moveItemDown` remain dead code (§R, unrelated). The Videos-mode product decision (§B.5) remains open
+and unrelated. No new debt was introduced by this phase; both real bugs found during development (the
+cross-test SharedPreferences leak, the dispatcher-hop test flakiness) were fixed and verified stable
+across repeated runs within this same session, not deferred.
+
+### Next phase
+
+**Phase 5A5 — migrate Equalizer to Compose.** Not started as part of this phase.

@@ -272,13 +272,11 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="org.moire.ultrasonic.fragment.SettingsFragment">
+        <!-- issue #10 phase 5A4: groupTitle was dropped - SettingsDefinitions.forRootKey(rootKey)
+             is now the single source of truth for a screen's title, so there is nothing left to
+             capture-and-thread from the clicked row's own text at navigation time. -->
         <argument
             android:name="rootKey"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="groupTitle"
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />

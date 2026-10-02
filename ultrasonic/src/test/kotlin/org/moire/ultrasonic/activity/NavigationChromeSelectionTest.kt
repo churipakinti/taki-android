@@ -247,14 +247,13 @@ class NavigationChromeSelectionTest {
     fun `about is the only destination phase 5A1 removed from the shared back bar`() {
         // Regression guard: every other destination that showed the shared back bar before
         // phase 5A1 must still show it - only aboutFragment's entry was removed there.
-        // serverSelectorFragment/editServerFragment are asserted separately below (removed in
-        // phases 5A2/5A3, not 5A1).
+        // serverSelectorFragment/editServerFragment/settingsFragment are asserted separately
+        // below (removed in phases 5A2/5A3/5A4, not 5A1).
         assertTrue(showsBackBar(R.id.playlistsFragment))
         assertTrue(showsBackBar(R.id.artistListFragment))
         assertTrue(showsBackBar(R.id.albumListFragment))
         assertTrue(showsBackBar(R.id.selectGenreFragment))
         assertTrue(showsBackBar(R.id.downloadsFragment))
-        assertTrue(showsBackBar(R.id.settingsFragment))
         assertTrue(showsBackBar(R.id.equalizerFragment))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, libraryTrackCollection = true))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, albumDetail = true))
@@ -285,6 +284,24 @@ class NavigationChromeSelectionTest {
         // Its own header's back action now routes through the same dirty-check as system Back,
         // fixing the gap where the shared bar's back arrow bypassed it entirely (phase 5A3 audit).
         assertFalse(showsBackBar(R.id.editServerFragment))
+    }
+
+    // --- Settings (post-issue-#10 residual migration, phase 5A4) ------------------------------
+
+    @Test
+    fun `settings still hides the shared toolbar - unchanged by phase 5A4`() {
+        assertTrue(hides(R.id.settingsFragment))
+    }
+
+    @Test
+    fun `settings no longer shows the shared back bar - it draws its own TakiScreenHeader`() {
+        assertFalse(showsBackBar(R.id.settingsFragment))
+    }
+
+    @Test
+    fun `equalizer is unaffected by phase 5A4 - still legacy, still shows the shared back bar`() {
+        assertTrue(showsBackBar(R.id.equalizerFragment))
+        assertTrue(hides(R.id.equalizerFragment))
     }
 
     @Test

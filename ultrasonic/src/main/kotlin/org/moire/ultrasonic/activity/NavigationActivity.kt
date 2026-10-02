@@ -807,7 +807,9 @@ class NavigationActivity : ScopeActivity() {
          * in phase 5A3 - its own header's back action now routes through the same dirty-check as
          * system Back (`EditServerViewModel.requestBack`), fixing a real gap the shared bar's
          * click listener had no way to participate in (it only ever called `navigateUp()`
-         * directly). Pure so `NavigationChromeSelectionTest` can lock it.
+         * directly). `settingsFragment` was removed in phase 5A4 for the same reason as About -
+         * it now draws its own `TakiScreenHeader`. `equalizerFragment` stays - still legacy, still
+         * relies on the shared bar. Pure so `NavigationChromeSelectionTest` can lock it.
          */
         fun showsContentBackButton(
             destinationId: Int,
@@ -821,7 +823,6 @@ class NavigationActivity : ScopeActivity() {
             R.id.selectGenreFragment,
             R.id.downloadsFragment,
         ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail ||
-            destinationId == R.id.settingsFragment ||
             destinationId == R.id.equalizerFragment
 
         /**

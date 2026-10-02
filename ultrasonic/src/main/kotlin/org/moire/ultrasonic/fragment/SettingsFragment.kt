@@ -1,434 +1,135 @@
 /*
  * SettingsFragment.kt
- * Copyright (C) 2009-2023 Ultrasonic developers
+ * Copyright (C) 2009-2026 Ultrasonic developers
  *
  * Distributed under terms of the GNU GPLv3 license.
  */
 
 package org.moire.ultrasonic.fragment
 
-import android.content.DialogInterface
 import android.content.Intent
-import android.content.SharedPreferences
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
-import android.provider.SearchRecentSuggestions
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.TextView
-import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.preference.EditTextPreference
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceScreen
-import androidx.preference.SwitchPreferenceCompat
-import kotlin.math.ceil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.app.UApp
-import org.moire.ultrasonic.data.ActiveServerProvider
-import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
-import org.moire.ultrasonic.log.FileLoggerTree
-import org.moire.ultrasonic.log.FileLoggerTree.Companion.deleteLogFiles
-import org.moire.ultrasonic.log.FileLoggerTree.Companion.getLogFileNumber
-import org.moire.ultrasonic.log.FileLoggerTree.Companion.getLogFileSizes
-import org.moire.ultrasonic.log.FileLoggerTree.Companion.plantToTimberForest
-import org.moire.ultrasonic.log.FileLoggerTree.Companion.uprootFromTimberForest
-import org.moire.ultrasonic.provider.SearchSuggestionProvider
-import org.moire.ultrasonic.service.DownloadService
-import org.moire.ultrasonic.util.ConfirmationDialog
-import org.moire.ultrasonic.util.ErrorDialog
-import org.moire.ultrasonic.util.FileUtil.albumArtDirectory
-import org.moire.ultrasonic.util.FileUtil.ultrasonicDirectory
-import org.moire.ultrasonic.util.InfoDialog
-import org.moire.ultrasonic.util.RecentSearches
+import org.moire.ultrasonic.model.SettingsViewModel
+import org.moire.ultrasonic.ui.settings.SettingsActions
+import org.moire.ultrasonic.ui.settings.SettingsEffect
+import org.moire.ultrasonic.ui.settings.SettingsScreen
+import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.SelectCacheActivityContract
-import org.moire.ultrasonic.util.Settings
-import org.moire.ultrasonic.util.Settings.id3TagsEnabledOnline
-import org.moire.ultrasonic.util.Settings.preferences
-import org.moire.ultrasonic.util.Storage
-import org.moire.ultrasonic.util.Util.formatBytes
-import org.moire.ultrasonic.util.Util.toast
-import timber.log.Timber
 
 /**
  * Shows main app settings.
+ *
+ * Post-issue-#10 residual migration (phase 5A4): now a thin Compose host, the same shape as
+ * [ServerSelectorFragment]/[EditServerFragment] - it threads the live floating-chrome inset into
+ * [SettingsScreen] and owns the one piece of platform plumbing that must stay Fragment-side: the
+ * [SelectCacheActivityContract] launcher (an `ActivityResultLauncher` can only be registered from
+ * a `Fragment`/`Activity`, never from a `ViewModel`). Every other behavior - the item tree, every
+ * toggle/choice/action's read-write-side-effect logic, the transient sheets - lives in
+ * [SettingsViewModel]/`org.moire.ultrasonic.ui.settings`.
+ *
+ * One instance per screen: the legacy self-navigating `settingsFragment` → `settingsFragment`
+ * destination (`onPreferenceTreeClick`'s `settingsToGroup` action) is unchanged - each nested
+ * group still gets its own back-stack entry and its own `by viewModels()` instance, resolving its
+ * item list from [org.moire.ultrasonic.ui.settings.SettingsDefinitions] via its own `rootKey` nav
+ * argument instead of `PreferenceFragmentCompat.setPreferencesFromResource(R.xml.settings,
+ * rootKey)`.
  */
-@Suppress("TooManyFunctions")
-class SettingsFragment :
-    PreferenceFragmentCompat(),
-    OnSharedPreferenceChangeListener,
-    KoinComponent {
-    private var cacheLocation: Preference? = null
-    private var useId3TagsOffline: SwitchPreferenceCompat? = null
-    private var debugLogToFile: SwitchPreferenceCompat? = null
-    private var customCacheLocation: SwitchPreferenceCompat? = null
-    private var clearImageCache: Preference? = null
+class SettingsFragment : Fragment() {
 
-    private val activeServerProvider: ActiveServerProvider by inject()
-
-    // null rootKey/groupTitle means the top-level screen (a list of groups); a non-null pair
-    // means this instance shows one group's actual settings, reached via onPreferenceTreeClick
-    // navigating this same destination to itself with a different rootKey -- see that override
-    // below for why this doesn't use PreferenceFragmentCompat's own nested-screen mechanism.
+    private val viewModel: SettingsViewModel by viewModels()
     private val navArgs by navArgs<SettingsFragmentArgs>()
+    private val fallbackChromeInset = MutableStateFlow(0)
+
+    private val selectCacheActivityContract =
+        registerForActivityResult(SelectCacheActivityContract()) { uri ->
+            if (uri != null) {
+                UApp.applicationContext().contentResolver.takePersistableUriPermission(uri, RW_FLAG)
+                viewModel.onCacheLocationPicked(uri.toString())
+            } else {
+                viewModel.onCacheLocationPicked(null)
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val preferenceView = super.onCreateView(inflater, container, savedInstanceState)
-        val wrapper = inflater.inflate(R.layout.settings_fragment, container, false)
-        wrapper.findViewById<FrameLayout>(R.id.settings_content).addView(preferenceView)
-        wrapper.findViewById<TextView>(R.id.settings_header).text =
-            navArgs.groupTitle ?: getString(R.string.menu_settings)
-        return wrapper
-    }
-
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.settings, navArgs.rootKey)
-    }
-
-    override fun onPreferenceTreeClick(preference: Preference): Boolean {
-        if (preference is PreferenceScreen && preference.key != null) {
-            findNavController().navigate(
-                SettingsFragmentDirections.settingsToGroup(
-                    rootKey = preference.key,
-                    groupTitle = preference.title?.toString()
-                )
-            )
-            return true
+        val chromeInsetFlow =
+            (activity as? NavigationActivity)?.contentBottomInset ?: fallbackChromeInset
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TakiTheme {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    val chromeInsetPx by chromeInsetFlow.collectAsStateWithLifecycle()
+                    val bottomInset = if (chromeInsetPx > 0) {
+                        with(LocalDensity.current) { chromeInsetPx.toDp() }
+                    } else {
+                        TakiTheme.dimensions.contentInsetFloatingChrome
+                    }
+                    SettingsScreen(
+                        state = state,
+                        actions = settingsActions,
+                        bottomContentInset = bottomInset,
+                    )
+                }
+            }
         }
-        return super.onPreferenceTreeClick(preference)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setTitle(this, navArgs.groupTitle ?: getString(R.string.menu_settings))
-        debugLogToFile = findPreference(getString(R.string.setting_key_debug_log_to_file))
-        useId3TagsOffline = findPreference(getString(R.string.setting_key_id3_tags_offline))
-        customCacheLocation = findPreference(getString(R.string.setting_key_custom_cache_location))
-        cacheLocation = findPreference(getString(R.string.setting_key_cache_location))
-        clearImageCache = findPreference(getString(R.string.setting_key_clear_image_cache))
-
-        setupClearSearchPreference()
-        setupClearImageCachePreference()
-        setupCacheLocationPreference()
-        setupEqualizerPreference()
-        setupClearDownloadsPreference()
-        setupAboutPreference()
+        viewModel.onEffect = ::handleEffect
+        viewModel.load(navArgs.rootKey)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        Settings.normalizeBitrateQualitySettings()
-
-        // Get all setting keys and populate the summaries
-        Settings.getAllKeys().forEach {
-            updatePreferenceSummaries(it)
-        }
-
-        updateCustomPreferences()
+    override fun onDestroyView() {
+        viewModel.onEffect = {}
+        super.onDestroyView()
     }
 
-    override fun onResume() {
-        super.onResume()
-        preferences.registerOnSharedPreferenceChangeListener(this)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        preferences.unregisterOnSharedPreferenceChangeListener(this)
-    }
-
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        if (key == null || sharedPreferences == null) return
-
-        Timber.d("Preference changed: %s", key)
-        updateCustomPreferences()
-
-        updatePreferenceSummaries(key)
-
-        when (key) {
-            getString(R.string.setting_key_debug_log_to_file) -> {
-                setDebugLogToFile(sharedPreferences.getBoolean(key, false))
-            }
-
-            getString(R.string.setting_key_id3_tags) -> {
-                useId3TagsOffline?.isEnabled = sharedPreferences.getBoolean(key, false)
-            }
-
-            getString(R.string.setting_key_custom_cache_location) -> {
-                if (Settings.customCacheLocation) {
-                    selectCacheLocation()
-                } else {
-                    if (Settings.cacheLocationUri != "") setCacheLocation("")
-                    setupCacheLocationPreference()
-                }
-            }
+    private fun handleEffect(effect: SettingsEffect) {
+        when (effect) {
+            is SettingsEffect.LaunchCacheLocationPicker ->
+                selectCacheActivityContract.launch(effect.currentUri)
         }
     }
 
-    /**
-     * Update preference summaries to reflect the current select item (or entered text) in the UI
-     *
-     * @param key: The key of the preference to update
-     */
-    private fun updatePreferenceSummaries(key: String) {
-        try {
-            when (val pref: Preference? = findPreference(key)) {
-                is ListPreference -> {
-                    pref.summary = pref.entry
-                }
-
-                is EditTextPreference -> {
-                    pref.summary = pref.text
-                }
-            }
-        } catch (ignored: Exception) {
-            // If we have updated a ListPreferences possible values, and the user has now an
-            // impossible value, getEntry() will throw an Exception.
-        }
-    }
-
-    private fun setupCacheLocationPreference() {
-        if (!Settings.customCacheLocation) {
-            cacheLocation?.isVisible = false
-            return
-        }
-
-        cacheLocation?.isVisible = true
-        val uri = Settings.cacheLocationUri.toUri()
-        cacheLocation!!.summary = uri.path
-        cacheLocation!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            selectCacheLocation()
-            true
-        }
-    }
-
-    private fun selectCacheLocation() {
-        // Start the activity to pick a directory using the system's file picker.
-        selectCacheActivityContract.launch(Settings.cacheLocationUri)
-    }
-
-    // Custom activity result contract
-    private val selectCacheActivityContract =
-        registerForActivityResult(SelectCacheActivityContract()) { uri ->
-            // parseResult will return the chosen path as an Uri
-            if (uri != null) {
-                val contentResolver = UApp.applicationContext().contentResolver
-                contentResolver.takePersistableUriPermission(uri, RW_FLAG)
-                setCacheLocation(uri.toString())
-                setupCacheLocationPreference()
-            } else {
-                ErrorDialog.Builder(requireContext())
-                    .setMessage(R.string.settings_cache_location_error)
-                    .show()
-                if (Settings.cacheLocationUri == "") {
-                    Settings.customCacheLocation = false
-                    customCacheLocation?.isChecked = false
-                    setupCacheLocationPreference()
-                }
-            }
-        }
-
-    private fun setupClearSearchPreference() {
-        val clearSearchPreference =
-            findPreference<Preference>(getString(R.string.setting_key_clear_search_history))
-        if (clearSearchPreference != null) {
-            clearSearchPreference.onPreferenceClickListener =
-                Preference.OnPreferenceClickListener {
-                    val suggestions = SearchRecentSuggestions(
-                        activity,
-                        SearchSuggestionProvider.AUTHORITY,
-                        SearchSuggestionProvider.MODE
-                    )
-                    suggestions.clearHistory()
-                    RecentSearches(requireContext()).clear()
-                    toast(R.string.settings_search_history_cleared)
-                    false
-                }
-        }
-    }
-
-    private fun setupClearImageCachePreference() {
-        val clearImagePreference =
-            findPreference<Preference>(getString(R.string.setting_key_clear_image_cache))
-        if (clearImagePreference != null) {
-            val cacheSize = getImageCacheSize()
-            clearImagePreference.summary =
-                getString(R.string.settings_clear_image_cache_summary, cacheSize)
-            clearImagePreference.onPreferenceClickListener =
-                Preference.OnPreferenceClickListener {
-                    ConfirmationDialog.Builder(requireContext())
-                        .setMessage(R.string.settings_clear_image_cache_confirm)
-                        .setNegativeButton(R.string.common_cancel) { dIf: DialogInterface, _: Int ->
-                            dIf.cancel()
-                        }
-                        .setPositiveButton(R.string.common_ok) { _: DialogInterface, _: Int ->
-                            clearImageCache()
-                        }
-                        .create().show()
-                    false
-                }
-        }
-    }
-
-    private fun setupEqualizerPreference() {
-        val equalizerPreference =
-            findPreference<Preference>(getString(R.string.setting_key_equalizer))
-        equalizerPreference?.onPreferenceClickListener =
-            Preference.OnPreferenceClickListener {
-                findNavController().navigate(R.id.toEqualizer)
-                true
-            }
-    }
-
-    private fun setupAboutPreference() {
-        val aboutPreference = findPreference<Preference>("about")
-        aboutPreference?.onPreferenceClickListener =
-            Preference.OnPreferenceClickListener {
-                findNavController().navigate(R.id.aboutFragment)
-                true
-            }
-    }
-
-    private fun setupClearDownloadsPreference() {
-        val clearDownloadsPreference =
-            findPreference<Preference>(getString(R.string.setting_key_clear_downloads))
-        clearDownloadsPreference?.onPreferenceClickListener =
-            Preference.OnPreferenceClickListener {
-                ConfirmationDialog.Builder(requireContext())
-                    .setMessage(R.string.settings_clear_downloads_confirm)
-                    .setNegativeButton(R.string.common_cancel) { dIf: DialogInterface, _: Int ->
-                        dIf.cancel()
-                    }
-                    .setPositiveButton(R.string.common_ok) { _: DialogInterface, _: Int ->
-                        clearAllDownloads()
-                    }
-                    .create().show()
-                false
-            }
-    }
-
-    private fun clearAllDownloads() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val tracks = withContext(Dispatchers.IO) {
-                activeServerProvider.offlineMetaDatabase.trackDao().get()
-            }
-            DownloadService.deleteAsync(tracks)
-            toast(
-                resources.getQuantityString(R.plurals.n_songs_deleted, tracks.size, tracks.size)
-            )
-        }
-    }
-
-    private fun getImageCacheSize(): String {
-        val albumArtDir = albumArtDirectory
-        if (!albumArtDir.exists()) return "0 B"
-
-        var totalSize = 0L
-        albumArtDir.walkTopDown().forEach { file ->
-            if (file.isFile) {
-                totalSize += file.length()
-            }
-        }
-        return formatBytes(totalSize)
-    }
-
-    private fun clearImageCache() {
-        val albumArtDir = albumArtDirectory
-        if (!albumArtDir.exists()) {
-            toast(R.string.settings_clear_image_cache_cleared)
-            return
-        }
-
-        var deletedCount = 0
-        albumArtDir.walkTopDown().forEach { file ->
-            if (file.isFile && file.delete()) {
-                deletedCount++
-            }
-        }
-        Timber.i("Deleted %d image cache files", deletedCount)
-        clearImageCache?.summary = getString(R.string.settings_clear_image_cache_summary, "0 B")
-        toast(R.string.settings_clear_image_cache_cleared)
-    }
-
-    private fun updateCustomPreferences() {
-        if (debugLogToFile?.isChecked == true) {
-            debugLogToFile?.summary = getString(
-                R.string.settings_debug_log_path,
-                ultrasonicDirectory,
-                FileLoggerTree.FILENAME
-            )
-        } else {
-            debugLogToFile?.summary = ""
-        }
-
-        useId3TagsOffline?.isEnabled = id3TagsEnabledOnline
-    }
-
-    private fun setCacheLocation(path: String) {
-        if (path != "") {
-            val uri = path.toUri()
-            cacheLocation!!.summary = uri.path ?: ""
-        }
-
-        Settings.cacheLocationUri = path
-
-        // Clear download queue.
-        DownloadService.clearDownloads()
-        Storage.reset()
-        Storage.checkForErrorsWithCustomRoot()
-    }
-
-    private fun setDebugLogToFile(writeLog: Boolean) {
-        if (writeLog) {
-            plantToTimberForest()
-            Timber.i("Enabled debug logging to file")
-        } else {
-            uprootFromTimberForest()
-            Timber.i("Disabled debug logging to file")
-            val fileNum = getLogFileNumber()
-            val fileSize = getLogFileSizes()
-            val message = getString(
-                R.string.settings_debug_log_summary,
-                fileNum.toString(),
-                ceil(fileSize.toDouble() / 1000 / 1000).toString(),
-                ultrasonicDirectory
-            )
-            val keep = R.string.settings_debug_log_keep
-            val delete = R.string.settings_debug_log_delete
-            ConfirmationDialog.Builder(requireContext())
-                .setMessage(message)
-                .setNegativeButton(keep) { dIf: DialogInterface, _: Int ->
-                    dIf.cancel()
-                }
-                .setPositiveButton(delete) { dIf: DialogInterface, _: Int ->
-                    deleteLogFiles()
-                    Timber.i("Deleted debug log files")
-                    dIf.dismiss()
-                    InfoDialog.Builder(requireContext())
-                        .setMessage(R.string.settings_debug_log_deleted)
-                        .setPositiveButton(R.string.common_ok) { dIf2: DialogInterface, _: Int ->
-                            dIf2.dismiss()
-                        }
-                        .create().show()
-                }
-                .create().show()
-        }
+    private val settingsActions: SettingsActions by lazy {
+        SettingsActions(
+            onBack = { findNavController().navigateUp() },
+            onToggle = viewModel::onToggle,
+            onChoiceClick = viewModel::onChoiceClick,
+            onChoiceSelected = viewModel::onChoiceSelected,
+            onChoiceDismiss = viewModel::onOverlayDismiss,
+            onActionClick = viewModel::onActionClick,
+            onConfirm = viewModel::onConfirm,
+            onConfirmDismiss = viewModel::onOverlayDismiss,
+            onInfoDismiss = viewModel::onOverlayDismiss,
+            onNavigateGroup = { rootKey ->
+                findNavController().navigate(SettingsFragmentDirections.settingsToGroup(rootKey))
+            },
+            onNavigateEqualizer = { findNavController().navigate(R.id.toEqualizer) },
+            onNavigateAbout = { findNavController().navigate(R.id.aboutFragment) },
+        )
     }
 
     companion object {
