@@ -50,7 +50,7 @@ mean every reachable pixel is Compose: the focused residual audit in §U found a
 *transient* app-owned View overlays (list-picker dialog, album-info bottom sheet, four playlist
 dialogs, the Library hub popup menu) that were never matrix rows and are still View-based. They are
 listed and classified in §U, and are the reason that section's
-`REACHABLE_UI_MIGRATION_COMPLETE` verdict is **NO**. Videos remains separately classified as
+
 unreachable/product-decision-required (§B.5) and excluded from the 27.
 
 **As of #10's closure (phase 4M4, historical):**
@@ -1854,9 +1854,9 @@ picker in Edit Server.
 
 ### Tests
 
-1405 → **1466** (+61, 0 removed, 0 failures, 0 skipped): `TakiSheetsComposeTest` (13),
+1405 → **1470** (+65, 0 removed, 0 failures, 0 skipped): `TakiSheetsComposeTest` (14),
 `AddToPlaylistSheetComposeTest` (6), `AlbumInfoSheetComposeTest` (7), `PlaylistInfoSheetsComposeTest`
-(8), `LibraryHubSheetComposeTest` (9), `LibraryHubNavigationTest` (4), `ErrorMessageChannelTest`
+(8), `LibraryHubSheetComposeTest` (9), `PlaylistSheetsBackTest` (3), `LibraryHubNavigationTest` (4), `ErrorMessageChannelTest`
 (6), `OverlaySheetsScreenshotTest` (5 goldens: add-to-playlist, album info, playlist info, delete
 confirmation, Library hub), `ResidualViewOverlayGuardTest` (3). Gates: lintDebug no new issues
 (baseline 60 → 59 filtered), lintVitalRelease green, assembleDebug/Release green, detekt 42
@@ -1864,20 +1864,59 @@ confirmation, Library hub), `ResidualViewOverlayGuardTest` (3). Gates: lintDebug
 
 ### Final residual audit (after)
 
-Every code-line reference to a View overlay API, by file: the nine files in
-`ResidualViewOverlayGuardTest.knownLeftovers` — all UNREACHABLE, DEAD, INTERNAL_NON_UI or
+Every code-line reference to a View overlay API, by file: the files in
+`ResidualViewOverlayGuardTest.knownLeftovers` (eleven files) — all UNREACHABLE, DEAD, INTERNAL_NON_UI or
 SYSTEM_OR_THIRD_PARTY (Edit Server's `skydoves` color picker). No `AlertDialog`,
 `MaterialAlertDialogBuilder` (outside the unreachable list dialog), `BottomSheetDialogFragment`,
 `InfoDialog`/`ErrorDialog`/`ConfirmationDialog` remains. **Reachable app-owned View overlays: 0**
 (code audit).
 
-### Pixel 7 validation
+### Pixel 7 validation (`2B191FDH200E36`, debuggable build)
 
-**NOT YET RUN** — the device was not connected to adb during this session
-(`no devices/emulators found` after an adb server restart). The required live checks (R1 from two
-screens, R2, R3 each overlay with cancel-only on destructive ones, R4 from Home and Library, R6
-exercised or documented, stability, no unintended playlist/server mutation) remain open, so the
-completion verdict is deferred; see the follow-up note below once they are done.
+Run after the first 5A6 commit (`ca8a004e`) once the device was connected; non-destructive actions
+only, cancel-only on every destructive confirmation, no playlist or server was created, renamed,
+changed or deleted (the playlist list — 8 playlists, same names and song counts — was re-checked
+afterwards) and no playback was started.
+
+- **R4 Library hub** — from Home and from Library: the five legacy entries in the legacy order, the
+  current-library row shown and inert, Back closes the sheet and stays on the screen, Settings /
+  Switch collection / Add collection (Edit Server, left without saving) / About each open their
+  screen and Back returns.
+- **R3 Playlist List** — Details (correct text, e.g. "Owner … / Song Count: 50 / Public: false /
+  Creation Date …"), Update Information (pre-filled, a tap between fields keeps it open, Cancel
+  changes nothing), Delete (confirmation names the tapped playlist; re-checked on a second playlist
+  so the target is never stale; Cancel and Back dismiss).
+- **R2 Album info** — Compose Album Detail → Album information: artwork, name, artist,
+  "2016 · 18 songs · 2 discs", description; tap on the text keeps it open, Back closes it.
+- **R1 Add to playlist** — from Compose Album Detail and Compose Playlist Detail: all 8 server
+  playlists in server order (including two real playlists with the same name), a tap on the title
+  keeps it open, Back and the scrim dismiss without adding anything.
+- **Playlist Detail ⋮** (Download / Rename playlist / Delete): Back closes it; Delete's confirmation
+  names the playlist and Cancel dismisses; the Rename sheet opens pre-filled.
+- **Pickers** — Track List "By Genre" (long list scrolls, selecting filters the list) and
+  "By Artist"; Album List "By Genre" (the picker §U had wrongly filed as dead); Create Playlist
+  "By Artist"; Back closes each.
+- **Stability** — one app PID throughout; 0 `FATAL EXCEPTION` / ANR in logcat; the only
+  `StrictMode` entries are 4 pre-existing `DiskReadViolation`s in `DownloadService.getDownloadState`
+  (the track context menu's download-state read), none from the new code; the always-present
+  (GONE) error host never intercepted a touch.
+
+Two defects were found live and fixed in the follow-up commit:
+
+1. **Tap-through** — a tap on a *non-interactive* part of a sheet panel (the current-library row, a
+   title, the gap between form fields) fell through to the scrim behind it and dismissed the sheet,
+   which would have closed the update-info form on a stray tap. `TakiSheet`'s panel now swallows
+   taps; two regression tests fail without the fix.
+2. **Back with the Rename / Create-name sheets** (earlier phases) navigated away from the screen
+   instead of closing the sheet. Both now install `TakiBackHandler(enabled = visible)`; three tests.
+
+**Not exercised live (stated, not hidden):** the remove-download confirmation (no playlist on the
+device is fully downloaded, and making one would permanently change its download state — it shares
+`TakiConfirmSheet` with the delete confirmation exercised above and is unit-tested); the error
+sheet itself (provoking a real server/network failure would mean changing the device's connectivity
+settings — the channel, the sheet and the host wiring are unit-tested, and the host being inert
+when idle is confirmed by every navigation above); and Create Playlist's "By Genre" (same picker
+code path as its "By Artist" and as the Track List / Album List genre pickers verified above).
 
 ### Known debt (carried forward, unchanged)
 
@@ -1886,3 +1925,11 @@ decision; #21 Artist Radio StrictMode; #22 Album List folder reload; #23 dead Ar
 (now also the unreachable legacy TrackCollection path above); #24 Visualizer; online per-row download
 indicator gap; deferred TrackCollection/binder cleanup; Up Next shuffle/reorder limitation; Settings
 `showConfirmationDialog` dead toggle.
+
+### Verdict (5A6)
+
+Code audit: 0 reachable app-owned View overlays. Gates: tests 1470/0 failures, lint no new issues,
+detekt 42, both assembles green. Pixel 7: every overlay that can be exercised without changing
+production data passed live (see above), after fixing two defects found there; three paths are
+test-covered only for the reasons stated. `REACHABLE_UI_MIGRATION_COMPLETE = YES`, with those three
+stated live gaps. The canonical matrix remains 27/0/0.

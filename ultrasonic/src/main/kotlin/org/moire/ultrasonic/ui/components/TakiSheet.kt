@@ -11,6 +11,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.findViewTreeOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -102,6 +104,9 @@ fun TakiSheet(
                 .clip(RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS))
                 .background(TakiTheme.colors.surface)
                 .testTag(sheetTestTag)
+                // A tap on a non-interactive part of the panel (a title, a label, a gap between
+                // fields) must not fall through to the scrim behind it and dismiss the sheet.
+                .pointerInput(Unit) { detectTapGestures { } }
                 .padding(horizontal = TakiTheme.spacing.xl)
                 .padding(top = TakiTheme.spacing.sm, bottom = TakiTheme.spacing.sm + bottomContentInset),
         ) {

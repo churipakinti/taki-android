@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.ui.components.TakiBackHandler
 import org.moire.ultrasonic.ui.components.TakiTextField
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
@@ -104,6 +105,8 @@ fun BoxScope.CreatePlaylistNameSheet(
     bottomContentInset: Dp,
     modifier: Modifier = Modifier,
 ) {
+    // System Back closes the open sheet instead of leaving the screen (issue #10 phase 5A6).
+    TakiBackHandler(enabled = visible, onBack = actions.onDismiss)
     AnimatedVisibility(
         visible = visible,
         modifier = modifier.fillMaxSize(),

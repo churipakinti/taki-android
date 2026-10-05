@@ -21,7 +21,9 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -86,6 +88,24 @@ class TakiSheetsComposeTest {
         compose.onNodeWithTag(takiPickerOptionTestTag("k2")).performClick()
         compose.onNodeWithTag(takiPickerOptionTestTag("k3")).performClick()
         assertEquals(listOf("k2"), picked)
+    }
+
+    @Test
+    fun `tapping a non-interactive part of the panel does not dismiss the sheet`() {
+        var dismissed = 0
+        compose.setContent {
+            TakiTheme {
+                TakiConfirmSheet("Confirm", "Delete Mix?", "Delete", "Cancel", {}, { dismissed++ }, 0.dp, tag)
+            }
+        }
+        // Found on a Pixel 7: these taps used to fall through to the scrim behind the panel.
+        compose.onNodeWithText("Confirm").performTouchInput { click() }
+        compose.onNodeWithText("Delete Mix?").performTouchInput { click() }
+        compose.onNodeWithTag(tag).performTouchInput { click(topCenter + androidx.compose.ui.geometry.Offset(0f, 4f)) }
+        assertEquals("a tap inside the panel must never dismiss it", 0, dismissed)
+        // ...while a genuine tap on the scrim still does.
+        compose.onNodeWithTag(takiSheetScrimTestTag(tag)).performTouchInput { click(topCenter) }
+        assertEquals(1, dismissed)
     }
 
     @Test

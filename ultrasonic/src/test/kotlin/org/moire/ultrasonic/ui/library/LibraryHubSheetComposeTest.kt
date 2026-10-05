@@ -16,7 +16,9 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import org.junit.Assert.assertEquals
@@ -75,13 +77,15 @@ class LibraryHubSheetComposeTest {
 
     @Test
     fun `the current library row is informational - shown, disabled, and never actionable`() {
-        val actions = show()
+        var dismissed = 0
+        val actions = show(onDismiss = { dismissed++ })
         compose.onNodeWithText("Home server").assertIsDisplayed()
         compose.onNodeWithTag(LIBRARY_HUB_CURRENT_TEST_TAG)
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled))
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("Current library: Home server")))
-        compose.onNodeWithTag(LIBRARY_HUB_CURRENT_TEST_TAG).performClick()
+        compose.onNodeWithTag(LIBRARY_HUB_CURRENT_TEST_TAG).performTouchInput { click() }
         assertTrue(actions.isEmpty())
+        assertEquals("tapping the info row must not close the sheet (Pixel 7 regression)", 0, dismissed)
     }
 
     private fun assertActionFires(action: LibraryHubAction) {
