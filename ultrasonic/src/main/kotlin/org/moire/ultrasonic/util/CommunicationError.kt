@@ -45,10 +45,12 @@ object CommunicationError {
 
         if (context == null) return
 
-        ErrorDialog(
-            context = context,
-            message = getErrorMessage(error)
-        ).show()
+        // Shown by the Compose error sheet NavigationActivity hosts (issue #10 phase 5A6). Like
+        // the legacy AlertDialog, which could not be shown without a foreground Activity, a
+        // message with no host attached is dropped after being logged above.
+        if (!ErrorMessageChannel.post(getErrorMessage(error))) {
+            Timber.w("No UI host attached; the error was not displayed")
+        }
     }
 
     @JvmStatic

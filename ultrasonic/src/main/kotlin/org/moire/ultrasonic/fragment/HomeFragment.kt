@@ -8,17 +8,17 @@
 package org.moire.ultrasonic.fragment
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.widget.FrameLayout
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -33,6 +33,7 @@ import org.moire.ultrasonic.NavigationGraphDirections
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.activity.NavigationActivity
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
+import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.model.HomeViewModel
 import org.moire.ultrasonic.service.DailyMixQueueBuilder
 import org.moire.ultrasonic.service.MediaPlayerManager
@@ -40,6 +41,8 @@ import org.moire.ultrasonic.ui.home.HomeActions
 import org.moire.ultrasonic.ui.home.HomeAlbumUi
 import org.moire.ultrasonic.ui.home.HomeScreen
 import org.moire.ultrasonic.ui.home.HomeUiState
+import org.moire.ultrasonic.ui.library.LibraryHubAction
+import org.moire.ultrasonic.ui.library.LibraryHubSheet
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util.toast
@@ -61,10 +64,11 @@ class HomeFragment : Fragment() {
     // the impossible case of a non-NavigationActivity host).
     private val fallbackChromeInset = MutableStateFlow(0)
 
-    // A zero-width strip pinned top-end, purely so the library-hub PopupMenu has a small
-    // anchor near the Compose header's overflow glyph (a full-size ComposeView anchor drops
-    // the menu in the wrong place).
-    private var overflowAnchor: View? = null
+    // The Library hub sheet (issue #10 phase 5A6, replacing the AppCompat PopupMenu): host-owned
+    // visibility, with the active collection's name read when the overflow is tapped.
+    private val libraryHubVisible = mutableStateOf(false)
+    private var libraryHubCurrentName = ""
+    private val activeServerProvider: ActiveServerProvider by inject()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -73,7 +77,7 @@ class HomeFragment : Fragment() {
     ): View {
         val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
             ?: fallbackChromeInset
-        val composeView = ComposeView(requireContext()).apply {
+        return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TakiTheme {
@@ -84,33 +88,34 @@ class HomeFragment : Fragment() {
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    HomeScreen(
-                        state = state,
-                        actions = homeActions,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        HomeScreen(
+                            state = state,
+                            actions = homeActions,
+                            bottomContentInset = bottomInset,
+                        )
+                        if (libraryHubVisible.value) {
+                            LibraryHubSheet(
+                                currentLibraryName = libraryHubCurrentName,
+                                onAction = ::onLibraryHubAction,
+                                onDismiss = { libraryHubVisible.value = false },
+                                bottomContentInset = bottomInset,
+                            )
+                        }
+                    }
                 }
-            }
-        }
-        val anchor = View(requireContext())
-        overflowAnchor = anchor
-        return FrameLayout(requireContext()).apply {
-            addView(
-                composeView,
-                FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT),
-            )
-            val anchorHeightPx = (OVERFLOW_ANCHOR_HEIGHT_DP * resources.displayMetrics.density)
-                .toInt()
-            addView(anchor, FrameLayout.LayoutParams(1, anchorHeightPx))
-            anchor.updateLayoutParams<FrameLayout.LayoutParams> {
-                gravity = Gravity.TOP or Gravity.END
             }
         }
     }
 
-    override fun onDestroyView() {
-        overflowAnchor = null
-        super.onDestroyView()
+    private fun showLibraryHub() {
+        libraryHubCurrentName = activeServerProvider.getActiveServer().name
+        libraryHubVisible.value = true
+    }
+
+    private fun onLibraryHubAction(action: LibraryHubAction) {
+        libraryHubVisible.value = false
+        findNavController().navigateLibraryHub(action)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -135,9 +140,7 @@ class HomeFragment : Fragment() {
                     homeViewModel.loadHomeScreen(forceRefresh = true)
                 }
             },
-            onOverflow = {
-                (activity as? NavigationActivity)?.showLibraryHub(overflowAnchor ?: requireView())
-            },
+            onOverflow = ::showLibraryHub,
             onAlbumClick = ::openAlbum,
             onOpenPlaylists = { findNavController().navigate(R.id.playlistsFragment) },
             onOpenAlbums = {
@@ -209,7 +212,4 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private companion object {
-        private const val OVERFLOW_ANCHOR_HEIGHT_DP = 48f
-    }
 }

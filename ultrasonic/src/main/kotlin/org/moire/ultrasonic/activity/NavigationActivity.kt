@@ -22,11 +22,13 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -67,12 +69,14 @@ import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.ui.components.AppErrorSheet
 import org.moire.ultrasonic.ui.playback.MiniPlayerActions
 import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
 import org.moire.ultrasonic.ui.playback.TakiMiniPlayer
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.CommunicationError
 import org.moire.ultrasonic.util.Constants
+import org.moire.ultrasonic.util.ErrorMessageChannel
 import org.moire.ultrasonic.util.LocaleHelper
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.RecentSearches
@@ -115,6 +119,10 @@ class NavigationActivity : ScopeActivity() {
     private var imeVisible = false
     private var navigationBarBottomInset = 0
 
+    // The system navigation-bar inset alone, observable by the app-wide error sheet (which draws
+    // above the bottom nav and the mini-player, so it only has to clear the system bar).
+    private val navigationBarInsetPx = MutableStateFlow(0)
+
     // The live bottom inset a scrollable screen should reserve so its last item clears whatever
     // floating chrome (system nav bar + bottom nav + mini-player band) is currently visible.
     // Updated by applyBottomInset(); consumed reactively by bindFloatingChromeInset() and by
@@ -148,6 +156,7 @@ class NavigationActivity : ScopeActivity() {
         volumeControlStream = AudioManager.STREAM_MUSIC
         setContentView(R.layout.navigation_activity)
         nowPlayingView = findViewById<ComposeView>(R.id.mini_player_host).also(::bindMiniPlayer)
+        bindErrorOverlay(findViewById(R.id.error_overlay_host))
         bottomNavigation = findViewById(R.id.bottom_navigation)
         navHostContainer = findViewById(R.id.nav_host_container)
         navHostFragmentView = findViewById(R.id.nav_host_fragment)
@@ -161,6 +170,7 @@ class NavigationActivity : ScopeActivity() {
             view.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
             navigationBarBottomInset =
                 insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            navigationBarInsetPx.value = navigationBarBottomInset
             applyBottomInset()
             val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             if (imeVisible != isImeVisible) {
@@ -369,41 +379,6 @@ class NavigationActivity : ScopeActivity() {
         }
     }
 
-    fun showLibraryHub(anchorView: View? = null) {
-        val currentToolbar = toolbar
-        val anchor = anchorView
-            ?: currentToolbar
-            ?: return
-        val popup = androidx.appcompat.widget.PopupMenu(this, anchor)
-        // Align to the anchor's end edge - the overflow control always sits top-end, and the
-        // Compose Home passes the full-width content root as the anchor.
-        popup.gravity = android.view.Gravity.END
-        popup.menuInflater.inflate(R.menu.library_hub_popup, popup.menu)
-        popup.menu.findItem(R.id.library_hub_current).title = getString(
-            R.string.library_hub_current_name,
-            activeServerProvider.getActiveServer().name
-        )
-        popup.setOnMenuItemClickListener { item ->
-            val navController = findNavController(R.id.nav_host_fragment)
-            when (item.itemId) {
-                R.id.library_hub_switch -> navController.navigate(R.id.serverSelectorFragment)
-
-                R.id.library_hub_add -> navController.navigate(
-                    R.id.editServerFragment,
-                    Bundle().apply { putInt("serverId", -1) }
-                )
-
-                R.id.library_hub_settings -> navController.navigate(R.id.settingsFragment)
-
-                R.id.library_hub_about -> navController.navigate(R.id.aboutFragment)
-
-                else -> return@setOnMenuItemClickListener false
-            }
-            true
-        }
-        popup.show()
-    }
-
     override fun onResume() {
         Timber.d("onResume called")
         super.onResume()
@@ -433,6 +408,7 @@ class NavigationActivity : ScopeActivity() {
         rxBusSubscription.dispose()
         destinationChangedListener?.let { host?.navController?.removeOnDestinationChangedListener(it) }
         destinationChangedListener = null
+        ErrorMessageChannel.detachHost()
         super.onDestroy()
     }
 
@@ -567,6 +543,31 @@ class NavigationActivity : ScopeActivity() {
                     progressProvider = playbackUiStateHolder::snapshotProgress,
                 )
             }
+        }
+    }
+
+    /**
+     * Hosts the app-wide error sheet (issue #10 phase 5A6), replacing the `AlertDialog`
+     * `CommunicationError.handleError` used to show. The host view stays GONE (and therefore
+     * touch-transparent) unless a message is pending; [ErrorMessageChannel] only queues messages
+     * while this Activity is attached, like the legacy dialog needing a foreground Activity.
+     */
+    private fun bindErrorOverlay(view: ComposeView) {
+        ErrorMessageChannel.attachHost()
+        view.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        view.setContent {
+            TakiTheme {
+                val messages by ErrorMessageChannel.messages.collectAsStateWithLifecycle()
+                val navBarPx by navigationBarInsetPx.collectAsStateWithLifecycle()
+                AppErrorSheet(
+                    messages = messages,
+                    onDismiss = ErrorMessageChannel::dismissCurrent,
+                    bottomContentInset = with(LocalDensity.current) { navBarPx.toDp() },
+                )
+            }
+        }
+        lifecycleScope.launch {
+            ErrorMessageChannel.messages.collect { view.isVisible = it.isNotEmpty() }
         }
     }
 

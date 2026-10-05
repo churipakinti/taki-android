@@ -2,7 +2,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="library_hub.title">Your library</string>
     <string name="library_hub.current">Current library</string>
-    <string name="library_hub.current_name">%1$s</string>
     <string name="library_hub.switch">Switch collection</string>
     <string name="library_hub.add">Add collection</string>
     <string name="library_hub.bottom_label">Library</string>
@@ -252,6 +251,11 @@
         <item quantity="other">%d songs selected</item>
     </plurals>
     <string name="playlist.update_info">Update Information</string>
+    <string name="playlist.info_owner">Owner: %1$s</string>
+    <string name="playlist.info_comments">Comments: %1$s</string>
+    <string name="playlist.info_song_count">Song Count: %1$s</string>
+    <string name="playlist.info_public">Public: %1$s</string>
+    <string name="playlist.info_created">Creation Date: %1$s</string>
     <string name="playlist.updated_info">Updated playlist information for %s</string>
     <string name="playlist.updated_info_error">Failed to update playlist information for %s</string>
     <string name="search.albums">Albums</string>

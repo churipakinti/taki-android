@@ -1752,3 +1752,137 @@ dead toggle. New in this phase: R1–R5 recorded above.
 A decision, not started here: either one more small phase migrating the transient overlays R1–R4 to
 Compose sheets (the established `Taki*Sheet` pattern), or accept them as documented debt and begin
 beta/stabilization review before Visualizer #24.
+
+## V. Phase 5A6 — Residual View overlays migrated to Compose (post-#10)
+
+Baseline `4e892707` (Migrate Equalizer to Compose). Not a reopening of #10. The canonical
+reachable-surface matrix is **unchanged at 27 Compose / 0 hybrid / 0 legacy** — these overlays were
+never matrix rows (§U), and this phase does not retroactively make them so.
+
+### Correction to §U
+
+§U classified `AlbumListFragment` / `ArtistListFragment` as DEAD (#23). **That was wrong.** Both are
+live Compose hosts reached from Home and Library (`toAlbumList`, `toArtistList`); only their *old
+View bodies* are gone. Consequence: the "By Genre" picker on Album List was a **reachable** legacy
+`ItemSelectionDialogFragment` that §U had hidden inside the DEAD row. The re-audit also found
+overlays §U's R1–R5 list did not name. Everything below was re-derived from the current branch, not
+from §U.
+
+### Re-audit: every reachable app-owned View overlay found (before)
+
+| # | Overlay | Live path | Class before |
+|---|---|---|---|
+| R1 | `ItemSelectionDialogFragment` — Add to playlist | Compose Album Detail / Track List / Playlist Detail / Folder Browser track menus → `addTracksToPlaylist` | REACHABLE |
+| R1b | `ItemSelectionDialogFragment` — playlist ⋮ menu (Download / Rename / Delete) | Compose Playlist Detail header | REACHABLE (new) |
+| R1c | `ItemSelectionDialogFragment` — artist/genre pickers | Compose Track List sort, Compose Album List "By Genre", Create Playlist sort | REACHABLE (new) |
+| R1d | `ConfirmationDialog` — delete playlist | Playlist Detail ⋮ → Delete | REACHABLE (new) |
+| R2 | `AlbumInfoBottomSheetFragment` | Compose Album Detail → Information | REACHABLE |
+| R3 | `ConfirmationDialog` ×3 (remove download, update info, delete) + `InfoDialog` ×1 (info) | Compose Playlist List row menu | REACHABLE |
+| R4 | AppCompat `PopupMenu` (`NavigationActivity.showLibraryHub`) | ⋮ on Home / Library | REACHABLE |
+| R6 | `ErrorDialog` (`CommunicationError.handleError`, a `MaterialAlertDialogBuilder`) | failed transport commands from Now Playing, the random-songs shortcut, list-model load errors | REACHABLE (new) |
+
+### What replaced them
+
+One shared sheet chrome — `TakiSheet` (scrim, rounded panel, drag handle, heading, system-Back via
+`TakiBackHandler`, content capped at 75% of the host height) — and three thin primitives on it:
+`TakiPickerSheet`, `TakiConfirmSheet`, `TakiMessageSheet`. No global modal framework: each host
+owns one `mutableStateOf` and draws one sheet.
+
+- **R1 → `AddToPlaylistSheet`.** Same source (`PlaylistUtil.getPlaylists`), same order, same
+  add call, same toasts/empty behaviour (the host still toasts "No saved playlists" and opens
+  nothing when the list is empty). Intentional improvement: rows are identified by playlist **id**,
+  not name — the legacy name lookup could not tell two same-named playlists apart.
+- **R1b/R1d → `TakiPickerSheet` + `TakiConfirmSheet`** hosted by `TrackCollectionFragment`'s four
+  Compose views through one `OverlayHost`. **R1c →** index-keyed `TakiPickerSheet`
+  (duplicate names cannot collide), hosted by Track List, Album List and Create Playlist.
+- **R2 → `AlbumInfoSheet`.** Same fields and hide-when-empty rules (artwork, name ≤2 lines, artist,
+  "year · N songs · N discs", scrollable description); no new metadata or actions.
+- **R3 → `TakiConfirmSheet` ×2, `PlaylistInfoSheet`, `UpdatePlaylistInfoSheet`.** The info text is
+  line-for-line the legacy dialog (Owner / Comments / Song Count and, only with a public flag,
+  Public / Creation Date with the `T` shown as a space), URLs still tappable (`linkifyWebUrls`
+  replacing `Linkify`); the update form keeps no validation, a disabled Public checkbox reporting
+  `false` when the server sent no flag, and the same `updatePlaylist` call. The legacy labels were
+  hard-coded English and are now string resources with the same English text.
+- **R4 → `LibraryHubSheet`.** Exactly the legacy entries and order: a disabled informational
+  "current library" row (exposed as disabled), Switch collection, Add collection, Settings, About.
+  Hosted by Home and Library (the old anchor-view hack is gone); targets in
+  `libraryHubDestination` (Add = Edit Server `serverId = -1`).
+- **R6 → `AppErrorSheet`** fed by `ErrorMessageChannel`, hosted once by `NavigationActivity`
+  above the nav host / bottom nav / mini-player. A message is queued only while the Activity is
+  attached — matching the legacy dialog, which could not show without a foreground Activity.
+- **Destructive wording:** delete confirmations now confirm with an explicit "Delete" button (the
+  legacy playlist delete said "OK").
+- **Insets:** every host that renders behind the floating chrome passes its own
+  `bottomContentInset` to the sheet (as the earlier Rename/Create sheets do); the error host sits
+  above all chrome and passes only the system navigation-bar inset. Nothing is padded twice.
+
+### R5 — binder popups, resolved individually
+
+`TrackCollectionFragment` routes every live mode (`isComposeAlbumMode`, `isComposePlaylistDetailMode`,
+`isComposeLibraryTrackListMode`, `isComposeFolderBrowserMode`) to Compose before the legacy block
+runs; every `toTrackCollection` caller in the app was traced and lands in one of those four. The
+legacy block is reachable only for `id == null` / `getVideos` / `getRandom` / `ALL_SONGS` shapes that
+no caller produces (§F, phases 4L/4M1).
+
+| Binder / popup | Instantiated by | Classification |
+|---|---|---|
+| `AlbumRowDelegate` | legacy block of `TrackCollectionFragment` only | UNREACHABLE |
+| `AlbumGridDelegate` | nothing (zero instantiations) | DEAD |
+| `ArtistRowBinder` | nothing (zero instantiations) | DEAD |
+| `ArtistGridBinder` | nothing (zero instantiations) | DEAD |
+| `LibraryTrackBinder` | legacy block of `TrackCollectionFragment` only | UNREACHABLE |
+| `TrackViewBinder` | legacy block of `TrackCollectionFragment` only | UNREACHABLE |
+| `Utils.createPopupMenu` | the binders above | UNREACHABLE |
+| `showAlbumOverflow` PopupMenu | legacy header binder only (Compose Album Detail has its own ⋮) | UNREACHABLE |
+| `FilterButtonBar` `ListPopupWindow` | legacy filter bar, legacy block only | UNREACHABLE |
+| `PopupMenu` in `runTrackContextAction`, `AlbumListFragment`, `ArtistListFragment` | inflated but **never shown** — only to obtain a `MenuItem` for `ContextMenuUtil` | INTERNAL_NON_UI |
+| `ItemSelectionDialogFragment` | legacy filter-bar functions of the legacy block only | UNREACHABLE (DEFERRED_DEAD_CODE, #23) |
+
+None is reachable, so none was migrated; nothing was deleted beyond what 5A6 itself orphaned.
+`ResidualViewOverlayGuardTest` pins this inventory: a new View overlay API in any other file fails
+the build.
+
+### Legacy removed
+
+`AlbumInfoBottomSheetFragment` + `album_info_bottom_sheet.xml`; `Dialogs.kt` (`InfoDialog` /
+`ErrorDialog` / `ConfirmationDialog`, zero callers left); `library_hub_popup.xml`;
+`update_playlist.xml`; `NavigationActivity.showLibraryHub`; the Home/Library anchor-view wrappers;
+the now-unused `ic_baseline_info`, `ic_baseline_warning` and `library_hub.current_name` (lint
+`UnusedResources`, removed rather than baselined). **Retained on purpose:** `ItemSelectionDialogFragment`
+and the legacy filter-bar/binder code (UNREACHABLE, #23), `ContextMenuUtil`, the third-party color
+picker in Edit Server.
+
+### Tests
+
+1405 → **1466** (+61, 0 removed, 0 failures, 0 skipped): `TakiSheetsComposeTest` (13),
+`AddToPlaylistSheetComposeTest` (6), `AlbumInfoSheetComposeTest` (7), `PlaylistInfoSheetsComposeTest`
+(8), `LibraryHubSheetComposeTest` (9), `LibraryHubNavigationTest` (4), `ErrorMessageChannelTest`
+(6), `OverlaySheetsScreenshotTest` (5 goldens: add-to-playlist, album info, playlist info, delete
+confirmation, Library hub), `ResidualViewOverlayGuardTest` (3). Gates: lintDebug no new issues
+(baseline 60 → 59 filtered), lintVitalRelease green, assembleDebug/Release green, detekt 42
+(= baseline), `ArchitectureGuardTest` / `TakiTokensTest` / `NavigationChromeSelectionTest` green.
+
+### Final residual audit (after)
+
+Every code-line reference to a View overlay API, by file: the nine files in
+`ResidualViewOverlayGuardTest.knownLeftovers` — all UNREACHABLE, DEAD, INTERNAL_NON_UI or
+SYSTEM_OR_THIRD_PARTY (Edit Server's `skydoves` color picker). No `AlertDialog`,
+`MaterialAlertDialogBuilder` (outside the unreachable list dialog), `BottomSheetDialogFragment`,
+`InfoDialog`/`ErrorDialog`/`ConfirmationDialog` remains. **Reachable app-owned View overlays: 0**
+(code audit).
+
+### Pixel 7 validation
+
+**NOT YET RUN** — the device was not connected to adb during this session
+(`no devices/emulators found` after an adb server restart). The required live checks (R1 from two
+screens, R2, R3 each overlay with cancel-only on destructive ones, R4 from Home and Library, R6
+exercised or documented, stability, no unintended playlist/server mutation) remain open, so the
+completion verdict is deferred; see the follow-up note below once they are done.
+
+### Known debt (carried forward, unchanged)
+
+`deleteMetaDatabase` pre-delete-active-id quirk; dead `moveItemUp`/`moveItemDown`; Videos unreachable
+decision; #21 Artist Radio StrictMode; #22 Album List folder reload; #23 dead Artist/Album cleanup
+(now also the unreachable legacy TrackCollection path above); #24 Visualizer; online per-row download
+indicator gap; deferred TrackCollection/binder cleanup; Up Next shuffle/reorder limitation; Settings
+`showConfirmationDialog` dead toggle.

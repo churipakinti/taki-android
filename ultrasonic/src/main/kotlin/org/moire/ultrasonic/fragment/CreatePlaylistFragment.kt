@@ -11,7 +11,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -30,6 +36,8 @@ import org.moire.ultrasonic.domain.ArtistOrIndex
 import org.moire.ultrasonic.fragment.FragmentTitle.setTitle
 import org.moire.ultrasonic.model.CreatePlaylistViewModel
 import org.moire.ultrasonic.ui.createplaylist.CreatePlaylistActions
+import org.moire.ultrasonic.ui.components.TakiPickerOption
+import org.moire.ultrasonic.ui.components.TakiPickerSheet
 import org.moire.ultrasonic.ui.createplaylist.CreatePlaylistScreen
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.Util.toast
@@ -49,7 +57,12 @@ class CreatePlaylistFragment : Fragment() {
     private val navArgs: CreatePlaylistFragmentArgs by navArgs()
     private val viewModel: CreatePlaylistViewModel by viewModels()
 
-    private var pendingSelection: SortOrder? = null
+    /** The open artist/genre picker sheet (issue #10 phase 5A6, replacing the legacy
+     *  ItemSelectionDialogFragment), `null` = closed. Items are display names; the selection is
+     *  resolved by index, so duplicate names cannot collide. */
+    private data class Picker(val sortOrder: SortOrder, val titleRes: Int, val items: List<String>)
+
+    private val picker = mutableStateOf<Picker?>(null)
     private var availableArtists: List<ArtistOrIndex> = emptyList()
     private val fallbackChromeInset = MutableStateFlow(0)
 
@@ -59,11 +72,6 @@ class CreatePlaylistFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         setTitle(this, navArgs.playlistName)
-
-        childFragmentManager.setFragmentResultListener(
-            ItemSelectionDialogFragment.REQUEST_KEY,
-            viewLifecycleOwner
-        ) { _, bundle -> handleSelectionDialogResult(bundle) }
 
         val chromeInsetFlow = (activity as? NavigationActivity)?.contentBottomInset
             ?: fallbackChromeInset
@@ -80,11 +88,27 @@ class CreatePlaylistFragment : Fragment() {
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    CreatePlaylistScreen(
-                        state = state,
-                        actions = actions,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        CreatePlaylistScreen(
+                            state = state,
+                            actions = actions,
+                            bottomContentInset = bottomInset,
+                        )
+                        val open = picker.value
+                        if (open != null) {
+                            TakiPickerSheet(
+                                title = stringResource(open.titleRes),
+                                options = remember(open) {
+                                    open.items.mapIndexed { i, name -> TakiPickerOption(i.toString(), name) }
+                                },
+                                onSelect = { key -> onPicked(open, key.toInt()) },
+                                onDismiss = { picker.value = null },
+                                dismissLabel = stringResource(R.string.common_cancel),
+                                bottomContentInset = bottomInset,
+                                sheetTestTag = CREATE_PLAYLIST_PICKER_SHEET_TEST_TAG,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -117,42 +141,35 @@ class CreatePlaylistFragment : Fragment() {
     }
 
     private fun showArtistSelection() {
-        pendingSelection = SortOrder.BY_ARTIST
         viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
             availableArtists = viewModel.loadArtists().sortedBy {
                 it.name.orEmpty().lowercase(Locale.ROOT)
             }
-            showSelectionDialog(
+            showSelection(
+                SortOrder.BY_ARTIST,
                 R.string.main_artists_title,
-                availableArtists.mapNotNull { it.name }.toTypedArray()
+                availableArtists.mapNotNull { it.name }
             )
         }
     }
 
     private fun showGenreSelection() {
-        pendingSelection = SortOrder.BY_GENRE
         viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
-            val genres = viewModel.loadGenres().map { it.name }.sorted().toTypedArray()
-            showSelectionDialog(R.string.main_genres_title, genres)
+            val genres = viewModel.loadGenres().map { it.name }.sorted()
+            showSelection(SortOrder.BY_GENRE, R.string.main_genres_title, genres)
         }
     }
 
-    private fun showSelectionDialog(title: Int, items: Array<String>) {
-        if (items.isEmpty()) return
-        if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
-            ItemSelectionDialogFragment.create(title, items)
-                .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
-        }
+    /** Opens the picker sheet; like the legacy dialog never stacked, never empty. */
+    private fun showSelection(sortOrder: SortOrder, title: Int, items: List<String>) {
+        if (items.isEmpty() || picker.value != null) return
+        picker.value = Picker(sortOrder, title, items)
     }
 
-    private fun handleSelectionDialogResult(bundle: Bundle) {
-        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) {
-            pendingSelection = null
-            return
-        }
-        val selected = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)
-            ?: return
-        when (pendingSelection) {
+    private fun onPicked(open: Picker, index: Int) {
+        picker.value = null
+        val selected = open.items.getOrNull(index) ?: return
+        when (open.sortOrder) {
             SortOrder.BY_ARTIST -> {
                 val artist = availableArtists.firstOrNull { it.name == selected } ?: return
                 viewModel.selectArtist(artist.id, selected)
@@ -160,7 +177,6 @@ class CreatePlaylistFragment : Fragment() {
             SortOrder.BY_GENRE -> viewModel.selectGenre(selected)
             else -> Unit
         }
-        pendingSelection = null
     }
 
     private fun savePlaylist() {
@@ -184,5 +200,8 @@ class CreatePlaylistFragment : Fragment() {
 
     companion object {
         const val PLAYLIST_CREATED_RESULT = "playlist_created_result"
+
+        /** Lets tests and the Pixel validation find the artist/genre picker. */
+        const val CREATE_PLAYLIST_PICKER_SHEET_TEST_TAG = "create_playlist_picker_sheet"
     }
 }

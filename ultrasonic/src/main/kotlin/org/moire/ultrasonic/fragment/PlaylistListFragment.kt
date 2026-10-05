@@ -7,23 +7,18 @@
 
 package org.moire.ultrasonic.fragment
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.method.LinkMovementMethod
-import android.text.util.Linkify
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.TextView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -48,19 +43,22 @@ import org.moire.ultrasonic.model.PlaylistListViewModel
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
+import org.moire.ultrasonic.domain.Track
+import org.moire.ultrasonic.ui.components.TakiConfirmSheet
 import org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameActions
 import org.moire.ultrasonic.ui.playlistlist.CreatePlaylistNameSheet
 import org.moire.ultrasonic.ui.playlistlist.PlaylistContextAction
+import org.moire.ultrasonic.ui.playlistlist.PlaylistInfoSheet
+import org.moire.ultrasonic.ui.playlistlist.PlaylistInfoUiState
 import org.moire.ultrasonic.ui.playlistlist.PlaylistListActions
 import org.moire.ultrasonic.ui.playlistlist.PlaylistListRow
 import org.moire.ultrasonic.ui.playlistlist.PlaylistListScreen
 import org.moire.ultrasonic.ui.playlistlist.PlaylistRowDownloadStatus
+import org.moire.ultrasonic.ui.playlistlist.UpdatePlaylistInfoSheet
 import org.moire.ultrasonic.ui.theme.TakiTheme
-import org.moire.ultrasonic.util.ConfirmationDialog
 import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
 import org.moire.ultrasonic.util.FileUtil
-import org.moire.ultrasonic.util.InfoDialog
 import org.moire.ultrasonic.util.Util.toast
 import org.moire.ultrasonic.util.toastingExceptionHandler
 
@@ -95,6 +93,17 @@ class PlaylistListFragment : Fragment() {
     private val showCreatePlaylistSheet = mutableStateOf(false)
     private val createPlaylistName = mutableStateOf("")
     private val createPlaylistError = mutableStateOf<String?>(null)
+
+    /** The one transient confirmation/info/form sheet this screen may show (issue #10 phase 5A6,
+     *  replacing four app-owned dialogs). Plain data, no Context; `null` = nothing open. */
+    private sealed interface Overlay {
+        data class RemoveDownload(val playlist: Playlist, val tracks: List<Track>) : Overlay
+        data class Info(val info: PlaylistInfoUiState) : Overlay
+        data class UpdateInfo(val playlist: Playlist) : Overlay
+        data class Delete(val playlist: Playlist) : Overlay
+    }
+
+    private val overlay = mutableStateOf<Overlay?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -134,6 +143,7 @@ class PlaylistListFragment : Fragment() {
                             actions = createPlaylistNameActions(),
                             bottomContentInset = bottomInset,
                         )
+                        OverlayHost(bottomInset)
                     }
                 }
             }
@@ -224,18 +234,17 @@ class PlaylistListFragment : Fragment() {
     private fun confirmRemoveDownload(playlist: Playlist) {
         val tracks = viewModel.tracksFor(playlist.id).orEmpty()
         if (tracks.isEmpty()) return
-        ConfirmationDialog.Builder(requireContext())
-            .setTitle(R.string.playlist_remove_download_title)
-            .setMessage(getString(R.string.playlist_remove_download_message, playlist.name))
-            .setPositiveButton(R.string.common_delete) { _, _ ->
-                viewModel.setDownloadStatusOptimistic(playlist.id, PlaylistRowDownloadStatus.REMOVING)
-                DownloadUtil.justDownload(action = DownloadAction.DELETE, fragment = this, tracks = tracks)
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    FileUtil.getPlaylistFile(activeServerProvider.getActiveServer().name, playlist.name).delete()
-                }
-            }
-            .setNegativeButton(R.string.common_cancel, null)
-            .show()
+        overlay.value = Overlay.RemoveDownload(playlist, tracks)
+    }
+
+    private fun onRemoveDownloadConfirmed(target: Overlay.RemoveDownload) {
+        overlay.value = null
+        val playlist = target.playlist
+        viewModel.setDownloadStatusOptimistic(playlist.id, PlaylistRowDownloadStatus.REMOVING)
+        DownloadUtil.justDownload(action = DownloadAction.DELETE, fragment = this, tracks = target.tracks)
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            FileUtil.getPlaylistFile(activeServerProvider.getActiveServer().name, playlist.name).delete()
+        }
     }
 
     // ---- Create (issue #10 phase 4M3: Compose naming sheet, replacing the legacy AlertDialog) --
@@ -263,96 +272,121 @@ class PlaylistListFragment : Fragment() {
         onDismiss = { showCreatePlaylistSheet.value = false },
     )
 
-    // ---- Info / Update info / Delete (legacy displayPlaylistInfo/updatePlaylistInfo/deletePlaylist) ----
+    // ---- Info / Update info / Delete (issue #10 phase 5A6: Compose sheets) ------------------
 
     private fun displayPlaylistInfo(playlist: Playlist) {
-        val textView = TextView(requireContext())
-        textView.setPadding(5, 5, 5, 5)
-        val message: Spannable = SpannableString(
-            """
-              Owner: ${playlist.owner}
-              Comments: ${playlist.comment}
-              Song Count: ${playlist.songCount}
-            """.trimIndent() +
-                if (playlist.public == null) {
-                    ""
-                } else {
-                    """
-
- Public: ${playlist.public}
-                    """.trimIndent() + """
-
-  Creation Date: ${playlist.created.replace('T', ' ')}
-                    """.trimIndent()
-                }
+        overlay.value = Overlay.Info(
+            PlaylistInfoUiState(
+                name = playlist.name,
+                owner = playlist.owner,
+                comment = playlist.comment,
+                songCount = playlist.songCount,
+                isPublic = playlist.public,
+                created = playlist.created,
+            ),
         )
-        Linkify.addLinks(message, Linkify.WEB_URLS)
-        textView.text = message
-        textView.movementMethod = LinkMovementMethod.getInstance()
-        InfoDialog.Builder(requireContext()).setTitle(playlist.name).setCancelable(true)
-            .setView(textView).show()
     }
 
-    @SuppressLint("InflateParams")
     private fun updatePlaylistInfo(playlist: Playlist) {
-        val dialogView = layoutInflater.inflate(R.layout.update_playlist, null) ?: return
-        val nameBox = dialogView.findViewById<EditText>(R.id.get_playlist_name)
-        val commentBox = dialogView.findViewById<EditText>(R.id.get_playlist_comment)
-        val publicBox = dialogView.findViewById<CheckBox>(R.id.get_playlist_public)
-        nameBox.setText(playlist.name)
-        commentBox.setText(playlist.comment)
-        val pub = playlist.public
-        if (pub == null) {
-            publicBox.isEnabled = false
-        } else {
-            publicBox.isChecked = pub
-        }
-        val alertDialog = ConfirmationDialog.Builder(requireContext())
-        alertDialog.setIcon(R.drawable.ic_baseline_warning)
-        alertDialog.setTitle(R.string.playlist_update_info)
-        alertDialog.setView(dialogView)
-        alertDialog.setPositiveButton(R.string.common_ok) { _, _ ->
-            viewLifecycleOwner.lifecycleScope.launch(
-                toastingExceptionHandler(
-                    getString(R.string.playlist_updated_info_error, playlist.name)
-                )
-            ) {
-                val name = nameBox.text?.toString()
-                val comment = commentBox.text?.toString()
+        overlay.value = Overlay.UpdateInfo(playlist)
+    }
 
-                withContext(Dispatchers.IO) {
-                    getMusicService().updatePlaylist(playlist.id, name, comment, publicBox.isChecked)
-                }
+    private fun onUpdateInfoConfirmed(
+        playlist: Playlist,
+        name: String,
+        comment: String,
+        isPublic: Boolean,
+    ) {
+        overlay.value = null
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(
+                getString(R.string.playlist_updated_info_error, playlist.name)
+            )
+        ) {
+            withContext(Dispatchers.IO) {
+                getMusicService().updatePlaylist(playlist.id, name, comment, isPublic)
+            }
 
-                withContext(Dispatchers.Main) {
-                    viewModel.load(refresh = true)
-                    toast(getString(R.string.playlist_updated_info, playlist.name))
-                }
+            withContext(Dispatchers.Main) {
+                viewModel.load(refresh = true)
+                toast(getString(R.string.playlist_updated_info, playlist.name))
             }
         }
-        alertDialog.setNegativeButton(R.string.common_cancel, null)
-        alertDialog.show()
     }
 
     private fun deletePlaylist(playlist: Playlist) {
-        ConfirmationDialog.Builder(requireContext()).setIcon(R.drawable.ic_baseline_warning)
-            .setTitle(R.string.common_confirm).setMessage(
-                getString(R.string.delete_playlist, playlist.name)
-            ).setPositiveButton(R.string.common_ok) { _, _ ->
-                viewLifecycleOwner.lifecycleScope.launch(
-                    toastingExceptionHandler(
-                        getString(R.string.menu_deleted_playlist_error, playlist.name)
-                    )
-                ) {
-                    withContext(Dispatchers.IO) {
-                        getMusicService().deletePlaylist(playlist.id)
-                    }
+        overlay.value = Overlay.Delete(playlist)
+    }
 
-                    withContext(Dispatchers.Main) {
-                        viewModel.removePlaylist(playlist.id)
-                        toast(getString(R.string.menu_deleted_playlist, playlist.name))
-                    }
-                }
-            }.setNegativeButton(R.string.common_cancel, null).show()
+    private fun onDeleteConfirmed(playlist: Playlist) {
+        overlay.value = null
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(
+                getString(R.string.menu_deleted_playlist_error, playlist.name)
+            )
+        ) {
+            withContext(Dispatchers.IO) {
+                getMusicService().deletePlaylist(playlist.id)
+            }
+
+            withContext(Dispatchers.Main) {
+                viewModel.removePlaylist(playlist.id)
+                toast(getString(R.string.menu_deleted_playlist, playlist.name))
+            }
+        }
+    }
+
+    /** Draws the open [overlay], if any, above the playlist list. */
+    @Composable
+    private fun OverlayHost(bottomInset: Dp) {
+        val dismiss = { overlay.value = null }
+        val cancelLabel = stringResource(R.string.common_cancel)
+        when (val current = overlay.value) {
+            null -> Unit
+            is Overlay.RemoveDownload -> TakiConfirmSheet(
+                title = stringResource(R.string.playlist_remove_download_title),
+                message = stringResource(
+                    R.string.playlist_remove_download_message,
+                    current.playlist.name,
+                ),
+                confirmLabel = stringResource(R.string.common_delete),
+                dismissLabel = cancelLabel,
+                onConfirm = { onRemoveDownloadConfirmed(current) },
+                onDismiss = dismiss,
+                bottomContentInset = bottomInset,
+                sheetTestTag = REMOVE_DOWNLOAD_SHEET_TEST_TAG,
+            )
+            is Overlay.Info -> PlaylistInfoSheet(
+                info = current.info,
+                onDismiss = dismiss,
+                bottomContentInset = bottomInset,
+            )
+            is Overlay.UpdateInfo -> UpdatePlaylistInfoSheet(
+                initialName = current.playlist.name,
+                initialComment = current.playlist.comment,
+                initialPublic = current.playlist.public,
+                onConfirm = { name, comment, isPublic ->
+                    onUpdateInfoConfirmed(current.playlist, name, comment, isPublic)
+                },
+                onDismiss = dismiss,
+                bottomContentInset = bottomInset,
+            )
+            is Overlay.Delete -> TakiConfirmSheet(
+                title = stringResource(R.string.common_confirm),
+                message = stringResource(R.string.delete_playlist, current.playlist.name),
+                confirmLabel = stringResource(R.string.common_delete),
+                dismissLabel = cancelLabel,
+                onConfirm = { onDeleteConfirmed(current.playlist) },
+                onDismiss = dismiss,
+                bottomContentInset = bottomInset,
+                sheetTestTag = DELETE_PLAYLIST_SHEET_TEST_TAG,
+            )
+        }
+    }
+
+    companion object {
+        /** Lets tests and the Pixel validation find the confirmations this Fragment hosts. */
+        const val REMOVE_DOWNLOAD_SHEET_TEST_TAG = "playlist_remove_download_sheet"
+        const val DELETE_PLAYLIST_SHEET_TEST_TAG = "playlist_delete_sheet"
     }
 }

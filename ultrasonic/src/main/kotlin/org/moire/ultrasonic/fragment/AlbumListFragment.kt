@@ -12,7 +12,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -41,6 +47,8 @@ import org.moire.ultrasonic.ui.albumlist.AlbumContextAction
 import org.moire.ultrasonic.ui.albumlist.AlbumListActions
 import org.moire.ultrasonic.ui.albumlist.AlbumListRow
 import org.moire.ultrasonic.ui.albumlist.AlbumListScreen
+import org.moire.ultrasonic.ui.components.TakiPickerOption
+import org.moire.ultrasonic.ui.components.TakiPickerSheet
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.ContextMenuUtil
 import org.moire.ultrasonic.view.SortOrder
@@ -74,6 +82,10 @@ class AlbumListFragment : Fragment() {
 
     private val rxBusSubscription = CompositeDisposable()
     private val fallbackChromeInset = MutableStateFlow(0)
+
+    /** The genre names offered by the open "By Genre" picker sheet (issue #10 phase 5A6,
+     *  replacing the legacy ItemSelectionDialogFragment); `null` = closed. */
+    private val genrePicker = mutableStateOf<List<String>?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,11 +125,30 @@ class AlbumListFragment : Fragment() {
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    AlbumListScreen(
-                        state = state,
-                        actions = albumListActions,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        AlbumListScreen(
+                            state = state,
+                            actions = albumListActions,
+                            bottomContentInset = bottomInset,
+                        )
+                        val genres = genrePicker.value
+                        if (genres != null) {
+                            TakiPickerSheet(
+                                title = stringResource(R.string.main_genres_title),
+                                options = remember(genres) {
+                                    genres.mapIndexed { i, name -> TakiPickerOption(i.toString(), name) }
+                                },
+                                onSelect = { key ->
+                                    genrePicker.value = null
+                                    genres.getOrNull(key.toInt())?.let(viewModel::selectGenre)
+                                },
+                                onDismiss = { genrePicker.value = null },
+                                dismissLabel = stringResource(R.string.common_cancel),
+                                bottomContentInset = bottomInset,
+                                sheetTestTag = GENRE_PICKER_SHEET_TEST_TAG,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -126,17 +157,6 @@ class AlbumListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Handler for the genre-selection dialog. Invoked if the user selects "By Genre" in the
-        // sort-order menu - always re-shown on tap, exactly like the legacy screen (see
-        // AlbumListViewModel.beginGenreSort's kdoc).
-        childFragmentManager.setFragmentResultListener(
-            ItemSelectionDialogFragment.REQUEST_KEY,
-            viewLifecycleOwner,
-        ) { _, bundle ->
-            if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return@setFragmentResultListener
-            val genreName = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)
-            if (genreName != null) viewModel.selectGenre(genreName)
-        }
 
         setTitle(this, navArgs.title ?: getString(R.string.main_albums_title))
 
@@ -193,10 +213,8 @@ class AlbumListFragment : Fragment() {
             val genres = viewModel.loadGenres()
             if (genres.isEmpty()) return@launch
             val genreStrings = genres.map { it.name }.toTypedArray()
-            if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
-                ItemSelectionDialogFragment.create(R.string.main_genres_title, genreStrings)
-                    .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
-            }
+            // Always re-shown on tap unless a picker is already open, like the legacy dialog.
+            if (genrePicker.value == null) genrePicker.value = genreStrings.toList()
         }
     }
 
@@ -226,3 +244,6 @@ class AlbumListFragment : Fragment() {
         )
     }
 }
+
+/** Lets tests and the Pixel validation find the "By Genre" picker. */
+const val GENRE_PICKER_SHEET_TEST_TAG = "album_list_genre_picker_sheet"

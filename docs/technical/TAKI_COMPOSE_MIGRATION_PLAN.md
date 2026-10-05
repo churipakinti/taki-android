@@ -1338,3 +1338,12 @@ These were the open questions at first draft; all are now decided:
 > bottom sheet, four playlist dialogs, the Library hub popup) plus deferred binder/dead-fragment
 > cleanup, so the reachable-UI-migration-complete verdict is **NO** pending a decision. Issue #10
 > remains closed; Videos remains excluded (§B.5).
+
+> **Status update (Phase 5A6, 2026-10-04):** the reachable transient View overlays the 5A5 audit
+> recorded (add-to-playlist picker, album-info sheet, the Playlist List dialogs, the Library hub
+> popup) — plus several the audit had not named (the artist/genre pickers, the Playlist Detail
+> menu and delete confirmation, and the app-wide error dialog) — are now Compose sheets on one
+> shared `TakiSheet` chrome. Canonical matrix still 27/0/0. What remains is classified in
+> `TAKI_COMPOSE_COVERAGE_AUDIT.md` §V as UNREACHABLE / DEAD / INTERNAL_NON_UI / third-party and
+> pinned by `ResidualViewOverlayGuardTest`; live Pixel 7 validation is tracked there. #10 stays
+> closed.

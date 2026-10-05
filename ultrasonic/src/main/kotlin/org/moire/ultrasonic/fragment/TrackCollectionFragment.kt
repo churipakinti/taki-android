@@ -19,8 +19,12 @@ import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -63,12 +67,16 @@ import org.moire.ultrasonic.service.DownloadState
 import org.moire.ultrasonic.ui.album.AlbumDetailActions
 import org.moire.ultrasonic.ui.album.AlbumDetailArgs
 import org.moire.ultrasonic.ui.album.AlbumDetailScreen
+import org.moire.ultrasonic.ui.album.AlbumInfoSheet
+import org.moire.ultrasonic.ui.album.AlbumInfoUiState
 import org.moire.ultrasonic.ui.album.AlbumOverflowItem
 import org.moire.ultrasonic.ui.album.TrackContextAction
 import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserActions
 import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserArgs
 import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserRow
 import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserScreen
+import org.moire.ultrasonic.ui.playlist.AddToPlaylistOption
+import org.moire.ultrasonic.ui.playlist.AddToPlaylistSheet
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailActions
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailArgs
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailScreen
@@ -78,6 +86,9 @@ import org.moire.ultrasonic.ui.tracklist.TrackListActions
 import org.moire.ultrasonic.ui.tracklist.TrackListRow
 import org.moire.ultrasonic.ui.tracklist.TrackListScreen
 import org.moire.ultrasonic.ui.album.TrackContextMenuState
+import org.moire.ultrasonic.ui.components.TakiConfirmSheet
+import org.moire.ultrasonic.ui.components.TakiPickerOption
+import org.moire.ultrasonic.ui.components.TakiPickerSheet
 import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.playback.PlaybackUiStateHolder
 import org.moire.ultrasonic.ui.theme.TakiTheme
@@ -105,7 +116,6 @@ import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.VideoPlayer
-import org.moire.ultrasonic.util.ConfirmationDialog
 import org.moire.ultrasonic.util.ContextMenuUtil
 import org.moire.ultrasonic.util.DownloadAction
 import org.moire.ultrasonic.util.DownloadUtil
@@ -158,9 +168,23 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private var albumNotes: String? = null
     private var albumStarred = false
     private var selectionModeActive = false
-    private var pendingAddToPlaylistTracks: List<Track>? = null
-    private var availablePlaylists: List<Playlist> = emptyList()
-    private var pendingPlaylistHeaderMenu = false
+
+    /**
+     * The one transient Compose overlay this screen may show on top of its Compose host (issue
+     * #10 phase 5A6, replacing `ItemSelectionDialogFragment`, `ConfirmationDialog` and
+     * `AlbumInfoBottomSheetFragment`). Plain, Context-free data; `null` = nothing open. The
+     * Rename Playlist sheet keeps its own earlier host state ([showRenamePlaylistSheet]).
+     */
+    private sealed interface Overlay {
+        data class AddToPlaylist(val tracks: List<Track>, val playlists: List<Playlist>) : Overlay
+        data object PlaylistHeaderMenu : Overlay
+        data class DeletePlaylist(val playlistId: String, val playlistName: String) : Overlay
+        data class AlbumInfo(val info: AlbumInfoUiState) : Overlay
+        data class FilterPicker(val sortOrder: SortOrder, val titleRes: Int, val items: List<String>) :
+            Overlay
+    }
+
+    private val overlay = mutableStateOf<Overlay?>(null)
 
     /**
      * The id of the main layout
@@ -382,7 +406,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     trailingActionIcon = R.drawable.ic_menu_download,
                     trailingActionDescription = R.string.album_download_description,
                     onTrailingAction = { downloadSelectedOrAllTracks() },
-                    onInfoAction = ::showAlbumInfo,
+                    // Information is hosted by Compose Album Detail (AlbumInfoSheet); this legacy
+                    // header is unreachable, so it simply offers no Info action.
+                    onInfoAction = null,
                     onToggleStar = ::toggleAlbumStar,
                     onArtistClick = ::openArtistDetail,
                     onMoreClick = ::showAlbumOverflow
@@ -642,31 +668,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         viewAdapter.submitList(listOf(updatedHeader) + current.drop(1))
     }
 
-    /**
-     * Album Detail's Information action. Everything shown here is already resolved by the
-     * time this can be tapped - [AlbumDetailHeaderBinder] only
-     * shows the button once [AlbumHeader.notes] came back non-empty from [loadAlbumInfo], and the
-     * rest (artist/year/song count/disc count/cover) is synchronous, computed when the header
-     * was built. No network call happens here.
-     */
-    private fun showAlbumInfo(header: AlbumHeader) {
-        val discCount = header.entries.filterIsInstance<Track>()
-            .mapNotNull { it.discNumber }
-            .toSet().size
-        val coverEntry = header.entries.firstOrNull()
-
-        AlbumInfoBottomSheetFragment.newInstance(
-            description = header.notes,
-            albumName = header.name,
-            artist = header.artists.joinToString(", ").ifEmpty { null },
-            year = header.years.singleOrNull()?.toString(),
-            songCount = header.childCount,
-            discCount = discCount,
-            coverArtId = coverEntry?.coverArt,
-            coverArtKey = FileUtil.getAlbumArtKey(coverEntry, false)
-        ).show(childFragmentManager, AlbumInfoBottomSheetFragment.TAG)
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString("sort_order", sortOrder?.name)
@@ -826,42 +827,33 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         viewAdapter.notifyItemRangeChanged(0, viewAdapter.itemCount)
     }
 
+    // ---- Transient overlays (issue #10 phase 5A6) -------------------------------------------
+    // Add-to-playlist, the playlist ⋮ menu, delete-playlist confirmation, album info and the
+    // track-list artist/genre pickers are all Compose sheets drawn by [OverlayHost] on top of
+    // whichever Compose screen this Fragment hosts, replacing ItemSelectionDialogFragment /
+    // ConfirmationDialog / AlbumInfoBottomSheetFragment. The data loading and the side effects
+    // behind each choice are the unchanged legacy code below; only the presentation moved.
+
     private fun addTracksToPlaylist(tracks: List<Track>) {
         if (tracks.isEmpty() || isOffline()) return
-        pendingAddToPlaylistTracks = tracks
         viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
-            availablePlaylists = PlaylistUtil.getPlaylists()
-            if (availablePlaylists.isEmpty()) {
-                pendingAddToPlaylistTracks = null
+            val playlists = PlaylistUtil.getPlaylists()
+            if (playlists.isEmpty()) {
                 toast(R.string.select_playlist_empty)
                 return@launch
             }
-            ItemSelectionDialogFragment.create(
-                R.string.playlist_add_to_title,
-                availablePlaylists.map { it.name }.toTypedArray()
-            ).show(childFragmentManager, ItemSelectionDialogFragment.TAG)
+            overlay.value = Overlay.AddToPlaylist(tracks, playlists)
         }
     }
 
-    private fun handleAddToPlaylistResult(
-        @Suppress("UNUSED_PARAMETER") key: String,
-        bundle: Bundle
-    ) {
-        val tracks = pendingAddToPlaylistTracks
-        pendingAddToPlaylistTracks = null
-        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED) ||
-            tracks == null
-        ) {
-            return
-        }
-
-        val name = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM) ?: return
-        val playlist = availablePlaylists.firstOrNull { it.name == name } ?: return
+    private fun onAddToPlaylistSelected(selected: Overlay.AddToPlaylist, playlistId: String) {
+        overlay.value = null
+        val playlist = selected.playlists.firstOrNull { it.id == playlistId } ?: return
 
         viewLifecycleOwner.lifecycleScope.launch(
             toastingExceptionHandler(getString(R.string.playlist_add_error))
         ) {
-            PlaylistUtil.addToPlaylist(playlist, tracks)
+            PlaylistUtil.addToPlaylist(playlist, selected.tracks)
             toast(getString(R.string.playlist_added, playlist.name))
             viewAdapter.setSelectionStatusOfAll(false)
             exitSelectionMode()
@@ -869,10 +861,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     }
 
     /*
-     * Playlist detail hero's trailing ⋮ action (download, rename, delete). Reuses
-     * ItemSelectionDialogFragment, the same shared list
-     * dialog already used for artist/genre filter selection above, instead of a PopupMenu that
-     * would need the clicked view as an anchor.
+     * Playlist detail hero's trailing ⋮ action (download, rename, delete), shown as a Compose
+     * picker sheet instead of a PopupMenu that would need the clicked view as an anchor.
      */
     private fun showPlaylistHeaderMenu() {
         if (navArgs.playlistId == null) return
@@ -882,33 +872,23 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             toast(R.string.playlist_menu_unavailable_offline)
             return
         }
-        pendingPlaylistHeaderMenu = true
-        showSelectionDialog(
-            R.string.playlist_menu_description,
-            arrayOf(
-                getString(R.string.common_download),
-                getString(R.string.playlist_rename_action),
-                getString(R.string.common_delete)
-            )
-        )
+        overlay.value = Overlay.PlaylistHeaderMenu
     }
 
-    private fun handlePlaylistHeaderMenuResult(bundle: Bundle) {
-        pendingPlaylistHeaderMenu = false
-        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return
-
-        when (bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM)) {
+    private fun onPlaylistHeaderMenuSelected(key: String) {
+        overlay.value = null
+        when (key) {
             // Playlist Detail is always Compose now (isComposePlaylistDetailMode) - this menu's
             // only reachable caller is playlistDetailActions.onShowHeaderMenu, so "Download"
             // reads the Compose ViewModel's snapshot, not the legacy (always-empty here)
             // viewAdapter getSelectedOrAllTracks() used to.
-            getString(R.string.common_download) -> DownloadUtil.justDownload(
+            PLAYLIST_MENU_DOWNLOAD -> DownloadUtil.justDownload(
                 action = DownloadAction.DOWNLOAD,
                 fragment = this,
                 tracks = playlistDetailViewModel.tracksSnapshot(),
             )
-            getString(R.string.playlist_rename_action) -> showRenamePlaylistDialog()
-            getString(R.string.common_delete) -> confirmDeletePlaylist()
+            PLAYLIST_MENU_RENAME -> showRenamePlaylistDialog()
+            PLAYLIST_MENU_DELETE -> confirmDeletePlaylist()
         }
     }
 
@@ -954,24 +934,78 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
 
     private fun confirmDeletePlaylist() {
         val playlistId = navArgs.playlistId ?: return
-        val name = navArgs.playlistName.orEmpty()
-        ConfirmationDialog.Builder(requireContext())
-            .setIcon(R.drawable.ic_baseline_warning)
-            .setTitle(R.string.common_confirm)
-            .setMessage(getString(R.string.delete_playlist, name))
-            .setPositiveButton(R.string.common_ok) { _, _ ->
-                viewLifecycleOwner.lifecycleScope.launch(
-                    toastingExceptionHandler(getString(R.string.menu_deleted_playlist_error, name))
-                ) {
-                    withContext(Dispatchers.IO) {
-                        MusicServiceFactory.getMusicService().deletePlaylist(playlistId)
-                    }
-                    toast(getString(R.string.menu_deleted_playlist, name))
-                    findNavController().navigateUp()
-                }
+        overlay.value = Overlay.DeletePlaylist(playlistId, navArgs.playlistName.orEmpty())
+    }
+
+    private fun onDeletePlaylistConfirmed(target: Overlay.DeletePlaylist) {
+        overlay.value = null
+        val name = target.playlistName
+        viewLifecycleOwner.lifecycleScope.launch(
+            toastingExceptionHandler(getString(R.string.menu_deleted_playlist_error, name))
+        ) {
+            withContext(Dispatchers.IO) {
+                MusicServiceFactory.getMusicService().deletePlaylist(target.playlistId)
             }
-            .setNegativeButton(R.string.common_cancel, null)
-            .show()
+            toast(getString(R.string.menu_deleted_playlist, name))
+            findNavController().navigateUp()
+        }
+    }
+
+    /** Draws the open [overlay], if any, above this Fragment's Compose screen. */
+    @Composable
+    private fun OverlayHost(bottomInset: Dp) {
+        val dismiss = { overlay.value = null }
+        val cancelLabel = stringResource(R.string.common_cancel)
+        when (val current = overlay.value) {
+            null -> Unit
+            is Overlay.AddToPlaylist -> AddToPlaylistSheet(
+                playlists = remember(current) {
+                    current.playlists.map { AddToPlaylistOption(it.id, it.name) }
+                },
+                onSelect = { onAddToPlaylistSelected(current, it) },
+                onDismiss = dismiss,
+                bottomContentInset = bottomInset,
+            )
+            Overlay.PlaylistHeaderMenu -> TakiPickerSheet(
+                title = stringResource(R.string.playlist_menu_description),
+                options = listOf(
+                    TakiPickerOption(PLAYLIST_MENU_DOWNLOAD, stringResource(R.string.common_download)),
+                    TakiPickerOption(PLAYLIST_MENU_RENAME, stringResource(R.string.playlist_rename_action)),
+                    TakiPickerOption(PLAYLIST_MENU_DELETE, stringResource(R.string.common_delete)),
+                ),
+                onSelect = ::onPlaylistHeaderMenuSelected,
+                onDismiss = dismiss,
+                dismissLabel = cancelLabel,
+                bottomContentInset = bottomInset,
+                sheetTestTag = PLAYLIST_HEADER_MENU_SHEET_TEST_TAG,
+            )
+            is Overlay.DeletePlaylist -> TakiConfirmSheet(
+                title = stringResource(R.string.common_confirm),
+                message = stringResource(R.string.delete_playlist, current.playlistName),
+                confirmLabel = stringResource(R.string.common_delete),
+                dismissLabel = cancelLabel,
+                onConfirm = { onDeletePlaylistConfirmed(current) },
+                onDismiss = dismiss,
+                bottomContentInset = bottomInset,
+                sheetTestTag = DELETE_PLAYLIST_SHEET_TEST_TAG,
+            )
+            is Overlay.AlbumInfo -> AlbumInfoSheet(
+                info = current.info,
+                onDismiss = dismiss,
+                bottomContentInset = bottomInset,
+            )
+            is Overlay.FilterPicker -> TakiPickerSheet(
+                title = stringResource(current.titleRes),
+                options = remember(current) {
+                    current.items.mapIndexed { index, name -> TakiPickerOption(index.toString(), name) }
+                },
+                onSelect = { onFilterPicked(current, it.toInt()) },
+                onDismiss = dismiss,
+                dismissLabel = cancelLabel,
+                bottomContentInset = bottomInset,
+                sheetTestTag = FILTER_PICKER_SHEET_TEST_TAG,
+            )
+        }
     }
 
     @Synchronized
@@ -1462,12 +1496,15 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    AlbumDetailScreen(
-                        state = state,
-                        actions = albumDetailActions,
-                        currentTrackId = player.trackId,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        AlbumDetailScreen(
+                            state = state,
+                            actions = albumDetailActions,
+                            currentTrackId = player.trackId,
+                            bottomContentInset = bottomInset,
+                        )
+                        OverlayHost(bottomInset)
+                    }
                 }
             }
         }
@@ -1695,18 +1732,18 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
     private fun showComposeAlbumInfo() {
         val state = albumDetailViewModel.uiState.value
         val tracks = albumDetailViewModel.tracksSnapshot()
-        val coverEntry = tracks.firstOrNull()
         val discCount = tracks.mapNotNull { it.discNumber }.toSet().size
-        AlbumInfoBottomSheetFragment.newInstance(
-            description = state.notes,
-            albumName = state.title,
-            artist = state.artist.ifEmpty { null },
-            year = state.year,
-            songCount = state.songCount,
-            discCount = discCount,
-            coverArtId = coverEntry?.coverArt,
-            coverArtKey = FileUtil.getAlbumArtKey(coverEntry, false),
-        ).show(childFragmentManager, AlbumInfoBottomSheetFragment.TAG)
+        overlay.value = Overlay.AlbumInfo(
+            AlbumInfoUiState(
+                albumName = state.title,
+                artist = state.artist.ifEmpty { null },
+                year = state.year,
+                songCount = state.songCount,
+                discCount = discCount,
+                description = state.notes,
+                artworkModel = state.artworkModel,
+            ),
+        )
     }
 
     // ---- Compose Playlist Detail (issue #10 phase 4F3) ---------------------------------------
@@ -1740,6 +1777,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                             actions = renamePlaylistActions(),
                             bottomContentInset = bottomInset,
                         )
+                        OverlayHost(bottomInset)
                     }
                 }
             }
@@ -1761,16 +1799,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 }
             }
         }
-
-        // showPlaylistHeaderMenu (download/rename/delete) and addTracksToPlaylist (per-track
-        // "Add to playlist") both reuse the same ItemSelectionDialogFragment request key +
-        // router (handleSelectionDialogResult) the legacy View path used - see
-        // isComposePlaylistDetailMode's kdoc.
-        childFragmentManager.setFragmentResultListener(
-            ItemSelectionDialogFragment.REQUEST_KEY,
-            viewLifecycleOwner,
-            ::handleSelectionDialogResult,
-        )
     }
 
     private fun playlistDetailArgs(): PlaylistDetailArgs = PlaylistDetailArgs(
@@ -1927,11 +1955,14 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    TrackListScreen(
-                        state = state,
-                        actions = trackListActions,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        TrackListScreen(
+                            state = state,
+                            actions = trackListActions,
+                            bottomContentInset = bottomInset,
+                        )
+                        OverlayHost(bottomInset)
+                    }
                 }
             }
         }
@@ -1971,11 +2002,6 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
             headerTitle = composeTrackListHeaderTitle,
         )
         trackListViewModel.load()
-
-        childFragmentManager.setFragmentResultListener(
-            ItemSelectionDialogFragment.REQUEST_KEY,
-            viewLifecycleOwner,
-        ) { _, bundle -> handleTrackListSelectionResult(bundle) }
 
         // Songs re-fetches on a server switch (getLiveData(refresh) semantics); a folder change
         // on a "Songs" search-based listing was never wired up by the legacy screen either (no
@@ -2097,8 +2123,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
                     cachedTrackListArtists = trackListViewModel.loadArtists()
                     showTrackListSelectionDialog(
+                        SortOrder.BY_ARTIST,
                         R.string.main_artists_title,
-                        cachedTrackListArtists.mapNotNull { it.name }.toTypedArray(),
+                        cachedTrackListArtists.mapNotNull { it.name },
                     )
                 }
             }
@@ -2107,8 +2134,9 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
                     val genres = trackListViewModel.loadGenres()
                     showTrackListSelectionDialog(
+                        SortOrder.BY_GENRE,
                         R.string.main_genres_title,
-                        genres.map { it.name }.sorted().toTypedArray(),
+                        genres.map { it.name }.sorted(),
                     )
                 }
             }
@@ -2116,18 +2144,17 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
-    private fun showTrackListSelectionDialog(title: Int, items: Array<String>) {
-        if (items.isEmpty()) return
-        if (childFragmentManager.findFragmentByTag(ItemSelectionDialogFragment.TAG) == null) {
-            ItemSelectionDialogFragment.create(title, items)
-                .show(childFragmentManager, ItemSelectionDialogFragment.TAG)
-        }
+    /** Opens the artist/genre picker sheet; like the legacy dialog it is never stacked on one
+     *  that is already showing, and an empty list shows nothing. */
+    private fun showTrackListSelectionDialog(sortOrder: SortOrder, title: Int, items: List<String>) {
+        if (items.isEmpty() || overlay.value != null) return
+        overlay.value = Overlay.FilterPicker(sortOrder, title, items)
     }
 
-    private fun handleTrackListSelectionResult(bundle: Bundle) {
-        if (bundle.getBoolean(ItemSelectionDialogFragment.RESULT_CANCELLED)) return
-        val selectedName = bundle.getString(ItemSelectionDialogFragment.RESULT_SELECTED_ITEM) ?: return
-        when (trackListViewModel.uiState.value.sortOrder) {
+    private fun onFilterPicked(picker: Overlay.FilterPicker, index: Int) {
+        overlay.value = null
+        val selectedName = picker.items.getOrNull(index) ?: return
+        when (picker.sortOrder) {
             SortOrder.BY_ARTIST -> {
                 viewLifecycleOwner.lifecycleScope.launch(toastingExceptionHandler()) {
                     val artist = cachedTrackListArtists.firstOrNull { it.name == selectedName }
@@ -2166,14 +2193,13 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
-    private fun handleSelectionDialogResult(requestKey: String, bundle: Bundle) {
-        if (pendingAddToPlaylistTracks != null) {
-            handleAddToPlaylistResult(requestKey, bundle)
-        } else if (pendingPlaylistHeaderMenu) {
-            handlePlaylistHeaderMenuResult(bundle)
-        } else {
-            handleFilterSelectionResult(bundle)
-        }
+    // Legacy (unreachable) filter-bar path only - every reachable picker is a Compose sheet
+    // drawn by OverlayHost; see the phase 5A6 audit.
+    private fun handleSelectionDialogResult(
+        @Suppress("UNUSED_PARAMETER") requestKey: String,
+        bundle: Bundle
+    ) {
+        handleFilterSelectionResult(bundle)
     }
 
     private fun handleFilterSelectionResult(bundle: Bundle) {
@@ -2230,11 +2256,14 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                     } else {
                         TakiTheme.dimensions.contentInsetFloatingChrome
                     }
-                    FolderBrowserScreen(
-                        state = state,
-                        actions = folderBrowserActions,
-                        bottomContentInset = bottomInset,
-                    )
+                    Box(Modifier.fillMaxSize()) {
+                        FolderBrowserScreen(
+                            state = state,
+                            actions = folderBrowserActions,
+                            bottomContentInset = bottomInset,
+                        )
+                        OverlayHost(bottomInset)
+                    }
                 }
             }
         }
@@ -2355,6 +2384,14 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         private const val PENDING_FILTER_KEY = "songs_pending_filter"
         private const val HERO_HEIGHT_DP = 300
         private const val TOOLBAR_REVEAL_OFFSET_DP = 56
+        private const val PLAYLIST_MENU_DOWNLOAD = "download"
+        private const val PLAYLIST_MENU_RENAME = "rename"
+        private const val PLAYLIST_MENU_DELETE = "delete"
+
+        /** Lets tests and the Pixel validation find the overlays this Fragment hosts. */
+        const val PLAYLIST_HEADER_MENU_SHEET_TEST_TAG = "playlist_header_menu_sheet"
+        const val DELETE_PLAYLIST_SHEET_TEST_TAG = "delete_playlist_sheet"
+        const val FILTER_PICKER_SHEET_TEST_TAG = "filter_picker_sheet"
 
         /**
          * The single criterion that routes this Fragment's album-detail presentation to the

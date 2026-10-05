@@ -85,6 +85,15 @@
             a:layout_marginHorizontal="@dimen/mini_player_edge_margin"
             a:layout_marginBottom="@dimen/mini_player_edge_margin" />
 
+        <!-- App-wide error sheet host (issue #10 phase 5A6). Drawn last, i.e. above the nav host,
+             the bottom nav and the mini-player; GONE unless an error message is pending, so it
+             never intercepts touches otherwise. NavigationActivity owns its content. -->
+        <androidx.compose.ui.platform.ComposeView
+            a:id="@+id/error_overlay_host"
+            a:layout_width="match_parent"
+            a:layout_height="match_parent"
+            a:visibility="gone" />
+
     </FrameLayout>
 
 </LinearLayout>
