@@ -247,14 +247,13 @@ class NavigationChromeSelectionTest {
     fun `about is the only destination phase 5A1 removed from the shared back bar`() {
         // Regression guard: every other destination that showed the shared back bar before
         // phase 5A1 must still show it - only aboutFragment's entry was removed there.
-        // serverSelectorFragment/editServerFragment/settingsFragment are asserted separately
-        // below (removed in phases 5A2/5A3/5A4, not 5A1).
+        // serverSelectorFragment/editServerFragment/settingsFragment/equalizerFragment are asserted
+        // separately below (removed in phases 5A2/5A3/5A4/5A5, not 5A1).
         assertTrue(showsBackBar(R.id.playlistsFragment))
         assertTrue(showsBackBar(R.id.artistListFragment))
         assertTrue(showsBackBar(R.id.albumListFragment))
         assertTrue(showsBackBar(R.id.selectGenreFragment))
         assertTrue(showsBackBar(R.id.downloadsFragment))
-        assertTrue(showsBackBar(R.id.equalizerFragment))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, libraryTrackCollection = true))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, albumDetail = true))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, playlistDetail = true))
@@ -298,10 +297,32 @@ class NavigationChromeSelectionTest {
         assertFalse(showsBackBar(R.id.settingsFragment))
     }
 
+    // --- Equalizer (post-issue-#10 residual migration, phase 5A5) -----------------------------
+
     @Test
-    fun `equalizer is unaffected by phase 5A4 - still legacy, still shows the shared back bar`() {
-        assertTrue(showsBackBar(R.id.equalizerFragment))
+    fun `equalizer still hides the shared toolbar - unchanged by phase 5A5`() {
         assertTrue(hides(R.id.equalizerFragment))
+    }
+
+    @Test
+    fun `equalizer no longer shows the shared back bar - it draws its own TakiScreenHeader`() {
+        assertFalse(showsBackBar(R.id.equalizerFragment))
+    }
+
+    @Test
+    fun `no destination reached from Settings or Now Playing shows two back arrows`() {
+        // Every post-#10 migrated destination draws its own header, so none may also show the
+        // shared back-only bar - the one-header invariant phases 5A1-5A5 established.
+        listOf(
+            R.id.aboutFragment,
+            R.id.serverSelectorFragment,
+            R.id.editServerFragment,
+            R.id.settingsFragment,
+            R.id.equalizerFragment,
+        ).forEach { id ->
+            assertTrue("$id must hide the shared toolbar", hides(id))
+            assertFalse("$id must not show the shared back bar", showsBackBar(id))
+        }
     }
 
     @Test

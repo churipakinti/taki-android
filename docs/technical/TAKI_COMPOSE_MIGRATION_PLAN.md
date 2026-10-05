@@ -1328,3 +1328,13 @@ These were the open questions at first draft; all are now decided:
 - Nothing blocking #10. Throttling policy for `PlaybackUiStateHolder` (it currently consumes
   the non-throttled `RxBus.playerStateObservable`) is revisited when the mini-player is
   migrated (§8 step 6) — a per-consumer decision, not an architecture one.
+
+> **Status update (Phase 5A5, 2026-10-04):** the "intentionally legacy" list above has been fully
+> retired post-#10 — About/Box Sets (5A1), Server Selector (5A2), Edit Server (5A3), Settings (5A4)
+> and Equalizer (5A5) are all Compose; the audio runtime (`EqualizerController`) stayed
+> authoritative and outside Compose. Canonical matrix: 27 Compose / 0 hybrid / 0 legacy (see
+> `TAKI_COMPOSE_COVERAGE_AUDIT.md` §U). This does **not** mean no View code remains: a focused
+> residual audit found four reachable transient View overlays (list-picker dialog, album-info
+> bottom sheet, four playlist dialogs, the Library hub popup) plus deferred binder/dead-fragment
+> cleanup, so the reachable-UI-migration-complete verdict is **NO** pending a decision. Issue #10
+> remains closed; Videos remains excluded (§B.5).

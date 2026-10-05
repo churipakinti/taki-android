@@ -25,24 +25,33 @@ view`), and a live Pixel 7 crawl (`2B191FDH200E36`) via `adb`/`uiautomator`.
 
 ## A. Executive summary
 
-**Current (post-phase 5A4):**
+**Current (post-phase 5A5):**
 
 | Metric | Count |
 |---|---:|
 | Total reachable UI surfaces classified | 27 |
-| — Compose | 26 |
+| — Compose | 27 |
 | — Hybrid (Compose + View by design) | 0 |
 | — Legacy View/XML, still core-browsing (`MIGRATE_IN_#10` remaining) | 0 |
-| — Legacy View/XML, intentionally out of scope | 1 |
+| — Legacy View/XML, intentionally out of scope | 0 |
 | Unclassified | **0** |
 
-Arithmetic: 26 + 0 + 0 + 1 = 27. Phase 5A1 (§Q) moved Box Sets (hybrid) and About (legacy) to full
+Arithmetic: 27 + 0 + 0 + 0 = 27. Phase 5A1 (§Q) moved Box Sets (hybrid) and About (legacy) to full
 Compose, 21/1/5 → 23/0/4. Phase 5A2 (§R) moved Server Selector to full Compose, 23/0/4 → 24/0/3.
 Phase 5A3 (§S) moved Edit Server to full Compose, 24/0/3 → 25/0/2. Phase 5A4 (§T) moved Settings to
-full Compose, 25/0/2 → 26/0/1. Remaining intentionally-legacy surface: Equalizer (§B.4). See
-§Q/§R/§S/§T for the full before/after detail of each phase. Everything below this line up to §P is
-the historical record as of issue #10's closure and is preserved unedited; §Q, §R, §S and §T append
-the post-#10 updates.
+full Compose, 25/0/2 → 26/0/1. Phase 5A5 (§U) moved Equalizer to full Compose, 26/0/1 → 27/0/0. See
+§Q/§R/§S/§T/§U for the full before/after detail of each phase. Everything below this line up to §P
+is the historical record as of issue #10's closure and is preserved unedited; §Q-§U append the
+post-#10 updates.
+
+**What 27/0/0 does and does not mean.** It means every one of the 27 *classified reachable
+surfaces* (screens and migrated sub-surfaces in the canonical matrix, §B) is Compose. It does **not**
+mean every reachable pixel is Compose: the focused residual audit in §U found a small set of
+*transient* app-owned View overlays (list-picker dialog, album-info bottom sheet, four playlist
+dialogs, the Library hub popup menu) that were never matrix rows and are still View-based. They are
+listed and classified in §U, and are the reason that section's
+`REACHABLE_UI_MIGRATION_COMPLETE` verdict is **NO**. Videos remains separately classified as
+unreachable/product-decision-required (§B.5) and excluded from the 27.
 
 **As of #10's closure (phase 4M4, historical):**
 
@@ -107,6 +116,7 @@ below.
 | Server Selector | `serverSelectorFragment` | Fragment | **phase 5A2** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`ServerSelectorScreen`), including the delete confirmation (`DeleteServerSheet`, replacing the legacy `ErrorDialog`) |
 | Edit Server | `editServerFragment` | Fragment | **phase 5A3** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`EditServerScreen`), both New (onboarding) and Existing (full editor) modes, plus the discard-changes confirmation (`DiscardServerChangesSheet`, replacing the legacy `AlertDialog`) |
 | Settings | `settingsFragment` | Fragment | **phase 5A4** (post-#10) — was the intentionally-legacy row in §B.4 below; now full Compose (`SettingsScreen`), top level + all 6 nested groups rendered from one static `SettingsDefinitions` tree, plus three new transient sheets (`SettingsChoiceSheet`/`SettingsConfirmSheet`/`SettingsInfoSheet`) replacing the legacy `ListPreference` dialogs and `ConfirmationDialog`/`InfoDialog`/`ErrorDialog` usages |
+| Equalizer | `equalizerFragment` | Fragment | **phase 5A5** (post-#10) — was the last intentionally-legacy row in §B.4 below; now full Compose (`EqualizerScreen`), one slider per runtime band, a switch row, a runtime-driven preset sheet (`EqualizerPresetSheet`), and an explicit unavailable state; the audio runtime (`EqualizerController`) is unchanged and stays outside Compose |
 
 ### B.2 — Hybrid by design
 
@@ -124,11 +134,12 @@ Playlist dialog) has been migrated to Compose — see §B.1 and §N.
 **Updated in phase 5A1 (post-#10):** About moved to full Compose — see §Q. **Updated in phase 5A2
 (post-#10):** Server Selector moved to full Compose — see §R. **Updated in phase 5A3 (post-#10):**
 Edit Server moved to full Compose — see §S. **Updated in phase 5A4 (post-#10):** Settings moved to
-full Compose — see §T. The remaining row is unchanged.
+full Compose — see §T. **Updated in phase 5A5 (post-#10):** Equalizer, the last remaining row, moved
+to full Compose — see §U. **This table is now empty.**
 
 | Surface | Destination | Verified via |
 |---|---|---|
-| Equalizer | `equalizerFragment` | `NavigationActivity.hidesSupportActionBar`/`updateChromeVisibility` still special-case it; Pixel-verified, tokenized dark theme, no toolbar, correct back nav |
+| *(none)* | — | — |
 
 Confirmed against issue #10's acceptance criteria (§H below): none of these are "core browsing" or
 "playback-heavy" surfaces the issue names. `docs/technical/TAKI_COMPOSE_MIGRATION_PLAN.md`'s "Out
@@ -1608,3 +1619,136 @@ across repeated runs within this same session, not deferred.
 ### Next phase
 
 **Phase 5A5 — migrate Equalizer to Compose.** Not started as part of this phase.
+
+## U. Phase 5A5 — Equalizer residual migration + residual-UI audit (post-#10)
+
+Baseline `38812254` (Migrate Settings to Compose). Not a reopening of issue #10 (stays closed);
+phases 5A1–5A5 are post-#10 residual work.
+
+### Equalizer audit
+
+Legacy screen: `EqualizerFragment` (XML `equalizer.xml` + `equalizer_bar.xml`), a "Select Preset"
+`ContextMenu`, a `CheckBox` master switch and one dynamically-built `SeekBar` per band. The audio
+runtime is `EqualizerController` (LiveData `EqualizerController.get()`, created by `PlaybackService`
+with the local player's audio session, settings persisted as a Java-serialized `EqualizerSettings`
+in `cacheDir/equalizer.dat`, saved asynchronously). Legacy behavior preserved 1:1: band labels
+`"%d - %d Hz"` from runtime band ranges (milliHertz / 1000), levels in millibels shown as `level/100`
+dB, 1-millibel slider stepping, `usePreset` followed by a re-read of every band, `saveSettings()` in
+`onPause`. Legacy defects *not* ported: the `enabled` read/write and the preset listing were
+unguarded (an `AudioEffect` failure could crash the app) — all runtime calls are now guarded.
+
+### Architecture (runtime stays outside Compose)
+
+- `EqualizerController` and the audio runtime are unchanged and authoritative. No second
+  `Equalizer` is created; no raw `android.media.audiofx.Equalizer` appears in a Composable or in
+  `remember`.
+- `audiofx/EqualizerRuntime` — a narrow interface plus `AudioFxEqualizerRuntime`, the only new
+  code touching the raw `Equalizer`; it reads `controller.equalizer` fresh on every call and never
+  retains it (so a replaced controller/equalizer can never be written to stale).
+- `model/EqualizerViewModel` projects the controller into immutable `EqualizerUiState`
+  (`controllerAvailable`, `enabled`, `bands`, `presets`, `currentPresetIndex`, `presetSheetVisible`),
+  follows controller replacement/disappearance (new controller → full rebuild; null → explicit
+  "unavailable" state), and never starts playback to obtain a controller.
+- `EqualizerFragment` is a thin host (`attach()`, `refresh()` on resume, `saveSettings()` on pause,
+  Back closes the preset sheet). `EqualizerScreen` draws its own `TakiScreenHeader`; the shared
+  toolbar and the shared content back bar are both removed for this destination
+  (`NavigationActivity`: `equalizerFragment` already in `hidesSupportActionBar`, dropped from
+  `showsContentBackButton`).
+- No write ever happens from rendering: band writes only fire when the value genuinely changed and
+  the equalizer is enabled; `onBandLevelChangeFinished` is read-only.
+- `contentBottomInset` is deliberately *not* threaded in: `equalizerFragment` is a hidden-bottom-nav
+  destination, so `NavigationActivity.applyBottomInset` already pads the whole nav host above the
+  floating mini-player; adding the inset again double-counted the chrome (found on the Pixel 7, see
+  below). The screen only keeps `TakiTheme.spacing.lg` of end padding.
+
+### Bugs found on the device (both fixed, regression-tested)
+
+1. **Preset names carry a trailing NUL on a Pixel 7** (`"Normal\u0000"`). It made `uiautomator dump`
+   die and would break accessibility/serialisation. Names are sanitised in the ViewModel
+   (`displayName`); a regression test fails without the fix.
+2. **Preset sheet hid the 10th preset ("Rock")**: a fixed 420dp list cap, then a 60% cap on a
+   ~720dp Compose area plus a double-counted bottom inset. Fixed by capping the list at 75% of the
+   *available* height and not double-padding; verified on device — all 10 presets visible.
+
+### Tests
+
+Equalizer-specific: `EqualizerViewModelTest` (32), `EqualizerScreenComposeTest` (26),
+`EqualizerScreenScreenshotTest` (4 Roborazzi goldens: enabled, disabled, preset sheet,
+unavailable) = 62; `NavigationChromeSelectionTest` gained Equalizer chrome tests (3 replacing 1).
+Slider touch-target behavior is asserted by touch, not by node bounds (Compose enforces the 48dp
+minimum touch target on hit-testing even when the node is 44dp).
+
+### Pixel 7 validation (`2B191FDH200E36`, debuggable build)
+
+The original equalizer state was captured byte-for-byte first: disabled, preset Normal, bands
+[300,0,0,0,300] mB (`cache/equalizer.dat`). Verified live: entry via Settings → Playback →
+Equalizer (single header, no toolbar, no duplicate back); switch on/off with sliders disabled when
+off; band drags update the dB label and read back the stored value; the preset row shows the active
+preset; the preset sheet lists all 10 runtime presets, and picking **Rock** refreshes all five bands
+to +5/+3/−1/+3/+5 dB and the subtitle to "Rock", while **Normal** restores them; settings are saved
+on leaving the screen; entry from the Now Playing overflow → Equalizer → Back returns to Now
+Playing, and entry from Settings during active playback — playback stayed PLAYING and the process
+PID was unchanged throughout; no FATAL/ANR/AudioEffect exception in logcat for the session.
+**Exact restoration confirmed**: the final `equalizer.dat` is byte-identical (`cmp`) to the
+original, and playback was returned to PAUSED. The controller-unavailable state is covered by tests
+only (it cannot be provoked on the device without tearing down the player).
+
+### Coverage
+
+| | Before 5A5 | After 5A5 |
+|---|---:|---:|
+| Compose | 26 | 27 |
+| Hybrid | 0 | 0 |
+| Intentionally legacy | 1 | 0 |
+| Total reachable | 27 | 27 |
+
+Arithmetic: 26 + 0 + 1 = 27 → 27 + 0 + 0 = 27.
+
+### Residual UI audit
+
+Scope: any app-owned View UI still reachable from a live path, beyond the 27 canonical rows.
+Searched the source for `AlertDialog`/`MaterialAlertDialogBuilder`, `DialogFragment`,
+`BottomSheetDialogFragment`, `PopupMenu`, `registerForContextMenu` and the legacy `Dialogs.kt`
+builders, then traced callers. Classes: REACHABLE_BLOCKER, DEAD, SYSTEM_OR_THIRD_PARTY,
+INTERNAL_NON_UI, DEFERRED_CLEANUP.
+
+| # | Surface | Where | Class |
+|---|---|---|---|
+| R1 | List-picker dialog (`ItemSelectionDialogFragment`, `MaterialAlertDialogBuilder.setItems`) | "Add to playlist" in the Compose Album Detail / Track List / Playlist Detail track menus (`TrackContextAction.ADD_TO_PLAYLIST` → `addTracksToPlaylist`, hosted by `TrackCollectionFragment`) | REACHABLE_BLOCKER |
+| R2 | Album-info bottom sheet (`AlbumInfoBottomSheetFragment`) | Compose Album Detail's Information action, hosted by `TrackCollectionFragment` | REACHABLE_BLOCKER |
+| R3 | Four playlist dialogs (`ConfirmationDialog` ×3: remove downloads / edit info / delete; `InfoDialog` ×1: info) | Compose Playlists List's per-row actions, `PlaylistListFragment` | REACHABLE_BLOCKER |
+| R4 | Library hub popup (`androidx.appcompat.widget.PopupMenu`, `NavigationActivity.showLibraryHub`) | ⋮ on Home / Library | REACHABLE_BLOCKER |
+| R5 | RecyclerView-binder context popups (`Utils.createPopupMenu` in `AlbumRowDelegate`, `ArtistRowBinder`, `LibraryTrackBinder`, `TrackViewBinder`) | legacy `TrackCollectionFragment` modes' rows | DEFERRED_CLEANUP (tied to the known deferred TrackCollection/binder cleanup; reachability of each binder not exhaustively proven) |
+| — | `AlbumListFragment` / `ArtistListFragment` (incl. their `PopupMenu`s and genre `ItemSelectionDialogFragment` use) | in the nav graph, no live caller | DEAD (#23) |
+| — | `CreatePlaylistFragment` list-picker use | superseded by the migrated create/rename flows | DEAD / DEFERRED_CLEANUP |
+| — | System permission/file pickers (SAF cache-location picker, runtime permission dialogs), OS share sheet | platform UI | SYSTEM_OR_THIRD_PARTY |
+| — | Notification / media-session surfaces, `Toast`s | platform surfaces driven by app logic | SYSTEM_OR_THIRD_PARTY |
+| — | `ErrorDialog`/`InfoDialog`/`ConfirmationDialog` builders in `Dialogs.kt` | only R3 and dead code still call them | INTERNAL_NON_UI until R3 is migrated |
+
+R1–R4 are **reachable, app-owned, View-based transient overlays** on live paths. They are not
+screens and never appeared as rows in the canonical matrix, so the 27/0/0 matrix figure is
+accurate, but it must not be read as "all reachable UI is Compose".
+
+**`REACHABLE_UI_MIGRATION_COMPLETE = NO`.**
+
+### What this does and does not mean
+
+- Does mean: every one of the 27 classified reachable surfaces is Compose; Equalizer was the last
+  intentionally-legacy row and is gone.
+- Does not mean: all legacy View code is gone (R1–R5, dead fragments and deferred binder code
+  remain); Videos is excluded (still unreachable / product-decision-required, §B.5); issue #10
+  stays closed; #21–#24 and the Visualizer are untouched.
+
+### Known debt (carried forward)
+
+`deleteMetaDatabase` pre-delete-active-id quirk (§R); dead `ServerSettingsModel.moveItemUp/Down`;
+Videos unreachable decision (§B.5); #21 Artist Radio StrictMode; #22 Album List folder reload; #23
+dead Artist/Album cleanup; #24 Visualizer; online per-row download indicator gap; deferred
+TrackCollection/binder cleanup; Up Next shuffle/reorder limitation; Settings `showConfirmationDialog`
+dead toggle. New in this phase: R1–R5 recorded above.
+
+### Next action
+
+A decision, not started here: either one more small phase migrating the transient overlays R1–R4 to
+Compose sheets (the established `Taki*Sheet` pattern), or accept them as documented debt and begin
+beta/stabilization review before Visualizer #24.

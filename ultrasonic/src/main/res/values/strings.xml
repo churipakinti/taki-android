@@ -161,6 +161,11 @@
     <string name="equalizer.enabled">Enabled</string>
     <string name="equalizer.label">Equalizer</string>
     <string name="equalizer.preset">Select Preset</string>
+    <string name="equalizer.bands">Bands</string>
+    <string name="equalizer.band_range">%1$d - %2$d Hz</string>
+    <string name="equalizer.band_description">%1$d to %2$d Hz</string>
+    <string name="equalizer.unavailable_title">Equalizer unavailable</string>
+    <string name="equalizer.unavailable_message">The equalizer is tied to the audio player. It becomes available once the player is running.</string>
     <string name="error.label">Error</string>
     <string name="jukebox.is_default">Jukebox By Default</string>
     <string name="jukebox.summary_is_default">Plays music through the server\'s own speakers instead of streaming it to this device.</string>

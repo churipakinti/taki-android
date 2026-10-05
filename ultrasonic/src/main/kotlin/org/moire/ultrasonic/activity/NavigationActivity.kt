@@ -808,8 +808,9 @@ class NavigationActivity : ScopeActivity() {
          * system Back (`EditServerViewModel.requestBack`), fixing a real gap the shared bar's
          * click listener had no way to participate in (it only ever called `navigateUp()`
          * directly). `settingsFragment` was removed in phase 5A4 for the same reason as About -
-         * it now draws its own `TakiScreenHeader`. `equalizerFragment` stays - still legacy, still
-         * relies on the shared bar. Pure so `NavigationChromeSelectionTest` can lock it.
+         * it now draws its own `TakiScreenHeader`, and `equalizerFragment` followed in phase 5A5
+         * (the last destination to leave this bar). Pure so `NavigationChromeSelectionTest` can
+         * lock it.
          */
         fun showsContentBackButton(
             destinationId: Int,
@@ -822,8 +823,7 @@ class NavigationActivity : ScopeActivity() {
             R.id.albumListFragment,
             R.id.selectGenreFragment,
             R.id.downloadsFragment,
-        ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail ||
-            destinationId == R.id.equalizerFragment
+        ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail
 
         /**
          * Whether a destination draws its own top chrome and the shared Material toolbar must
