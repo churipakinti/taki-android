@@ -356,7 +356,7 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 1. ~~**BB-1**~~ — **RESOLVED** (#27, see §S).
 2. ~~**BF-1 + BF-2**~~ — **RESOLVED** (#28, see §T).
 3. ~~**BF-3 (#21)**~~ — **RESOLVED** (see §U).
-4. **BF-5** — surface a playback-source error and let Next prepare the next item from `ERROR`.
+4. **BF-5** — FIXED in code, pending live Pixel confirmation (see §V).
 5. **BF-6** — make list screens distinguish a load failure from an empty result and offer retry.
 6. **BF-4** — guard or fix Up Next reordering while shuffled.
 
@@ -479,3 +479,36 @@ violation seen is an unrelated hardware-bitmap read). Playback left paused; queu
 `ARTIST_RADIO_ROOM_MAIN_THREAD_ACCESS = 0`.
 
 **Status: BF-3 = RESOLVED.** BB-1, BF-1, BF-2 RESOLVED. **`BETA_READY` remains NO** pending #30, #31, #29.
+
+---
+
+## V. BF-5 remediation (#30) — FIXED, live confirmation pending
+
+**Two separate causes.**
+1. *Next did not load the next item.* Media3 has no `STATE_ERROR`: after a fatal source error the player is `STATE_IDLE` with
+   `playerError != null` and keeps `playWhenReady`. `seekToNext()` only moves the index; nothing is loaded until `prepare()`. That is why
+   no `stream.view` request was made and a later Play press "worked" (Play re-prepares).
+2. *Feedback.* `onPlayerError` already toasted: `UnrecognizedInputFormatException` maps to `ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED`,
+   i.e. the track-unavailable message. I could not reproduce the failing stream, so I cannot prove why the audit did not see it; a single
+   short toast is the weakest possible channel (transient, easy to miss, never announced). It is now delivered through
+   `ErrorMessageChannel` (the 5A6 error sheet, persists until dismissed) with the toast kept as the fallback when no UI host is attached.
+
+**Fix** (`PlaybackErrorRecovery.kt`, `MediaPlayerManager`'s existing controller listener - so notification/headset/MediaSession Next,
+which reach the controller listener through the session, are covered, not just the Compose buttons):
+- `onMediaItemTransition`: if the reason is `SEEK` and the player is `IDLE` with a `playerError`, call `prepare()` once. `playWhenReady`
+  is untouched, so it resumes only if the user was playing. Healthy Next never matches (no extra command). No auto-skip.
+- `PlaybackErrorReportGate`: one message per failed attempt; cleared when the player leaves idle or changes item.
+- `classifyPlaybackError` names the three existing treatments (network retry #19 / track-unavailable + album-cache invalidation #18 /
+  generic); behaviour unchanged. Last item: Next raises no transition, so nothing is prepared or repeated.
+
+**Tests** (`PlaybackErrorRecoveryTest`, 14, driving the real listener): one message per treatment, duplicate callbacks, retry-after-leave,
+transient retry (no premature message / final message when the budget is spent), Next prepares once with no play/stop/clear, healthy Next
+and AUTO/REPEAT never prepare, last-item path, A->B->C applies recovery only to A->B. Disabling the `prepare()` call fails 2 of them.
+1509 -> 1523. Existing #17/#18/#19 tests unchanged and green; #18's cache-invalidation code is untouched (not live-testable without
+renaming server files).
+
+**Pixel 7: NOT DONE.** The device was not reachable over adb (no devices listed after restarting the adb server), and no known-broken
+stream exists to exercise without altering server data. The live scenario (failed track -> one sheet -> Next plays the next track with
+no extra Play; healthy Next unchanged) still needs one manual pass.
+
+**Status: BF-5 = FIXED (automated evidence), live confirmation pending. `BETA_READY` remains NO** (also #31, #29 open).

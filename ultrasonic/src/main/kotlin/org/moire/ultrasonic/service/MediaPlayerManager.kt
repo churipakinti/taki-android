@@ -44,6 +44,7 @@ import org.moire.ultrasonic.data.RatingUpdate
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MusicServiceFactory.getMusicService
 import org.moire.ultrasonic.util.DownloadUtil
+import org.moire.ultrasonic.util.ErrorMessageChannel
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
@@ -208,6 +209,19 @@ class MediaPlayerManager(
     // resumes from the saved position; the controller, queue and session are left intact.
     // Cleared the moment playback actually resumes.
     private var networkErrorRetryCount = 0
+
+    private val playbackErrorReportGate = PlaybackErrorReportGate()
+
+    /** Test seam for the user-visible playback-error message. */
+    internal var playbackErrorSink: (Int) -> Unit = ::deliverPlaybackError
+
+    private fun reportPlaybackError(messageId: Int) = playbackErrorSink(messageId)
+
+    private fun deliverPlaybackError(messageId: Int) {
+        val context = UApp.applicationContext()
+        val text = context.getString(messageId)
+        if (!ErrorMessageChannel.post(text)) toast(text, false, context)
+    }
     private val networkErrorRetryRunnable = Runnable {
         val c = controller ?: return@Runnable
         Timber.i(
@@ -277,6 +291,7 @@ class MediaPlayerManager(
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState != Player.STATE_IDLE) playbackErrorReportGate.clear()
             playerStateChangedHandler()
             publishPlaybackState()
             // The queue reaching its natural end (no next item to auto-transition to) is the
@@ -317,6 +332,17 @@ class MediaPlayerManager(
             // network-error recovery was aimed at the previous item.
             stallWatchdog.reset()
             cancelNetworkErrorRecovery()
+            playbackErrorReportGate.clear()
+            // Issue #30: Next/Previous/queue tap after a source error only moves the index; the
+            // player stays idle until prepare() is called. playWhenReady is kept by Media3, so
+            // this resumes playback only if the user was playing. Healthy skips never match.
+            val c = controller
+            if (mediaItem != null && c != null &&
+                shouldPrepareAfterTransition(reason, c.playerError != null, c.playbackState)
+            ) {
+                Timber.i("Skipped away from a failed item; preparing the new current item")
+                c.prepare()
+            }
             publishPlaybackState()
         }
 
@@ -357,13 +383,8 @@ class MediaPlayerManager(
             // the Subsonic error envelope), a 404, or an unrecognised container. Point the user at
             // the fix -- refreshing the album re-fetches the current ids -- rather than the generic
             // "couldn't play" message.
-            val trackUnavailable = when (error.errorCode) {
-                PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE,
-                PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
-                PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
-                PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED -> true
-                else -> false
-            }
+            val trackUnavailable =
+                classifyPlaybackError(error.errorCode) == PlaybackErrorKind.TRACK_UNAVAILABLE
 
             // Issue #19: a transient network error (Wi-Fi<->mobile handoff, brief drop) that
             // outlasted Media3's own load retries. As long as the user still wants playback,
@@ -401,8 +422,11 @@ class MediaPlayerManager(
                     R.string.download_play_error
                 }
 
-            mainScope.launch {
-                toast(messageId, false, UApp.applicationContext())
+            // One message per failed attempt (see PlaybackErrorReportGate). #30: delivered through
+            // the app's error sheet when a UI host is attached - it stays until dismissed, unlike
+            // a toast that is easy to miss - and falls back to a toast otherwise.
+            if (playbackErrorReportGate.shouldReport(controller?.currentMediaItem?.mediaId)) {
+                reportPlaybackError(messageId)
             }
 
             // The id no longer resolves server-side (file moved/renamed, library not rescanned).
