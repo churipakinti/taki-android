@@ -121,7 +121,7 @@ class ServerSettingsModel(
         appScope.launch {
             repository.update(serverSetting)
             activeServerProvider.invalidateCache()
-            Timber.d("updateItem updated server setting: $serverSetting")
+            Timber.d("updateItem updated server setting id: ${serverSetting.id}")
         }
     }
 
@@ -135,7 +135,7 @@ class ServerSettingsModel(
         appScope.launch {
             serverSetting.index = (repository.count() ?: 0) + 1
             serverSetting.id = repository.insert(serverSetting).toInt()
-            Timber.d("saveNewItem saved server setting: $serverSetting")
+            Timber.d("saveNewItem saved server setting id: ${serverSetting.id}")
             if (onSaved != null) withContext(Dispatchers.Main) { onSaved(serverSetting) }
         }
     }
@@ -165,7 +165,7 @@ class ServerSettingsModel(
                 setting.index = newIndex
                 newIndex++
                 repository.update(setting)
-                Timber.d("reindexSettings saved $setting")
+                Timber.d("reindexSettings saved server setting id: ${setting.id} index: ${setting.index}")
             }
         }
     }

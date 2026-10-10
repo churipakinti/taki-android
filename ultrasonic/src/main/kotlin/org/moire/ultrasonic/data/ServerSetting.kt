@@ -44,4 +44,13 @@ data class ServerSetting(
     constructor() : this (
         0, 0, "", "", null, "", "", false, false, false, null, null
     )
+
+    /**
+     * Credential-safe string form. The generated data-class `toString()` would include the
+     * plaintext [password] (and the user name), which must never reach Timber / logcat /
+     * `FileLoggerTree`. Only non-sensitive identifiers are emitted; equality, `hashCode`, `copy`
+     * and `componentN()` are unaffected.
+     */
+    override fun toString(): String =
+        "ServerSetting(id=$id, index=$index, name=$name, password=<redacted>)"
 }

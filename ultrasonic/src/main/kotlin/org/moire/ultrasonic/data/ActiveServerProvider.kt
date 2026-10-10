@@ -49,9 +49,9 @@ class ActiveServerProvider(private val repository: ServerSettingDao) :
                     cachedServer = repository.findById(serverId)
                 }
                 Timber.d(
-                    "getActiveServer retrieved from DataBase, id: %s cachedServer: %s",
+                    "getActiveServer retrieved from DataBase, id: %s found: %s",
                     serverId,
-                    cachedServer
+                    cachedServer != null
                 )
             }
 

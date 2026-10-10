@@ -13,4 +13,8 @@ data class SubsonicClientConfiguration(
     val forcePlainTextPassword: Boolean = false,
     val debug: Boolean = false,
     val isRealProtocolVersion: Boolean = false
-)
+) {
+    /** Credential-safe: the generated `toString()` would print the plaintext [password]. */
+    override fun toString(): String =
+        "SubsonicClientConfiguration(baseUrl=$baseUrl, clientID=$clientID, password=<redacted>)"
+}

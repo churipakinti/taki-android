@@ -353,8 +353,7 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 
 ## R. Remediation order (`BETA_READY = NO`)
 
-1. **BB-1** — stop logging whole `ServerSetting` objects / redact `toString`; flip the two audit
-   tests. (Smallest change, highest stakes.)
+1. ~~**BB-1**~~ — **RESOLVED** (#27, see §S).
 2. **BF-1 + BF-2** — bring the 11 older sheets onto the `TakiSheet` panel/back behaviour (or add
    `pointerInput` + `TakiBackHandler` to each); flip the `SheetInteractionAuditTest` rows.
 3. **BF-3 (#21)** — build Artist Radio on an IO dispatcher.
@@ -364,3 +363,47 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 
 Then rerun the affected 5B checks (the tests above plus the live items) and re-issue this verdict.
 Everything in §D marked POST_BETA is acceptable for a first beta.
+
+---
+
+## S. BB-1 remediation (#27) — RESOLVED
+
+**Root cause.** `ServerSetting` is a Kotlin `data class`, so its generated `toString()` printed the
+plaintext `password` (and `userName`). `ServerSettingsModel` interpolated whole objects into Timber
+at three sites (`updateItem`, `saveNewItem`, `reindexSettings`), and `ActiveServerProvider.getActiveServer`
+logged the whole cached `ServerSetting` on every cache miss (a fourth site the original audit missed).
+Timber reaches logcat in debug builds and `FileLoggerTree` (the shareable "debug log to file") in release.
+
+**Fix (defence in depth).**
+- Layer A: the four sites now log only ids (`updateItem ... id: N`, `reindexSettings ... id: N index: M`,
+  `getActiveServer ... found: true|false`).
+- Layer B: `ServerSetting.toString()` is overridden to `ServerSetting(id, index, name, password=<redacted>)`.
+  No length, hash or fragment. Equality, `hashCode`, `copy`, `componentN`, Room mapping and persistence unchanged.
+- Related credential path (same logging family, narrow): the debug-build OkHttp `HttpLoggingInterceptor`
+  logs the request line, which carries `t`/`s` (or legacy `p`). It now uses `redactQueryParams("p","t","s")`.
+  Reachable only with `debug = BuildConfig.DEBUG` (never release), but debug logcat could be pasted into reports.
+  `SubsonicClientConfiguration` (data class holding the password) also got a redacting `toString()`; it is not logged anywhere today.
+- Field classification: `password`, `t`, `s`, `p` = SECRET; `userName`, `url` = SENSITIVE_CONTEXT (no longer logged by these paths);
+  `id`, `index`, `name` = SAFE_IDENTIFIER.
+- Exceptions: connection-test failures are logged via `Timber.w(exception)` in `EditServerViewModel`; OkHttp/Retrofit
+  exception messages carry host/status only, never the query string, so no concrete exposure was found.
+- Not changed: Room schema, storage format, authentication, onboarding, debug-log-to-file feature.
+
+**Tests.** `ServerSettingCredentialExposureAuditTest` rewritten (2 → 7) as a permanent regression using a
+unique sentinel password and a capturing Timber tree (the same messages `FileLoggerTree` receives):
+`toString` redaction, equality/copy preserved, interpolation, `updateItem`, `saveNewItem`, `reindexSettings`
+(via `getServerList`), `ActiveServerProvider`. Verified against the old code: 6 of 7 fail without the fix.
+`HttpLoggingCredentialRedactionTest` (2, core) proves `p`, `t`, `s` are redacted in HTTP logging.
+`testDebugUnitTest`: 1497 → 1502 (0 failures, 0 skipped); core adds 2.
+
+**Source audit.** Remaining `Timber` matches near server objects/credentials: `ServerSelectorViewModel` and
+`ActiveServerProvider` log ids only; `EditServerModel`/`RESTMusicService` log API version; `PerfMetricsInterceptor`
+logs method + path only. No `$serverSetting` / `$setting` interpolation remains.
+
+**Live (Pixel 7).** Debug APK installed over the existing install; cold start logged
+`getActiveServer retrieved from DataBase, id: 1 found: true`; 94 request lines showed `t=██&s=██`; zero
+`password=` / `ServerSetting(` lines. No server was edited, added or deleted and no preference was changed
+(so the production server, its password and the debug-log preference are untouched). The real password was never
+read or echoed; the sentinel tests are the authoritative proof.
+
+**Status: BB-1 = RESOLVED. `BETA_READY` remains NO** pending #28, #21, #30, #31, #29 and the 5B revalidation.

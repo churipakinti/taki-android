@@ -122,6 +122,8 @@ class SubsonicAPIClient(
     private fun OkHttpClient.Builder.addLogging() {
         val loggingInterceptor = HttpLoggingInterceptor(okLogger)
         loggingInterceptor.level = HttpLoggingInterceptor.Level.HEADERS
+        // The request line carries the auth query params: legacy password (p) or token+salt (t, s)
+        loggingInterceptor.redactQueryParams("p", "t", "s")
         this.addInterceptor(loggingInterceptor)
     }
 
