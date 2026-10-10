@@ -329,7 +329,10 @@ class EqualizerScreenComposeTest {
             available(sheet = true),
             EqualizerActions.Noop.copy(onPresetSheetDismiss = { dismissed = true }),
         )
-        compose.onNodeWithTag(EQUALIZER_PRESET_SCRIM_TEST_TAG).performClick()
+        // Top of the scrim: its centre is under the panel (which now swallows taps, #28).
+        compose.onNodeWithTag(EQUALIZER_PRESET_SCRIM_TEST_TAG).performTouchInput {
+            click(topCenter + androidx.compose.ui.geometry.Offset(0f, 40f))
+        }
         assertTrue(dismissed)
     }
 

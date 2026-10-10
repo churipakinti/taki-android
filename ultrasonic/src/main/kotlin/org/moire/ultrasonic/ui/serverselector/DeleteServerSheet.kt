@@ -46,6 +46,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.ui.components.takiSheetPanelTapSwallow
+import org.moire.ultrasonic.ui.components.TakiBackHandler
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /** Lets tests find the sheet and its actions. */
@@ -74,6 +76,7 @@ fun BoxScope.DeleteServerSheet(
     bottomContentInset: Dp,
     modifier: Modifier = Modifier,
 ) {
+    TakiBackHandler(enabled = visible, onBack = onDismiss)
     AnimatedVisibility(
         visible = visible,
         modifier = modifier.fillMaxSize(),
@@ -120,6 +123,7 @@ private fun DeleteServerSheetContent(
             .clip(RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS))
             .background(TakiTheme.colors.surface)
             .testTag(DELETE_SERVER_SHEET_TEST_TAG)
+            .takiSheetPanelTapSwallow()
             .padding(horizontal = TakiTheme.spacing.xl)
             .padding(top = TakiTheme.spacing.sm, bottom = TakiTheme.spacing.xl + bottomContentInset),
     ) {

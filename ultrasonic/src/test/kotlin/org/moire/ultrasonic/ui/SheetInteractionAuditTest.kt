@@ -66,13 +66,28 @@ import org.moire.ultrasonic.ui.settings.SettingsConfirmSheet
 import org.moire.ultrasonic.ui.settings.SettingsInfoSheet
 import org.moire.ultrasonic.ui.settings.SettingsItem
 import org.moire.ultrasonic.ui.settings.SettingsOverlay
+import org.moire.ultrasonic.ui.components.takiSheetScrimTestTag
+import org.moire.ultrasonic.ui.equalizer.EQUALIZER_PRESET_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.player.SAVE_PLAYLIST_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.player.SLEEP_TIMER_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.playlist.RENAME_PLAYLIST_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.playlistlist.CREATE_PLAYLIST_NAME_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.serverselector.DELETE_SERVER_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.serverselector.DISCARD_SERVER_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.settings.SETTINGS_CHOICE_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.settings.SETTINGS_CONFIRM_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.settings.SETTINGS_INFO_SCRIM_TEST_TAG
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Phase 5B sheet interaction audit: the SAME two probes run against EVERY reachable Compose sheet
- * of the app, and the outcome of each is pinned in the table below.
+ * Permanent sheet interaction regression matrix (born as the Phase 5B audit, flipped by the #28
+ * fix): the SAME three probes run against EVERY reachable Compose sheet of the app. Every row must
+ * now read `tapThrough = false`, Back dismissing exactly once, and a scrim tap dismissing exactly
+ * once - reintroducing a pre-5A6 sheet shell breaks the build. The one deliberate exception is the
+ * Equalizer preset sheet, whose Back is owned by `EqualizerFragment` (verified live), not the
+ * composable.
  *
  *  - **tap-through** - a tap on the panel's own, non-interactive top edge (the drag handle). It
  *    must never reach the scrim behind the panel and dismiss the sheet. Phase 5A6 found and fixed
@@ -81,10 +96,6 @@ import org.robolectric.annotation.Config
  *    A sheet whose composable does not handle Back relies on its host Fragment - or, if the host
  *    registers nothing either, Back navigates away from the screen with the sheet still open
  *    (confirmed live for the Settings choice sheet and others; see the audit document).
- *
- * The expectations are the CURRENT behaviour, deliberately including the known defects (BF-1
- * tap-through, BF-2 Back), so the build stays green and the table is the durable evidence. When a
- * sheet is fixed, its row here flips and must be updated - that is the point.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w420dp-h900dp-xxhdpi")
@@ -115,8 +126,21 @@ class SheetInteractionAuditTest {
         return dismissed
     }
 
-    /** [tapThrough] / [backHandled] = what the sheet does today. */
-    private fun audit(panelTag: String, tapThrough: Boolean, backHandled: Boolean) {
+    private fun tapScrim(scrimTag: String): Int {
+        dismissed = 0
+        compose.onNodeWithTag(scrimTag).performTouchInput { click(topCenter + androidx.compose.ui.geometry.Offset(0f, 40f)) }
+        compose.waitForIdle()
+        return dismissed
+    }
+
+    /** Every sheet: panel inert, scrim dismisses once, composable Back as stated by [backHandled]. */
+    private fun audit(
+        panelTag: String,
+        tapThrough: Boolean,
+        backHandled: Boolean,
+        scrimTag: String = takiSheetScrimTestTag(panelTag),
+    ) {
+        assertEquals("$panelTag: scrim tap dismisses once", 1, tapScrim(scrimTag))
         assertEquals(
             "$panelTag: panel tap dismissed=${tapThrough}",
             if (tapThrough) 1 else 0,
@@ -169,14 +193,14 @@ class SheetInteractionAuditTest {
         audit(APP_ERROR_SHEET_TEST_TAG, tapThrough = false, backHandled = true)
     }
 
-    // ---- Back fixed in 5A6, panel tap-through still open (BF-1) -------------------------------
+    // ---- Pre-TakiSheet shells, converged by #28 (same panel swallow + TakiBackHandler) --------
 
     @Test
     fun renamePlaylist() {
         host {
             RenamePlaylistSheet(true, "n", null, RenamePlaylistActions.Noop.copy(onDismiss = onDismiss), 0.dp)
         }
-        audit(RENAME_PLAYLIST_SHEET_TEST_TAG, tapThrough = true, backHandled = true)
+        audit(RENAME_PLAYLIST_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = RENAME_PLAYLIST_SCRIM_TEST_TAG)
     }
 
     @Test
@@ -186,11 +210,10 @@ class SheetInteractionAuditTest {
                 true, "n", null, CreatePlaylistNameActions.Noop.copy(onDismiss = onDismiss), 0.dp,
             )
         }
-        audit(CREATE_PLAYLIST_NAME_SHEET_TEST_TAG, tapThrough = true, backHandled = true)
+        audit(CREATE_PLAYLIST_NAME_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = CREATE_PLAYLIST_NAME_SCRIM_TEST_TAG)
     }
 
-    // ---- Built before 5A6: tap-through (BF-1) AND no composable-level Back (BF-2) -------------
-
+    
     @Test
     fun settingsChoice() {
         host {
@@ -205,7 +228,7 @@ class SheetInteractionAuditTest {
                 "0", {}, onDismiss, 0.dp,
             )
         }
-        audit(SETTINGS_CHOICE_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        audit(SETTINGS_CHOICE_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = SETTINGS_CHOICE_SCRIM_TEST_TAG)
     }
 
     @Test
@@ -222,25 +245,25 @@ class SheetInteractionAuditTest {
                 {}, onDismiss, 0.dp,
             )
         }
-        audit(SETTINGS_CONFIRM_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        audit(SETTINGS_CONFIRM_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = SETTINGS_CONFIRM_SCRIM_TEST_TAG)
     }
 
     @Test
     fun settingsInfo() {
         host { SettingsInfoSheet(SettingsOverlay.Info(R.string.common_ok), onDismiss, 0.dp) }
-        audit(SETTINGS_INFO_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        audit(SETTINGS_INFO_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = SETTINGS_INFO_SCRIM_TEST_TAG)
     }
 
     @Test
     fun deleteServer() {
         host { DeleteServerSheet(true, "srv", {}, onDismiss, 0.dp) }
-        audit(DELETE_SERVER_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        audit(DELETE_SERVER_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = DELETE_SERVER_SCRIM_TEST_TAG)
     }
 
     @Test
     fun discardServerChanges() {
         host { DiscardServerChangesSheet(true, {}, onDismiss, 0.dp) }
-        audit(DISCARD_SERVER_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        audit(DISCARD_SERVER_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = DISCARD_SERVER_SCRIM_TEST_TAG)
     }
 
     @Test
@@ -248,7 +271,7 @@ class SheetInteractionAuditTest {
         host {
             SavePlaylistSheet(true, "n", SavePlaylistActions.Noop.copy(onDismiss = onDismiss))
         }
-        audit(SAVE_PLAYLIST_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        audit(SAVE_PLAYLIST_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = SAVE_PLAYLIST_SCRIM_TEST_TAG)
     }
 
     @Test
@@ -256,7 +279,7 @@ class SheetInteractionAuditTest {
         host {
             SleepTimerSheet(true, SleepTimerState.Off, true, SleepTimerActions.Noop.copy(onDismiss = onDismiss))
         }
-        audit(SLEEP_TIMER_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        audit(SLEEP_TIMER_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = SLEEP_TIMER_SCRIM_TEST_TAG)
     }
 
     @Test
@@ -264,7 +287,24 @@ class SheetInteractionAuditTest {
         host {
             EqualizerPresetSheet(listOf(EqualizerPresetUiState(0, "Normal")), 0, {}, onDismiss, 0.dp)
         }
-        // Back is handled by EqualizerFragment's OnBackPressedCallback, not by the composable.
-        audit(EQUALIZER_PRESET_SHEET_TEST_TAG, tapThrough = true, backHandled = false)
+        // Back is deliberately host-owned: EqualizerFragment's OnBackPressedCallback (verified live).
+        audit(EQUALIZER_PRESET_SHEET_TEST_TAG, tapThrough = false, backHandled = false, scrimTag = EQUALIZER_PRESET_SCRIM_TEST_TAG)
+    }
+
+    // ---- A hidden sheet must not intercept Back (host/navigation keeps ownership) -------------
+
+    @Test
+    fun hiddenAnimatedSheetsDoNotInterceptBack() {
+        host {
+            DeleteServerSheet(false, "srv", {}, onDismiss, 0.dp)
+            DiscardServerChangesSheet(false, {}, onDismiss, 0.dp)
+            SavePlaylistSheet(false, "n", SavePlaylistActions.Noop.copy(onDismiss = onDismiss))
+            SleepTimerSheet(false, SleepTimerState.Off, true, SleepTimerActions.Noop.copy(onDismiss = onDismiss))
+            RenamePlaylistSheet(false, "n", null, RenamePlaylistActions.Noop.copy(onDismiss = onDismiss), 0.dp)
+            CreatePlaylistNameSheet(
+                false, "n", null, CreatePlaylistNameActions.Noop.copy(onDismiss = onDismiss), 0.dp,
+            )
+        }
+        assertEquals(0, pressBack())
     }
 }

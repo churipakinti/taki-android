@@ -354,8 +354,7 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 ## R. Remediation order (`BETA_READY = NO`)
 
 1. ~~**BB-1**~~ — **RESOLVED** (#27, see §S).
-2. **BF-1 + BF-2** — bring the 11 older sheets onto the `TakiSheet` panel/back behaviour (or add
-   `pointerInput` + `TakiBackHandler` to each); flip the `SheetInteractionAuditTest` rows.
+2. ~~**BF-1 + BF-2**~~ — **RESOLVED** (#28, see §T).
 3. **BF-3 (#21)** — build Artist Radio on an IO dispatcher.
 4. **BF-5** — surface a playback-source error and let Next prepare the next item from `ERROR`.
 5. **BF-6** — make list screens distinguish a load failure from an empty result and offer retry.
@@ -407,3 +406,46 @@ logs method + path only. No `$serverSetting` / `$setting` interpolation remains.
 read or echoed; the sentinel tests are the authoritative proof.
 
 **Status: BB-1 = RESOLVED. `BETA_READY` remains NO** pending #28, #21, #30, #31, #29 and the 5B revalidation.
+
+---
+
+## T. BF-1 + BF-2 remediation (#28) — RESOLVED
+
+**Exact matrix** (`SheetInteractionAuditTest`, 16 rows + a hidden-state probe): 6 `TakiSheet` sheets already correct (Add to playlist,
+Album info, Playlist info, Update playlist info, Library hub, App error) and **10 older sheets fixed**:
+
+| Sheet | Host | Back owner before → after | Panel tap before → after |
+|---|---|---|---|
+| Settings choice / confirm / info | Settings | none → sheet (`TakiBackHandler`) | dismissed → inert |
+| Server delete | Server Selector | none → sheet | dismissed → inert |
+| Discard server changes | Edit Server | host `requestBack` re-raised it → sheet (registered later, so it wins) | dismissed → inert |
+| Save playlist, Sleep timer | Now Playing | none → sheet | dismissed → inert |
+| Rename playlist, Create playlist name | Playlist detail / list | sheet (5A6) → sheet | dismissed → inert |
+| Equalizer preset | Equalizer | **host** (`EqualizerFragment` callback) → host (intentionally retained) | dismissed → inert |
+
+**Root cause.** These sheets were hand-built (full-screen box, manual scrim, manual panel) before 5A6 introduced `TakiSheet`; the
+panel had no pointer handler, so a tap on a non-interactive area reached the scrim `clickable`, and only some had a Back handler.
+
+**Implementation.** Shared: new `Modifier.takiSheetPanelTapSwallow()` in `TakiSheet.kt` (now also used by `TakiSheet` itself).
+Per sheet: apply it to the panel and add `TakiBackHandler` (`enabled = visible` for the always-composed animated sheets, so a hidden
+sheet never intercepts Back). No visual, inset, content or callback change. Not migrated onto `TakiSheet` itself: titles, sizing and
+bottom insets differ and a rewrite would be visual churn outside this issue. Equalizer keeps its host-owned Back (correct, verified
+live) to avoid a second, competing handler.
+
+**Tests.** `SheetInteractionAuditTest` is now the permanent matrix: every row asserts panel tap = no dismiss, scrim tap = exactly one
+dismiss, Back = exactly one dismiss (Equalizer: 0 at composable level by design), plus hidden animated sheets do not intercept Back.
+New `EditServerDiscardBackTest`: dirty form → discard sheet → Back closes only the sheet, stays on Edit Server, form intact, host
+re-asks on the next Back, panel/scrim/Discard behave. `EqualizerScreenComposeTest` scrim test now taps the exposed scrim (it had relied
+on the tap-through). 1502 → 1505; 12 of 19 new/changed assertions fail on the pre-fix code.
+
+**Source audit.** All 16 sheets are in the matrix; `REACHABLE_SHEET_TAP_THROUGH = 0`, `REACHABLE_SHEET_BACK_ESCAPE = 0`.
+
+**Pixel 7.** Settings choice (Language), Settings confirm (Clear all downloads), Server delete, Edit Server discard, Sleep timer,
+Save playlist, Equalizer preset, Create playlist name and Rename playlist: panel/title/message/gap taps keep the sheet open; Back
+closes only the sheet (screen retained); scrim dismisses; no setting, server, EQ preset or timer changed; Settings info not reachable
+safely (covered by the matrix). Edit Server: the dirty form survived Back/scrim; Discard left without saving (name unchanged).
+**Incident:** a probe tap between the Save-playlist buttons landed on the Save button's padding and created a server playlist named
+`2026-10-10` (3 songs). I identified it by creation time (1:39 pm, during validation) and deleted it; the server is back to its 3
+playlists. Nothing else changed (playback paused, no timer, EQ = Normal, one server).
+
+**Status: BF-1 = RESOLVED, BF-2 = RESOLVED. BB-1 remains RESOLVED. `BETA_READY` remains NO** pending #21, #30, #31, #29.

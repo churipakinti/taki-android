@@ -50,6 +50,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.service.SleepTimerState
+import org.moire.ultrasonic.ui.components.takiSheetPanelTapSwallow
+import org.moire.ultrasonic.ui.components.TakiBackHandler
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /** Lets tests find the sheet, a preset chip and the cancel action. */
@@ -106,6 +108,7 @@ fun BoxScope.SleepTimerSheet(
     modifier: Modifier = Modifier,
     nowMs: () -> Long = SystemClock::elapsedRealtime,
 ) {
+    TakiBackHandler(enabled = visible, onBack = actions.onDismiss)
     AnimatedVisibility(
         visible = visible,
         modifier = modifier.fillMaxSize(),
@@ -152,6 +155,7 @@ private fun SleepTimerSheetContent(
             .clip(RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS))
             .background(TakiTheme.colors.surface)
             .testTag(SLEEP_TIMER_SHEET_TEST_TAG)
+            .takiSheetPanelTapSwallow()
             .navigationBarsPadding()
             .padding(horizontal = TakiTheme.spacing.xl)
             .padding(top = TakiTheme.spacing.sm, bottom = TakiTheme.spacing.xl),

@@ -48,6 +48,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.TakiTextField
+import org.moire.ultrasonic.ui.components.takiSheetPanelTapSwallow
+import org.moire.ultrasonic.ui.components.TakiBackHandler
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /** Lets tests find the sheet and its actions. */
@@ -98,6 +100,7 @@ fun BoxScope.SavePlaylistSheet(
     actions: SavePlaylistActions,
     modifier: Modifier = Modifier,
 ) {
+    TakiBackHandler(enabled = visible, onBack = actions.onDismiss)
     AnimatedVisibility(
         visible = visible,
         modifier = modifier.fillMaxSize(),
@@ -139,6 +142,7 @@ private fun SavePlaylistSheetContent(name: String, actions: SavePlaylistActions)
             .clip(RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS))
             .background(TakiTheme.colors.surface)
             .testTag(SAVE_PLAYLIST_SHEET_TEST_TAG)
+            .takiSheetPanelTapSwallow()
             .navigationBarsPadding()
             .padding(horizontal = TakiTheme.spacing.xl)
             .padding(top = TakiTheme.spacing.sm, bottom = TakiTheme.spacing.xl),

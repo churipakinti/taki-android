@@ -104,9 +104,7 @@ fun TakiSheet(
                 .clip(RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS))
                 .background(TakiTheme.colors.surface)
                 .testTag(sheetTestTag)
-                // A tap on a non-interactive part of the panel (a title, a label, a gap between
-                // fields) must not fall through to the scrim behind it and dismiss the sheet.
-                .pointerInput(Unit) { detectTapGestures { } }
+                .takiSheetPanelTapSwallow()
                 .padding(horizontal = TakiTheme.spacing.xl)
                 .padding(top = TakiTheme.spacing.sm, bottom = TakiTheme.spacing.sm + bottomContentInset),
         ) {
@@ -137,6 +135,13 @@ private fun TakiSheetDragHandle() {
         )
     }
 }
+
+/**
+ * A tap on a non-interactive part of a sheet panel (a title, a label, a gap between fields) must
+ * not fall through to the scrim behind it and dismiss the sheet. Apply to the panel itself, after
+ * its background/clip and before its padding; interactive children still receive their own taps.
+ */
+fun Modifier.takiSheetPanelTapSwallow(): Modifier = pointerInput(Unit) { detectTapGestures { } }
 
 /**
  * Routes the system Back gesture/button to [onBack] while this composable is in the composition,
