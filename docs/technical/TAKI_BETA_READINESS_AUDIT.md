@@ -355,7 +355,7 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 
 1. ~~**BB-1**~~ — **RESOLVED** (#27, see §S).
 2. ~~**BF-1 + BF-2**~~ — **RESOLVED** (#28, see §T).
-3. **BF-3 (#21)** — build Artist Radio on an IO dispatcher.
+3. ~~**BF-3 (#21)**~~ — **RESOLVED** (see §U).
 4. **BF-5** — surface a playback-source error and let Next prepare the next item from `ERROR`.
 5. **BF-6** — make list screens distinguish a load failure from an empty result and offer retry.
 6. **BF-4** — guard or fix Up Next reordering while shuffled.
@@ -449,3 +449,33 @@ safely (covered by the matrix). Edit Server: the dirty form survived Back/scrim;
 playlists. Nothing else changed (playback paused, no timer, EQ = Normal, one server).
 
 **Status: BF-1 = RESOLVED, BF-2 = RESOLVED. BB-1 remains RESOLVED. `BETA_READY` remains NO** pending #21, #30, #31, #29.
+
+---
+
+## U. BF-3 remediation (#21) — RESOLVED
+
+**Root cause / call chain.** `ArtistDetailFragment.startArtistRadio` and `ContextMenuUtil.handleContextMenu` (`menu_start_radio`,
+used by the Artist List) launch on `lifecycleScope` (Main) and call the suspend `ArtistRadioQueueBuilder.build`, which called
+`MusicService` directly. `CachedMusicService.getAlbumsOfArtist` reads `cachedAlbums.byArtist(id)` - a synchronous Room DAO - on that
+caller thread, so Room threw `IllegalStateException: Cannot access database on the main thread`. The builder's private `fetch()`
+swallows every `Exception`, so the radio silently lost the artist's albums (3 seed candidates + random filler) and still played.
+
+**Fix.** The IO boundary lives in the builder, so every caller benefits: `build()` now runs its whole data-gathering body in
+`withContext(ioDispatcher)` (constructor-injected, default `Dispatchers.IO`). The caller keeps the playback hand-off on Main
+(`mediaPlayerManager.addToPlaylist`), the queue rules (`ArtistRadioSelector`, sizes, filler, dedup) are untouched, and `fetch()` now
+rethrows `CancellationException` (it was swallowing cancellation too) so leaving the screen cancels the build; otherwise failure
+handling is unchanged. Lifecycle: both callers already use the view/fragment lifecycle scope. Double taps were already possible
+(the build was already asynchronous network work) and are unchanged.
+
+**Tests.** `ArtistRadioQueueBuilderTest` (4): a Room-like fake throws on the caller thread - all service access happens on the injected
+IO thread; the artist's own album tracks are in the queue (not just filler), unique, size = target; a caller-thread dispatcher
+reproduces the pre-fix degraded queue (so the guard demonstrably bites); and a source guard that the only two production callers
+(Artist Detail, ContextMenuUtil/Artist List) use the default IO boundary. 1505 -> 1509.
+
+**Pixel 7.** Artist List long-press -> Start radio (queue replaced, expected): `seedCandidates=66` (was 3), 30-track queue with
+AC/DC album tracks; Next works. Artist Detail -> Start artist radio (Accept): `seedCandidates=47`, 30 tracks, plays. Logcat for both:
+Room main-thread exceptions 0, "unavailable while building" 0, FATAL 0, ANR 0, Artist-Radio-attributable StrictMode 0 (the only
+violation seen is an unrelated hardware-bitmap read). Playback left paused; queue is the Accept radio (validation side effect).
+`ARTIST_RADIO_ROOM_MAIN_THREAD_ACCESS = 0`.
+
+**Status: BF-3 = RESOLVED.** BB-1, BF-1, BF-2 RESOLVED. **`BETA_READY` remains NO** pending #30, #31, #29.

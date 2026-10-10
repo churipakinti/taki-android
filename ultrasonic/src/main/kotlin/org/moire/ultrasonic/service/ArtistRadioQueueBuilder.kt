@@ -7,6 +7,10 @@
 
 package org.moire.ultrasonic.service
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.util.PerfMetrics
@@ -20,14 +24,26 @@ private const val ARTIST_RADIO_RELATED_TOP_SONGS = 8
 private const val ARTIST_RADIO_RANDOM_FILL_SIZE = 60
 private const val ARTIST_RADIO_ALBUM_FALLBACK_COUNT = 6
 
-class ArtistRadioQueueBuilder(private val musicService: MusicService) {
+/**
+ * Builds an artist-radio queue. All [MusicService] access (which goes through
+ * `CachedMusicService` and therefore synchronous Room DAOs) runs on [ioDispatcher], never on the
+ * caller's thread - the callers launch from the UI's `lifecycleScope`, i.e. Main, and Room throws
+ * "Cannot access database on the main thread" there (#21). The caller keeps the playback hand-off.
+ */
+class ArtistRadioQueueBuilder(
+    private val musicService: MusicService,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) {
     companion object {
         // Exposed so callers can tell the user when the generated radio came back shorter than
         // usual.
         const val TARGET_SIZE = ARTIST_RADIO_TARGET_SIZE
     }
 
-    suspend fun build(artistId: String, artistName: String?): List<Track> {
+    suspend fun build(artistId: String, artistName: String?): List<Track> =
+        withContext(ioDispatcher) { buildOnCurrentThread(artistId, artistName) }
+
+    private suspend fun buildOnCurrentThread(artistId: String, artistName: String?): List<Track> {
         val perfToken = PerfMetrics.start("artist_radio_generate")
         val artistLabel = artistName?.takeIf { it.isNotBlank() } ?: artistId
 
@@ -99,6 +115,8 @@ class ArtistRadioQueueBuilder(private val musicService: MusicService) {
 
     private suspend fun <T> fetch(label: String, block: suspend () -> T): T? = try {
         block()
+    } catch (cancelled: CancellationException) {
+        throw cancelled
     } catch (error: Exception) {
         Timber.i(error, "%s unavailable while building artist radio", label)
         null
