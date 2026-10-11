@@ -646,3 +646,37 @@ preparing", BUFFERING→READY, playing, metadata moved to the next track, bar co
 Observation (unchanged): the error sheet's OK button is partly under the bottom nav on Home.
 
 **Status: MINI_PLAYER_AFTER_ERROR = RESOLVED. `BETA_READY` remains NO** (#29 open).
+
+---
+
+## #29 — Up Next reorder under Shuffle (Phase 5B.7)
+
+**Root cause.** Up Next's `onMove` passes *play-order* positions (the shuffle-aware order it
+displays) to `MediaPlayerManager.moveItemInPlaylist`, which forwards them to Media3
+`moveMediaItem`, which expects *playlist* (unshuffled) indices. With Shuffle off the two spaces are
+identical; with Shuffle on they differ, so the move relocated a different track identity
+(`PlayerFragment` is the only caller).
+
+**Decision.** Beta contract: reorder only with Shuffle off. Index-mapping through
+`getUnshuffledIndexOf` was deliberately not taken: moving in the underlying playlist is not
+equivalent to reordering the visible shuffled sequence (Media3 owns a separate shuffle order).
+
+**Fix.** `UpNextUiState.reorderEnabled` (= `isQueueReorderAllowed(shuffle)`, default true). While
+false: no drag gesture is attached (a long press opens the row menu via `combinedClickable`), the
+"Move up/down" accessibility actions are not exposed, the controller ignores `moveBy`/drop, and a
+drag in flight is abandoned. Tap-to-play, swipe-to-remove and the menu are unchanged.
+`moveItemInPlaylist` also rejects the move while shuffled, so no other caller can mutate the queue.
+Shuffle playback itself is untouched.
+
+**Tests.** 1556 → 1562 (+6 in `UpNextScreenComposeTest`: shuffled rows expose only Remove; a
+shuffled long-press+drag dispatches no move; tap/menu still work; swipe-remove still works; default
+and predicate; host/runtime source guard). Existing Shuffle-off reorder tests unchanged and green.
+Detekt 42 (a first pass added 3 and was refactored away). Lint: no new issues.
+
+**Pixel 7.** Shuffle off: dragged "I Wanna Know Why" (row 1) down two rows → it landed third, the
+others kept order. Shuffle on: same gesture on row 1 → no move, order identical before/after, the
+row menu opened instead; no drag state, no crash. Shuffle restored to off, playback paused,
+0 FATAL / 0 ANR. (The queue order was changed by the Shuffle-off drag and is not restored.)
+
+**Status: BF-4 = RESOLVED. All BB/BF items now resolved; `BETA_READY` stays NO until the Phase 5B
+revalidation (#25) is run.**

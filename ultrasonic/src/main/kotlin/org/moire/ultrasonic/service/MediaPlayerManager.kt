@@ -1190,7 +1190,13 @@ class MediaPlayerManager(
 
     @Synchronized
     fun moveItemInPlaylist(oldPos: Int, newPos: Int) {
-        // TODO: This currently does not care about shuffle position.
+        // moveMediaItem() takes playlist (unshuffled) indices, but callers pass play-order
+        // positions. While shuffled those differ, so the move would relocate a different track
+        // (#29). Reordering is therefore a no-op under Shuffle; Up Next disables it as well.
+        if (!isQueueReorderAllowed(isShufflePlayEnabled)) {
+            Timber.w("Ignoring queue reorder %d -> %d while Shuffle is on", oldPos, newPos)
+            return
+        }
         controller?.moveMediaItem(oldPos, newPos)
     }
 
@@ -1627,3 +1633,9 @@ internal fun incompleteTrackIndicesToRemove(
 ): List<Int> = downloaded.indices.filter { index ->
     index != currentIndex && !downloaded[index]
 }
+
+/**
+ * Manual queue reordering moves playlist (unshuffled) indices, so it is only well-defined while
+ * Shuffle is off (#29).
+ */
+fun isQueueReorderAllowed(shuffleEnabled: Boolean): Boolean = !shuffleEnabled

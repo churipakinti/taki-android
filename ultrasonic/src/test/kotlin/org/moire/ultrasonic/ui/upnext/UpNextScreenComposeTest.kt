@@ -245,6 +245,72 @@ class UpNextScreenComposeTest {
         assertTrue(recorder.events.isEmpty())
     }
 
+    // --- Shuffle on: reorder disabled (#29) -----------------------------------------------------------
+
+    private val shuffled = populated.copy(reorderEnabled = false)
+
+    @Test
+    fun `shuffled rows expose only remove - no move actions`() {
+        show(shuffled)
+        listOf("Immigrant Song", "Black Dog", "Rain Song").forEach {
+            val actions = compose.onNodeWithText(it).fetchSemanticsNode().config[SemanticsActions.CustomActions]
+            assertEquals(listOf("Remove from queue"), actions.map { a -> a.label })
+        }
+    }
+
+    @Test
+    fun `shuffled long-press then drag never dispatches a move`() {
+        val recorder = show(shuffled)
+        val row = compose.onNodeWithText("Immigrant Song")
+        row.performTouchInput { down(center) }
+        compose.mainClock.advanceTimeBy(1000)
+        row.performTouchInput {
+            moveBy(Offset(0f, 400f))
+            up()
+        }
+        compose.waitForIdle()
+        assertTrue("no reorder while shuffled: ${recorder.events}", recorder.events.none { it.startsWith("move") })
+    }
+
+    @Test
+    fun `shuffled rows still play on tap, open the menu on long press, and swipe to remove`() {
+        val recorder = show(shuffled)
+        compose.onNodeWithText("Immigrant Song").performClick()
+        assertEquals(listOf("play:3"), recorder.events)
+        compose.onNodeWithText("Black Dog").performTouchInput { longClick() }
+        compose.onNodeWithText("Lyrics").assertIsDisplayed()
+        assertEquals(listOf("play:3"), recorder.events)
+    }
+
+    @Test
+    fun `shuffled swipe still removes through the runtime path`() {
+        val recorder = show(shuffled)
+        compose.onNodeWithText("Black Dog").performTouchInput {
+            down(Offset(width * 0.7f, centerY))
+            moveTo(Offset(width * 0.05f, centerY), delayMillis = 300)
+            up()
+        }
+        compose.mainClock.advanceTimeBy(2000)
+        compose.waitForIdle()
+        assertEquals(listOf("remove:4"), recorder.events)
+    }
+
+    @Test
+    fun `reorder is enabled by default and only Shuffle turns it off`() {
+        assertTrue(UpNextUiState().reorderEnabled)
+        assertTrue(org.moire.ultrasonic.service.isQueueReorderAllowed(shuffleEnabled = false))
+        assertTrue(!org.moire.ultrasonic.service.isQueueReorderAllowed(shuffleEnabled = true))
+    }
+
+    @Test
+    fun `the host wires Shuffle into the Up Next state and the runtime rejects shuffled moves`() {
+        val host = java.io.File("src/main/kotlin/org/moire/ultrasonic/fragment/PlayerFragment.kt").readText()
+        assertTrue(host.contains("reorderEnabled = isQueueReorderAllowed(displayState.isShuffleEnabled)"))
+        val manager = java.io.File("src/main/kotlin/org/moire/ultrasonic/service/MediaPlayerManager.kt").readText()
+        val body = manager.substringAfter("fun moveItemInPlaylist").substringBefore("controller?.moveMediaItem")
+        assertTrue(body.contains("isQueueReorderAllowed(isShufflePlayEnabled)"))
+    }
+
     // --- swipe to remove -------------------------------------------------------------------------------
 
     @Test

@@ -58,6 +58,7 @@ import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.MediaPlayerManager
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.service.RxBus
+import org.moire.ultrasonic.service.isQueueReorderAllowed
 import org.moire.ultrasonic.service.plusAssign
 import org.moire.ultrasonic.subsonic.NetworkAndStorageChecker
 import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
@@ -535,6 +536,7 @@ class PlayerFragment :
                     tracks.map { QueueEntry(it.id, it.title.orEmpty(), it.artist, queueMenuItems(it)) },
                     displayState.currentIndex,
                 ),
+                reorderEnabled = isQueueReorderAllowed(displayState.isShuffleEnabled),
             )
         }
         UpNextScreen(

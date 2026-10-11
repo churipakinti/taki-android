@@ -10,6 +10,7 @@ package org.moire.ultrasonic.ui.upnext
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
@@ -55,6 +56,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
@@ -159,6 +161,14 @@ private class UpNextController(
     val drag = UpNextDragState()
     var firstPosition = initialRows.firstOrNull()?.playOrderIndex ?: 0
     lateinit var actions: UpNextActions
+    private var reorderEnabled = true
+
+    /** Binds the host's commands and reorder permission; losing it mid-drag abandons the local order. */
+    fun bind(actions: UpNextActions, enabled: Boolean, latest: List<UpNextTrackUi>) {
+        this.actions = actions
+        reorderEnabled = enabled
+        if (!enabled && drag.active) cancelDrag(latest)
+    }
 
     fun positionOf(key: String): Int = firstPosition + rows.indexOfFirst { it.key == key }
 
@@ -169,6 +179,7 @@ private class UpNextController(
     }
 
     fun moveBy(key: String, delta: Int) {
+        if (!reorderEnabled) return
         val from = rows.indexOfFirst { it.key == key }
         val to = from + delta
         if (from < 0 || to !in rows.indices) return
@@ -194,7 +205,7 @@ private class UpNextController(
         val to = rows.indexOfFirst { it.key == drag.draggedKey }
         drag.draggedKey = null
         drag.offsetY = 0f
-        if (from >= 0 && to >= 0 && from != to) actions.onMove(firstPosition + from, firstPosition + to)
+        if (reorderEnabled && from != to && minOf(from, to) >= 0) actions.onMove(firstPosition + from, firstPosition + to)
         drag.resyncTick++
     }
 
@@ -217,12 +228,13 @@ private fun UpNextList(
     val scope = rememberCoroutineScope()
     val edgePx = with(LocalDensity.current) { TakiTheme.dimensions.touchTargetMin.toPx() }
     val controller = remember { UpNextController(listState, scope, edgePx, state.upcoming) }
-    controller.actions = actions
     controller.firstPosition = state.upcoming.firstOrNull()?.playOrderIndex ?: controller.firstPosition
     val latestUpcoming by rememberUpdatedState(state.upcoming)
     val drag = controller.drag
+    controller.bind(actions, state.reorderEnabled, latestUpcoming)
 
     LaunchedEffect(state.upcoming) { if (!drag.active) controller.rows = state.upcoming }
+
     LaunchedEffect(drag.resyncTick) {
         if (drag.resyncTick > 0) {
             delay(RESYNC_DELAY_MS)
@@ -248,8 +260,9 @@ private fun UpNextList(
                 row = row,
                 artwork = artworkFor(row),
                 dragging = dragging,
-                canMoveUp = index > 0,
-                canMoveDown = index in 0 until rows.lastIndex,
+                reorderEnabled = state.reorderEnabled,
+                canMoveUp = state.reorderEnabled && index > 0,
+                canMoveDown = state.reorderEnabled && index in 0 until rows.lastIndex,
                 onPlay = { controller.actions.onPlay(controller.positionOf(row.key)) },
                 onRemove = { controller.remove(row.key) },
                 onMenuItem = { item -> controller.actions.onMenuItem(controller.positionOf(row.key), item) },
@@ -399,6 +412,7 @@ private fun UpNextRow(
     row: UpNextTrackUi,
     artwork: Any?,
     dragging: Boolean,
+    reorderEnabled: Boolean,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
     onPlay: () -> Unit,
@@ -420,7 +434,6 @@ private fun UpNextRow(
     val moveUpLabel = stringResource(R.string.up_next_move_up)
     val moveDownLabel = stringResource(R.string.up_next_move_down)
     var menuOpen by remember { mutableStateOf(false) }
-    val haptics = LocalHapticFeedback.current
 
     SwipeToDismissBox(
         state = dismissState,
@@ -432,15 +445,16 @@ private fun UpNextRow(
             Modifier
                 .fillMaxWidth()
                 .background(if (dragging) TakiTheme.colors.surface else TakiTheme.colors.black)
-                .clickable(role = Role.Button, onClick = onPlay)
-                .reorderOnLongPress(
+                .rowGestures(
+                    reorderEnabled = reorderEnabled,
                     key = row.key,
-                    onArm = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                    onPlay = onPlay,
+                    haptics = LocalHapticFeedback.current,
                     onDragStart = onDragStart,
                     onDrag = onDrag,
                     onDragEnd = onDragEnd,
                     onDragCancel = onDragCancel,
-                    onLongPressRelease = { menuOpen = true },
+                    onOpenMenu = { menuOpen = true },
                 )
                 .semantics {
                     onLongClick { menuOpen = true; true }
@@ -470,6 +484,37 @@ private fun UpNextRow(
             RowMenu(expanded = menuOpen, items = row.menuItems, onDismiss = { menuOpen = false }, onItem = onMenuItem)
         }
     }
+}
+
+/**
+ * Tap plays the row. With reorder enabled a long press arms drag-reorder (release without travel
+ * opens the menu); while Shuffle is on (#29) there is no drag gesture at all and a long press only
+ * opens the menu.
+ */
+@Suppress("LongParameterList")
+@OptIn(ExperimentalFoundationApi::class)
+private fun Modifier.rowGestures(
+    reorderEnabled: Boolean,
+    key: String,
+    onPlay: () -> Unit,
+    haptics: HapticFeedback,
+    onDragStart: () -> Unit,
+    onDrag: (Float) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit,
+    onOpenMenu: () -> Unit,
+): Modifier = if (reorderEnabled) {
+    clickable(role = Role.Button, onClick = onPlay).reorderOnLongPress(
+        key = key,
+        onArm = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+        onDragStart = onDragStart,
+        onDrag = onDrag,
+        onDragEnd = onDragEnd,
+        onDragCancel = onDragCancel,
+        onLongPressRelease = onOpenMenu,
+    )
+} else {
+    combinedClickable(role = Role.Button, onClick = onPlay, onLongClick = onOpenMenu)
 }
 
 /**

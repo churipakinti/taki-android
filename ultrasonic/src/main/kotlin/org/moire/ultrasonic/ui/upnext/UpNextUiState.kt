@@ -49,6 +49,8 @@ data class UpNextCurrentUi(
 data class UpNextUiState(
     val current: UpNextCurrentUi? = null,
     val upcoming: List<UpNextTrackUi> = emptyList(),
+    /** False while Shuffle is on (#29): rows stay playable/removable but cannot be reordered. */
+    val reorderEnabled: Boolean = true,
 )
 
 /**
