@@ -3,16 +3,25 @@
 Audit date: 2026-10-10. Auditor: Claude (Sonnet 5.5) with the project owner's Pixel 7
 (`2B191FDH200E36`, Android 17 / API 37, 1080×2400 @ 420 dpi, portrait-locked app).
 
-This is an **audit**, not a remediation. No product code was changed. The only repository changes
-are tests and this document (see §P).
+This document has three layers, kept in order: the **original audit** (2026-10-10, §A–§R as first
+written, with each finding's current status noted), the **remediation evidence** (§S–§W and the two
+unlettered #32 / #29 sections), and the **final revalidation** (§AA, 2026-10-11) whose verdict
+supersedes the original one. The original audit changed no product code; each remediation section
+says what it changed.
 
 ---
 
 ## A. Executive verdict
 
-**`BETA_READY = NO`**
+**`BETA_READY = NO`** *(final, after the Phase 5B revalidation of 2026-10-11 — see §AA.)*
 
-There is no crash, data-loss or release-build blocker, the core journeys work, and playback is
+> **Current status.** All original BB/BF findings (BB-1, BF-1…BF-6) are RESOLVED and re-verified. The
+> revalidation found **one new BETA_FIX, BF-7 ([#33](https://github.com/churipakinti/taki-android/issues/33))**:
+> the app-wide error sheet is drawn under the bottom navigation, so its OK button cannot be tapped or
+> read. That alone keeps the verdict at NO. Current counts are in §AA.9. The paragraph below and the
+> original table are the **2026-10-10** state, kept as history.
+
+*Original (2026-10-10) verdict:* There is no crash, data-loss or release-build blocker, the core journeys work, and playback is
 stable. But one privacy defect should not ship to external testers (**BB-1**, a plaintext server
 password reaching the log file the beta is going to ask testers to attach), and five reproducible
 interaction defects (**BF-1…BF-6**) are cheap to fix and visible to anyone using the app for an
@@ -72,6 +81,7 @@ were checked structurally); the app's own error sheet could not be provoked safe
 | BF-4 ([#29](https://github.com/churipakinti/taki-android/issues/29)) | Up Next | Reordering with **shuffle on** moves the wrong tracks (`moveItemInPlaylist` ignores shuffle position — it says so in a TODO). | BETA_FIX | Yes (live) | §G | At minimum, disable the drag handle while shuffled; or map play-order → playlist indices. |
 | BF-5 ([#30](https://github.com/churipakinti/taki-android/issues/30)) | Playback errors | A stream the server cannot serve (`UnrecognizedInputFormatException`) leaves the player in `STATE_ERROR` with **no message**; **Next** from that state does not start the next track (needs a second Play press). | BETA_FIX | Yes (live) | §G | Surface the error (toast/sheet) and auto-advance or let Next prepare. |
 | BF-6 ([#31](https://github.com/churipakinti/taki-android/issues/31)) | Network | With the network down, list screens (Albums) show **"No media found"** — indistinguishable from an empty library; the failure is swallowed, no retry hint. | BETA_FIX | Yes (live outage) | §H | Distinguish error from empty; offer retry. |
+| **BF-7** ([#33](https://github.com/churipakinti/taki-android/issues/33)) | Error sheet | *(found in the §AA revalidation)* The app-wide error sheet is covered by the bottom navigation: its **OK button is unreachable** (tapping it activates the Search tab) and the message is clipped. Back/scrim still dismiss it. | **BETA_FIX** | Yes (live, 2 messages) | §AA.4 | Raise the overlay above the chrome / lay the panel out above it; regression test. |
 | PB-1 | Downloads | Online Album Detail shows no per-row ✓ and no "downloaded" state on the download button, although 12/12 tracks are local (Downloaded-mode view does show ✓). | POST_BETA | Yes | §H | Known "online per-row indicator gap". |
 | PB-2 | Now Playing | Seek bar is disabled while paused (legacy parity) — you cannot scrub a paused track. | POST_BETA | Yes | §G | Product decision. |
 | PB-3 | Server selector | Deleting a **non-active** server clears the *active* server's metadata cache and orphans the deleted one's. Cache only, re-fetchable. | POST_BETA | Source + existing unit test | §N | Known `deleteMetaDatabase` quirk. |
@@ -358,10 +368,10 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 3. ~~**BF-3 (#21)**~~ — **RESOLVED** (see §U).
 4. ~~**BF-5**~~ — **RESOLVED** (#30, see §V).
 5. ~~**BF-6**~~ — **RESOLVED** (#31, see §W).
-6. **BF-4** — guard or fix Up Next reordering while shuffled.
+6. ~~**BF-4**~~ — **RESOLVED** (#29, see the "#29" section).
 
-Then rerun the affected 5B checks (the tests above plus the live items) and re-issue this verdict.
-Everything in §D marked POST_BETA is acceptable for a first beta.
+*(Original list; all six items are now resolved.)* The revalidation (§AA) added **BF-7 (#33)**, the only
+remaining item before `BETA_READY = YES`. Everything in §D marked POST_BETA is acceptable for a first beta.
 
 ---
 
@@ -680,3 +690,152 @@ row menu opened instead; no drag state, no crash. Shuffle restored to off, playb
 
 **Status: BF-4 = RESOLVED. All BB/BF items now resolved; `BETA_READY` stays NO until the Phase 5B
 revalidation (#25) is run.**
+
+
+---
+
+## AA. Final Phase 5B revalidation (2026-10-11)
+
+Commit under test: `59dce5c6` "Disable Up Next reordering while Shuffle is on" (`origin/develop` == local,
+worktree clean). Device: Pixel 7 `2B191FDH200E36` over USB (authorized), debug build of that commit
+(`io.github.churipakinti.taki.debug`). This pass is verification only: no product code was changed.
+
+### AA.1 Verdict
+
+**`BETA_READY = NO`** — one new reproducible BETA_FIX, **BF-7 (#33)**. Everything that Phase 5B set out to
+fix is resolved and re-verified; the verdict is NO solely because the revalidation measured the
+error-sheet/bottom-nav overlap and found its OK button unreachable (the decision rule: "OK cannot
+reliably be tapped/read" ⇒ BETA_FIX). It is a small, isolated fix.
+
+### AA.2 Automated gates
+
+| Gate | Result |
+|---|---|
+| `:ultrasonic:testDebugUnitTest` | **1562 tests, 0 failures, 0 skipped** |
+| `:core:subsonic-api:test` | 298 tests, 0 failures |
+| `assembleDebug` / `assembleRelease` | green (release APK produced) |
+| `lintDebug` / `lintVitalRelease` | no new issues (baseline untouched) |
+| detekt `:ultrasonic` | **42** (= baseline); `:core:subsonic-api` **1** (existing) |
+| Canonical UI matrix | **27 Compose / 0 Hybrid / 0 Legacy** — no layout, navigation-graph or manifest change since the audit baseline `0424dc4f` (`git diff`); `ResidualViewOverlayGuardTest` (3) green |
+| Reachable app-owned View overlays | **0** |
+| `SheetInteractionAuditTest` flake | **NOT REPRODUCED**: the class (17 tests) passed in both complete suite runs of this pass |
+
+Regression classes present and green: `ServerSettingCredentialExposureAuditTest` 7 + `HttpLoggingCredentialRedactionTest` 2
+(BB-1/#27); `SheetInteractionAuditTest` 17 + `EditServerDiscardBackTest` 2 (BF-1/BF-2/#28); `ArtistRadioQueueBuilderTest` 4
+(BF-3/#21); `UpNextScreenComposeTest` 27 (BF-4/#29, incl. 6 shuffle cases); `PlaybackErrorRecoveryTest` 14 (BF-5/#30);
+`AlbumListLoadErrorTest` 9 + `HomeLoadErrorTest` 9 + `LoadErrorStateComposeTest` 7 (BF-6/#31); `MiniPlayerShellTest` 22 (#32);
+`ReleaseHygieneInvariantsTest` 9, `ArchitectureGuardTest` 5, `NavigationChromeSelectionTest` 34, `TakiTokensTest` 6.
+
+### AA.3 Before state (restored at the end)
+
+Wi-Fi on, mobile data on, airplane off; font scale 1.0; one server (+ the built-in Offline library); paused on
+"Living After Midnight" in a 30-track queue; Shuffle off; Repeat Off; no sleep timer; EQ = Normal.
+
+### AA.4 Live Pixel 7 results
+
+**Smoke crawl** (all loaded, Back worked, bottom-nav selection and mini-player coherent, 0 crashes): Home, Library hub,
+Albums, Artists, Songs, Genres, Box Sets, Liked Songs, Liked Albums, Playlists (3), Downloads, Search (recents + results),
+Album Detail (+ overflow menu, Album information), Artist Detail, Playlist Detail, track context menu, Now Playing, Up Next,
+Lyrics, Sleep Timer, Equalizer, Settings (+ Downloads/Playback), About (Version 0.1.0-beta), Server Selector, Add library.
+
+**Sheets (representative live sample).** Sleep Timer, Save Playlist (opened, **never saved**), Equalizer preset, Settings choice
+(Language), Settings confirm (Clear All Downloads — **OK never pressed**), Server delete (**Cancel/Back only**, server intact),
+Add-library discard (dirty form → discard sheet → Back keeps the form → Cancel → Back → OK; no server created), Album information
+(`TakiSheet`), Library hub (current-library row inert). In every one a panel tap kept the sheet open, Back closed only the
+sheet (screen retained), and the scrim dismissed where intended. `REACHABLE_SHEET_TAP_THROUGH = 0`, `REACHABLE_SHEET_BACK_ESCAPE = 0`.
+
+**Artist Radio (#21).** Artist Detail → Start artist radio: `seedCandidates=11` (the artist's own tracks), 30-track queue, plays
+the artist first. Room main-thread exceptions 0, "unavailable while building" 0, FATAL 0.
+
+**Playback error + mini-player + Next recovery (#30, #32).**
+- Network off, Next → real `ExoPlaybackException: Source error`. Two classifications were seen: a transient network error
+  (retries 1/3, 2/3, 3/3 at 2 s/4 s/8 s) and an immediate final error when the interface was already down. Each ended in exactly
+  **one** error sheet and one terminal ERROR state. The mini-player stayed visible throughout (IDLE + error + current item).
+- Network restored, **one** Next from the mini-player → exactly one `Skipped away from a failed item; preparing`, BUFFERING → READY,
+  metadata moved to the next track. A following healthy Next advanced with no recovery log (count unchanged). Repeated for a
+  second failure with the same result.
+- A **genuinely unplayable track** (server reachable, ping 0 % loss) produced "Couldn't play this track. It may have moved…"
+  once; Back dismissed it, Next recovered the next track (one prepare), no further sheet.
+- 0 FATAL, 0 ANR, 0 controller rebuilds, no prepare loop, no sheet spam. (An earlier outage run's logcat was lost to the ring buffer;
+  the scenario was re-run with a file capture, which is the evidence above.)
+
+**List network failure (#31).** Network off → Library → Albums: after ≈20 s "Couldn't load your music / Check your connection and try
+again. / **Retry**" (no "No media found"). Network on → Retry in place → grid loaded. Home pull-to-refresh offline: shelves and Daily Mix
+**stayed**, exactly one "Couldn't refresh. Showing what was already loaded." message.
+
+**Up Next (#29).** Shuffle off: dragging the first upcoming row down two rows moved exactly that track (then moved back). Shuffle
+on: the same gesture changed nothing (queue order identical) and opened the row menu; Next followed the shuffled order. Shuffle
+restored to off.
+
+**BF-7 (new): error sheet vs bottom navigation.** Re-measured on two messages (refresh failure; playback failure) on Home:
+`OK` bounds `[906,2169][954,2212]` lie inside the bottom-nav Search item; **tapping OK navigated to Search and left the sheet
+open**; the OK label is not legible; the message is clipped to its first line. System Back and the scrim both dismiss it, so the
+user is not trapped, but the only labelled action is unusable. Classified **BETA_FIX** (rule: "OK cannot reliably be tapped/read").
+Filed as #33; not fixed here.
+
+**Accessibility sanity.** Touch targets on the surfaces touched are unchanged (≥ 48 dp; the crawl's clickable nodes plus tests),
+mini-player Previous/Play/Next and the Now Playing controls are labelled, Retry has real text, and Up Next exposes no Move up/down when
+shuffled (`UpNextScreenComposeTest`). Font scale 1.5: Home (ellipsized titles, scrollable chips — the known §O clipping), Library and
+Now Playing usable; restored to 1.0. TalkBack was not exercised (same as the original audit).
+
+**Performance sanity (debug).** Cold start 1.8 s, warm 36 ms. Scroll sample: 328 frames, 9.8 % janky, p50/p90/p95 5/27/48 ms (first
+scroll after a cold start; the original debug Home figure was 7.1 %); PSS 333 MB right after a cold start. No freeze, ANR or runaway
+log. Debug-build numbers; PB-10/PB-11 unchanged in kind.
+
+**Runtime/log audit** (≈106 k log lines over the error/outage/radio/Up Next scenarios): `FATAL EXCEPTION` 0, `ANR` 0, Room main-thread 0,
+`NetworkOnMainThreadException` 0, `ConcurrentModificationException` 0, `IllegalStateException` 0 (own process), `FragmentManager` 0,
+controller disconnect/rebuild 0, `DiskReadViolation` 0. StrictMode entries were only "read pixels from hardware bitmap" (6) and one
+TLS-context `CustomViolation` — known/benign, debug policy. The only errors were the deliberately induced `Source error`s.
+
+**Observations resolved.** *Album star:* "From The Fires" was already in the server's Liked Albums on the first Home screenshot of the
+#32 session (before any interaction), and Liked Albums lists the same albums now — server state, no unintended mutation —
+**NOT REPRODUCED**. *#22:* Albums still exposes no folder selector (single music folder) — **NOT_REPRODUCED**.
+
+### AA.5 Release hygiene (from source/build)
+
+applicationId `io.github.churipakinti.taki`, versionName `0.1.0-beta`, versionCode `131` (verified with `aapt2 dump badging` on the
+release APK and shown in About); release `minifyEnabled true` / `shrinkResources true`; the release APK is **not debuggable** and
+**v2-signed** (`apksigner verify`); `keystore.properties` is git-ignored and untracked; 10 permissions and 6 exported components,
+unchanged and pinned by `ReleaseHygieneInvariantsTest`; `allowBackup` true (credentials DB excluded; PB-12); cleartext + user CAs
+deliberate (ACCEPTED); HTTP/Timber logging debug-only and credential-redacted (BB-1). No release-hygiene regression.
+
+### AA.6 Changelog
+
+`CHANGELOG.md` `[Unreleased]` is still stale (PB-7). Classification unchanged: **POST_BETA** / release-preparation debt; it does not
+by itself block the beta.
+
+### AA.7 Known POST_BETA debt (unchanged; does not prevent the first beta)
+
+PB-1 online per-row download indicator; PB-2 seek disabled while paused; PB-3 non-active server delete cache quirk; PB-4 main-thread
+download/file disk reads (debug policy); PB-5 Shuffle a11y state label; PB-6 outage buffering feedback (self-recovers); PB-7 stale
+CHANGELOG; PB-8 dead `showConfirmationDialog`; PB-9 dead-code cleanup/#23, Videos; PB-10 debug Home jank; PB-11 PSS growth; PB-12
+backup includes prefs/metadata caches. #24 Visualizer, #20 Share and #26 polish are out of scope. New minor observation (**PB-13**,
+POST_BETA): when the network interface is already down the failure is classified generic ("Couldn't play this song.") rather than as a
+network error — correct handling, wording only.
+
+### AA.8 Device restoration
+
+Final state: Wi-Fi on, mobile data on, airplane off; font scale 1.0; **playback paused**; Shuffle off; Repeat Off; no sleep timer;
+EQ unchanged (Normal); one server; no server/playlist/download/recent-search changes. **Unavoidable side effects:** the queue is now
+the Abaddon Incarnate artist-radio mix (paused on "Encrucijada"), and a Shuffle-off drag was made and reverted inside it.
+
+### AA.9 Current findings (recalculated)
+
+| Class | Count | Items |
+|---|---:|---|
+| BETA_BLOCKER | **0** | — (BB-1 resolved) |
+| BETA_FIX | **1** | **BF-7 (#33)** error sheet covered by bottom nav. BF-1…BF-6 resolved. |
+| POST_BETA | 13 | PB-1 … PB-13 |
+| ACCEPTED | 11 | §D.1 |
+| NOT_REPRODUCED | 9 | #22; remove-download confirm; recents "Clear all"; successful server connect; live `deleteMetaDatabase`; Create-Playlist by genre; crash/ANR; the `SheetInteractionAuditTest` flake; album-star mutation |
+
+### AA.10 Invariants
+
+`CANONICAL_UI_MATRIX = 27 / 0 / 0` · `REACHABLE_VIEW_OVERLAYS = 0` · `REACHABLE_SHEET_TAP_THROUGH = 0` ·
+`REACHABLE_SHEET_BACK_ESCAPE = 0` · `ARTIST_RADIO_ROOM_MAIN_THREAD_ACCESS = 0` · `PLAYBACK_ERROR_USER_FEEDBACK = RELIABLE`
+(one sheet per failure; see BF-7 for its OK button) · `NEXT_AFTER_PLAYBACK_ERROR_RECOVERS = YES` ·
+`FAILED_REMOTE_LOAD_PRESENTED_AS_EMPTY = 0` · `RECOVERABLE_ERROR_MINI_PLAYER_VISIBLE = YES` · `EMPTY_IDLE_MINI_PLAYER_VISIBLE = NO`
+(test-covered; the live queue-clear was not run) · `SHUFFLED_REORDER_WRONG_TRACK = 0` · `SHUFFLE_ON_REORDER_DISABLED = YES`.
+
+**Status: `BETA_READY = NO`.** Required before the next revalidation: fix **#33** (error sheet above the bottom nav / mini-player,
+OK reachable and legible), then re-check that sheet live and re-issue the verdict. Nothing else blocks the first beta.
