@@ -163,13 +163,16 @@ private fun ServerRow(row: ServerSelectorRow, actions: ServerSelectorActions) {
             }
         }
         if (!row.isOffline) {
-            ServerRowMenu(
-                expanded = menuExpanded,
-                row = row,
-                onDismiss = { menuExpanded = false },
-                onEdit = { menuExpanded = false; actions.onEditServer(row) },
-                onDelete = { menuExpanded = false; actions.onDeleteRequested(row) },
-            )
+            // Anchored to the trailing edge so the menu opens under the overflow button.
+            Box(Modifier.align(Alignment.TopEnd)) {
+                ServerRowMenu(
+                    expanded = menuExpanded,
+                    row = row,
+                    onDismiss = { menuExpanded = false },
+                    onEdit = { menuExpanded = false; actions.onEditServer(row) },
+                    onDelete = { menuExpanded = false; actions.onDeleteRequested(row) },
+                )
+            }
         }
     }
 }

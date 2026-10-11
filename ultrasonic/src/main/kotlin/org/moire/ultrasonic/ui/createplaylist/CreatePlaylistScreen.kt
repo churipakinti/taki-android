@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.EmptyState
 import org.moire.ultrasonic.ui.components.TakiArtwork
+import org.moire.ultrasonic.ui.components.TakiPrimaryButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
 import org.moire.ultrasonic.ui.components.TakiSearchField
 import org.moire.ultrasonic.ui.components.TakiSortMenu
@@ -211,9 +211,11 @@ private fun CreatePlaylistBottomBar(state: CreatePlaylistUiState, actions: Creat
                 color = TakiTheme.colors.accent,
             )
         } else {
-            Button(onClick = actions.onSave, enabled = state.saveEnabled) {
-                Text(stringResource(R.string.common_save))
-            }
+            TakiPrimaryButton(
+                text = stringResource(R.string.common_save),
+                onClick = actions.onSave,
+                enabled = state.saveEnabled,
+            )
         }
     }
 }

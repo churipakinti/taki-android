@@ -21,8 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -180,18 +178,11 @@ fun TakiMessageSheet(
         )
         Spacer(Modifier.height(TakiTheme.spacing.lg))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            Button(
+            TakiPrimaryButton(
+                text = okLabel,
                 onClick = onDismiss,
-                modifier = Modifier
-                    .testTag(TAKI_SHEET_PRIMARY_ACTION_TEST_TAG)
-                    .defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TakiTheme.colors.accent,
-                    contentColor = TakiTheme.colors.onAccent,
-                ),
-            ) {
-                Text(text = okLabel, style = TakiTheme.type.titleSmall)
-            }
+                modifier = Modifier.testTag(TAKI_SHEET_PRIMARY_ACTION_TEST_TAG),
+            )
         }
     }
 }
@@ -214,17 +205,10 @@ fun TakiSheetActions(
             Text(text = dismissLabel, style = TakiTheme.type.titleSmall)
         }
         Spacer(Modifier.width(TakiTheme.spacing.sm))
-        Button(
+        TakiPrimaryButton(
+            text = confirmLabel,
             onClick = onConfirm,
-            modifier = Modifier
-                .testTag(TAKI_SHEET_PRIMARY_ACTION_TEST_TAG)
-                .defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = TakiTheme.colors.accent,
-                contentColor = TakiTheme.colors.onAccent,
-            ),
-        ) {
-            Text(text = confirmLabel, style = TakiTheme.type.titleSmall)
-        }
+            modifier = Modifier.testTag(TAKI_SHEET_PRIMARY_ACTION_TEST_TAG),
+        )
     }
 }

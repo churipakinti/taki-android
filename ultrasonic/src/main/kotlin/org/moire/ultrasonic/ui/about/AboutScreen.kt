@@ -62,7 +62,7 @@ fun AboutScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TakiTheme.spacing.xl),
+                    .padding(horizontal = TakiTheme.spacing.lg),
             ) {
                 Spacer(Modifier.height(TakiTheme.spacing.lg))
                 Text(

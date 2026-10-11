@@ -30,8 +30,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,6 +45,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.ui.components.TakiPrimaryButton
 import org.moire.ultrasonic.ui.components.TakiTextField
 import org.moire.ultrasonic.ui.components.takiSheetPanelTapSwallow
 import org.moire.ultrasonic.ui.components.TakiBackHandler
@@ -175,16 +174,10 @@ private fun SavePlaylistSheetContent(name: String, actions: SavePlaylistActions)
                 Text(text = stringResource(R.string.common_cancel), style = TakiTheme.type.titleSmall)
             }
             Spacer(Modifier.width(TakiTheme.spacing.sm))
-            Button(
+            TakiPrimaryButton(
+                text = stringResource(R.string.common_save),
                 onClick = actions.onSave,
-                modifier = Modifier.defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TakiTheme.colors.accent,
-                    contentColor = TakiTheme.colors.onAccent,
-                ),
-            ) {
-                Text(text = stringResource(R.string.common_save), style = TakiTheme.type.titleSmall)
-            }
+            )
         }
     }
 }

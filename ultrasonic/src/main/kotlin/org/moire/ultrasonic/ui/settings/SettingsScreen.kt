@@ -78,7 +78,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .testTag(SETTINGS_CONTENT_TEST_TAG),
                     contentPadding = PaddingValues(
-                        horizontal = TakiTheme.spacing.md,
+                        horizontal = TakiTheme.spacing.lg,
                         vertical = TakiTheme.spacing.sm,
                     ),
                 ) {

@@ -26,11 +26,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -55,8 +52,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.ui.components.TakiPrimaryButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
 import org.moire.ultrasonic.ui.components.TakiScreenHeader
+import org.moire.ultrasonic.ui.components.TakiSecondaryButton
 import org.moire.ultrasonic.ui.components.TakiTextField
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
@@ -364,25 +363,19 @@ private fun ActionRow(state: EditServerUiState, actions: EditServerActions, bott
         horizontalArrangement = Arrangement.spacedBy(TakiTheme.spacing.sm),
     ) {
         if (!state.isNewMode) {
-            OutlinedButton(
+            TakiSecondaryButton(
+                text = stringResource(R.string.settings_test_connection_title),
                 onClick = actions.onTestConnection,
                 enabled = !state.isTesting,
                 modifier = Modifier.weight(1f),
-            ) {
-                Text(stringResource(R.string.settings_test_connection_title))
-            }
+            )
         }
-        Button(
+        TakiPrimaryButton(
+            text = stringResource(if (state.isNewMode) R.string.server_editor_connect else R.string.common_save),
             onClick = actions.onConnectOrSave,
             enabled = !state.isTesting,
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = TakiTheme.colors.accent,
-                contentColor = TakiTheme.colors.onAccent,
-            ),
-        ) {
-            Text(stringResource(if (state.isNewMode) R.string.server_editor_connect else R.string.common_save))
-        }
+        )
     }
 }
 

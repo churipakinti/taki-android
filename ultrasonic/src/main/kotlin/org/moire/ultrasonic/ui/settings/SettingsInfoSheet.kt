@@ -15,15 +15,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -38,6 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
+import org.moire.ultrasonic.ui.components.TakiPrimaryButton
 import org.moire.ultrasonic.ui.components.takiSheetPanelTapSwallow
 import org.moire.ultrasonic.ui.components.TakiBackHandler
 import org.moire.ultrasonic.ui.theme.TakiTheme
@@ -94,18 +92,11 @@ fun SettingsInfoSheet(
             )
             Spacer(Modifier.height(TakiTheme.spacing.lg))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Button(
+                TakiPrimaryButton(
+                    text = stringResource(R.string.common_ok),
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .testTag(SETTINGS_INFO_ACTION_TEST_TAG)
-                        .defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = TakiTheme.colors.accent,
-                        contentColor = TakiTheme.colors.onAccent,
-                    ),
-                ) {
-                    Text(text = stringResource(R.string.common_ok), style = TakiTheme.type.titleSmall)
-                }
+                    modifier = Modifier.testTag(SETTINGS_INFO_ACTION_TEST_TAG),
+                )
             }
         }
     }

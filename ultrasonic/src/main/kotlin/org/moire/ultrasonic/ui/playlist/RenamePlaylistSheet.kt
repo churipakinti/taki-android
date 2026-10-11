@@ -29,8 +29,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,6 +46,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.TakiBackHandler
+import org.moire.ultrasonic.ui.components.TakiPrimaryButton
 import org.moire.ultrasonic.ui.components.TakiTextField
 import org.moire.ultrasonic.ui.components.takiSheetPanelTapSwallow
 import org.moire.ultrasonic.ui.theme.TakiTheme
@@ -194,19 +193,10 @@ private fun RenamePlaylistSheetContent(
                 Text(text = stringResource(R.string.common_cancel), style = TakiTheme.type.titleSmall)
             }
             Spacer(Modifier.width(TakiTheme.spacing.sm))
-            Button(
+            TakiPrimaryButton(
+                text = stringResource(R.string.playlist_rename_confirm_action),
                 onClick = actions.onRename,
-                modifier = Modifier.defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TakiTheme.colors.accent,
-                    contentColor = TakiTheme.colors.onAccent,
-                ),
-            ) {
-                Text(
-                    text = stringResource(R.string.playlist_rename_confirm_action),
-                    style = TakiTheme.type.titleSmall,
-                )
-            }
+            )
         }
     }
 }

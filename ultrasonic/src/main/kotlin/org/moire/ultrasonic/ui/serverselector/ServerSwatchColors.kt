@@ -17,7 +17,8 @@ private const val LUMINANCE_LIMIT = 0.5
 
 /**
  * The background/foreground pair for a server color swatch: a configured server [color], or the
- * app's own accent as a neutral fallback; the foreground is luminance-picked for contrast. Shared
+ * quiet selected-container + accent glyph fallback; a configured colour's foreground is
+ * luminance-picked for contrast. Shared
  * by [ServerSelectorScreen]'s row swatch and [EditServerScreen]'s color picker trigger (issue #10
  * phase 5A3) - reimplemented with Compose tokens instead of the legacy `ServerColor`'s
  * `MaterialColors.getColor`/`harmonizeWithPrimary` calls, which resolve an XML theme attribute
@@ -26,7 +27,10 @@ private const val LUMINANCE_LIMIT = 0.5
  */
 @Composable
 fun serverSwatchColors(color: Int?): Pair<Color, Color> {
-    val background = color?.let { Color(it) } ?: TakiTheme.colors.accent
+    // No configured colour: a quiet low-intensity green container with an accent glyph, rather
+    // than a bright accent fill (V2 green budget - accent is a signal, not a default fill).
+    if (color == null) return TakiTheme.colors.selectedContainer to TakiTheme.colors.accent
+    val background = Color(color)
     val foreground = if (ColorUtils.calculateLuminance(background.toArgb()) < LUMINANCE_LIMIT) {
         TakiTheme.colors.ivory
     } else {
