@@ -185,7 +185,10 @@ class AlbumDetailModesViewModelTest {
     fun `a directory with no children at all is the empty state`() = runTest {
         val model = vm(loader = { emptyList() })
         model.load(folderArgs(), this)
-        assertTrue(model.uiState.value.loadFailed)
+        // Successful-but-empty is "No media found", never the failed-load state (#31).
+        assertFalse(model.uiState.value.loadFailed)
+        assertTrue(model.uiState.value.showEmpty)
+        assertFalse(model.uiState.value.showError)
     }
 
     @Test
@@ -270,14 +273,17 @@ class AlbumDetailModesViewModelTest {
     fun `a downloaded album with nothing local is the empty state`() = runTest {
         val model = vm(offline = { emptyList() })
         model.load(downloadedArgs(), this)
-        assertTrue(model.uiState.value.loadFailed)
+        assertFalse(model.uiState.value.loadFailed)
+        assertTrue(model.uiState.value.showEmpty)
     }
 
     @Test
-    fun `a failing local load is the empty state, not a crash`() = runTest {
+    fun `a failing local load is the error state, not a crash`() = runTest {
         val model = vm(offline = { error("db down") })
         model.load(downloadedArgs(), this)
         assertTrue(model.uiState.value.loadFailed)
+        assertTrue(model.uiState.value.showError)
+        assertFalse(model.uiState.value.showEmpty)
     }
 
     @Test

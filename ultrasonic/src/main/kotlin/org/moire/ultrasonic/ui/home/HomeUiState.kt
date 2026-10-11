@@ -27,6 +27,8 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     /** A fetch (initial or pull-to-refresh) is in flight - run the refresh indicator. */
     val isRefreshing: Boolean = false,
+    /** Every album fetch failed and there is nothing to show (#31) - render error + Retry. */
+    val loadFailed: Boolean = false,
     val featuredMix: FeaturedMixUi? = null,
     val recentlyPlayed: ImmutableList<HomeAlbumUi> = persistentListOf(),
     val shelves: ImmutableList<HomeShelfUi> = persistentListOf(),
@@ -34,9 +36,14 @@ data class HomeUiState(
     /** True once loaded and every source came back empty (folds the old `updateEmptyState`). */
     val isEmpty: Boolean
         get() = !isLoading &&
+            !loadFailed &&
             featuredMix == null &&
             recentlyPlayed.isEmpty() &&
             shelves.all { it.albums.isEmpty() }
+
+    /** Failed load with nothing on screen - never the same branch as [isEmpty]. */
+    val showError: Boolean
+        get() = !isLoading && loadFailed && !hasContent
 
     val hasContent: Boolean
         get() = featuredMix != null ||

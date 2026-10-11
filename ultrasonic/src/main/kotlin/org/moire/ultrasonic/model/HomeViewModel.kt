@@ -36,6 +36,7 @@ import org.moire.ultrasonic.ui.home.HomeUiState
 import org.moire.ultrasonic.ui.home.greetingForHour
 import org.moire.ultrasonic.ui.home.mixToFeaturedUi
 import org.moire.ultrasonic.ui.home.toHomeAlbumUi
+import org.moire.ultrasonic.util.ListLoadFeedback
 import org.moire.ultrasonic.util.PerfMetrics
 import org.moire.ultrasonic.util.Settings
 
@@ -65,6 +66,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val shelvesFreshness =
         HomeShelvesFreshness(Settings.DIRECTORY_CACHE_TIME * MILLIS_PER_SECOND)
 
+    /**
+     * Loads (or refreshes) every shelf. Failure semantics (issue #31): a shelf fetch that throws
+     * is *not* an empty shelf - it keeps whatever that shelf showed before. When **every** album
+     * fetch fails the load as a whole failed: with nothing on screen the state flips to
+     * [HomeUiState.loadFailed] (error + Retry, never the empty message), with content on screen
+     * the content stays and one refresh-failed message is raised. A single failing shelf (e.g. a
+     * type an offline/folder server cannot answer) stays quiet, as before. A failed load is never
+     * marked fresh, so the next visit retries it.
+     */
     suspend fun loadHomeScreen(forceRefresh: Boolean = false) = coroutineScope {
         _uiState.update { it.copy(greeting = greetingForHour(currentHour())) }
 
@@ -76,7 +86,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             return@coroutineScope
         }
 
-        _uiState.update { it.copy(isRefreshing = true) }
+        _uiState.update {
+            it.copy(isRefreshing = true, loadFailed = false, isLoading = it.isLoading || !it.hasContent)
+        }
         val perfToken = PerfMetrics.start("home_load")
         try {
             val recent = async { fetchAlbums(AlbumListType.RECENT, SHORTCUTS_SIZE) }
@@ -86,32 +98,62 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             val frequent = async { fetchAlbums(AlbumListType.FREQUENT) }
             val mix = async { fetchMixUi(forceRefresh = false) }
 
-            val shelves = persistentListOf(
-                HomeShelfUi(HomeShelfKind.LIKED, liked.await()),
-                HomeShelfUi(HomeShelfKind.NEWEST, newest.await()),
-                HomeShelfUi(HomeShelfKind.DISCOVER, random.await()),
-                HomeShelfUi(HomeShelfKind.FREQUENT, frequent.await()),
-            )
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    featuredMix = mix.await(),
-                    recentlyPlayed = recent.await(),
-                    shelves = shelves,
-                )
+            val results = listOf(liked.await(), newest.await(), random.await(), frequent.await())
+            val recentResult = recent.await()
+            val mixResult = mix.await()
+            val allAlbumFetchesFailed = recentResult == null && results.all { it == null }
+
+            var hadContent = false
+            _uiState.update { current ->
+                hadContent = current.hasContent
+                mergeLoad(current, results, recentResult, mixResult, allAlbumFetchesFailed)
             }
-            shelvesFreshness.markLoaded(SystemClock.elapsedRealtime(), currentServerId)
+            if (allAlbumFetchesFailed) {
+                if (hadContent) ListLoadFeedback.refreshFailed(getApplication())
+            } else {
+                shelvesFreshness.markLoaded(SystemClock.elapsedRealtime(), currentServerId)
+            }
         } finally {
             _uiState.update { it.copy(isRefreshing = false, isLoading = false) }
             PerfMetrics.end("home_load", perfToken)
         }
     }
 
+    /**
+     * Folds one load into [current]: a failed shelf keeps its previous albums, and an empty mix
+     * during a total failure keeps the previous mix (DailyMixQueueBuilder swallows its own network
+     * errors into an empty list, so that is a failure, not "no mix" - #31).
+     */
+    private fun mergeLoad(
+        current: HomeUiState,
+        results: List<ImmutableList<HomeAlbumUi>?>,
+        recent: ImmutableList<HomeAlbumUi>?,
+        mixResult: MixFetch,
+        allFailed: Boolean,
+    ): HomeUiState {
+        val mixUsable = mixResult.ok && (mixResult.ui != null || !allFailed)
+        if (mixUsable) mixTracks = mixResult.tracks
+        val shelves = SHELF_KINDS.mapIndexed { i, kind ->
+            results[i]?.let { HomeShelfUi(kind, it) }
+                ?: current.shelves.firstOrNull { it.kind == kind }
+                ?: HomeShelfUi(kind, persistentListOf())
+        }.toImmutableList()
+        val next = current.copy(
+            featuredMix = if (mixUsable) mixResult.ui else current.featuredMix,
+            recentlyPlayed = recent ?: current.recentlyPlayed,
+            shelves = shelves,
+        )
+        return next.copy(isLoading = false, loadFailed = allFailed && !next.hasContent)
+    }
+
     suspend fun regenerateDailyMix() {
         _uiState.update { it.copy(isRefreshing = true) }
         try {
             val mix = fetchMixUi(forceRefresh = true)
-            _uiState.update { it.copy(featuredMix = mix) }
+            if (mix.ok) {
+                mixTracks = mix.tracks
+                _uiState.update { it.copy(featuredMix = mix.ui) }
+            }
         } finally {
             _uiState.update { it.copy(isRefreshing = false) }
         }
@@ -120,9 +162,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun fetchAlbums(
         type: AlbumListType,
         size: Int = SIZE,
-    ): ImmutableList<HomeAlbumUi> = withContext(Dispatchers.IO) {
+    ): ImmutableList<HomeAlbumUi>? = withContext(Dispatchers.IO) {
         // A failure here (offline folder browsing, a transient network error) must not cancel
-        // the sibling fetches in loadHomeScreen()'s coroutineScope.
+        // the sibling fetches in loadHomeScreen()'s coroutineScope. null = "failed", which is
+        // different from a successful empty shelf (#31).
         try {
             val service = MusicServiceFactory.getMusicService()
             val albums = if (ActiveServerProvider.shouldUseId3Tags()) {
@@ -134,26 +177,38 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (expected: Exception) {
-            persistentListOf()
+            null
         }
     }
 
-    private suspend fun fetchMixUi(forceRefresh: Boolean): FeaturedMixUi? = withContext(Dispatchers.IO) {
+    private class MixFetch(val ui: FeaturedMixUi?, val ok: Boolean, val tracks: List<Track> = emptyList())
+
+    /** The daily-mix source. Test seam. */
+    internal var mixLoader: suspend (forceRefresh: Boolean) -> List<Track> = { forceRefresh ->
+        DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build(forceRefresh)
+    }
+
+    private suspend fun fetchMixUi(forceRefresh: Boolean): MixFetch = withContext(Dispatchers.IO) {
         try {
-            val tracks = DailyMixQueueBuilder(MusicServiceFactory.getMusicService()).build(forceRefresh)
-            mixTracks = tracks
-            mixToFeaturedUi(tracks)
+            val tracks = mixLoader(forceRefresh)
+            MixFetch(mixToFeaturedUi(tracks), ok = true, tracks = tracks)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (expected: Exception) {
-            mixTracks = emptyList()
-            null
+            // Keep the previous mix (and its playable tracks) rather than blanking the card.
+            MixFetch(null, ok = false)
         }
     }
 
     private fun currentHour(): Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
     companion object {
+        private val SHELF_KINDS = listOf(
+            HomeShelfKind.LIKED,
+            HomeShelfKind.NEWEST,
+            HomeShelfKind.DISCOVER,
+            HomeShelfKind.FREQUENT,
+        )
         private const val SIZE = 12
         private const val SHORTCUTS_SIZE = 6
         private const val MILLIS_PER_SECOND = 1000L

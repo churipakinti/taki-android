@@ -272,6 +272,10 @@
     <string name="search.field_hint">Search your music</string>
     <string name="search.clear_field">Clear search</string>
     <string name="select_album.empty">No media found</string>
+    <string name="list_load_error_title">Couldn\'t load your music</string>
+    <string name="list_load_error_message">Check your connection and try again.</string>
+    <string name="list_load_error_retry">Retry</string>
+    <string name="list_refresh_failed">Couldn\'t refresh. Showing what was already loaded.</string>
     <string name="select_album.no_network">Warning: No usable network available.\n If you are using mobile data, you may need to allow downloads on metered connections in the settings.</string>
     <string name="select_album.no_sdcard">Error: No SD card available.</string>
     <string name="select_album.play_all">Play All</string>

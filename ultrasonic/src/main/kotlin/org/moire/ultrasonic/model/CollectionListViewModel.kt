@@ -28,6 +28,7 @@ import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
 import org.moire.ultrasonic.ui.collectionlist.CollectionListRow
 import org.moire.ultrasonic.ui.collectionlist.CollectionListUiState
 import org.moire.ultrasonic.util.CollectionResolver
+import org.moire.ultrasonic.util.ListLoadFeedback
 
 /**
  * Owns the Compose Box Sets list state (post-issue-#10 residual migration, phase 5A1) as one
@@ -75,12 +76,14 @@ class CollectionListViewModel(application: Application) :
                 null
             }
 
-            hasLoadedOnce = true
-
             if (result == null) {
+                // Not "loaded once": a later plain load() must retry rather than keep the error.
                 _uiState.update { it.copy(isLoading = false, loadFailed = it.rows.isEmpty()) }
+                if (_uiState.value.rows.isNotEmpty()) ListLoadFeedback.refreshFailed(getApplication())
                 return@launch
             }
+
+            hasLoadedOnce = true
 
             _uiState.update {
                 it.copy(

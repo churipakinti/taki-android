@@ -151,7 +151,7 @@ class CollectionDetailViewModelTest {
     }
 
     @Test
-    fun `a failed first resolve ends as a finished empty collection`() = runTest {
+    fun `a failed first resolve ends as a finished error collection, never the empty state`() = runTest {
         val model = vm { throw IOException("db unavailable") }
         model.load("Bach 333")
         advanceUntilIdle()
@@ -159,7 +159,8 @@ class CollectionDetailViewModelTest {
         val state = model.uiState.value
         assertFalse(state.isLoading)
         assertTrue(state.loadFailed)
-        assertTrue(state.showEmpty)
+        assertTrue(state.showError)
+        assertFalse(state.showEmpty)
     }
 
     @Test

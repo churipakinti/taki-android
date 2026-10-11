@@ -357,7 +357,7 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 2. ~~**BF-1 + BF-2**~~ — **RESOLVED** (#28, see §T).
 3. ~~**BF-3 (#21)**~~ — **RESOLVED** (see §U).
 4. ~~**BF-5**~~ — **RESOLVED** (#30, see §V).
-5. **BF-6** — make list screens distinguish a load failure from an empty result and offer retry.
+5. ~~**BF-6**~~ — **RESOLVED** (#31, see §W).
 6. **BF-4** — guard or fix Up Next reordering while shuffled.
 
 Then rerun the affected 5B checks (the tests above plus the live items) and re-issue this verdict.
@@ -526,3 +526,80 @@ Source error` <- `ConnectException`, classified as a generic code, not the unrec
 no Next control until they open Now Playing (tapping the media notification does). Worth a follow-up: keep the mini-player while the player has an error.
 
 **Status: BF-5 = RESOLVED. BB-1, BF-1, BF-2, BF-3 RESOLVED. `BETA_READY` remains NO** (#31, #29 open).
+
+---
+
+## W. BF-6 remediation (#31) — RESOLVED
+
+**Root cause.** The Compose migration gave every list `UiState` a `loadFailed` flag and the
+ViewModels set it correctly (`loadFailed = rows.isEmpty()` on a thrown load), but **no screen
+read it**: each rendered the empty state from `showEmpty = !isLoading && rows.isEmpty()`. Path:
+`AlbumListScreen` → `AlbumListViewModel.loadPaged` → `service.getAlbumList2` throws
+`SocketTimeoutException` → `catch → null` → `loadFailed = true, isLoading = false, rows = []` →
+`showEmpty` true → "No media found". Home was worse: `HomeViewModel.fetchAlbums` caught the
+exception and returned `persistentListOf()`, so a failed refresh *overwrote* every shelf with an
+empty one, and the Daily Mix builder swallows its own network errors into an empty mix. Three
+screens/VMs additionally flagged a genuine empty result as `loadFailed` (`AlbumDetail`,
+`FolderBrowser`, `PlaylistDetail`), and Album List's RANDOM refresh cleared its albums before the
+fetch.
+
+**Affected-surface inventory.**
+
+| Surface | Class |
+|---|---|
+| Album List, Artist List, Genres, Playlists, Box Sets (collection list), Songs/Daily Mix/Genre tracks (`TrackList`), Folder Browser | AFFECTED → fixed (`showError` + `LoadErrorState`) |
+| Home | AFFECTED → fixed (per-shelf keep-previous, `loadFailed`, single refresh message) |
+| Album Detail, Playlist Detail, Artist Detail, Collection Detail | AFFECTED → fixed (same state split; genuine-empty no longer flagged failed) |
+| Downloads | LOCAL_ONLY (Room query; has its own error event) |
+| Library hub, Create Playlist | LOCAL_ONLY / not list-load flows |
+| Search | DIFFERENT_FLOW (zero hits is a normal no-results state; unchanged) |
+
+**State model.** `Loading` = `isLoading` (first load shows the existing progress strip / skeleton);
+`Content` = rows present; `Empty` = `showEmpty` = `!isLoading && !loadFailed && rows.isEmpty()`
+(only after a *successful* empty response); `Error` = `showError` = `!isLoading && loadFailed &&
+rows.isEmpty()`. Invariant: `ERROR != EMPTY`.
+
+**Initial failure.** Inline `LoadErrorState` — "Couldn't load your music / Check your connection
+and try again." + **Retry** (en/es). No exception text, no sheet.
+
+**Refresh failure with content.** Content is kept (`loadFailed` is only set when nothing is on
+screen); the indicator stops and `ListLoadFeedback.refreshFailed` raises exactly one
+`ErrorMessageChannel` message ("Couldn't refresh. Showing what was already loaded."), de-duplicated
+against pending identical messages. Home keeps each shelf's previous albums when its fetch throws;
+it only treats the load as failed when *every* album fetch fails (a single unsupported shelf stays
+quiet, as before); an empty Daily Mix during a total failure keeps the previous mix. A failed load
+is never marked fresh. Pagination (append) failures stay silent.
+
+**Retry.** Reuses each screen's refresh action: Error → Loading (error cleared at start) →
+Content / Empty / Error; one request per tap (Retry is not rendered while loading), no navigation,
+no Fragment recreation. Box Sets no longer sets `hasLoadedOnce` on failure.
+
+**Cancellation / stale requests.** Every catch rethrows `CancellationException` first (tested:
+no error, no message). Album List/Home/detail loads cancel or ignore overlapping loads
+(`loadJob?.cancel()`, refresh-while-loading ignored); Artist List's un-cancelled overlap can only
+replace content with content and cannot flip an existing list to Error.
+
+**Source audit.** `FAILED_REMOTE_LOAD_PRESENTED_AS_EMPTY = 0` for the affected reachable paths.
+Remaining `catch → emptyList()` sites are safe/different: Artist List local sort/folders, Playlist
+per-playlist track prefetch, offline/local loaders, `DailyMixQueueBuilder` internals (now guarded in
+Home), `TrackCollectionModel` (legacy, non-Compose modes — post-beta).
+
+**Tests.** 1523 → 1548 (+25: `AlbumListLoadErrorTest` 9, `HomeLoadErrorTest` 9,
+`LoadErrorStateComposeTest` 7; 9 existing tests rewritten from "failed = empty" to the new
+contract). Fail on the old code: failed-first-load = error not empty, genuine-empty not
+`loadFailed`, retry transitions, failed-refresh-keeps-content (incl. RANDOM and the Daily Mix), Home
+cold failure.
+
+**Pixel 7** (USB adb; original Wi-Fi on, data on, airplane off; server over Tailscale).
+Wi-Fi and data off → Library → Albums: after the ~60–90 s retry/timeout window the screen showed
+"Couldn't load your music / Check your connection and try again. / Retry" (no "No media found",
+no sheet). Wi-Fi restored → **Retry** in place → album grid loaded. Home with content, network off,
+pull-to-refresh: shelves and Daily Mix stayed, the spinner ended after ~2 min, exactly one
+"Couldn't refresh…" sheet appeared (a first run exposed the Daily Mix card vanishing — fixed and
+covered by a test, then re-verified); network restored, refresh recovered. Network restored to
+Wi-Fi 1 / data 1 / airplane 0. Logcat: only the expected `SocketTimeoutException`s; no FATAL, no ANR.
+Observation (not changed, pre-existing): the bottom of the error sheet (OK button) is partly
+covered by the bottom navigation on Home — worth a follow-up with #32/#26.
+Note: long outage timeouts (~2 min on Home) are PB-6 family (post-beta).
+
+**Status: BF-6 = RESOLVED. BB-1, BF-1, BF-2, BF-3, BF-5 RESOLVED. `BETA_READY` remains NO** (#32, #29 open).

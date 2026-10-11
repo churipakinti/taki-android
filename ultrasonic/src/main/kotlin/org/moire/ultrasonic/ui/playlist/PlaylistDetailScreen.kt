@@ -51,6 +51,7 @@ import org.moire.ultrasonic.ui.album.TrackContextAction
 import org.moire.ultrasonic.ui.album.TrackContextMenuState
 import org.moire.ultrasonic.ui.components.DetailPrimaryPlayButton
 import org.moire.ultrasonic.ui.components.EmptyState
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
@@ -131,6 +132,10 @@ fun PlaylistDetailScreen(
                                 title = stringResource(R.string.playlist_empty),
                                 modifier = Modifier.padding(top = TakiTheme.spacing.xxl),
                             )
+                        }
+                    } else if (state.showError) {
+                        item(key = "error") {
+                            LoadErrorState(onRetry = actions.onRefresh)
                         }
                     } else {
                         items(items = state.rows, key = { "track_${it.id}" }) { row ->

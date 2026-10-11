@@ -32,6 +32,7 @@ import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.albumlist.AlbumListRow
 import org.moire.ultrasonic.ui.albumlist.AlbumListUiState
 import org.moire.ultrasonic.util.LayoutType
+import org.moire.ultrasonic.util.ListLoadFeedback
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.view.SortOrder
 
@@ -289,10 +290,7 @@ class AlbumListViewModel(application: Application) :
         } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") expected: Exception) {
             null
         }
-        if (result == null) {
-            _uiState.update { it.copy(isLoading = false, loadFailed = allAlbums.isEmpty()) }
-            return
-        }
+        if (result == null) return onLoadFailed(append = false)
         allAlbums = result
         publish()
     }
@@ -305,8 +303,9 @@ class AlbumListViewModel(application: Application) :
 
         // Avoid items jumping around when refreshing a RANDOM list - AlbumListModel.getAlbums's
         // exact quirk.
+        // allAlbums itself is replaced on success and must survive a failed fetch (#31: a failed
+        // refresh must not destroy usable content), so only the paging cursor is reset here.
         if (refresh && !append && type == AlbumListType.RANDOM) {
-            allAlbums = emptyList()
             loadedUntil = 0
         }
 
@@ -328,10 +327,7 @@ class AlbumListViewModel(application: Application) :
             null
         }
 
-        if (fetched == null) {
-            _uiState.update { it.copy(isLoading = false, loadFailed = allAlbums.isEmpty()) }
-            return
-        }
+        if (fetched == null) return onLoadFailed(append)
 
         if (append && fetched.isEmpty()) hasMorePages = false
 
@@ -339,6 +335,14 @@ class AlbumListViewModel(application: Application) :
         loadedUntil = offset
 
         publish()
+    }
+
+    /** A failed fetch (#31): with nothing loaded it is the error state (inline error + Retry,
+     *  never the empty state); with albums already on screen they stay, and a non-append
+     *  refresh raises the single refresh-failed message. */
+    private fun onLoadFailed(append: Boolean) {
+        _uiState.update { it.copy(isLoading = false, loadFailed = allAlbums.isEmpty()) }
+        if (allAlbums.isNotEmpty() && !append) ListLoadFeedback.refreshFailed(getApplication())
     }
 
     private var cachedFolders: List<MusicFolder> = emptyList()

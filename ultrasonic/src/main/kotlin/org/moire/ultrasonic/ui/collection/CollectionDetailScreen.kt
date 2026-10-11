@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.Dp
 import kotlinx.collections.immutable.toImmutableList
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.EmptyState
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
@@ -280,6 +281,10 @@ private fun CollectionDiscGrid(
     ) {
         if (state.showEmpty) {
             item(span = { GridItemSpan(maxLineSpan) }) { CollectionEmptyState() }
+        } else if (state.showError) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                LoadErrorState(onRetry = actions.onRefresh)
+            }
         } else {
             items(state.members, key = { it.id }) { member ->
                 CollectionDiscGridCard(member = member, onClick = { actions.onOpenMember(member) })
@@ -304,6 +309,8 @@ private fun CollectionDiscList(
     ) {
         if (state.showEmpty) {
             item(key = "empty") { CollectionEmptyState() }
+        } else if (state.showError) {
+            item(key = "error") { LoadErrorState(onRetry = actions.onRefresh) }
         } else {
             items(state.members, key = { it.id }) { member ->
                 CollectionDiscListRow(member = member, onClick = { actions.onOpenMember(member) })

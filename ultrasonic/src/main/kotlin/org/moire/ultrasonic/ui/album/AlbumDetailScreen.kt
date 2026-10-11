@@ -60,6 +60,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.DetailPrimaryPlayButton
 import org.moire.ultrasonic.ui.components.EmptyState
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiDiscHeader
 import org.moire.ultrasonic.ui.components.TakiEntryRow
@@ -165,6 +166,10 @@ private fun LazyListScope.albumDetailItems(
                 title = stringResource(R.string.select_album_empty),
                 modifier = Modifier.padding(top = TakiTheme.spacing.xxl),
             )
+        }
+    } else if (state.showError) {
+        item(key = "error") {
+            LoadErrorState(onRetry = actions.onRefresh)
         }
     } else {
         trackRows(state, actions, currentTrackId)

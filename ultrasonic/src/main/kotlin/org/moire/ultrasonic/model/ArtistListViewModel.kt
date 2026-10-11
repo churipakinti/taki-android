@@ -36,6 +36,7 @@ import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.artistlist.ArtistListRow
 import org.moire.ultrasonic.ui.artistlist.ArtistListUiState
 import org.moire.ultrasonic.util.LayoutType
+import org.moire.ultrasonic.util.ListLoadFeedback
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.view.SortOrder
 
@@ -141,6 +142,7 @@ class ArtistListViewModel(application: Application) :
                 _uiState.update { it.copy(isLoading = false, loadFailed = true) }
                 return@launch
             }
+            if (result == null) ListLoadFeedback.refreshFailed(getApplication())
 
             applySort(_uiState.value.sortOrder, resetScroll = false, refreshFolders = refresh)
         }

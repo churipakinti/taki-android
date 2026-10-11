@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.AlbumShelfItem
 import org.moire.ultrasonic.ui.components.EmptyState
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiEntryGrid
 import org.moire.ultrasonic.ui.components.TakiEntryRow
 import org.moire.ultrasonic.ui.components.TakiFolderSelectorHeader
@@ -125,6 +126,8 @@ fun ArtistListScreen(
                         title = stringResource(R.string.search_no_match),
                         modifier = Modifier.padding(top = TakiTheme.spacing.xxl),
                     )
+                } else if (state.showError) {
+                    LoadErrorState(onRetry = actions.onRefresh)
                 } else {
                     ArtistListContent(state, actions, bottomContentInset)
                 }

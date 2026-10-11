@@ -29,6 +29,7 @@ import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserArgs
 import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserRow
 import org.moire.ultrasonic.ui.folderbrowser.FolderBrowserUiState
+import org.moire.ultrasonic.util.ListLoadFeedback
 
 private const val SUBTITLE_SEPARATOR = " · "
 
@@ -98,6 +99,7 @@ class FolderBrowserViewModel(application: Application) :
                 // A failed refresh must not destroy a directory already on screen - only the
                 // very first load surfaces the "No media found" state.
                 _uiState.update { it.copy(isLoading = false, loadFailed = it.rows.isEmpty()) }
+                if (_uiState.value.rows.isNotEmpty()) ListLoadFeedback.refreshFailed(getApplication())
                 return@launch
             }
 
@@ -105,7 +107,7 @@ class FolderBrowserViewModel(application: Application) :
             _uiState.update { current ->
                 current.copy(
                     isLoading = false,
-                    loadFailed = children.isEmpty(),
+                    loadFailed = false,
                     rows = children.toRows().toImmutableList(),
                 )
             }

@@ -28,6 +28,7 @@ import org.moire.ultrasonic.imageloader.coverArtRequestOrNull
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.genrelist.GenreListRow
 import org.moire.ultrasonic.ui.genrelist.GenreListUiState
+import org.moire.ultrasonic.util.ListLoadFeedback
 
 /**
  * Owns the Compose Genres List state (issue #10 phase 4G2) as one
@@ -96,6 +97,7 @@ class GenreListViewModel(application: Application) : AndroidViewModel(applicatio
 
             if (result == null) {
                 _uiState.update { it.copy(isLoading = false, loadFailed = it.rows.isEmpty()) }
+                if (_uiState.value.rows.isNotEmpty()) ListLoadFeedback.refreshFailed(getApplication())
                 return@launch
             }
 

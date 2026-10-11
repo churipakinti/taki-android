@@ -114,7 +114,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `a shelf that throws is swallowed and comes back empty`() = runTest {
+    fun `when every fetch throws, Home is a load error and not the empty state`() = runTest {
         install(
             mock {
                 onBlocking { getAlbumList(any(), any(), any(), anyOrNull()) } doThrow RuntimeException("boom")
@@ -133,7 +133,9 @@ class HomeViewModelTest {
         assertTrue(state.shelves.all { it.albums.isEmpty() })
         assertTrue(state.recentlyPlayed.isEmpty())
         assertNull(state.featuredMix)
-        assertTrue(state.isEmpty)
+        assertTrue(state.loadFailed)
+        assertTrue(state.showError)
+        assertFalse(state.isEmpty)
     }
 
     @Test

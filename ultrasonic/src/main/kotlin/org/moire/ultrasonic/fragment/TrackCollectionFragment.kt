@@ -1548,7 +1548,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         if (navArgs.autoPlay) {
             viewLifecycleOwner.lifecycleScope.launch {
                 albumDetailViewModel.uiState.first { !it.isLoading }
-                if (!albumDetailViewModel.uiState.value.loadFailed) {
+                if (albumDetailViewModel.uiState.value.let { !it.loadFailed && it.rows.isNotEmpty() }) {
                     playComposeAlbum(shuffle = navArgs.shuffle)
                 }
             }
@@ -1794,7 +1794,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         if (navArgs.autoPlay) {
             viewLifecycleOwner.lifecycleScope.launch {
                 playlistDetailViewModel.uiState.first { !it.isLoading }
-                if (!playlistDetailViewModel.uiState.value.loadFailed) {
+                if (playlistDetailViewModel.uiState.value.let { !it.loadFailed && it.rows.isNotEmpty() }) {
                     playComposePlaylist(shuffle = navArgs.shuffle)
                 }
             }

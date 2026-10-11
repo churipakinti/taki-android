@@ -133,18 +133,16 @@ class FolderBrowserViewModelTest {
 
     @Test
     fun `an empty directory shows the empty state once loaded`() = runTest {
-        // Mirrors AlbumDetailViewModel's own "No media found" contract exactly: zero children on
-        // the first load *is* the loadFailed state (both screens render the same EmptyState for
-        // it either way - see AlbumDetailScreen/FolderBrowserScreen, which only branch on
-        // showEmpty, not loadFailed, for their empty-state rendering).
+        // A successful-but-empty directory is a genuine empty state, not a failed load (#31).
         val model = vm { emptyList() }
         model.load(args())
         advanceUntilIdle()
 
         val state = model.uiState.value
         assertFalse(state.isLoading)
-        assertTrue(state.loadFailed)
+        assertFalse(state.loadFailed)
         assertTrue(state.showEmpty)
+        assertFalse(state.showError)
     }
 
     @Test

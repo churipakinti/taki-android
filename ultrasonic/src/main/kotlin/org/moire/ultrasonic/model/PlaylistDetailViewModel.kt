@@ -28,6 +28,7 @@ import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailArgs
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailRow
 import org.moire.ultrasonic.ui.playlist.PlaylistDetailUiState
+import org.moire.ultrasonic.util.ListLoadFeedback
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 
@@ -91,12 +92,13 @@ class PlaylistDetailViewModel(application: Application) : AndroidViewModel(appli
                 // A failed refresh must not destroy a playlist that is already on screen - only
                 // the very first load surfaces the "No matches" state, exactly like Album Detail.
                 _uiState.update { it.copy(isLoading = false, loadFailed = it.rows.isEmpty()) }
+                if (_uiState.value.rows.isNotEmpty()) ListLoadFeedback.refreshFailed(getApplication())
                 return@launch
             }
 
             rawTracks = tracks
             _uiState.update { current ->
-                project(current, args).copy(isLoading = false, loadFailed = tracks.isEmpty())
+                project(current, args).copy(isLoading = false, loadFailed = false)
             }
         }
     }

@@ -34,6 +34,7 @@ import org.moire.ultrasonic.ui.playlistlist.PlaylistListUiState
 import org.moire.ultrasonic.ui.playlistlist.PlaylistRowDownloadStatus
 import org.moire.ultrasonic.util.CacheCleaner
 import org.moire.ultrasonic.util.LayoutType
+import org.moire.ultrasonic.util.ListLoadFeedback
 
 /**
  * Owns the Compose Playlists List state (issue #10 phase 4G1) as one
@@ -111,6 +112,7 @@ class PlaylistListViewModel(application: Application) :
 
             if (result == null) {
                 _uiState.update { it.copy(isLoading = false, loadFailed = it.rows.isEmpty()) }
+                if (_uiState.value.rows.isNotEmpty()) ListLoadFeedback.refreshFailed(getApplication())
                 return@launch
             }
 

@@ -135,7 +135,7 @@ class PlaylistDetailViewModelTest {
     }
 
     @Test
-    fun `a failed load ends as a finished empty playlist`() = runTest {
+    fun `a failed load ends as a finished error playlist, never the empty state`() = runTest {
         val model = vm { _, _ -> throw IOException("server down") }
         model.load(args())
         advanceUntilIdle()
@@ -143,7 +143,8 @@ class PlaylistDetailViewModelTest {
         val state = model.uiState.value
         assertFalse(state.isLoading)
         assertTrue(state.loadFailed)
-        assertTrue(state.showEmpty)
+        assertTrue(state.showError)
+        assertFalse(state.showEmpty)
         assertFalse(state.hasContent)
     }
 

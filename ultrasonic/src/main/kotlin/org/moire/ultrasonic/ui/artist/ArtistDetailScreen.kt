@@ -54,6 +54,7 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.AlbumShelfItem
 import org.moire.ultrasonic.ui.components.DetailPrimaryPlayButton
 import org.moire.ultrasonic.ui.components.EmptyState
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
@@ -129,6 +130,7 @@ fun ArtistDetailScreen(
                     item(key = "hero") { ArtistHero(state) }
                     item(key = "actions") { ArtistActionRow(actions) }
 
+                    if (state.showError) item(key = "error") { LoadErrorState(actions.onRefresh) }
                     if (state.showEmpty) {
                         item(key = "empty") {
                             EmptyState(

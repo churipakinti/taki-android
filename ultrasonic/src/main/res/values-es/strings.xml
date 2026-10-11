@@ -170,6 +170,10 @@
     <string name="search.remove_recent">Eliminar de búsquedas recientes</string>
     <string name="search.history_cleared">Historial de búsqueda eliminado</string>
     <string name="select_album.empty">No se han encontrado medios</string>
+    <string name="list_load_error_title">No se pudo cargar tu música</string>
+    <string name="list_load_error_message">Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="list_load_error_retry">Reintentar</string>
+    <string name="list_refresh_failed">No se pudo actualizar. Se muestra lo ya cargado.</string>
     <string name="select_album.no_network">Atención: no hay ninguna red utilizable disponible.\n Si estás utilizando datos móviles, es posible que tengas que permitir las descargas en conexiones con tarificación o en itinerancia en la configuración.</string>
     <string name="select_album.no_sdcard">Error: no hay tarjeta SD disponible.</string>
     <string name="select_album.play_all">Reproducir todo</string>

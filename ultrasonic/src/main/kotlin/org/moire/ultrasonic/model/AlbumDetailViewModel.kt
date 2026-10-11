@@ -40,6 +40,7 @@ import org.moire.ultrasonic.ui.album.AlbumDetailRow
 import org.moire.ultrasonic.ui.album.AlbumDetailUiState
 import org.moire.ultrasonic.ui.album.TrackDownloadIndicator
 import org.moire.ultrasonic.util.EntryByDiscAndTrackComparator
+import org.moire.ultrasonic.util.ListLoadFeedback
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 
@@ -159,6 +160,7 @@ class AlbumDetailViewModel(application: Application) :
                 _uiState.update {
                     it.copy(isLoading = false, loadFailed = it.rows.isEmpty())
                 }
+                if (_uiState.value.rows.isNotEmpty()) ListLoadFeedback.refreshFailed(getApplication())
                 return@launch
             }
 
@@ -168,7 +170,8 @@ class AlbumDetailViewModel(application: Application) :
             _uiState.update { current ->
                 project(current, args).copy(
                     isLoading = false,
-                    loadFailed = rawChildren.isEmpty(),
+                    // A successful-but-empty directory is "No media found", not a failed load.
+                    loadFailed = false,
                 )
             }
 

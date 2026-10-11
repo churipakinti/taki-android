@@ -46,7 +46,10 @@ data class ArtistDetailUiState(
     val hasContent: Boolean get() = albums.isNotEmpty() || popularTracks.isNotEmpty()
 
     /** Loaded, nothing to show - render the empty state (legacy `loaded && tracks & albums empty`). */
-    val showEmpty: Boolean get() = !isLoading && !hasContent
+    val showEmpty: Boolean get() = !isLoading && !loadFailed && !hasContent
+
+    /** The load failed and there is nothing to show - error + Retry, never the empty state. */
+    val showError: Boolean get() = !isLoading && loadFailed && !hasContent
 
     val showAbout: Boolean get() = !biography.isNullOrEmpty()
 

@@ -34,6 +34,7 @@ import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.collection.CollectionDetailUiState
 import org.moire.ultrasonic.ui.collection.CollectionMember
 import org.moire.ultrasonic.util.CollectionResolver
+import org.moire.ultrasonic.util.ListLoadFeedback
 import timber.log.Timber
 
 /**
@@ -150,23 +151,31 @@ class CollectionDetailViewModel(application: Application) :
 
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
+            var failed = false
             val collection = try {
                 collectionLoader(grouping)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (@Suppress("TooGenericExceptionCaught", "SwallowedException") expected: Exception) {
+                failed = true
                 null
             }
 
+            var refreshFailedWithContent = false
             _uiState.update { current ->
-                if (collection == null) {
+                if (failed) {
                     // A failed refresh keeps the members already on screen; only the first
-                    // resolve surfaces the empty state.
+                    // resolve surfaces the error state.
+                    refreshFailedWithContent = current.members.isNotEmpty()
                     current.copy(isLoading = false, loadFailed = current.members.isEmpty())
+                } else if (collection == null) {
+                    // The resolve succeeded but found no such box set: a genuine empty state.
+                    current.copy(isLoading = false, loadFailed = false)
                 } else {
                     project(current, grouping, collection)
                 }
             }
+            if (refreshFailedWithContent) ListLoadFeedback.refreshFailed(getApplication())
         }
     }
 

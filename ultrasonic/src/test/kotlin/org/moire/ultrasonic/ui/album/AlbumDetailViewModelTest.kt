@@ -200,7 +200,7 @@ class AlbumDetailViewModelTest {
     }
 
     @Test
-    fun `a failed load ends as a finished empty album`() = runTest {
+    fun `a failed load ends as a finished error album, never the empty state`() = runTest {
         val model = vm { throw IOException("server down") }
         model.load(args())
         advanceUntilIdle()
@@ -208,7 +208,8 @@ class AlbumDetailViewModelTest {
         val state = model.uiState.value
         assertFalse(state.isLoading)
         assertTrue(state.loadFailed)
-        assertTrue(state.showEmpty)
+        assertTrue(state.showError)
+        assertFalse(state.showEmpty)
         assertFalse(state.hasContent)
     }
 

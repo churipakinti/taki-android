@@ -44,6 +44,7 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.AlbumShelfItem
 import org.moire.ultrasonic.ui.components.EmptyState
 import org.moire.ultrasonic.ui.components.FeaturedMixCard
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiFilterChip
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
@@ -117,6 +118,12 @@ fun HomeScreen(
                             compact = false,
                             onAlbumClick = actions.onAlbumClick,
                         )
+                    }
+                }
+
+                if (state.showError) {
+                    item(key = "error") {
+                        LoadErrorState(onRetry = actions.onRefresh)
                     }
                 }
 

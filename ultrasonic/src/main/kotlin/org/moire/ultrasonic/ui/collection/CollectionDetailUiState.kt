@@ -43,7 +43,10 @@ data class CollectionDetailUiState(
     val hasContent: Boolean get() = members.isNotEmpty()
 
     /** Nothing to show and not still loading - render the empty state. */
-    val showEmpty: Boolean get() = !isLoading && members.isEmpty()
+    val showEmpty: Boolean get() = !isLoading && !loadFailed && members.isEmpty()
+
+    /** The load failed and there is nothing to show - error + Retry, never the empty state. */
+    val showError: Boolean get() = !isLoading && loadFailed && members.isEmpty()
 
     /** Member release count - the header's "N discs" line, exactly like the legacy subtitle. */
     val discCount: Int get() = members.size

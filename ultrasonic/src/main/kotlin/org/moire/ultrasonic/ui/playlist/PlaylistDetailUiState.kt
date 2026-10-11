@@ -56,7 +56,10 @@ data class PlaylistDetailUiState(
     val hasContent: Boolean get() = rows.isNotEmpty()
 
     /** Nothing to show and not still loading - render the empty state. */
-    val showEmpty: Boolean get() = !isLoading && rows.isEmpty()
+    val showEmpty: Boolean get() = !isLoading && !loadFailed && rows.isEmpty()
+
+    /** The load failed and there is nothing else to show - render the error + Retry, never empty. */
+    val showError: Boolean get() = !isLoading && loadFailed && rows.isEmpty()
 }
 
 /**

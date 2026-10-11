@@ -155,7 +155,8 @@ class ArtistDetailViewModelTest {
 
         assertFalse(model.uiState.value.isLoading)
         assertTrue(model.uiState.value.loadFailed)
-        assertTrue(model.uiState.value.showEmpty)
+        assertTrue(model.uiState.value.showError)
+        assertFalse(model.uiState.value.showEmpty)
     }
 
     @Test

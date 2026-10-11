@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.moire.ultrasonic.app.UApp
 import org.moire.ultrasonic.data.ActiveServerProvider
 import org.moire.ultrasonic.domain.Album
 import org.moire.ultrasonic.domain.Artist
@@ -41,6 +42,7 @@ import org.moire.ultrasonic.ui.artist.ArtistDetailArgs
 import org.moire.ultrasonic.ui.artist.ArtistDetailUiState
 import org.moire.ultrasonic.ui.artist.ArtistSimilarUi
 import org.moire.ultrasonic.ui.artist.ArtistTrackUi
+import org.moire.ultrasonic.util.ListLoadFeedback
 import org.moire.ultrasonic.util.Util
 
 /**
@@ -65,6 +67,12 @@ class ArtistDetailViewModel :
     val uiState: StateFlow<ArtistDetailUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
+
+    /** Raises the single "refresh failed, content kept" message. Test seam - this ViewModel has
+     *  no Application. */
+    internal var refreshFailureNotifier: () -> Unit = {
+        ListLoadFeedback.refreshFailed(UApp.applicationContext())
+    }
     private var loadedArtistId: String? = null
 
     /** The unsliced fetched track list - the Fragment's play-from-row reads it (legacy
@@ -158,6 +166,7 @@ class ArtistDetailViewModel :
 
             if (data == null) {
                 _uiState.update { it.copy(isLoading = false, loadFailed = !it.hasContent) }
+                if (_uiState.value.hasContent) refreshFailureNotifier()
                 return@launch
             }
 

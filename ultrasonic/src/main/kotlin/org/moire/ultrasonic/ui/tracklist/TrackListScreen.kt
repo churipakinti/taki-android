@@ -44,6 +44,7 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.album.TrackContextAction
 import org.moire.ultrasonic.ui.album.TrackContextMenuState
 import org.moire.ultrasonic.ui.components.EmptyState
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiFilterChip
 import org.moire.ultrasonic.ui.components.TakiLibraryTrackRow
 import org.moire.ultrasonic.ui.components.TakiScaffold
@@ -129,6 +130,8 @@ fun TrackListScreen(
                         title = stringResource(R.string.search_no_match),
                         modifier = Modifier.padding(top = TakiTheme.spacing.xxl),
                     )
+                } else if (state.showError) {
+                    LoadErrorState(onRetry = actions.onRefresh)
                 } else {
                     TrackListContent(state, actions, bottomContentInset)
                 }

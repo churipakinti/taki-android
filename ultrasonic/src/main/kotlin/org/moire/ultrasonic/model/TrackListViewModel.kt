@@ -33,6 +33,7 @@ import org.moire.ultrasonic.service.DailyMixQueueBuilder
 import org.moire.ultrasonic.service.MusicServiceFactory
 import org.moire.ultrasonic.ui.tracklist.TrackListRow
 import org.moire.ultrasonic.ui.tracklist.TrackListUiState
+import org.moire.ultrasonic.util.ListLoadFeedback
 import org.moire.ultrasonic.util.Settings
 import org.moire.ultrasonic.util.Util
 import org.moire.ultrasonic.view.SortOrder
@@ -363,6 +364,7 @@ class TrackListViewModel(application: Application) :
 
         if (result == null) {
             _uiState.update { it.copy(isLoading = false, loadFailed = allTracks.isEmpty()) }
+            if (allTracks.isNotEmpty() && !append) ListLoadFeedback.refreshFailed(getApplication())
             return
         }
 

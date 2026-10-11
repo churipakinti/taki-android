@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.EmptyState
+import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiEntryGrid
 import org.moire.ultrasonic.ui.components.TakiScaffold
@@ -106,6 +107,8 @@ fun GenreListScreen(
                         title = stringResource(R.string.select_genre_empty),
                         modifier = Modifier.padding(top = TakiTheme.spacing.xxl),
                     )
+                } else if (state.showError) {
+                    LoadErrorState(onRetry = actions.onRefresh)
                 } else {
                     val gridState = rememberLazyGridState()
                     TakiEntryGrid(
