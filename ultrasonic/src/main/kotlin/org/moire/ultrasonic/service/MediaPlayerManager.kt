@@ -1395,6 +1395,10 @@ class MediaPlayerManager(
     val playbackState: Int
         get() = controller?.playbackState ?: 0
 
+    /** True while Media3 holds an unrecovered playback error (IDLE + error, see #30/#32). */
+    val hasPlaybackError: Boolean
+        get() = controller?.playerError != null
+
     val isPlaying: Boolean
         get() = controller?.isPlaying ?: false
 

@@ -8,6 +8,7 @@
 package org.moire.ultrasonic.ui.playback
 
 import java.io.File
+import androidx.media3.common.Player
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -113,6 +114,67 @@ class MiniPlayerShellTest {
             // Even with the keyboard up: only Search reacts to it.
             assertFalse(NavigationActivity.miniPlayerHiddenFor(id, imeVisible = true))
         }
+    }
+
+    // --- playback-side visibility rule (#32) ------------------------------------------------
+
+    private fun playbackVisible(state: Int, item: Boolean, error: Boolean) =
+        NavigationActivity.shouldShowMiniPlayerForPlayback(state, item, error)
+
+    @Test
+    fun `READY and BUFFERING with a current item show the mini-player`() {
+        assertTrue(playbackVisible(Player.STATE_READY, item = true, error = false))
+        assertTrue(playbackVisible(Player.STATE_BUFFERING, item = true, error = false))
+    }
+
+    @Test
+    fun `IDLE with a playback error and a current item keeps the mini-player (recoverable)`() =
+        assertTrue(playbackVisible(Player.STATE_IDLE, item = true, error = true))
+
+    @Test
+    fun `empty or cleared IDLE session never shows a ghost mini-player`() {
+        assertFalse(playbackVisible(Player.STATE_IDLE, item = false, error = true))
+        assertFalse(playbackVisible(Player.STATE_IDLE, item = false, error = false))
+        // Cold start / error-free IDLE with an item keeps the established hidden behavior.
+        assertFalse(playbackVisible(Player.STATE_IDLE, item = true, error = false))
+    }
+
+    @Test
+    fun `no current item hides the bar in every state`() {
+        listOf(Player.STATE_IDLE, Player.STATE_BUFFERING, Player.STATE_READY, Player.STATE_ENDED)
+            .forEach { assertFalse(playbackVisible(it, item = false, error = false)) }
+    }
+
+    @Test
+    fun `ENDED keeps its established hidden behavior`() {
+        assertFalse(playbackVisible(Player.STATE_ENDED, item = true, error = false))
+        assertFalse(playbackVisible(Player.STATE_ENDED, item = true, error = true))
+    }
+
+    @Test
+    fun `a failed recoverable session still obeys destination chrome rules`() {
+        // Playback rule says visible; destination rule decides where.
+        assertTrue(playbackVisible(Player.STATE_IDLE, item = true, error = true))
+        assertFalse(NavigationActivity.miniPlayerHiddenFor(R.id.homeFragment, imeVisible = false))
+        assertFalse(NavigationActivity.miniPlayerHiddenFor(R.id.mainFragment, imeVisible = false))
+        assertTrue(NavigationActivity.miniPlayerHiddenFor(R.id.playerFragment, imeVisible = false))
+        assertTrue(NavigationActivity.miniPlayerHiddenFor(R.id.lyricsFragment, imeVisible = false))
+        assertTrue(NavigationActivity.miniPlayerHiddenFor(R.id.searchFragment, imeVisible = true))
+    }
+
+    @Test
+    fun `the bar inset follows the visibility - recoverable error keeps the band, clear drops it`() {
+        val failed = playbackVisible(Player.STATE_IDLE, item = true, error = true)
+        val cleared = playbackVisible(Player.STATE_IDLE, item = false, error = true)
+        assertEquals(navFootprint + band, inset(nav = true, mini = failed))
+        assertEquals(navFootprint + edge, inset(nav = true, mini = cleared))
+    }
+
+    @Test
+    fun `NavigationActivity uses the shared rule and no READY-only comparison remains`() {
+        val src = File("src/main/kotlin/org/moire/ultrasonic/activity/NavigationActivity.kt").readText()
+        assertTrue(src.contains("shouldShowMiniPlayerForPlayback("))
+        assertFalse(src.contains("playerState == STATE_BUFFERING"))
     }
 
     // --- layout: one Compose host, no Fragment host -----------------------------------------

@@ -603,3 +603,46 @@ covered by the bottom navigation on Home — worth a follow-up with #32/#26.
 Note: long outage timeouts (~2 min on Home) are PB-6 family (post-beta).
 
 **Status: BF-6 = RESOLVED. BB-1, BF-1, BF-2, BF-3, BF-5 RESOLVED. `BETA_READY` remains NO** (#32, #29 open).
+
+---
+
+## #32 — Mini-player after a recoverable playback error (Phase 5B.6)
+
+**Root cause.** Two disagreeing visibility rules in `NavigationActivity`. The
+`playerStateObservable` subscriber showed the bar only for `STATE_READY` and hid it for everything
+else; `showNowPlaying()` itself accepted BUFFERING or READY plus a current item. After a fatal
+source error Media3 sits in `IDLE` with `playerError != null` but the queue and current item intact,
+so the bar was hidden even though Next/Play still work (#30). The READY-only subscriber also hid
+the bar during BUFFERING.
+
+**Old matrix** (subscriber → showNowPlaying): READY+item visible; BUFFERING hidden (flicker);
+IDLE+error+item hidden (bug); IDLE empty hidden; ENDED hidden.
+
+**Final rule.** `NavigationActivity.shouldShowMiniPlayerForPlayback(state, hasCurrentItem,
+hasPlaybackError)`: no current item → hidden (cleared queue / cold start never ghost); BUFFERING or
+READY → visible; IDLE → visible only with a playback error; ENDED and error-free IDLE → hidden
+(unchanged). The subscriber now routes through `showNowPlaying()`, which uses this rule, so there is
+one playback rule. Only the semantic `MediaPlayerManager.hasPlaybackError`
+(`controller?.playerError != null`) was added; no raw exception reaches Compose, no new state copy.
+Destination rules (`miniPlayerHiddenFor`) and `nowPlayingHidden` semantics are unchanged: only READY
+clears an explicit dismissal, an error never overrides it. Queue clear publishes via
+`onMediaItemTransition` (item null), hiding the bar and shrinking the content inset.
+
+**#30 integration.** Mini-player Next → `MediaPlayerManager.seekToNext()` → the existing
+"Skipped away from a failed item; preparing" path. No UI-side recovery code.
+
+**Tests.** 1548 → 1556 (+8 in `MiniPlayerShellTest`: predicate matrix, empty-IDLE, ENDED,
+destination rules under a failed session, inset follows visibility, source guard against a
+READY-only rule). The recoverable-error and BUFFERING cases fail on the old logic. 0 failures.
+Detekt 42 (= baseline).
+
+**Pixel 7** (Wi-Fi on / data on / airplane off before and after). Healthy: BUFFERING→READY,
+mini-player visible. Wi-Fi and data off, Next to an unbuffered track → real
+`ExoPlaybackException: Source error` (IDLE + error) → #19 retries 1–3/3 → final #30 error sheet.
+The bar stayed visible with the failed track the whole time (Home/album detail). Sheet dismissed,
+network restored, **Next pressed on the mini-player** → one "Skipped away from a failed item;
+preparing", BUFFERING→READY, playing, metadata moved to the next track, bar continuous. Paused at end.
+0 FATAL, 0 ANR. Live queue-clear not run (it would destroy the user's queue); covered by tests.
+Observation (unchanged): the error sheet's OK button is partly under the bottom nav on Home.
+
+**Status: MINI_PLAYER_AFTER_ERROR = RESOLVED. `BETA_READY` remains NO** (#29 open).

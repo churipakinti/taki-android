@@ -35,7 +35,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.media3.common.MediaItem
+import androidx.media3.common.Player.STATE_IDLE
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_READY
 import androidx.navigation.NavController
@@ -361,7 +361,10 @@ class NavigationActivity : ScopeActivity() {
         }
 
         rxBusSubscription += RxBus.playerStateObservable.subscribe {
-            if (it.state == STATE_READY) {
+            // READY is the "playback was (re)started" signal that re-shows a bar the user swiped
+            // away; every other state change only re-evaluates the shared visibility rule and
+            // never overrides an explicit dismissal (#32).
+            if (it.state == STATE_READY || !nowPlayingHidden) {
                 showNowPlaying()
             } else {
                 hideNowPlaying()
@@ -600,13 +603,14 @@ class NavigationActivity : ScopeActivity() {
         }
 
         if (nowPlayingView != null) {
-            val playerState: Int = mediaPlayerManager.playbackState
-            if (playerState == STATE_BUFFERING || playerState == STATE_READY) {
-                val item: MediaItem? = mediaPlayerManager.currentMediaItem
-                if (item != null) {
-                    nowPlayingView?.visibility = View.VISIBLE
-                    applyBottomInset()
-                }
+            if (shouldShowMiniPlayerForPlayback(
+                    playbackState = mediaPlayerManager.playbackState,
+                    hasCurrentItem = mediaPlayerManager.currentMediaItem != null,
+                    hasPlaybackError = mediaPlayerManager.hasPlaybackError
+                )
+            ) {
+                nowPlayingView?.visibility = View.VISIBLE
+                applyBottomInset()
             } else {
                 hideNowPlaying()
             }
@@ -738,6 +742,28 @@ class NavigationActivity : ScopeActivity() {
     }
 
     companion object {
+        /**
+         * The single playback-side rule for showing the mini-player (#32), independent of
+         * destination chrome ([miniPlayerHiddenFor]) and explicit dismissal.
+         *
+         * A current item is always required, so a cleared queue or cold start (bare IDLE) never
+         * leaves a ghost bar. BUFFERING and READY show it. IDLE shows it only with a playback
+         * error: that is a failed-but-recoverable session (Next / Play still work, see #30).
+         * ENDED and error-free IDLE stay hidden, as before.
+         */
+        fun shouldShowMiniPlayerForPlayback(
+            playbackState: Int,
+            hasCurrentItem: Boolean,
+            hasPlaybackError: Boolean
+        ): Boolean {
+            if (!hasCurrentItem) return false
+            return when (playbackState) {
+                STATE_BUFFERING, STATE_READY -> true
+                STATE_IDLE -> hasPlaybackError
+                else -> false
+            }
+        }
+
         /**
          * Whether the floating mini-player is hidden on [destinationId] (issue #10 phase 4I;
          * Lyrics added in phase 4K5): the full player itself, the immersive Lyrics reading
