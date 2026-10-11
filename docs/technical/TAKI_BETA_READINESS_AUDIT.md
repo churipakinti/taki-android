@@ -356,7 +356,7 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 1. ~~**BB-1**~~ — **RESOLVED** (#27, see §S).
 2. ~~**BF-1 + BF-2**~~ — **RESOLVED** (#28, see §T).
 3. ~~**BF-3 (#21)**~~ — **RESOLVED** (see §U).
-4. **BF-5** — FIXED in code, pending live Pixel confirmation (see §V).
+4. ~~**BF-5**~~ — **RESOLVED** (#30, see §V).
 5. **BF-6** — make list screens distinguish a load failure from an empty result and offer retry.
 6. **BF-4** — guard or fix Up Next reordering while shuffled.
 
@@ -482,7 +482,7 @@ violation seen is an unrelated hardware-bitmap read). Playback left paused; queu
 
 ---
 
-## V. BF-5 remediation (#30) — FIXED, live confirmation pending
+## V. BF-5 remediation (#30) — RESOLVED
 
 **Two separate causes.**
 1. *Next did not load the next item.* Media3 has no `STATE_ERROR`: after a fatal source error the player is `STATE_IDLE` with
@@ -507,8 +507,22 @@ and AUTO/REPEAT never prepare, last-item path, A->B->C applies recovery only to 
 1509 -> 1523. Existing #17/#18/#19 tests unchanged and green; #18's cache-invalidation code is untouched (not live-testable without
 renaming server files).
 
-**Pixel 7: NOT DONE.** The device was not reachable over adb (no devices listed after restarting the adb server), and no known-broken
-stream exists to exercise without altering server data. The live scenario (failed track -> one sheet -> Next plays the next track with
-no extra Play; healthy Next unchanged) still needs one manual pass.
+**Pixel 7 (2026-10-11).** A real source error happened on the device (server unreachable for a moment after reinstalling: `ExoPlaybackException:
+Source error` <- `ConnectException`, classified as a generic code, not the unrecognised-container one). Observed:
+- Feedback: exactly one error sheet, "Couldn't play this song.", dismissed with OK; no repeat. Media3 raised no play-when-ready change on the
+  error (events: loading, state->idle, error), so the user's intent (here: paused) was unchanged.
+- Next from Now Playing while the player was in that error state: `Skipped away from a failed item; preparing the new current item` logged
+  exactly once, the next track (Breaking the Law) loaded (buffer 24 s) - before the fix no request would have been made. Because the intent
+  was paused it stayed paused, as designed; Play then played it.
+- Healthy Next afterwards: no recovery log, advanced to the next track, UI in sync with the session (verified by screenshot). Logcat:
+  FATAL 0, ANR 0, no further source errors.
+- Not exercised live: the *playing*-intent resume (the error happened while paused) and the exact `UnrecognizedInputFormatException` code
+  (no known-broken stream; the server was not altered) - both covered by `PlaybackErrorRecoveryTest` and the Media3 observation above.
+- Side effects: queue is the Accept radio, now playing/paused further along; nothing else changed. One stray `adb` VIEW intent to the server
+  URL was sent by mistake; it opened nothing.
 
-**Status: BF-5 = FIXED (automated evidence), live confirmation pending. `BETA_READY` remains NO** (also #31, #29 open).
+**New finding (not fixed here, POST_BETA candidate): after a source error the mini-player disappears** (`NavigationActivity` shows it only for
+`STATE_BUFFERING`/`STATE_READY`; the error state is `STATE_IDLE`), and the media notification offers only Play. So a user outside Now Playing has
+no Next control until they open Now Playing (tapping the media notification does). Worth a follow-up: keep the mini-player while the player has an error.
+
+**Status: BF-5 = RESOLVED. BB-1, BF-1, BF-2, BF-3 RESOLVED. `BETA_READY` remains NO** (#31, #29 open).
