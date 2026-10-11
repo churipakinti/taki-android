@@ -13,13 +13,13 @@ says what it changed.
 
 ## A. Executive verdict
 
-**`BETA_READY = NO`** *(final, after the Phase 5B revalidation of 2026-10-11 — see §AA.)*
+**`BETA_READY = YES`** *(final: the Phase 5B revalidation of 2026-10-11 (§AA) found one new BETA_FIX, BF-7 —
+[#33](https://github.com/churipakinti/taki-android/issues/33), the error sheet drawn under the bottom navigation — which is now
+resolved and re-verified (§AB).)*
 
-> **Current status.** All original BB/BF findings (BB-1, BF-1…BF-6) are RESOLVED and re-verified. The
-> revalidation found **one new BETA_FIX, BF-7 ([#33](https://github.com/churipakinti/taki-android/issues/33))**:
-> the app-wide error sheet is drawn under the bottom navigation, so its OK button cannot be tapped or
-> read. That alone keeps the verdict at NO. Current counts are in §AA.9. The paragraph below and the
-> original table are the **2026-10-10** state, kept as history.
+> **Current status.** BETA_BLOCKER **0**, BETA_FIX **0**, POST_BETA 13, ACCEPTED 11, NOT_REPRODUCED 9. All original BB/BF
+> findings (BB-1, BF-1…BF-7) are RESOLVED. The paragraph below and the original table are the **2026-10-10** state, kept as
+> history; the intermediate verdict (NO, because of BF-7) is in §AA.
 
 *Original (2026-10-10) verdict:* There is no crash, data-loss or release-build blocker, the core journeys work, and playback is
 stable. But one privacy defect should not ship to external testers (**BB-1**, a plaintext server
@@ -81,7 +81,7 @@ were checked structurally); the app's own error sheet could not be provoked safe
 | BF-4 ([#29](https://github.com/churipakinti/taki-android/issues/29)) | Up Next | Reordering with **shuffle on** moves the wrong tracks (`moveItemInPlaylist` ignores shuffle position — it says so in a TODO). | BETA_FIX | Yes (live) | §G | At minimum, disable the drag handle while shuffled; or map play-order → playlist indices. |
 | BF-5 ([#30](https://github.com/churipakinti/taki-android/issues/30)) | Playback errors | A stream the server cannot serve (`UnrecognizedInputFormatException`) leaves the player in `STATE_ERROR` with **no message**; **Next** from that state does not start the next track (needs a second Play press). | BETA_FIX | Yes (live) | §G | Surface the error (toast/sheet) and auto-advance or let Next prepare. |
 | BF-6 ([#31](https://github.com/churipakinti/taki-android/issues/31)) | Network | With the network down, list screens (Albums) show **"No media found"** — indistinguishable from an empty library; the failure is swallowed, no retry hint. | BETA_FIX | Yes (live outage) | §H | Distinguish error from empty; offer retry. |
-| **BF-7** ([#33](https://github.com/churipakinti/taki-android/issues/33)) | Error sheet | *(found in the §AA revalidation)* The app-wide error sheet is covered by the bottom navigation: its **OK button is unreachable** (tapping it activates the Search tab) and the message is clipped. Back/scrim still dismiss it. | **BETA_FIX** | Yes (live, 2 messages) | §AA.4 | Raise the overlay above the chrome / lay the panel out above it; regression test. |
+| **BF-7** ([#33](https://github.com/churipakinti/taki-android/issues/33)) | Error sheet | *(found in the §AA revalidation)* The app-wide error sheet is covered by the bottom navigation: its **OK button is unreachable** (tapping it activates the Search tab) and the message is clipped. Back/scrim still dismiss it. | **BETA_FIX — RESOLVED (§AB)** | Yes (live, 2 messages) | §AA.4 | Raise the overlay above the chrome / lay the panel out above it; regression test. |
 | PB-1 | Downloads | Online Album Detail shows no per-row ✓ and no "downloaded" state on the download button, although 12/12 tracks are local (Downloaded-mode view does show ✓). | POST_BETA | Yes | §H | Known "online per-row indicator gap". |
 | PB-2 | Now Playing | Seek bar is disabled while paused (legacy parity) — you cannot scrub a paused track. | POST_BETA | Yes | §G | Product decision. |
 | PB-3 | Server selector | Deleting a **non-active** server clears the *active* server's metadata cache and orphans the deleted one's. Cache only, re-fetchable. | POST_BETA | Source + existing unit test | §N | Known `deleteMetaDatabase` quirk. |
@@ -370,8 +370,8 @@ playlists on the server. Flagged here so it is not mistaken for audit damage.
 5. ~~**BF-6**~~ — **RESOLVED** (#31, see §W).
 6. ~~**BF-4**~~ — **RESOLVED** (#29, see the "#29" section).
 
-*(Original list; all six items are now resolved.)* The revalidation (§AA) added **BF-7 (#33)**, the only
-remaining item before `BETA_READY = YES`. Everything in §D marked POST_BETA is acceptable for a first beta.
+*(Original list; all six items are now resolved.)* The revalidation (§AA) added **BF-7 (#33)**, resolved in §AB — no beta
+remediation remains. Everything in §D marked POST_BETA is acceptable for a first beta.
 
 ---
 
@@ -702,7 +702,7 @@ worktree clean). Device: Pixel 7 `2B191FDH200E36` over USB (authorized), debug b
 
 ### AA.1 Verdict
 
-**`BETA_READY = NO`** — one new reproducible BETA_FIX, **BF-7 (#33)**. Everything that Phase 5B set out to
+**`BETA_READY = NO`** *(at the time of §AA; superseded by §AB — YES after BF-7 was fixed)* — one new reproducible BETA_FIX, **BF-7 (#33)**. Everything that Phase 5B set out to
 fix is resolved and re-verified; the verdict is NO solely because the revalidation measured the
 error-sheet/bottom-nav overlap and found its OK button unreachable (the decision rule: "OK cannot
 reliably be tapped/read" ⇒ BETA_FIX). It is a small, isolated fix.
@@ -839,3 +839,67 @@ the Abaddon Incarnate artist-radio mix (paused on "Encrucijada"), and a Shuffle-
 
 **Status: `BETA_READY = NO`.** Required before the next revalidation: fix **#33** (error sheet above the bottom nav / mini-player,
 OK reachable and legible), then re-check that sheet live and re-issue the verdict. Nothing else blocks the first beta.
+
+
+---
+
+## AB. BF-7 remediation (#33) and final verdict — RESOLVED
+
+**Root cause (measured, not guessed).** `error_overlay_host` was the last child of `nav_host_container`, as the layout
+comment intended — but Android orders sibling views by **effective Z (elevation + translationZ) first and by child index only as the
+tie-break**, for both drawing and touch dispatch. The Material `BottomNavigationView` has a non-zero default elevation
+(measured **3 dp** under `UltrasonicTheme.Dark`), while the Compose overlay host had elevation 0. So the bottom nav painted over the
+sheet and received touches first. Proven in `ErrorOverlayLayeringTest` against a real `FrameLayout` built from the layout's own
+attributes: with the old layout a tap on the bottom-nav area went to the nav (no overlay touch, a tab selected); that is exactly the
+live symptom (OK sat inside the Search item; tapping it selected Search and left the sheet open). The mini-player host has elevation
+0 and was already below the overlay by order alone; only the nav was the problem.
+
+**Fix (shell-level, 2 resource lines).** New `@dimen/elevation_shell_modal` (16 dp) applied as `android:elevation` on
+`error_overlay_host` in `navigation_activity.xml`. No Kotlin, no `AppErrorSheet`/`TakiSheet` change, no inset change (the sheet keeps
+receiving only the system navigation-bar inset — it now genuinely overlays the chrome instead of reserving space above it), no
+change to error semantics, queueing or wording. Because Z drives both painting and dispatch, the same change fixes the rendering and
+the input order. The host stays `GONE` when nothing is pending, so it never intercepts input.
+
+**Modal contract.** While an error is pending the topmost app-owned layer is `error_overlay_host` → `AppErrorSheet` + scrim, above the
+mini-player, bottom navigation and screen content, for drawing *and* touch.
+
+**Tests** (1562 → 1568, +6 in `ErrorOverlayLayeringTest`; 2 fail on the old layout): last sibling and starts GONE; Material bottom
+nav elevation is non-zero (documents the cause); overlay Z strictly above bottom nav and mini-player (**fails on old**); a visible overlay
+receives taps over the bottom nav and mini-player and no tab is selected (**fails on old**); a hidden overlay never intercepts input;
+showing/hiding toggles who receives the same tap. Queue order/OK semantics and the Compose OK/dismiss behaviour are covered by the
+existing `ErrorMessageChannelTest`; the sheet's Back/scrim/panel-tap contract by `SheetInteractionAuditTest` (17, unchanged and green).
+Automated vs live: the Activity itself cannot be started under Robolectric here (Koin/`UApp`), so the real-hierarchy touch dispatch is
+automated on a replica built from the layout's attributes, and the full-Activity behaviour is verified live below.
+
+**Pixel 7 (debug build of the fixed tree).**
+- *Home refresh failure* (network off, pull-to-refresh): "Couldn't refresh. Showing what was already loaded." drawn **above** the bottom
+  nav and mini-player, fully readable, OK fully visible; **tapping OK dismissed it and Home stayed Home (Search not activated)**.
+  Network restored → refresh recovered, shelves and Daily Mix present.
+- *Playback failure* (real source error): "Couldn't play this song." — complete message, OK tappable; OK dismissed only the sheet,
+  destination unchanged, mini-player still available (#32). With the network back, **one** Next → one `Skipped away from a failed item;
+  preparing` → PLAYING (#30 recovery intact).
+- *Background-input probe, sheet open*: taps on the Home tab, Library tab, mini-player surface, Previous, Play and Next (6 taps) changed
+  **nothing** — still Home, player state and track unchanged, sheet still open. `BACKGROUND_INPUT_THROUGH_ERROR_MODAL = 0`. A scrim tap
+  over the "Playlists" chip dismissed the sheet **without** opening Playlists.
+- *Back and queue*: with two messages queued, Back dismissed the first and the second appeared; Back dismissed it and the overlay was
+  hidden; afterwards the bottom nav and mini-player worked normally (`HIDDEN_ERROR_OVERLAY_INTERCEPTS_INPUT = NO`).
+- *Font scale 1.5*: the longer, two-line refresh message was fully readable, OK reachable (sits just above the system gesture bar, no
+  double inset or extra gap), OK dismissed it; font restored to 1.0.
+- Logcat: no app `FATAL`/ANR (the two `FATAL EXCEPTION` lines in the capture are the `uiautomator dump` helper processes colliding —
+  "UiAutomationService already registered" — not the app), no Room main-thread, no `IllegalStateException` from the app.
+
+**Source audit.** The only children of `nav_host_container` are the nav host, the bottom nav (3 dp), the mini-player (0) and the error
+overlay (16 dp); no other shell layer has an elevation above it. `APP_ERROR_MODAL_ABOVE_BOTTOM_NAV = YES`,
+`APP_ERROR_MODAL_ABOVE_MINI_PLAYER = YES`, `APP_ERROR_OK_REACHABLE = YES`, `APP_ERROR_MESSAGE_LEGIBLE = YES`,
+`BACKGROUND_INPUT_THROUGH_ERROR_MODAL = 0`, `HIDDEN_ERROR_OVERLAY_INTERCEPTS_INPUT = NO`.
+
+**Observation (not part of this change).** Once, with the network off, re-entering Home from another tab showed the inline "Couldn't
+load your music" state before content was visible again — the designed initial-load-failure state from #31, not investigated further.
+
+### AB.1 Final verdict
+
+BF-7 = **RESOLVED**. Current findings: BETA_BLOCKER **0**, BETA_FIX **0**, POST_BETA 13, ACCEPTED 11, NOT_REPRODUCED 9. The preceding full
+revalidation (§AA) already established every other item; this change touched one layout attribute and one dimen, so the rest of that
+evidence stands (re-confirmed by a green full suite and builds on the final tree: see the gate line in the commit/#25 note).
+
+**`BETA_READY = YES`**

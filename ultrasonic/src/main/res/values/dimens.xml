@@ -118,6 +118,10 @@
 
     <!-- Elevation / borders. Depth is tonal by default; these are the rare exceptions. -->
     <dimen name="elevation_raised">3dp</dimen>
+    <!-- Z of the Activity-wide modal host (error sheet). Siblings are ordered by effective Z before
+         child index, and the Material bottom navigation is elevated (3dp), so a later but
+         zero-elevation overlay would sit *under* it (issue #33). Keep this above every shell layer. -->
+    <dimen name="elevation_shell_modal">16dp</dimen>
     <dimen name="border_thin">1dp</dimen>
 
     <!-- Now Playing (issue #10 phase 4J2): the app's one full-screen playback surface, so its
