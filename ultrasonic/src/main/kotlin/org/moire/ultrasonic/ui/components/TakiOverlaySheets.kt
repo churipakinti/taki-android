@@ -101,7 +101,8 @@ fun TakiPickerSheet(
 
 /**
  * A two-button confirmation: [onConfirm] fires at most once, dismissing (Cancel, scrim, Back)
- * never confirms. The confirm button is the accent button, labelled explicitly by the caller
+ * never confirms. The confirm button is the accent button (error-toned when [destructive]),
+ * labelled explicitly by the caller
  * ("Delete", "OK", ...) so a destructive action is never an anonymous "Yes".
  */
 @Composable
@@ -115,6 +116,7 @@ fun TakiConfirmSheet(
     bottomContentInset: Dp,
     sheetTestTag: String,
     modifier: Modifier = Modifier,
+    destructive: Boolean = false,
 ) {
     var consumed by remember { mutableStateOf(false) }
     TakiSheet(
@@ -143,6 +145,7 @@ fun TakiConfirmSheet(
                 }
             },
             onDismiss = onDismiss,
+            destructive = destructive,
         )
     }
 }
@@ -194,6 +197,7 @@ fun TakiSheetActions(
     dismissLabel: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
+    destructive: Boolean = false,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
         TextButton(
@@ -205,10 +209,11 @@ fun TakiSheetActions(
             Text(text = dismissLabel, style = TakiTheme.type.titleSmall)
         }
         Spacer(Modifier.width(TakiTheme.spacing.sm))
-        TakiPrimaryButton(
-            text = confirmLabel,
-            onClick = onConfirm,
-            modifier = Modifier.testTag(TAKI_SHEET_PRIMARY_ACTION_TEST_TAG),
-        )
+        val confirmModifier = Modifier.testTag(TAKI_SHEET_PRIMARY_ACTION_TEST_TAG)
+        if (destructive) {
+            TakiDestructiveButton(text = confirmLabel, onClick = onConfirm, modifier = confirmModifier)
+        } else {
+            TakiPrimaryButton(text = confirmLabel, onClick = onConfirm, modifier = confirmModifier)
+        }
     }
 }

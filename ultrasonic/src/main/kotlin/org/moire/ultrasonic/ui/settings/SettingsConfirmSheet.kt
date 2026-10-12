@@ -36,7 +36,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.moire.ultrasonic.ui.components.TakiPrimaryButton
+import org.moire.ultrasonic.ui.components.TakiDestructiveButton
 import org.moire.ultrasonic.ui.components.takiSheetPanelTapSwallow
 import org.moire.ultrasonic.ui.components.TakiBackHandler
 import org.moire.ultrasonic.ui.theme.TakiTheme
@@ -119,7 +119,7 @@ private fun ConfirmSheetActions(
             Text(text = stringResource(overlay.dismissLabelRes), style = TakiTheme.type.titleSmall)
         }
         Spacer(Modifier.width(TakiTheme.spacing.sm))
-        TakiPrimaryButton(
+        TakiDestructiveButton(
             text = stringResource(overlay.confirmLabelRes),
             onClick = onConfirm,
             modifier = Modifier.testTag(SETTINGS_CONFIRM_ACTION_TEST_TAG),

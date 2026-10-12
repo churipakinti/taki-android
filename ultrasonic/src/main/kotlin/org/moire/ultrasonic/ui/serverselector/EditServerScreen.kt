@@ -11,6 +11,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -220,7 +221,15 @@ private fun AppearanceSection(state: EditServerUiState, actions: EditServerActio
             modifier = Modifier
                 .size(TakiTheme.dimensions.artworkMini)
                 .clip(CircleShape)
-                .background(background),
+                .background(background)
+                // An unset colour is a dark disc that would read as a hole; ring it as a control.
+                .then(
+                    if (state.color == null) {
+                        Modifier.border(1.dp, TakiTheme.colors.gray.copy(alpha = UNSET_SWATCH_RING_ALPHA), CircleShape) // taki-raw-ok: hairline ring
+                    } else {
+                        Modifier
+                    },
+                ),
         )
         Spacer(Modifier.width(TakiTheme.spacing.md))
         Text(text = stringResource(R.string.settings_server_color), style = TakiTheme.type.body)
@@ -387,3 +396,5 @@ private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
         modifier = modifier.semantics { heading() },
     )
 }
+
+private const val UNSET_SWATCH_RING_ALPHA = 0.5f

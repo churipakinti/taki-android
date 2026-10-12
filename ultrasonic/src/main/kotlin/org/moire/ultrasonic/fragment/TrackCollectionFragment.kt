@@ -988,6 +988,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
                 onDismiss = dismiss,
                 bottomContentInset = bottomInset,
                 sheetTestTag = DELETE_PLAYLIST_SHEET_TEST_TAG,
+                destructive = true,
             )
             is Overlay.AlbumInfo -> AlbumInfoSheet(
                 info = current.info,

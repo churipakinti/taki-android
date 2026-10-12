@@ -58,3 +58,73 @@ Font scale 1.3 checked on Edit Server and Delete sheet (no clipping). Narrow-wid
 - Edit Server: 12dp field gaps / password affordance / library-colour swatch (still bright accent when unset).
 - Stock `Switch`/`Slider`/`DropdownMenu` styling; Spanish + narrow-width sweep; typography/spacing literal sweep of late screens.
 - Mature-screen comparison beyond a Home before/after sanity check.
+
+---
+
+## 5C.2 - Late-state, sheet and utility surfaces
+
+### Baseline
+`6e115742`. Tests 1576 -> 1586, 0 failures, 0 skipped; ultrasonic detekt 42, core 1.
+**Device note:** the Pixel 7 disconnected mid-batch (after the BEFORE captures). AFTER verification,
+and the Spanish / 1.3x / narrow sweeps, were therefore done with deterministic Roborazzi renders
+(Robolectric `es` locale, 320dp, fontScale 1.3), not on the phone. The Equalizer was toggled for
+capture and restored to disabled before the disconnect (verified by screenshot).
+
+### 5C.1 goldens reviewed (all 18, before/after crops against `7576dae0`)
+| Golden | Result |
+|---|---|
+| about_standard | intended - 16dp gutter (text reflow only) |
+| settings_top_level / settings_advanced_group / settings_choice_sheet_golden | intended - 16dp gutter; one summary truncates 2 chars earlier |
+| server_selector_standard | intended - quiet default swatch |
+| server_selector_delete_confirmation | intended - destructive Delete, quiet swatch |
+| edit_server_existing_mode / edit_server_advanced_expanded | buttons intended; **regression found**: unset library-colour swatch became a near-invisible dark disc (fixed in 5C.2, ring) |
+| edit_server_new_mode | intended - Connect label onAccent |
+| create_playlist_empty / _populated | intended - Save label + disabled treatment |
+| overlay_confirm_delete_playlist | button intended; **finding**: still accent, should be destructive (fixed, but see below) |
+| overlay_playlist_info, save_playlist_sheet_golden | intended - button only (diff confined to button bbox) |
+| rename_playlist_sheet(_error)_golden, create_playlist_name_sheet(_error)_golden | intended - button only (diff bbox <=150x32px; checked by bounding box, not eyeballed individually) |
+
+### Audit matrix
+| Surface | Finding | Class | Pri | Action |
+|---|---|---|---|---|
+| Unset server-colour swatch (Edit Server) | 5C.1 regression: dark disc, no control affordance | COLOR_SURFACE | HIGH | fixed: 1dp gray ring when unset |
+| Destructive confirms (Settings clear downloads / image cache / delete logs; playlist Delete; remove download) | green primary on irreversible actions | COLOR_SURFACE / SHEET | HIGH | fixed: `destructive` flag on `TakiSheetActions`/`TakiConfirmSheet`; Settings confirm uses `TakiDestructiveButton` |
+| Equalizer sliders | 5 full-width accent-lime active tracks = the largest green area in the app | COLOR_SURFACE | HIGH | fixed: active track `progress` (#7C9229), thumb stays accent, disabled unchanged |
+| Equalizer | 12dp gutter vs 16dp Settings it is reached from | SPACING | MED | fixed (lg) |
+| LoadErrorState | Retry was a plain ivory text button (read as a caption); used the *empty* playlist glyph (error looked like empty) | ICON_CONTROL / COLOR_SURFACE | MED | fixed: `EmptyState` action is now `TakiSecondaryButton`; error icon `ic_info_outline`. Error-vs-empty logic untouched |
+| App Error sheet | short + long + 1.3x render cleanly | ACCEPTED_AS_IS | - | new goldens only |
+| Settings row typography | `title` 16sp Medium; Library browse rows (mature) and the Equalizer/choice sheets use the same role | TYPOGRAPHY | - | ACCEPTED_AS_IS (consistent with the quality bar; no evidence it is heavy) |
+| Settings sections/rows/dividers | rhythm fine, no cards needed | ACCEPTED_AS_IS | - | none |
+| Equalizer preset sheet | visually identical to Settings choice sheet / TakiSheet (radius, handle, rows) | SHEET | - | ACCEPTED_AS_IS; Back ownership untouched |
+| Box Sets list | 12dp gutter matches Album List grid (cells 162dp at 360dp); stack legible; no evidence for change | ACCEPTED_AS_IS | - | none |
+| Collection Detail | fan hero + member grid coherent with Album Detail; list-toggle glyph heavier than refresh | ACCEPTED_AS_IS / LOW | LOW | none |
+| Cancel TextButtons | ivory Medium beside filled primary; clearly secondary (no fill), 48dp target | ACCEPTED_AS_IS | - | no new primitive (would have one-off consumers) |
+| Empty state placement | Equalizer mid-screen vs Box Sets near header; each fits its host | ACCEPTED_AS_IS / LOW | LOW | deferred |
+
+### Spanish / 1.3x / narrow (320dp) result
+Combined worst case rendered for Settings (Advanced), Equalizer, Edit Server (expanded), Box Sets, plus a
+destructive confirm sheet with "Eliminar descargas", load error and app error (short/long): no clipping,
+no overlap, sheet actions fit, titles wrap/ellipsize sensibly. The Settings *confirm overlay* golden
+renders below the 1200dp capture crop and was not visually inspected (the shared confirm sheet golden
+covers the same component). Pre-existing gap: several Settings strings are still English in `values-es`
+(e.g. "Advanced", "Bands", "Music cache size...") - a translation task, not changed here.
+
+### Shared fixes
+`TakiSheetActions` / `TakiConfirmSheet` (`destructive`), `EmptyState` (secondary action),
+`LoadErrorState` (error icon). Screen-specific: Equalizer (gutter + track colour), Edit Server (swatch ring),
+Settings confirm sheet (destructive), 3 call sites flagged destructive (PlaylistListFragment x2, TrackCollectionFragment).
+
+### Goldens
+Changed: equalizer_screen_{enabled,disabled,preset_sheet} (track colour + gutter), lyrics_error (Retry button),
+edit_server_{existing_mode,advanced_expanded} (swatch ring). New: shared_* (5) and sweep_es_* (5).
+All reviewed from before/after crops; `taki_floating_surface.png` churns on every record and was reverted.
+
+### Mature screens
+Home/Library were inspected on the phone before the disconnect (Library captured; no shared 5C.2 component
+touches them). Album/Artist Detail, Now Playing, Up Next were **not** re-inspected after this batch; the
+only shared components changed are `EmptyState` (action slot), `LoadErrorState` and sheet confirm actions.
+
+### Deferred
+Untranslated Spanish Settings strings; on-device AFTER verification of 5C.2 changes; Equalizer band
+density (4 labels per band) untouched; empty-state placement unification; remaining screens not yet
+visually reviewed (Library/Search/detail lists, Now Playing, Up Next, Lyrics, Downloads, Genres, playlists).

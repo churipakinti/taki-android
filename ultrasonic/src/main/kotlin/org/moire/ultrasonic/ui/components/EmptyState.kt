@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,9 +71,8 @@ fun EmptyState(
         }
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(TakiTheme.spacing.md))
-            TextButton(onClick = onAction) {
-                Text(text = actionLabel, style = TakiTheme.type.titleSmall)
-            }
+            // Neutral outlined action: a plain text button read as an unlabelled caption.
+            TakiSecondaryButton(text = actionLabel, onClick = onAction)
         }
     }
 }

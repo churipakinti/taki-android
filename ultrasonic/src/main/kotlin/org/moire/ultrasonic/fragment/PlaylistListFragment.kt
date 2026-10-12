@@ -355,6 +355,7 @@ class PlaylistListFragment : Fragment() {
                 onDismiss = dismiss,
                 bottomContentInset = bottomInset,
                 sheetTestTag = REMOVE_DOWNLOAD_SHEET_TEST_TAG,
+                destructive = true,
             )
             is Overlay.Info -> PlaylistInfoSheet(
                 info = current.info,
@@ -380,6 +381,7 @@ class PlaylistListFragment : Fragment() {
                 onDismiss = dismiss,
                 bottomContentInset = bottomInset,
                 sheetTestTag = DELETE_PLAYLIST_SHEET_TEST_TAG,
+                destructive = true,
             )
         }
     }

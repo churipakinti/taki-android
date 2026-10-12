@@ -114,7 +114,7 @@ private fun EqualizerContent(
             .fillMaxWidth()
             .testTag(EQUALIZER_CONTENT_TEST_TAG),
         contentPadding = PaddingValues(
-            horizontal = TakiTheme.spacing.md,
+            horizontal = TakiTheme.spacing.lg,
             vertical = TakiTheme.spacing.sm,
         ),
     ) {
@@ -271,7 +271,7 @@ private fun bandSliderColors() = TakiTheme.colors.let { colors ->
     val inactiveTrack: Color = colors.gray.copy(alpha = INACTIVE_TRACK_ALPHA)
     SliderDefaults.colors(
         thumbColor = colors.accent,
-        activeTrackColor = colors.accent,
+        activeTrackColor = colors.progress,
         inactiveTrackColor = inactiveTrack,
         disabledThumbColor = colors.gray.copy(alpha = DISABLED_ALPHA),
         disabledActiveTrackColor = colors.gray.copy(alpha = DISABLED_ALPHA),

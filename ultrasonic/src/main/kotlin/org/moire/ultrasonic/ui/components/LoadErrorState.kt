@@ -28,7 +28,7 @@ fun LoadErrorState(
     modifier: Modifier = Modifier,
 ) {
     EmptyState(
-        icon = painterResource(R.drawable.ic_empty),
+        icon = painterResource(R.drawable.ic_info_outline),
         title = stringResource(R.string.list_load_error_title),
         modifier = modifier.padding(top = TakiTheme.spacing.xxl),
         message = stringResource(R.string.list_load_error_message),
