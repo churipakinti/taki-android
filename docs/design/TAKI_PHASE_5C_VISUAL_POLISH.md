@@ -128,3 +128,18 @@ only shared components changed are `EmptyState` (action slot), `LoadErrorState` 
 Untranslated Spanish Settings strings; on-device AFTER verification of 5C.2 changes; Equalizer band
 density (4 labels per band) untouched; empty-state placement unification; remaining screens not yet
 visually reviewed (Library/Search/detail lists, Now Playing, Up Next, Lyrics, Downloads, Genres, playlists).
+
+### 5C.2 addendum - on-device verification (Pixel 7 reconnected)
+Foreground-guarded run (every tap checked Taki was the top activity; Taki only). Verified at 1.0x on the
+phone: Equalizer enabled/disabled (desaturated tracks, 16dp gutter; EQ restored to disabled), Settings >
+Downloads > "Clear All Downloads" confirm (error-toned OK; dismissed with Back, nothing deleted), Edit Server
+(dark `onAccent` Save, neutral Test Connection), Home (unchanged). Spanish + 1.3x checked on Edit Server,
+Settings and Equalizer: no clipping, but two defects were found and fixed:
+- Edit Server action row: "Comprobar conexion" wrapped to two lines and the two buttons had unequal
+  heights -> `IntrinsicSize.Min` + `fillMaxHeight` (Pixel-verified).
+- Same row at 320dp / 1.3x (Roborazzi): label broke mid-word -> the buttons stack (Save above Test)
+  below 280 font-neutral dp. `sweep_es_edit_server` re-recorded. Not re-run on the phone (the phone is
+  not narrow); the 320dp case is covered by the golden only.
+Observed, not fixed (deferred): `values-es` still has English for Settings "Playback"/"Downloads"/"Advanced"/
+"Equalizer > Bands", bottom-nav "Home"/"Library"; Home chip row and "Liked Albums" -> "Favoritos"
+overflow horizontally at 1.3x (expected scroll). Restored after testing: app locale (system default), font scale 1.0.

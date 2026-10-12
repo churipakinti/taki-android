@@ -15,9 +15,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -365,28 +369,62 @@ private fun ConnectionStatusRow(state: EditServerUiState) {
 
 @Composable
 private fun ActionRow(state: EditServerUiState, actions: EditServerActions, bottomContentInset: Dp) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = TakiTheme.spacing.lg + bottomContentInset),
-        horizontalArrangement = Arrangement.spacedBy(TakiTheme.spacing.sm),
-    ) {
-        if (!state.isNewMode) {
-            TakiSecondaryButton(
-                text = stringResource(R.string.settings_test_connection_title),
-                onClick = actions.onTestConnection,
-                enabled = !state.isTesting,
-                modifier = Modifier.weight(1f),
-            )
+    val bottomPadding = TakiTheme.spacing.lg + bottomContentInset
+    val testLabel = stringResource(R.string.settings_test_connection_title)
+    val primaryLabel = stringResource(if (state.isNewMode) R.string.server_editor_connect else R.string.common_save)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        // Width in "font-scale-neutral" dp: a narrow phone or a large font stacks the buttons so
+        // a label never breaks mid-word.
+        val stacked = maxWidth.value / LocalDensity.current.fontScale < STACK_ACTIONS_BELOW_DP
+        if (stacked) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding),
+                verticalArrangement = Arrangement.spacedBy(TakiTheme.spacing.sm),
+            ) {
+                TakiPrimaryButton(
+                    text = primaryLabel,
+                    onClick = actions.onConnectOrSave,
+                    enabled = !state.isTesting,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (!state.isNewMode) {
+                    TakiSecondaryButton(
+                        text = testLabel,
+                        onClick = actions.onTestConnection,
+                        enabled = !state.isTesting,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // Equal-height buttons when one label wraps (e.g. Spanish at large font scales).
+                    .height(IntrinsicSize.Min)
+                    .padding(bottom = bottomPadding),
+                horizontalArrangement = Arrangement.spacedBy(TakiTheme.spacing.sm),
+            ) {
+                if (!state.isNewMode) {
+                    TakiSecondaryButton(
+                        text = testLabel,
+                        onClick = actions.onTestConnection,
+                        enabled = !state.isTesting,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
+                }
+                TakiPrimaryButton(
+                    text = primaryLabel,
+                    onClick = actions.onConnectOrSave,
+                    enabled = !state.isTesting,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+            }
         }
-        TakiPrimaryButton(
-            text = stringResource(if (state.isNewMode) R.string.server_editor_connect else R.string.common_save),
-            onClick = actions.onConnectOrSave,
-            enabled = !state.isTesting,
-            modifier = Modifier.weight(1f),
-        )
     }
 }
+
+private const val STACK_ACTIONS_BELOW_DP = 280f
 
 @Composable
 private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
