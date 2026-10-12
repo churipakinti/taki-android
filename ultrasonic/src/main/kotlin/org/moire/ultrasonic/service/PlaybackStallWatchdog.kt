@@ -81,6 +81,11 @@ internal class PlaybackStallWatchdog(
      * @param playWhenReady the player's intent to play (stays true through the READY/BUFFERING
      *   flap a stall produces, unlike isPlaying)
      * @param isReadyOrBuffering playbackState is STATE_READY or STATE_BUFFERING
+     * @param playbackSuppressed Media3 is deliberately withholding playback even though
+     *   playWhenReady is true (playbackSuppressionReason != NONE: transient audio-focus loss,
+     *   unsuitable audio output, ...). The position freezes with a full buffer - the same
+     *   signature as a decoder stall - but it is not one (issue #34). Media3 owns when playback
+     *   resumes; we only drop our state so a fresh baseline is taken afterwards.
      * @param bufferedPositionMs how far ahead data is buffered
      * @param durationMs track duration, or null if not known yet
      */
@@ -88,10 +93,11 @@ internal class PlaybackStallWatchdog(
         positionMs: Long,
         playWhenReady: Boolean,
         isReadyOrBuffering: Boolean,
+        playbackSuppressed: Boolean,
         bufferedPositionMs: Long,
         durationMs: Long?
     ): StallAction {
-        if (!playWhenReady || !isReadyOrBuffering) {
+        if (!playWhenReady || !isReadyOrBuffering || playbackSuppressed) {
             reset()
             return StallAction.None
         }

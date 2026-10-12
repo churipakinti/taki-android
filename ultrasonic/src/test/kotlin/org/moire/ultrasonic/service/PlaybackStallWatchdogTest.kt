@@ -24,12 +24,14 @@ class PlaybackStallWatchdogTest {
         positionMs: Long,
         playWhenReady: Boolean = true,
         readyOrBuffering: Boolean = true,
+        suppressed: Boolean = false,
         bufferedPositionMs: Long = positionMs + 10_000,
         durationMs: Long? = 300_000
     ): StallAction = onTick(
         positionMs = positionMs,
         playWhenReady = playWhenReady,
         isReadyOrBuffering = readyOrBuffering,
+        playbackSuppressed = suppressed,
         bufferedPositionMs = bufferedPositionMs,
         durationMs = durationMs
     )
@@ -138,5 +140,66 @@ class PlaybackStallWatchdogTest {
         watchdog.tick(positionMs = 154_000)
         // Position crept 100 ms in 5 s - below STALL_MIN_ADVANCE_MS, so still a stall.
         watchdog.tick(positionMs = 154_100) shouldBeInstanceOf StallAction.Recover::class
+    }
+
+    // ---- Issue #34: Media3-suppressed playback (transient audio-focus loss) is not a stall ----
+
+    @Test
+    fun `suppression before any recovery never triggers recovery`() {
+        watchdog.tick(positionMs = 60_000) shouldBeEqualTo StallAction.None
+        repeat(10) {
+            watchdog.tick(positionMs = 60_000, suppressed = true) shouldBeEqualTo StallAction.None
+        }
+        watchdog.isRecoveryPending shouldBeEqualTo false
+    }
+
+    @Test
+    fun `suppression while a recovery is pending cancels it instead of escalating`() {
+        watchdog.tick(positionMs = 60_000)
+        watchdog.tick(positionMs = 60_000) shouldBeInstanceOf StallAction.Recover::class
+        watchdog.tick(positionMs = 60_000, suppressed = true) shouldBeEqualTo StallAction.None
+        watchdog.isRecoveryPending shouldBeEqualTo false
+        watchdog.tick(positionMs = 60_000, suppressed = true) shouldBeEqualTo StallAction.None
+    }
+
+    @Test
+    fun `resuming after a long interruption takes a fresh baseline`() {
+        watchdog.tick(positionMs = 60_000)
+        repeat(20) { watchdog.tick(positionMs = 60_000, suppressed = true) }
+        // First tick after restoration is only a baseline, not a stall verdict.
+        watchdog.tick(positionMs = 60_000) shouldBeEqualTo StallAction.None
+        watchdog.tick(positionMs = 65_000) shouldBeEqualTo StallAction.None
+        watchdog.isRecoveryPending shouldBeEqualTo false
+    }
+
+    @Test
+    fun `permanent focus loss and manual pause drop play intent and stay quiet`() {
+        watchdog.tick(positionMs = 60_000)
+        repeat(5) { watchdog.tick(positionMs = 60_000, playWhenReady = false) shouldBeEqualTo StallAction.None }
+        watchdog.isRecoveryPending shouldBeEqualTo false
+    }
+
+    @Test
+    fun `genuine stall without suppression still recovers and escalates`() {
+        watchdog.tick(positionMs = 154_000, suppressed = false)
+        watchdog.tick(positionMs = 154_000) shouldBeInstanceOf StallAction.Recover::class
+        watchdog.tick(positionMs = 154_000) shouldBeEqualTo StallAction.Escalate
+    }
+
+    @Test
+    fun `suppression while buffering is ignored and never escalates`() {
+        watchdog.tick(positionMs = 60_000, readyOrBuffering = true)
+        repeat(6) {
+            watchdog.tick(positionMs = 60_000, readyOrBuffering = true, suppressed = true) shouldBeEqualTo
+                StallAction.None
+        }
+    }
+
+    @Test
+    fun `an interruption never yields Escalate so no skip or error toast can follow`() {
+        val actions = mutableListOf<StallAction>()
+        actions += watchdog.tick(positionMs = 60_000)
+        repeat(30) { actions += watchdog.tick(positionMs = 60_000, suppressed = true) }
+        actions.none { it is StallAction.Escalate || it is StallAction.Recover } shouldBeEqualTo true
     }
 }

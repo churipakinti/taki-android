@@ -1304,6 +1304,9 @@ class MediaPlayerManager(
             positionMs = c.currentPosition,
             playWhenReady = c.playWhenReady,
             isReadyOrBuffering = state == Player.STATE_READY || state == Player.STATE_BUFFERING,
+            // Transient audio-focus loss keeps playWhenReady true but freezes the position
+            // (issue #34); Media3 reports it here, and it is not a decoder stall.
+            playbackSuppressed = c.playbackSuppressionReason != Player.PLAYBACK_SUPPRESSION_REASON_NONE,
             bufferedPositionMs = c.bufferedPosition,
             durationMs = duration
         )
