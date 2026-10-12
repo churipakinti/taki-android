@@ -51,7 +51,7 @@ fun TakiLibraryTrackRow(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onOpenMenu)
-            .padding(horizontal = TakiTheme.spacing.md, vertical = TakiTheme.spacing.sm),
+            .padding(horizontal = TakiTheme.spacing.screenHorizontal, vertical = TakiTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TakiArtwork(
@@ -85,7 +85,7 @@ fun TakiLibraryTrackRow(
                     if (liked) R.drawable.rating_heart_full else R.drawable.rating_heart_hollow,
                 ),
                 contentDescription = stringResource(R.string.download_menu_favorite),
-                tint = TakiTheme.colors.accentSecondary,
+                tint = if (liked) TakiTheme.colors.liked else TakiTheme.colors.gray,
             )
         }
         TakiIconButton(

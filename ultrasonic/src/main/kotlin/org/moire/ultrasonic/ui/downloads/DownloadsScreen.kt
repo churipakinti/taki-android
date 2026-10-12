@@ -73,8 +73,8 @@ fun DownloadsScreen(
                 text = stringResource(R.string.menu_downloads),
                 style = TakiTheme.type.hero,
                 modifier = Modifier.padding(
-                    start = TakiTheme.spacing.md,
-                    end = TakiTheme.spacing.md,
+                    start = TakiTheme.spacing.screenHorizontal,
+                    end = TakiTheme.spacing.screenHorizontal,
                     top = TakiTheme.spacing.md,
                     bottom = TakiTheme.spacing.sm,
                 ),

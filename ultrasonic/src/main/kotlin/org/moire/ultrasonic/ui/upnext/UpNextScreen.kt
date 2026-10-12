@@ -76,7 +76,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.zIndex
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
@@ -86,12 +85,12 @@ import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiScaffold
 import org.moire.ultrasonic.ui.components.TakiScreenHeader
+import org.moire.ultrasonic.ui.components.TakiSectionHeader
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 const val UP_NEXT_LIST_TEST_TAG = "up_next_list"
 const val UP_NEXT_CURRENT_TEST_TAG = "up_next_current"
 
-private const val SECTION_LETTER_SPACING_EM = 0.08f
 private const val RESYNC_DELAY_MS = 600L
 private const val EDGE_SCROLL_STEP_PX = 24f
 private const val DRAG_SCALE = 1.02f
@@ -329,13 +328,13 @@ private fun autoScroll(
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(
-        text = text.uppercase(),
-        style = TakiTheme.type.caption.copy(letterSpacing = SECTION_LETTER_SPACING_EM.em),
+    // The shared sentence-case section header (V2 section 10); the old all-caps tracked caption
+    // was a leftover of the pre-token design.
+    TakiSectionHeader(
+        title = text,
         modifier = Modifier
             .padding(horizontal = TakiTheme.spacing.lg)
-            .padding(top = TakiTheme.spacing.lg, bottom = TakiTheme.spacing.xs)
-            .semantics { heading() },
+            .padding(top = TakiTheme.spacing.lg, bottom = TakiTheme.spacing.xs),
     )
 }
 

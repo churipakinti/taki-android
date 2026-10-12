@@ -117,8 +117,8 @@ fun GenreListScreen(
                         state = gridState,
                         columns = GENRE_GRID_COLUMNS,
                         contentPadding = PaddingValues(
-                            start = TakiTheme.spacing.md,
-                            end = TakiTheme.spacing.md,
+                            start = TakiTheme.spacing.screenHorizontal,
+                            end = TakiTheme.spacing.screenHorizontal,
                             top = TakiTheme.spacing.sm,
                             bottom = TakiTheme.spacing.sm + bottomContentInset,
                         ),

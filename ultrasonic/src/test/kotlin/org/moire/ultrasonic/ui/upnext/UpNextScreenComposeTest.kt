@@ -95,7 +95,7 @@ class UpNextScreenComposeTest {
     @Test
     fun `the current track has its own section marked as now playing`() {
         show(populated)
-        compose.onNodeWithText("NOW PLAYING").assertIsDisplayed()
+        compose.onNodeWithText("Now playing").assertIsDisplayed()
         compose.onNodeWithText("Kashmir").assertIsDisplayed()
         compose.onNodeWithText("Led Zeppelin").assertIsDisplayed()
         compose.onNodeWithTag(UP_NEXT_CURRENT_TEST_TAG).assertIsDisplayed()
@@ -104,7 +104,7 @@ class UpNextScreenComposeTest {
     @Test
     fun `upcoming rows show title and artist`() {
         show(populated)
-        compose.onNodeWithText("NEXT").assertIsDisplayed()
+        compose.onNodeWithText("Next").assertIsDisplayed()
         compose.onNodeWithText("Immigrant Song").assertIsDisplayed()
         compose.onNodeWithText("Artist 0").assertIsDisplayed()
         compose.onNodeWithText("Black Dog").assertIsDisplayed()
@@ -128,13 +128,13 @@ class UpNextScreenComposeTest {
     fun `nothing upcoming shows the minimal message and no next section`() {
         show(UpNextUiState(current = current, upcoming = emptyList()))
         compose.onNodeWithText("Nothing up next").assertIsDisplayed()
-        compose.onNodeWithText("NEXT").assertDoesNotExist()
+        compose.onNodeWithText("Next").assertDoesNotExist()
     }
 
     @Test
     fun `an empty queue with no playback shows no stale rows`() {
         show(UpNextUiState())
-        compose.onNodeWithText("NOW PLAYING").assertDoesNotExist()
+        compose.onNodeWithText("Now playing").assertDoesNotExist()
         compose.onNodeWithText("Nothing up next").assertIsDisplayed()
     }
 

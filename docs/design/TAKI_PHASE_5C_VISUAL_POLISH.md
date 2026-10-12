@@ -143,3 +143,111 @@ Settings and Equalizer: no clipping, but two defects were found and fixed:
 Observed, not fixed (deferred): `values-es` still has English for Settings "Playback"/"Downloads"/"Advanced"/
 "Equalizer > Bands", bottom-nav "Home"/"Library"; Home chip row and "Liked Albums" -> "Favoritos"
 overflow horizontally at 1.3x (expected scroll). Restored after testing: app locale (system default), font scale 1.0.
+
+---
+
+## 5C.3 - Music surfaces and localization
+
+### Baseline
+`d79c51b6`. Tests 1586 -> 1588 (+2 Spanish completeness), 0 failures, 0 skipped; ultrasonic detekt 42, core 1.
+Pixel 7 connected. A foreground guard (top activity must be Taki) was used for every tap/screenshot after
+an earlier run touched another app. Live captures were taken after the first fixes landed, so BEFORE
+evidence for changed screens is the pre-change golden (and the 5C.2 captures), not a live shot.
+
+### Screens reviewed
+| Surface | Pixel (en 1.0) | Pixel (es 1.0) | Pixel (es 1.3x) | Golden/render |
+|---|---|---|---|---|
+| Home (skeleton only; no data loaded in the run) | yes | yes | yes | home_* |
+| Library | yes | yes | yes | library_* |
+| Search (recents state; populated + no-results NOT on device) | yes | yes | yes | search_* |
+| Albums / Artists / Songs / Genres / Playlists lists | yes | Genres | - | list goldens |
+| Downloads | yes | yes | yes | downloads_* |
+| Album Detail | yes | yes | yes | album_* |
+| Artist Detail | yes | yes | yes | artist_standard |
+| Playlist Detail | yes | - | - | playlist_standard |
+| Now Playing (paused) | yes | yes | yes | now_playing_* |
+| Up Next | yes | yes | yes | up_next_* |
+| Lyrics (plain + loading on device; synced + error via goldens) | yes | loading | loading | lyrics_* |
+| Sleep Timer sheet | yes | - | - | sleep_timer_* |
+| Mini-player | yes (every screen) | yes | yes | mini_player_* |
+| Settings / Equalizer (Spanish) | - | (5C.2) | (5C.2) | sweep_es_* |
+
+### Audit matrix
+| # | Surface | Finding | Class | Pri | Action |
+|---|---|---|---|---|---|
+| 1 | Spanish UI | 126 translatable strings + 6 plurals added with the Compose migration had no Spanish entry (nav label Home, Settings group titles, Equalizer Bands, Library hub, Album/Artist/Lyrics/Up Next copy, "2 albums") | l10n | HIGH | fixed: translated with existing terminology; `SpanishResourceCompletenessTest` (strings + plurals) |
+| 2 | List family gutter | Albums, Artists, Genres, Downloads, Playlists, Songs, Box Sets, folder rows and `TakiLibraryTrackRow`/`TakiEntryRow` used 12dp while Home, Library, Search, all detail screens and `TakiTrackRow` use `screenHorizontal` 16dp (Songs rows 12 vs Album Detail rows 16) | SPACING | HIGH | fixed: list gutters/rows -> `screenHorizontal` (card inner padding stays 12) |
+| 3 | `TakiLibraryTrackRow` heart | liked heart tinted `accentSecondary` (olive green); Album Detail / Now Playing / Library use the rose `liked` token | COLOR_SURFACE | MED | fixed: `liked` when liked, `gray` otherwise |
+| 4 | Up Next | section labels were ALL-CAPS letter-spaced captions, contradicting the sentence-case `Taki.SectionHeader` rule | TYPOGRAPHY | MED | fixed: shared `TakiSectionHeader` |
+| 5 | Library cards (es) | "Álbumes que me gu…" / "Listas de reproducci…" truncated at 1.0x | RESPONSIVE | MED | fixed: "Álbumes favoritos"; new `library_playlists` card label (Playlists / Listas) |
+| 6 | Artist radio playlist name | base (English) string was Spanish: "Radio de %1$s" | l10n | LOW | fixed: "%1$s Radio" (es keeps "Radio de %1$s") |
+| 7 | Library lists without a title | Albums/Artists/Genres/Songs/Playlists show only a back arrow (+ sort chip) while Downloads/Settings/Box Sets/Equalizer have a titled header. Intentional so far (shell-owned back bar, see `GenreListScreen` kdoc) but visibly inconsistent | NAV CHROME | MED | DEFERRED: needs a chrome decision in NavigationActivity |
+| 8 | Genres | after the gutter edit, genre names broke mid-word ("Alternativ/e"): my sed also widened the card INNER padding; caught on the phone, reverted | RESPONSIVE | HIGH (self-inflicted) | fixed before commit |
+| 9 | Now Playing | clean hierarchy, 304dp art, 80dp ivory Play, rose heart, quiet progress | ACCEPTED_AS_IS | - | none |
+| 10 | Album / Artist / Playlist Detail | siblings share Play-left + icon-right action row and ivory primary; heroes differ by design | ACCEPTED_AS_IS | - | none |
+| 11 | Mini-player | readable, floating over bottom nav, no collision with rows | ACCEPTED_AS_IS | - | none |
+| 12 | Sleep Timer sheet | matches the shared sheet family | ACCEPTED_AS_IS | - | none |
+| 13 | Lyrics | current-line container + gray context readable; plain lyrics left-aligned | ACCEPTED_AS_IS | - | none |
+| 14 | Search | recents / Clear all / result hierarchy fine, rows already 16dp | ACCEPTED_AS_IS | - | none |
+| 15 | Home chip row at es 1.3x | last chip partly visible: horizontal-scroll affordance, nothing unreachable | ACCEPTED_AS_IS | - | none |
+| 16 | Library cards at es 1.3x | "Canciones favo…" / "Álbumes favorit…" ellipsize (fixed 80dp card) | ACCEPTED_AS_IS | LOW | truncation per design rules |
+| 17 | Playlists smart-playlist tiles | large generic glyph squares | ACCEPTED_AS_IS | LOW | none |
+
+### Mature-screen coherence matrix (after fixes)
+| Dimension | Home | Library | Album Detail | Artist Detail | Now Playing | Up Next |
+|---|---|---|---|---|---|---|
+| gutter | 16 | 16 | 16 | 16 | 24 (V2) | 16 |
+| title hierarchy | Hero greeting | Hero | Hero, centred | Hero, centred | Hero, left | header + Taki.Title rows |
+| secondary text | gray caption | gray | gray | gray | gray | gray caption |
+| artwork | shelf 8dp / hero 20dp | icons only | 12dp hero | 12dp hero 220 | 12dp 304 | 8dp rows |
+| primary action | ivory Play | cards | ivory Play 64 | ivory Play 64 | ivory Play 80 | row tap |
+| green use | none | none (rose liked) | current-row marker | current-row marker | progress + active toggles | marker + progress |
+| surface use | glass hero card | cards | flat | flat | atmosphere | flat |
+Intentional differences: Now Playing 24dp gutter and 80dp Play; hero sizes. Visual debt: #7 (deferred); fixed here: #2, #3, #4.
+
+### Spanish completeness
+- Method: base vs `values-es`, keys normalised (dot to underscore), referenced from Kotlin/XML; plus plurals.
+- Missing before: 126 strings (+ `button_bar.home`, `song.add_to_playlist_description`) and 6 plurals
+  (`artist_album_count`, `n_discs`, `n_playlists`, `up_next_remaining`, `sleep_timer_remaining_full`,
+  `collection_discover_result`). Now 0 / 0, locked by `SpanishResourceCompletenessTest`.
+- Terminology kept: "lista de reproducción", "colección", "Aleatorio", "Cola", "Favoritas".
+  New: Biblioteca, Inicio, Buscar, Descargas, Reproducción, Avanzado, "Box sets" (loanword), "A continuación", "Reproduciendo".
+- Hard-coded user-visible English in Compose source: none (only `@Preview` fixtures and an animation label).
+- Not translated: the other 11 locales (out of scope); `error_label` and `song_details_kbps` are identical in Spanish.
+
+### Responsive
+- Spanish 1.0x (Pixel): Home, Library, Search, Downloads, Genres, Album/Artist Detail, Now Playing, Up Next, Lyrics - fixed #5, otherwise clean.
+- Spanish 1.3x (Pixel): same screens - no overlap, no mid-word breaks, controls reachable (see #15/#16).
+- 320dp: the 5C.2 `sweep_es_*` renders were re-recorded with translated strings. New 320dp renders for
+  Search/Genres/Downloads/Album/Artist/Now Playing/Up Next/Lyrics were NOT added in this batch (existing
+  `*_compact_360` goldens only).
+
+### Shared fixes
+`TakiLibraryTrackRow` (gutter + heart tint), `TakiEntryRow` (gutter), `UpNextScreen.SectionLabel` (-> `TakiSectionHeader`),
+list screens' gutters, `values` / `values-es` strings, `LibraryScreen` playlist card label.
+
+### Goldens changed (every before/after inspected)
+Gutter 12 to 16: album_list_{grid,list,empty,folder_header}, artist_list_{grid,list,empty,folder_header},
+collection_list_standard, downloads_{standard,empty}, genre_list_standard, playlist_list_{standard,grid,empty},
+folder_browser_mixed, server_selector_{standard,delete_confirmation}, track_list_{songs,with_header,empty},
+album_detail_folder (folder rows), track_list_liked_songs (also rose hearts).
+Up Next sentence-case headers: up_next_{populated,empty}.
+Spanish now translated: sweep_es_{settings_advanced,settings_confirm,equalizer,box_sets}.
+The pure-gutter empties (album/artist/downloads/playlist/track-list/up-next empty) were checked by diff region, not viewed one by one.
+
+### Architecture (explicit)
+`CANONICAL_UI_MATRIX = 27 Compose / 0 Hybrid / 0 Legacy` - source `TAKI_COMPOSE_COVERAGE_AUDIT.md` (27/0/0/0), re-checked
+against the tree: 0 changes to `res/layout`, `res/navigation`, `res/menu` or the manifest since the 5C baseline `7576dae0`
+(the only change since the audit baseline is the #33 error-host elevation).
+`REACHABLE_VIEW_OVERLAYS = 0` - `ResidualViewOverlayGuardTest` green.
+
+### Device restoration
+App locale: system default. Font scale 1.0. Playback left paused on "Bien alto" at about 0:14 (never started).
+Shuffle/Repeat untouched, no sleep timer armed, EQ unchanged (disabled), no data changed.
+
+### Deferred (-> 5C.4)
+- #7 title-less library list screens (chrome decision).
+- Not seen on device: Search populated/no-results, synced lyrics, lyrics error, Home with loaded data (skeleton only),
+  Folder browser, Collection detail, music-list error/empty states, Playlist Detail in Spanish.
+- 320dp renders for the music surfaces; other locales.
+- Known product debt unchanged: online Album Detail has no per-row downloaded indicator.

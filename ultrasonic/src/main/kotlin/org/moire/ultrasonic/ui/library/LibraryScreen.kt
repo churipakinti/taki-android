@@ -134,7 +134,7 @@ private fun YourMusicGrid(actions: LibraryActions) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(TakiTheme.spacing.md)) {
             LibraryPrimaryCard(
-                label = stringResource(R.string.playlist_label),
+                label = stringResource(R.string.library_playlists),
                 leadingPainter = painterResource(R.drawable.ic_menu_playlists),
                 onClick = actions.onPlaylists,
                 modifier = Modifier.weight(1f),

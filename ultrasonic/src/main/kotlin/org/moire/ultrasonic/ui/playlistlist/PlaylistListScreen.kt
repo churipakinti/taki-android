@@ -137,7 +137,7 @@ private fun PlaylistListControls(state: PlaylistListUiState, actions: PlaylistLi
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TakiTheme.spacing.md, vertical = TakiTheme.spacing.sm),
+            .padding(horizontal = TakiTheme.spacing.screenHorizontal, vertical = TakiTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -175,8 +175,8 @@ private fun PlaylistListContent(
                 state = gridState,
                 columns = PLAYLIST_GRID_COLUMNS,
                 contentPadding = PaddingValues(
-                    start = TakiTheme.spacing.md,
-                    end = TakiTheme.spacing.md,
+                    start = TakiTheme.spacing.screenHorizontal,
+                    end = TakiTheme.spacing.screenHorizontal,
                     top = TakiTheme.spacing.sm,
                     bottom = TakiTheme.spacing.sm + bottomContentInset,
                 ),
@@ -384,7 +384,7 @@ private fun CreatePlaylistRow(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = null)
-            .padding(horizontal = TakiTheme.spacing.md, vertical = TakiTheme.spacing.md),
+            .padding(horizontal = TakiTheme.spacing.screenHorizontal, vertical = TakiTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(

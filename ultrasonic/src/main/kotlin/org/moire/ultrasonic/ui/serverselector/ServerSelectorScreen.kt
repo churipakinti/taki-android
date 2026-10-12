@@ -89,7 +89,7 @@ fun ServerSelectorScreen(
                         .weight(1f)
                         .testTag(SERVER_SELECTOR_CONTENT_TEST_TAG),
                     contentPadding = PaddingValues(
-                        horizontal = TakiTheme.spacing.md,
+                        horizontal = TakiTheme.spacing.screenHorizontal,
                         vertical = TakiTheme.spacing.sm,
                     ),
                 ) {
@@ -232,7 +232,7 @@ private fun AddServerRow(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = TakiTheme.spacing.md, vertical = TakiTheme.spacing.md),
+            .padding(horizontal = TakiTheme.spacing.screenHorizontal, vertical = TakiTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(

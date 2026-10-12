@@ -10,6 +10,7 @@
     <string name="library.collection">Browse your collection</string>
     <string name="library.liked_songs">Liked Songs</string>
     <string name="library.liked_albums">Liked Albums</string>
+    <string name="library.playlists">Playlists</string>
     <string name="library.box_sets">Box Sets</string>
     <string name="collection.empty">No Box Sets found yet</string>
     <string name="collection.discover_more">Find missing discs</string>
@@ -51,7 +52,7 @@
     <string name="artist.radio_error">Could not start artist radio.</string>
     <string name="artist.radio_empty">Not enough songs to start artist radio.</string>
     <string name="artist.radio_short">Artist radio is shorter than usual (%1$d songs).</string>
-    <string name="artist.radio_playlist_name">Radio de %1$s</string>
+    <string name="artist.radio_playlist_name">%1$s Radio</string>
     <plurals name="artist_album_count">
         <item quantity="one">%1$d album</item>
         <item quantity="other">%1$d albums</item>

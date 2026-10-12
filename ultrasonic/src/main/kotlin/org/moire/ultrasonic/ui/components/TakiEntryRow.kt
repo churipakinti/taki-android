@@ -58,7 +58,7 @@ fun TakiEntryRow(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = TakiTheme.spacing.md, vertical = TakiTheme.spacing.sm),
+            .padding(horizontal = TakiTheme.spacing.screenHorizontal, vertical = TakiTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TakiArtwork(

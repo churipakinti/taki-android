@@ -145,7 +145,7 @@ private fun TrackListControls(state: TrackListUiState, actions: TrackListActions
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TakiTheme.spacing.md, vertical = TakiTheme.spacing.sm),
+            .padding(horizontal = TakiTheme.spacing.screenHorizontal, vertical = TakiTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TakiSortMenu(

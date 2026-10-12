@@ -152,7 +152,7 @@ private fun AlbumListControls(state: AlbumListUiState, actions: AlbumListActions
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TakiTheme.spacing.md, vertical = TakiTheme.spacing.sm),
+            .padding(horizontal = TakiTheme.spacing.screenHorizontal, vertical = TakiTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TakiSortMenu(
@@ -193,8 +193,8 @@ private fun AlbumListContent(
                 state = gridState,
                 columns = ALBUM_GRID_COLUMNS,
                 contentPadding = PaddingValues(
-                    start = TakiTheme.spacing.md,
-                    end = TakiTheme.spacing.md,
+                    start = TakiTheme.spacing.screenHorizontal,
+                    end = TakiTheme.spacing.screenHorizontal,
                     top = TakiTheme.spacing.sm,
                     bottom = TakiTheme.spacing.sm + bottomContentInset,
                 ),
