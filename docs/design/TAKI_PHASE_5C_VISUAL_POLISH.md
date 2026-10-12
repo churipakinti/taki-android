@@ -251,3 +251,125 @@ Shuffle/Repeat untouched, no sleep timer armed, EQ unchanged (disabled), no data
   Folder browser, Collection detail, music-list error/empty states, Playlist Detail in Spanish.
 - 320dp renders for the music surfaces; other locales.
 - Known product debt unchanged: online Album Detail has no per-row downloaded indicator.
+
+---
+
+## 5C.4 - Header convergence and final visual sign-off
+
+### Baseline
+`112f8012`. Tests 1588 -> 1612 (+9 header, +13 s320 renders, +2 chrome); ultrasonic detekt 42, core 1. Pixel 7 connected, foreground-guarded
+(top activity must be Taki before every tap or screenshot).
+
+### Header decision
+Every standard Library destination now owns one Compose `TakiScreenHeader` (back + localized title):
+Albums, Artists, Genres, Songs, Liked Songs, Playlists - and Downloads (decision B below). No new header primitive;
+`onBack` is a plain callback on each screen's Actions (default no-op) wired in the host Fragment to
+`findNavController().navigateUp()`. Navigation graph and NavController ownership are unchanged.
+
+Titles (existing keys, no duplicates): `main_albums_title` / `main_artists_title` / `main_genres_title` /
+`playlist_label` / `main_songs_title` / `library_liked_songs` / `menu_downloads`. Albums and Artists keep the
+contextual `navArgs.title` when one is passed (e.g. an artist's albums); Songs/Liked Songs reuse
+`TrackListUiState.headerTitle` (Genre tracks / Daily Mix already did).
+Downloads: B - its hand-drawn hero `Text` was replaced by the shared header; it was the one list with
+shell back-arrow + its own headline, now identical to its siblings.
+
+### Chrome selection matrix (after)
+| Destination | Support toolbar | Shell back-only bar | Compose header | Hero title | Back owner | Class |
+|---|---|---|---|---|---|---|
+| Albums / Artists / Genres / Playlists / Downloads | hidden | hidden (was shown) | back + title | - | Fragment navigateUp | HEADER_WITH_TITLE |
+| Songs / Liked Songs | hidden | hidden (was shown) | back + title | - | Fragment navigateUp | HEADER_WITH_TITLE |
+| Genre tracks / Daily Mix / Folder browser | hidden | hidden | back + title | - | Fragment | HEADER_WITH_TITLE (unchanged) |
+| Box Sets / Settings / Equalizer / About / Lyrics / Up Next | hidden | hidden | back + title | - | Fragment | HEADER_WITH_TITLE (unchanged) |
+| Album Detail / downloaded Album Detail / Playlist Detail | hidden | shown | - | in hero | shell arrow | HERO_WITH_BACK_ONLY (unchanged) |
+| Artist Detail / Collection Detail | hidden | hidden | back only (+actions) | in hero | Fragment | HERO_WITH_BACK_ONLY (unchanged) |
+| Now Playing | hidden | hidden | back + overflow | in body | Fragment | IMMERSIVE |
+| Home / Library / Search | hidden | hidden | none | greeting/section | - | TOP_LEVEL |
+`showsContentBackButton` shrank to `isAlbumDetail || isPlaylistDetail`. `NavigationChromeSelectionTest` replaced the
+old "every list shows the bar" assertions with: only hero-led detail screens keep the shared bar; every Library list
+hides toolbar AND bar; and each `trackCollectionFragment` mode (Songs, Liked, Genre/Daily Mix, Folder, Album Detail,
+downloaded Album Detail, Playlist Detail) gets exactly one back affordance.
+New `LibraryHeaderConvergenceComposeTest` (9): exactly one back arrow + one title per screen, callback fired once,
+contextual title preserved, no header when no title.
+
+### Navigation validated on the Pixel (Compose arrow and system Back)
+Library -> Albums -> back; Artists; Genres -> Genre tracks -> arrow -> Genres -> arrow -> Library; Songs; Liked Songs;
+Playlists -> Playlist Detail -> back -> Playlists; Albums -> Album Detail -> arrow -> Albums -> system Back -> Library;
+Artists -> Artist Detail -> arrow -> Artists -> system Back -> Library; Downloads -> downloaded Album Detail -> back ->
+Downloads. Every arrow tap was checked by UI dump (landed on the expected list or on the Library hub) and the bottom nav
+stayed on Library; Home/Library/Search tab switching behaved. No double pop.
+Genre list also fixed (found on device, see below).
+
+### Defects found and fixed in this batch
+1. Genre cards at 320dp/1.3x broke names to one letter per line ("Alt/er..."): the grid now falls to one column when two
+   cards would be narrower than 168dp x font scale. Other widths unchanged.
+2. Songs controls at 320dp/1.3x: the sort chip ellipsized to "Todas las" with no ellipsis glyph; `TakiFilterChip` label now
+   ellipsizes properly.
+
+### Before/after for the new headers
+Before: Library lists showed a bare back arrow over an unlabeled screen (`h4/` captures vs the 5C.3 `c3/` shots, and the
+downloads golden); after: arrow + Hero title, controls row 56dp below, content unchanged. Verified on the Pixel for
+Albums, Artists, Songs, Genres, Playlists, Liked Songs, Downloads (en).
+
+### Remaining on-device coverage
+| Item | Outcome |
+|---|---|
+| Populated Home (Daily Mix, Recently Played, Liked Albums, Recently Added, Discover, Most Played) | PIXEL_VERIFIED |
+| Search results (artists/albums/songs, scrolled) and no-results | PIXEL_VERIFIED |
+| Search clear/recents (removed the throw-away test queries I typed; the user's earlier recents are untouched) | PIXEL_VERIFIED |
+| Collection Detail + Box Sets list | PIXEL_VERIFIED |
+| Synced lyrics | UNAVAILABLE live (the server returns plain lyrics for some tracks and none for the current one; switching tracks would change playback). Rendering validated through `lyrics_synced_standard` / `lyrics_synced_font_1_30` goldens and the new 320dp es synced render - GOLDEN_VERIFIED |
+| Folder Browser | NOT_REPRODUCED (server is id3; folder mode needs a settings change). `folder_browser_mixed` golden (re-recorded for the 16dp gutter) - GOLDEN_VERIFIED |
+| Music-list EMPTY states | GOLDEN_VERIFIED (album/artist/genre/playlist/downloads/track-list/search empties) |
+| Music-list ERROR/Retry | GOLDEN_VERIFIED (`shared_load_error*`, `LoadErrorStateComposeTest`); NOT_REPRODUCED live (no safe way to force a failure) |
+
+### Responsive
+- Spanish 1.0x / 1.3x on the Pixel: reviewed in 5C.3 for all main screens; the new header destinations were validated
+  at en 1.0x on the Pixel, and at es 1.3x / 320dp through the new renders (below). The final build was then checked on the Pixel at es 1.3x: Albums, Artists, Songs, Genres (one column, by design), Playlists, Liked Songs, Downloads - titles localized, one header each, no overlap (PIXEL_VERIFIED).
+- 320dp / es / 1.3x renders (13 new goldens, all viewed): `s320_albums, artists, genres, songs, liked_songs, playlists,
+  downloads, search, album_detail, artist_detail, now_playing, up_next, lyrics`. No title/back collision (long "Listas de
+  reproducción" and "Canciones favoritas" ellipsize or fit), no mid-word breaks after the two fixes, controls reachable.
+  Observed and accepted: grid titles ellipsize ("OK Com..."), Now Playing's long title uses its marquee (static render clips).
+
+### Goldens
+New: s320_* (13). Changed: downloads_standard, downloads_empty (shared header replaces the Hero text). Earlier-phase
+list goldens were unaffected by the header (they render the screens without a title). Every changed/new golden was opened
+and viewed (before/after for downloads).
+
+### Final coherence assessment
+Library destinations now read as the same family as Box Sets/Settings/Genre tracks: arrow + Hero title, restrained
+accent, 16dp gutters, one rose liked color, sentence-case section headers. Intentional differences retained: Now Playing
+immersive, Album/Playlist Detail hero-led with shell arrow, Artist/Collection hero with in-screen back.
+
+### Accepted exceptions
+Home chip row scroll at 1.3x; Library card truncation at 1.3x; Album/Playlist Detail still use the shell back arrow
+(hero-led); Settings/Equalizer rows use `Taki.Title`.
+
+### Remaining findings (none HIGH)
+- Known product debt: online Album Detail shows no per-row downloaded indicator.
+- Not translated: 11 other locales (out of #26 scope).
+- Live-only gaps listed above (synced lyrics, folder mode, forced error states).
+
+### Final coverage matrix for #26
+| Surface | Inspected | Problem found | Disposition | Final validation |
+|---|---|---|---|---|
+| Home | yes (loaded, en) | none | ACCEPTED_AS_IS | PIXEL_VERIFIED |
+| Library hub | yes | es card truncation (5C.3) | FIXED | PIXEL_VERIFIED |
+| Search (recents/results/none) | yes | none | ACCEPTED_AS_IS | PIXEL_VERIFIED |
+| Albums / Artists / Genres / Songs / Liked / Playlists | yes | no title; 12dp gutter; genre cards narrow | FIXED (5C.3/5C.4) | PIXEL_VERIFIED (en 1.0, es 1.3) + 320dp render |
+| Downloads | yes | own hero title + shell arrow | FIXED | PIXEL_VERIFIED + 320dp render |
+| Album / Artist / Playlist Detail | yes | none | ACCEPTED_AS_IS | PIXEL_VERIFIED + 320dp (album, artist) |
+| Collection Detail / Box Sets | yes | none | ACCEPTED_AS_IS | PIXEL_VERIFIED |
+| Now Playing / Up Next / Sleep Timer | yes | Up Next caps (5C.3) | FIXED / ACCEPTED | PIXEL_VERIFIED + 320dp |
+| Lyrics (plain, loading) | yes | none | ACCEPTED_AS_IS | PIXEL_VERIFIED; synced GOLDEN_VERIFIED |
+| Folder Browser | golden | gutter (5C.3) | FIXED | GOLDEN_VERIFIED (UNAVAILABLE live) |
+| Settings / Equalizer / About / Server Selector / Edit Server | yes (5C.1-5C.2) | contrast, destructive, gutters | FIXED | PIXEL_VERIFIED (5C.2) |
+| Sheets / Empty / Error / App error | yes (5C.2) | button hierarchy | FIXED | GOLDEN_VERIFIED + PIXEL (destructive confirm) |
+
+### Final decision
+All 16 closure conditions hold: single localized header on every required destination; no double arrow or toolbar
+(chrome tests + device); back/navigation tests and device transitions pass; populated Home and Search results are
+Pixel-verified; synced Lyrics, Folder Browser and forced error states are golden-verified because the live server cannot
+produce them without changing data; Spanish 1.3x and 320dp reviewed with no known high-impact clipping; no HIGH defect
+open; gates green; architecture 27/0/0 and 0 View overlays; 0 FATAL/ANR in logcat; locale, font scale and data restored.
+
+

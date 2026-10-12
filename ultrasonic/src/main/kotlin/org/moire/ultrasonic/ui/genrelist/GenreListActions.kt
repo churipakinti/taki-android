@@ -18,6 +18,8 @@ data class GenreListActions(
     val onGenreClick: (GenreListRow) -> Unit,
     val onRefresh: () -> Unit,
     val onCoverNeeded: (String) -> Unit,
+    /** The header back arrow: the host Fragment's `findNavController().navigateUp()`. */
+    val onBack: () -> Unit = {},
 ) {
     companion object {
         val Noop = GenreListActions(

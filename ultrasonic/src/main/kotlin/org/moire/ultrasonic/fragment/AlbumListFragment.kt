@@ -130,6 +130,7 @@ class AlbumListFragment : Fragment() {
                             state = state,
                             actions = albumListActions,
                             bottomContentInset = bottomInset,
+                            title = navArgs.title ?: stringResource(R.string.main_albums_title),
                         )
                         val genres = genrePicker.value
                         if (genres != null) {
@@ -187,6 +188,7 @@ class AlbumListFragment : Fragment() {
             },
             onRefresh = viewModel::refresh,
             onLoadMore = viewModel::loadMore,
+            onBack = { findNavController().navigateUp() },
         )
     }
 

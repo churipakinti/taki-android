@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,6 +73,7 @@ class GenreListFragment : Fragment() {
                         state = state,
                         actions = genreListActions,
                         bottomContentInset = bottomInset,
+                        title = stringResource(R.string.main_genres_title),
                     )
                 }
             }
@@ -89,6 +91,7 @@ class GenreListFragment : Fragment() {
             onGenreClick = ::onGenreClick,
             onRefresh = viewModel::refresh,
             onCoverNeeded = viewModel::onCoverNeeded,
+            onBack = { findNavController().navigateUp() },
         )
     }
 

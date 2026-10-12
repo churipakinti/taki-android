@@ -16,6 +16,8 @@ data class DownloadsActions(
     val onAlbumClick: (DownloadedAlbumRow) -> Unit,
     val onRemoveClick: (DownloadedAlbumRow) -> Unit,
     val onRefresh: () -> Unit,
+    /** The header back arrow: the host Fragment's `findNavController().navigateUp()`. */
+    val onBack: () -> Unit = {},
 ) {
     companion object {
         val Noop = DownloadsActions(

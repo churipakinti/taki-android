@@ -50,6 +50,7 @@ import org.moire.ultrasonic.ui.components.TakiEntryRow
 import org.moire.ultrasonic.ui.components.TakiFolderSelectorHeader
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
+import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.components.TakiSortMenu
 import org.moire.ultrasonic.ui.theme.TakiTheme
 import org.moire.ultrasonic.util.LayoutType
@@ -86,12 +87,14 @@ fun AlbumListScreen(
     actions: AlbumListActions,
     bottomContentInset: Dp,
     modifier: Modifier = Modifier,
+    title: String? = null,
 ) {
     val isRefreshing = state.isLoading && state.hasContent
     val firstLoad = state.isLoading && !state.hasContent
 
     TakiScaffold(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth()) {
+            if (title != null) TakiScreenHeader(onBack = actions.onBack, title = title)
             // Reserved strip so the first load never shifts the controls row below it.
             Box(
                 modifier = Modifier.fillMaxWidth().height(TakiTheme.spacing.xxs),

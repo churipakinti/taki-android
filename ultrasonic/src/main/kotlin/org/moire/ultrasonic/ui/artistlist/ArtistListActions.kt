@@ -30,6 +30,8 @@ data class ArtistListActions(
     val onLayoutTypeSelected: (LayoutType) -> Unit,
     val onFolderSelected: (String?) -> Unit,
     val onRefresh: () -> Unit,
+    /** The header back arrow: the host Fragment's `findNavController().navigateUp()`. */
+    val onBack: () -> Unit = {},
 ) {
     companion object {
         val Noop = ArtistListActions(

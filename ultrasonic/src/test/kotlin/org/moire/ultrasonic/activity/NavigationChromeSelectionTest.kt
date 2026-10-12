@@ -7,6 +7,7 @@
 
 package org.moire.ultrasonic.activity
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -58,11 +59,10 @@ class NavigationChromeSelectionTest {
     )
 
     private fun showsBackBar(
-        id: Int,
-        libraryTrackCollection: Boolean = false,
+        @Suppress("UNUSED_PARAMETER") id: Int,
         albumDetail: Boolean = false,
         playlistDetail: Boolean = false,
-    ) = NavigationActivity.showsContentBackButton(id, libraryTrackCollection, albumDetail, playlistDetail)
+    ) = NavigationActivity.showsContentBackButton(albumDetail, playlistDetail)
 
     @Test
     fun `collection detail hides the shared toolbar - it draws its own Compose top row`() {
@@ -244,19 +244,57 @@ class NavigationChromeSelectionTest {
     }
 
     @Test
-    fun `about is the only destination phase 5A1 removed from the shared back bar`() {
-        // Regression guard: every other destination that showed the shared back bar before
-        // phase 5A1 must still show it - only aboutFragment's entry was removed there.
-        // serverSelectorFragment/editServerFragment/settingsFragment/equalizerFragment are asserted
-        // separately below (removed in phases 5A2/5A3/5A4/5A5, not 5A1).
-        assertTrue(showsBackBar(R.id.playlistsFragment))
-        assertTrue(showsBackBar(R.id.artistListFragment))
-        assertTrue(showsBackBar(R.id.albumListFragment))
-        assertTrue(showsBackBar(R.id.selectGenreFragment))
-        assertTrue(showsBackBar(R.id.downloadsFragment))
-        assertTrue(showsBackBar(R.id.trackCollectionFragment, libraryTrackCollection = true))
+    fun `phase 5C4 - the hero-led detail screens are the only ones left on the shared back bar`() {
+        // Albums, Artists, Genres, Songs, Liked Songs, Playlists and Downloads now draw a
+        // TakiScreenHeader (back + title) themselves; only Album/Playlist Detail's hero keeps the
+        // shared back-only arrow.
+        assertFalse(showsBackBar(R.id.playlistsFragment))
+        assertFalse(showsBackBar(R.id.artistListFragment))
+        assertFalse(showsBackBar(R.id.albumListFragment))
+        assertFalse(showsBackBar(R.id.selectGenreFragment))
+        assertFalse(showsBackBar(R.id.downloadsFragment))
+        assertFalse(showsBackBar(R.id.trackCollectionFragment))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, albumDetail = true))
         assertTrue(showsBackBar(R.id.trackCollectionFragment, playlistDetail = true))
+    }
+
+    @Test
+    fun `phase 5C4 - every Library list destination hides the toolbar and the shared bar`() {
+        listOf(
+            R.id.playlistsFragment,
+            R.id.artistListFragment,
+            R.id.albumListFragment,
+            R.id.selectGenreFragment,
+            R.id.downloadsFragment,
+        ).forEach { id ->
+            assertTrue("$id must hide the toolbar", hides(id))
+            assertFalse("$id must not show the shared back bar (it owns a Compose header)", showsBackBar(id))
+        }
+    }
+
+    @Test
+    fun `phase 5C4 - each trackCollection mode gets exactly one back affordance`() {
+        // (hidesToolbar, sharedBar) per mode: exactly one of the shared bar / a Compose header.
+        // Songs + Liked Songs: Compose TrackList header; Genre tracks + Daily Mix: Compose header;
+        // Folder browser: Compose header; Album/Playlist Detail + downloaded album: shared bar.
+        val songs = hides(R.id.trackCollectionFragment, libraryTrackCollection = true) to
+            showsBackBar(R.id.trackCollectionFragment)
+        val genreOrMix = hides(R.id.trackCollectionFragment, lightweightHeaderTrackCollection = true) to
+            showsBackBar(R.id.trackCollectionFragment)
+        val folder = hides(R.id.trackCollectionFragment, folderBrowser = true) to
+            showsBackBar(R.id.trackCollectionFragment)
+        val albumDetail = hides(R.id.trackCollectionFragment, albumDetail = true) to
+            showsBackBar(R.id.trackCollectionFragment, albumDetail = true)
+        val downloadedAlbum = hides(R.id.downloadedAlbumFragment, albumDetail = true) to
+            showsBackBar(R.id.downloadedAlbumFragment, albumDetail = true)
+        val playlistDetail = hides(R.id.trackCollectionFragment, playlistDetail = true) to
+            showsBackBar(R.id.trackCollectionFragment, playlistDetail = true)
+        assertEquals(true to false, songs)
+        assertEquals(true to false, genreOrMix)
+        assertEquals(true to false, folder)
+        assertEquals(true to true, albumDetail)
+        assertEquals(true to true, downloadedAlbum)
+        assertEquals(true to true, playlistDetail)
     }
 
     // --- Server Selector (post-issue-#10 residual migration, phase 5A2) -----------------------

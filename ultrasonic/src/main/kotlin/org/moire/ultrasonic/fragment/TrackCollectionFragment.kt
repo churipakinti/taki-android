@@ -1969,7 +1969,7 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         }
     }
 
-    /** Non-null only for Genre tracks/Daily Mix - see [TrackListUiState.headerTitle]'s kdoc.
+    /** Non-null for Genre tracks/Daily Mix and the Songs/Liked Songs destinations - see [TrackListUiState.headerTitle]'s kdoc.
      *  Mirrors [lightweightHeaderTitle] exactly (now dead code - see this section's own
      *  comment), which itself mirrors `TrackCollectionFragment.getLiveData()`'s own per-mode
      *  `setTitle()` calls for these two branches. */
@@ -1977,6 +1977,8 @@ open class TrackCollectionFragment(initialOrder: SortOrder? = null) :
         get() = when {
             navArgs.dailyMix -> getString(R.string.home_mix_title)
             navArgs.genreName != null -> navArgs.genreName
+            navArgs.getStarred -> getString(R.string.library_liked_songs)
+            navArgs.libraryRoot -> getString(R.string.main_songs_title)
             else -> null
         }
 

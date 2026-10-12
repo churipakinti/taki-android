@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /**
@@ -55,6 +56,7 @@ fun TakiFilterChip(
             text = label,
             style = TakiTheme.type.titleSmall,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(
                 horizontal = TakiTheme.spacing.md,
                 vertical = TakiTheme.spacing.sm,

@@ -323,12 +323,7 @@ class NavigationActivity : ScopeActivity() {
             } else {
                 supportActionBar?.show()
             }
-            val showsBackButton = showsContentBackButton(
-                destination.id,
-                isLibraryTrackCollection,
-                isAlbumDetail,
-                isPlaylistDetail,
-            )
+            val showsBackButton = showsContentBackButton(isAlbumDetail, isPlaylistDetail)
             contentNavigationHeader?.visibility =
                 if (showsBackButton) View.VISIBLE else View.GONE
             invalidateOptionsMenu()
@@ -836,21 +831,16 @@ class NavigationActivity : ScopeActivity() {
          * click listener had no way to participate in (it only ever called `navigateUp()`
          * directly). `settingsFragment` was removed in phase 5A4 for the same reason as About -
          * it now draws its own `TakiScreenHeader`, and `equalizerFragment` followed in phase 5A5
-         * (the last destination to leave this bar). Pure so `NavigationChromeSelectionTest` can
-         * lock it.
+         * (the last destination to leave this bar). Phase 5C.4 retired it for every Library list
+         * destination too (Albums, Artists, Genres, Songs, Liked Songs, Playlists, Downloads): each
+         * draws a `TakiScreenHeader` (back + localized title) itself, so only the hero-led
+         * [isAlbumDetail] / [isPlaylistDetail] screens - back arrow over artwork, no title row -
+         * still use it. Pure so `NavigationChromeSelectionTest` can lock it.
          */
         fun showsContentBackButton(
-            destinationId: Int,
-            isLibraryTrackCollection: Boolean,
             isAlbumDetail: Boolean,
             isPlaylistDetail: Boolean,
-        ): Boolean = destinationId in setOf(
-            R.id.playlistsFragment,
-            R.id.artistListFragment,
-            R.id.albumListFragment,
-            R.id.selectGenreFragment,
-            R.id.downloadsFragment,
-        ) || isLibraryTrackCollection || isAlbumDetail || isPlaylistDetail
+        ): Boolean = isAlbumDetail || isPlaylistDetail
 
         /**
          * Whether a destination draws its own top chrome and the shared Material toolbar must

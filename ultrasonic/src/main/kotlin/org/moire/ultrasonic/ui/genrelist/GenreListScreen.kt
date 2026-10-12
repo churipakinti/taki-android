@@ -10,9 +10,11 @@ package org.moire.ultrasonic.ui.genrelist
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,8 +43,11 @@ import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiEntryGrid
 import org.moire.ultrasonic.ui.components.TakiScaffold
+import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
+private const val GENRE_GRID_GUTTERS_DP = 44f // 2 x 16dp screen gutter + 12dp column gap
+private const val GENRE_TWO_COLUMN_MIN_DP = 168f
 private const val GENRE_GRID_COLUMNS = 2
 
 /** The legacy `genre_cover_container`'s `android:rotation="10"` - a small decorative tilt on
@@ -69,12 +75,14 @@ fun GenreListScreen(
     actions: GenreListActions,
     bottomContentInset: Dp,
     modifier: Modifier = Modifier,
+    title: String? = null,
 ) {
     val isRefreshing = state.isLoading && state.hasContent
     val firstLoad = state.isLoading && !state.hasContent
 
     TakiScaffold(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth()) {
+            if (title != null) TakiScreenHeader(onBack = actions.onBack, title = title)
             Box(modifier = Modifier.fillMaxWidth().height(TakiTheme.spacing.xxs)) {
                 if (firstLoad) {
                     LinearProgressIndicator(
@@ -110,20 +118,7 @@ fun GenreListScreen(
                 } else if (state.showError) {
                     LoadErrorState(onRetry = actions.onRefresh)
                 } else {
-                    val gridState = rememberLazyGridState()
-                    TakiEntryGrid(
-                        items = state.rows,
-                        modifier = Modifier.testTag(GENRE_LIST_CONTENT_TEST_TAG),
-                        state = gridState,
-                        columns = GENRE_GRID_COLUMNS,
-                        contentPadding = PaddingValues(
-                            start = TakiTheme.spacing.screenHorizontal,
-                            end = TakiTheme.spacing.screenHorizontal,
-                            top = TakiTheme.spacing.sm,
-                            bottom = TakiTheme.spacing.sm + bottomContentInset,
-                        ),
-                        key = { it.name },
-                    ) { row -> GenreGridCell(row, actions, state.coverGeneration) }
+                    GenreGrid(state, actions, bottomContentInset)
                 }
             }
         }
@@ -170,5 +165,30 @@ private fun GenreGridCell(row: GenreListRow, actions: GenreListActions, coverGen
             placeholder = painterResource(R.drawable.genre_placeholder_icon),
             modifier = Modifier.graphicsLayer { rotationZ = GENRE_COVER_ROTATION_DEGREES },
         )
+    }
+}
+
+/** Two cards across only while a name still has room next to its cover; a narrow phone or a large
+ *  font stacks them one per row instead of breaking "Alternative" mid-word. */
+@Composable
+private fun GenreGrid(state: GenreListUiState, actions: GenreListActions, bottomContentInset: Dp) {
+    val gridState = rememberLazyGridState()
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val cardWidthDp = (maxWidth.value - GENRE_GRID_GUTTERS_DP) / GENRE_GRID_COLUMNS
+        val columns =
+            if (cardWidthDp < GENRE_TWO_COLUMN_MIN_DP * LocalDensity.current.fontScale) 1 else GENRE_GRID_COLUMNS
+        TakiEntryGrid(
+            items = state.rows,
+            modifier = Modifier.testTag(GENRE_LIST_CONTENT_TEST_TAG),
+            state = gridState,
+            columns = columns,
+            contentPadding = PaddingValues(
+                start = TakiTheme.spacing.screenHorizontal,
+                end = TakiTheme.spacing.screenHorizontal,
+                top = TakiTheme.spacing.sm,
+                bottom = TakiTheme.spacing.sm + bottomContentInset,
+            ),
+            key = { it.name },
+        ) { row -> GenreGridCell(row, actions, state.coverGeneration) }
     }
 }

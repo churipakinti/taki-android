@@ -33,6 +33,8 @@ data class AlbumListActions(
     val onFolderSelected: (String?) -> Unit,
     val onRefresh: () -> Unit,
     val onLoadMore: () -> Unit,
+    /** The header back arrow: the host Fragment's `findNavController().navigateUp()`. */
+    val onBack: () -> Unit = {},
 ) {
     companion object {
         val Noop = AlbumListActions(

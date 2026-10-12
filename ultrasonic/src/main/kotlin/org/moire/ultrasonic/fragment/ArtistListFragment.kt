@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,6 +107,7 @@ class ArtistListFragment : Fragment() {
                         state = state,
                         actions = artistListActions,
                         bottomContentInset = bottomInset,
+                        title = navArgs.title ?: stringResource(R.string.main_artists_title),
                     )
                 }
             }
@@ -137,6 +139,7 @@ class ArtistListFragment : Fragment() {
                 RxBus.musicFolderChangedEventPublisher.onNext(RxBus.Folder(folderId))
             },
             onRefresh = viewModel::refresh,
+            onBack = { findNavController().navigateUp() },
         )
     }
 

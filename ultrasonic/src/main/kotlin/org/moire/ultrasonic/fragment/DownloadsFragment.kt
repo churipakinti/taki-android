@@ -101,6 +101,7 @@ class DownloadsFragment : Fragment() {
             onAlbumClick = ::onAlbumClick,
             onRemoveClick = { viewModel.removeAlbum(it.id) },
             onRefresh = viewModel::refresh,
+            onBack = { findNavController().navigateUp() },
         )
     }
 

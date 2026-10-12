@@ -135,6 +135,7 @@ class PlaylistListFragment : Fragment() {
                             state = state,
                             actions = playlistListActions,
                             bottomContentInset = bottomInset,
+                            title = stringResource(R.string.playlist_label),
                         )
                         CreatePlaylistNameSheet(
                             visible = showCreatePlaylistSheet.value,
@@ -182,6 +183,7 @@ class PlaylistListFragment : Fragment() {
             onLayoutTypeSelected = viewModel::setLayoutType,
             onCreatePlaylist = ::showCreatePlaylistDialog,
             onRefresh = viewModel::refresh,
+            onBack = { findNavController().navigateUp() },
         )
     }
 

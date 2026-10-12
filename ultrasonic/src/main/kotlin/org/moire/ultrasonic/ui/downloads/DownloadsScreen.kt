@@ -33,6 +33,7 @@ import org.moire.ultrasonic.ui.components.EmptyState
 import org.moire.ultrasonic.ui.components.TakiEntryRow
 import org.moire.ultrasonic.ui.components.TakiIconButton
 import org.moire.ultrasonic.ui.components.TakiScaffold
+import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
 /** Lets tests find the scrollable list regardless of loading/empty state. */
@@ -59,6 +60,7 @@ fun DownloadsScreen(
 
     TakiScaffold(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth()) {
+            TakiScreenHeader(onBack = actions.onBack, title = stringResource(R.string.menu_downloads))
             Box(modifier = Modifier.fillMaxWidth().height(TakiTheme.spacing.xxs)) {
                 if (firstLoad) {
                     LinearProgressIndicator(
@@ -68,17 +70,6 @@ fun DownloadsScreen(
                     )
                 }
             }
-
-            Text(
-                text = stringResource(R.string.menu_downloads),
-                style = TakiTheme.type.hero,
-                modifier = Modifier.padding(
-                    start = TakiTheme.spacing.screenHorizontal,
-                    end = TakiTheme.spacing.screenHorizontal,
-                    top = TakiTheme.spacing.md,
-                    bottom = TakiTheme.spacing.sm,
-                ),
-            )
 
             val pullState = rememberPullToRefreshState()
             PullToRefreshBox(
