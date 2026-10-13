@@ -230,3 +230,130 @@ exists (see 17).
 3. No regression of #34 suppression, #17 watchdog, #19 recovery, offline/downloaded playback, seek.
 4. Memory impact measured for MP3 320 and FLAC streams and recorded.
 5. Test D/E evidence collected, or the gap explicitly carried forward.
+
+---
+
+# Phase 2B - Streaming buffer implementation and A/B validation
+
+Baseline `2c4bef69`. Change: `PlaybackLoadControl.kt` (new), one line in `PlaybackService.getLocalPlayer()`
+(`.setLoadControl(createPlaybackLoadControl())`), `PlaybackLoadControlTest` (8 tests). Measurements below
+used the same temporary sampler as Phase 2A (not committed). The Phase 2A text above is unchanged.
+
+## Implementation decision
+
+**Chosen: Option B - configure `DefaultLoadControl`.** Taki's media-item URI (`id|bitrate|filePath`) is the
+contract with `PlaybackService.resolver`, `CachedDataSource`, the `MediaItemConverter` item cache and persisted
+queues. Changing it (Option A) would need a migration for serialized queues and risks the resolver and offline
+paths for no extra listening benefit. The URI classification was re-confirmed from the pinned Media3 1.10.1
+bytecode (`DefaultLoadControl.isLocalPlayback()`: empty scheme, or file/content/data/asset/android.resource/
+rawresource, means local) and it applies to every item, streamed or downloaded, because both use the same URI
+shape. Since Media3 therefore always applies the *local-playback* thresholds, configuring only the streaming
+thresholds would have changed nothing; the fix sets `setBufferDurationsMsForLocalPlayback`.
+**Rejected: Option A** (scheme-correct URIs): larger blast radius, needs a queue-compatibility strategy.
+
+## Source classification
+
+| | Before | After |
+|---|---|---|
+| Streamed (scheme-less URI) | local policy: min 1 s / max 50 s / start 1 s / rebuffer 1 s | local policy, configured: min 30 s / max 50 s / start 1 s / rebuffer 1 s |
+| Downloaded (scheme-less URI, served by `CachedDataSource`) | same | same as streamed |
+| `file://` or `http(s)://` item (not produced by Taki today) | local / streaming defaults | local config as above / unchanged streaming defaults (test `remote http URI keeps the default streaming policy`) |
+
+## Buffering policy
+
+`PLAYBACK_MIN_BUFFER_MS = 30 000`, `PLAYBACK_MAX_BUFFER_MS = 50 000` (unchanged Media3 default),
+`PLAYBACK_START_BUFFER_MS = 1 000`, `PLAYBACK_REBUFFER_RESUME_MS = 1 000` (both unchanged, so Play, Seek and
+rebuffer stay as responsive as before). Only the floor changed: the loader now tops up whenever less than 30 s
+remain instead of waiting for ~1 s. Memory is bounded by the same 50 s maximum as before; the time-prioritized
+mode that already applied to these items is unchanged.
+
+## Before / after buffer traces (OBSERVED, Pixel 7, Wi-Fi, MP3 320, Tailscale on)
+
+Same sampler (1 Hz), steady playback, excluding start-up fill.
+
+| | Pre-fix (first 200 s) | Post-fix (144 samples) |
+|---|---|---|
+| Minimum buffered ahead | 1.0 s | **30.0 s** |
+| Maximum | 53.2 s | 56.2 s |
+| Mean | 24.3 s | **42.1 s** |
+| Time below 5 s | 8.5 % | **0 %** |
+| Time below 10 s | 19.5 % | **0 %** |
+| Time below 20 s | 44.0 % | **0 %** |
+| Refill trigger (`isLoading=true`) | 0.98-0.99 s ahead | 29.97-29.99 s ahead |
+
+The pre-fix shape `50 -> ... -> 1 s -> burst -> 50 s` became `~56 -> 30 s -> burst -> ~56 s` (samples above
+50 s occur because loads complete in chunks and the next item's data is counted).
+
+## Wi-Fi / cellular measurements
+
+Next-track latency (tap to isPlaying): Wi-Fi pre 0.17-0.47 s (n=3), post 0.28-0.30 s (n=3). Cellular pre
+0.93-1.06 s (n=2), post 0.71-1.28 s (n=3). Seek, Wi-Fi: pre 0.06-0.41 s, post 0.07-0.43 s. Seek beyond the
+buffer on cellular: pre 2.0-3.0 s (n=7), post 2.7-2.9 s (n=3), i.e. unchanged within LTE variance. No
+start-up or seek regression observed. Cold-queue time-to-first-audio on Wi-Fi was not separately measured.
+
+## Outage measurements
+
+All with Tailscale on; airplane mode with Wi-Fi switched off first (VPN-only default network, TCP black-holed).
+A first post-fix attempt with Wi-Fi left on never cut the network (airplane mode kept Wi-Fi up); those two runs
+were discarded and repeated.
+
+| Scenario | Result |
+|---|---|
+| 5 s outage, post-fix, 31 s buffered | OBSERVED: no audible gap, same item, buffer never below ~31 s; the stalled read failed at the 10 s read timeout and reconnected immediately |
+| 60 s outage, post-fix, 31 s buffered | OBSERVED: no audible gap, same item; refills were served from data already in flight, the stale read failed at the read timeout and a new connection resumed loading after the route returned |
+| 60 s outage, pre-fix build, same track, 1.6 s buffered | OBSERVED: also no audible gap on that track (data already in flight refilled it) |
+| Phase 2A 60 s outage (MP3, next-track boundary inside the outage) | 16.3 s silence (historical, **not re-run**) |
+
+Honest reading: on this Tailscale path the OS socket already holds a reserve, so these outages were masked both
+before and after the change and the A/B does **not** discriminate. The post-fix guarantee is the
+application-level floor (30 s or more instead of ~1 s), which matters when the socket reserve is not available
+(stale connection, black-holed path at a track boundary). The specific Phase 2A silence (a track boundary during
+the outage) was **not reproduced after the fix**, so that improvement is NOT verified. Clean switches repeated
+post-fix: Wi-Fi to cell and cell to Wi-Fi, no gap, same item, no new HTTP connection, default network changed in
+about 0.4-0.6 s (no regression). 2 s and 10 s outages were not run.
+
+## Startup and seek latency
+
+See above: unchanged within noise (start threshold deliberately left at 1 s).
+
+## Offline regression (OBSERVED)
+
+Downloaded album (Stromae, "Cheese"; Media3 reported `audio/opus`, 48 kHz): zero HTTP requests while online and
+in airplane mode; Play 0.38 s, next 0.25-0.41 s, previous 0.08-0.27 s, seek 0.12-0.41 s; cold Play with no
+network worked; no queue or position anomalies. Return to online mode was exercised by re-enabling Wi-Fi.
+Hi-res FLAC and mid-queue streamed-to-downloaded switching were not separately tested.
+
+## Memory and data use
+
+Process PSS (`dumpsys meminfo`): 265.5 MB pre-fix, 262-264 MB post-fix (within noise), as expected because the
+50 s ceiling is unchanged. Cellular data was not metered separately; total bytes are expected to be about the
+same (earlier top-up, not more audio). Hi-res FLAC memory was **not measured**; the 29 MB per 50 s figure from
+Phase 2A remains an estimate.
+
+## Compatibility
+
+URI format unchanged: no change to persisted queues, the item cache, the resolver or offline lookup.
+`QueueRestoreRoundTripTest` and the rest of the suite pass unchanged.
+
+## Regression checks
+
+#34 Clock-timer interruption (60 s hold): frozen position, same item, no watchdog or recovery log lines, resumed
+by itself. #19 and #17 code is untouched; `NetworkRecoveryDelayTest`, `PlaybackErrorRecoveryTest` and
+`PlaybackStallWatchdogTest` pass. #19's retry path was not re-exercised on device (no outage reached a player
+error). Gates: 1627 tests, 0 failures, 0 skipped; assembleDebug/Release, lintDebug, lintVitalRelease green;
+detekt ultrasonic 42, core 1.
+
+## Known limitations
+
+- Degraded-but-associated Wi-Fi (the reported case): **NOT reproduced / UNAVAILABLE**. The user's complaint is
+  not verified fixed; automatic vs manual handoff remains unmeasured.
+- The outage A/B was masked by the OS socket reserve (see above).
+- No hi-res FLAC test, no cellular data metering, small sample sizes.
+
+## Recommended Phase 2C (only if justified)
+
+1. Reproduce the real case first (walk the diagnostic build out of or into Wi-Fi range, or use an access point
+   with throttling).
+2. If a stale established read is shown to block recovery after the route returns (observed, always ending at
+   the 10 s read timeout), evaluate a bounded in-place recovery or a shorter read timeout against that data.
+3. Re-test a long outage that straddles a track boundary with the fix, to measure next-item readiness.

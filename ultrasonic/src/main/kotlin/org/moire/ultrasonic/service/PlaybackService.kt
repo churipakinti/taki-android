@@ -326,6 +326,7 @@ class PlaybackService :
             .setAudioAttributes(getAudioAttributes(), true)
             .setWakeMode(getWakeModeFlag())
             .setHandleAudioBecomingNoisy(true)
+            .setLoadControl(createPlaybackLoadControl())
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
             .setSeekBackIncrementMs(Settings.SEEK_INTERVAL.toLong())
             .setSeekForwardIncrementMs(Settings.SEEK_INTERVAL.toLong())
