@@ -142,11 +142,85 @@ class ShareCardRendererTest {
     }
 
     @Test
-    fun `the brand mark sits below the content and above the bottom stories ui`() {
+    fun `the brand signature sits below the content and above the bottom stories ui`() {
         val brand = renderer.layout(short).brand
         assertTrue(brand.top >= ShareCardSpec.CONTENT_BOTTOM)
         assertTrue(brand.bottom <= ShareCardSpec.HEIGHT - 320f)
         assertEquals(540f, brand.centerX(), 1f)
+    }
+
+    @Test
+    fun `the signature is the symbol only and small`() {
+        val brand = renderer.layout(short).brand
+        assertEquals(ShareCardSpec.BRAND_SYMBOL_HEIGHT, brand.height(), 0.5f)
+        // The "t" symbol is 232 x 238 units: roughly square, and nowhere near the width of the old
+        // symbol + "aki" lockup (which was about 2.2x wider than tall).
+        assertTrue("width ${brand.width()}", brand.width() < brand.height() * 1.1f)
+        assertTrue(brand.height() in 50f..60f)
+    }
+
+    @Test
+    fun `the signature keeps clear of long metadata`() {
+        val layout = renderer.layout(long)
+        assertTrue(layout.album!!.bottom + 40f <= layout.brand.top)
+    }
+
+    /** A flat mid-grey cover makes the atmosphere a plain vertical gradient, so the same row is the
+     *  same colour everywhere and the signature can be isolated exactly. */
+    private fun flatCard(): Pair<Bitmap, RectF> {
+        val card = renderer.render(short, solid(600, 600, Color.rgb(90, 90, 90)))
+        return card to renderer.layout(short).brand
+    }
+
+    private fun stemPixel(card: Bitmap, brand: RectF): Int {
+        val scale = ShareCardSpec.BRAND_SYMBOL_HEIGHT / 238f
+        // Middle of the stem, below the crossbar, above the foot (SVG units x 141, y 200).
+        return card.getPixel((brand.left + (141f - 78f) * scale).toInt(), (brand.top + (200f - 48f) * scale).toInt())
+    }
+
+    private fun backgroundBeside(card: Bitmap, brand: RectF, dx: Float): Int =
+        card.getPixel((brand.centerX() + dx).toInt(), (brand.top + (200f - 48f) * ShareCardSpec.BRAND_SYMBOL_HEIGHT / 238f).toInt())
+
+    @Test
+    fun `the signature is monochrome and neutral, not the accent green`() {
+        val (card, brand) = flatCard()
+        val mark = stemPixel(card, brand)
+        // Ivory (F1F2ED) blended over a grey background stays neutral; the lime accent would give a
+        // strongly green-over-red pixel.
+        assertTrue("r=${Color.red(mark)} g=${Color.green(mark)}", Color.green(mark) - Color.red(mark) < 12)
+        assertTrue(Math.abs(Color.red(mark) - Color.blue(mark)) < 14)
+    }
+
+    @Test
+    fun `the signature is drawn at the specified low opacity`() {
+        val (card, brand) = flatCard()
+        val mark = stemPixel(card, brand)
+        val background = backgroundBeside(card, brand, dx = 120f)
+        val ivoryRed = 0xF1
+        val observed = (Color.red(mark) - Color.red(background)).toFloat() / (ivoryRed - Color.red(background))
+        assertEquals(ShareCardSpec.BRAND_ALPHA, observed, 0.06f)
+    }
+
+    @Test
+    fun `there is no wordmark beside the symbol`() {
+        val (card, brand) = flatCard()
+        val y = (brand.top + 0.6f * brand.height()).toInt()
+        val beside = card.getPixel((brand.right + 40f).toInt(), y)
+        val reference = card.getPixel((brand.left - 40f).toInt(), y)
+        assertEquals(Color.red(reference).toFloat(), Color.red(beside).toFloat(), 2f)
+        assertEquals(Color.green(reference).toFloat(), Color.green(beside).toFloat(), 2f)
+    }
+
+    @Test
+    fun `the missing artwork symbol keeps its own size and accent tint`() {
+        val card = renderer.render(short, null)
+        val tile = renderer.layout(short).artwork
+        val symbol = card.getPixel(tile.centerX().toInt(), (tile.centerY() - 0.07f * tile.height()).toInt())
+        val tileBase = card.getPixel((tile.left + 40).toInt(), (tile.top + 40).toInt())
+        // Large (about 42 % of the tile) and still accent-tinted, unaffected by the signature style.
+        assertTrue(Color.green(symbol) > Color.green(tileBase) + 10)
+        // accent (B7D63C) at 32 % over the dark tile: green leads red by ~13, vs ~0 for a neutral mark.
+        assertTrue(Color.green(symbol) - Color.red(symbol) > 8)
     }
 
     @Test

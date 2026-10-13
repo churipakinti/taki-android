@@ -77,7 +77,10 @@ object ShareCardSpec {
     const val SCRIM_ALPHA_TOP = 0.22f
     const val SCRIM_ALPHA_BOTTOM = 0.70f
 
-    const val BRAND_SCALE = 0.26f
+    /** The bottom signature: just the Taki "t" symbol, neutral and quiet. Independent of the
+     *  missing-artwork tile, which has its own size and tint. */
+    const val BRAND_SYMBOL_HEIGHT = 56f
+    const val BRAND_ALPHA = 0.40f
 }
 
 /** Where everything landed, in canvas pixels - what the layout tests assert on. */
@@ -350,39 +353,32 @@ class ShareCardRenderer(private val colors: TakiColors = TakiColors()) {
 
     // region Taki mark
 
-    private fun markTextPaint() = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-        typeface = Typeface.create(FAMILY_MEDIUM, Typeface.NORMAL)
-        textSize = LOGO_TEXT_SIZE * ShareCardSpec.BRAND_SCALE
-        letterSpacing = LOGO_LETTER_SPACING
-        color = withAlpha(ivory, MARK_ALPHA)
-    }
-
+    /** The signature's footprint: exactly the symbol (no wordmark), centred horizontally. */
     private fun brandRect(): RectF {
-        val scale = ShareCardSpec.BRAND_SCALE
-        val textWidth = markTextPaint().measureText(LOGO_WORD)
-        val width = max(LOGO_SYMBOL_RIGHT * scale, LOGO_TEXT_X * scale + textWidth) - LOGO_LEFT * scale
-        val height = (LOGO_BOTTOM - LOGO_TOP) * scale
+        val scale = ShareCardSpec.BRAND_SYMBOL_HEIGHT / SYMBOL_HEIGHT
+        val width = (LOGO_SYMBOL_RIGHT - LOGO_LEFT) * scale
         val left = (ShareCardSpec.WIDTH - width) / 2f
-        return RectF(left, ShareCardSpec.BRAND_TOP, left + width, ShareCardSpec.BRAND_TOP + height)
-    }
-
-    /** The existing primary logo (docs/graphic resources/Taki_Logo_Primary.svg), reproduced at a
-     *  small scale: the accent "t" symbol with "aki" tucked under its arm. Not a new mark. */
-    private fun drawTakiMark(canvas: Canvas, rect: RectF) {
-        val scale = ShareCardSpec.BRAND_SCALE
-        canvas.withTranslation(rect.left - LOGO_LEFT * scale, rect.top - LOGO_TOP * scale) {
-            scale(scale, scale)
-            drawSymbolShapes(this, withAlpha(accent, MARK_ALPHA))
-        }
-        canvas.drawText(
-            LOGO_WORD,
-            rect.left + (LOGO_TEXT_X - LOGO_LEFT) * scale,
-            rect.top + (LOGO_TEXT_BASELINE - LOGO_TOP) * scale,
-            markTextPaint(),
+        return RectF(
+            left,
+            ShareCardSpec.BRAND_TOP,
+            left + width,
+            ShareCardSpec.BRAND_TOP + ShareCardSpec.BRAND_SYMBOL_HEIGHT,
         )
     }
 
-    /** Draws just the "t" symbol, centred on ([cx], [cy]) - the missing-artwork tile. */
+    /** The existing Taki symbol (Taki_Logo_Primary.svg, without its lettering) as a single
+     *  neutral, translucent mark - a signature, not a logo. */
+    private fun drawTakiMark(canvas: Canvas, rect: RectF) {
+        drawTakiSymbol(
+            canvas,
+            rect.centerX(),
+            rect.centerY(),
+            ShareCardSpec.BRAND_SYMBOL_HEIGHT / SYMBOL_HEIGHT,
+            withAlpha(ivory, ShareCardSpec.BRAND_ALPHA),
+        )
+    }
+
+    /** Draws just the "t" symbol, centred on ([cx], [cy]): the bottom signature and the missing-artwork tile. */
     private fun drawTakiSymbol(canvas: Canvas, cx: Float, cy: Float, scale: Float, color: Int) {
         canvas.withTranslation(
             cx - ((LOGO_LEFT + LOGO_SYMBOL_RIGHT) / 2f) * scale,
@@ -438,7 +434,6 @@ class ShareCardRenderer(private val colors: TakiColors = TakiColors()) {
         const val EDGE_ALPHA = 0.10f
         const val FALLBACK_MARK_FRACTION = 0.42f
         const val FALLBACK_MARK_ALPHA = 0.32f
-        const val MARK_ALPHA = 0.92f
         const val MAX_BYTE = 255
 
         // Geometry of Taki_Logo_Primary.svg (a 900x320 viewBox), in its own units.
@@ -446,13 +441,6 @@ class ShareCardRenderer(private val colors: TakiColors = TakiColors()) {
         const val LOGO_TOP = 48f
         const val LOGO_BOTTOM = 286f
         const val LOGO_SYMBOL_RIGHT = 310f
-        // Moved right of the SVG's 168 so the ascender of the k clears the end of the crossbar.
-        const val LOGO_TEXT_X = 214f
-        // A touch below the SVG's 258 so "aki" clears the arm of the t at this small size.
-        const val LOGO_TEXT_BASELINE = 266f
-        const val LOGO_TEXT_SIZE = 205f
-        const val LOGO_LETTER_SPACING = -7f / 205f
-        const val LOGO_WORD = "aki"
         const val SYMBOL_HEIGHT = LOGO_BOTTOM - LOGO_TOP
     }
 }

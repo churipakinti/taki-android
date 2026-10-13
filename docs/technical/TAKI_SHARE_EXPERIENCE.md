@@ -42,12 +42,11 @@ Everything is in `ShareCardSpec` (`ui/share/ShareCardRenderer.kt`).
   2 lines, shrinking to 46 px, then ellipsized; artist Regular 46 px, up to 2 lines, 86 % ivory; album
   Regular 38 px, 1 line, 66 % ivory, only when it adds information (omitted when it repeats the
   title). Balanced breaking, no hyphenation, long unbroken words break by character.
-- **Taki mark**: the existing primary logo (`docs/graphic resources/Taki_Logo_Primary.svg`) redrawn at
-  0.26 scale, centred, 92 % opacity. The wordmark sits slightly lower and right of the SVG so the "k"
-  clears the arm of the "t" at this size; the three symbol shapes are unioned into one path so the
-  translucent colour does not double-blend.
+- **Taki signature**: only the existing Taki "t" symbol (the primary logo's symbol geometry, no
+  lettering), one neutral colour (Taki ivory) at 40 % opacity, 56 px tall (about 55 px wide), centred.
+  See section 18 for why.
 - **Layout**: the cover + text block is centred in the Stories-safe zone (top 250 px reserved,
-  everything above y = 1470, the mark at y = 1520..1582, the bottom 320 px left empty). A guideline,
+  everything above y = 1470, the signature at y = 1520..1576, the bottom 320 px left empty). A guideline,
   not a platform guarantee.
 - **Missing artwork**: Taki's own palette (olive-to-black gradient, dark tile with the accent "t"), same
   layout, still a finished card.
@@ -162,3 +161,42 @@ Gates: 1680 tests, 0 failures, 0 skipped; detekt 42 / 1.
 
 Sharing from other screens, an optional "Listen on Taki" call to action, a lyric line, and a user-chosen
 accent. None were implemented and none are needed for the feature to be complete.
+
+## 18. Share card branding refinement
+
+**Before.** The bottom mark was the full primary logo: a lime-green "t" plus ivory "aki" lettering at
+92 % opacity (about 100 x 62 px). On a calm background such as the purple "Maldito duende" card it was
+the only saturated, high-contrast element below the cover, so the eye went to Taki before the title
+and artist.
+
+**After.** Only the existing Taki symbol, drawn as one unioned path (so a translucent colour never
+double-blends where its shapes overlap), in a single neutral colour with no accent green. Final
+values, all in `ShareCardSpec`:
+
+| | Value |
+|---|---|
+| Symbol | Taki "t", primary-logo geometry, no "aki" |
+| Colour | Taki ivory (`TakiColors.ivory`), monochrome |
+| Opacity | `BRAND_ALPHA` = 0.40 |
+| Size | `BRAND_SYMBOL_HEIGHT` = 56 px tall, about 55 px wide |
+| Placement | horizontally centred, top at y = 1520 (below the text block, above the Stories bottom UI), unchanged |
+
+The footprint rectangle (`brandRect()`) now matches the symbol exactly, and the removed lettering's
+constants and drawing code are gone. The missing-artwork tile uses the same symbol geometry but has its
+own, independent size (42 % of the tile) and accent tint (`FALLBACK_MARK_*`) and is unchanged.
+
+**Reasoning.** The card should read music first (cover, title, artist, album) and Taki only on a
+second look. At 40 % ivory the symbol is perceptible as a signature at normal phone size and does not
+introduce a second hue, so it harmonises with any cover. No approved circular symbol exists (the app
+icon is the same "t" on a square), so the symbol-only direction was used and nothing new was drawn.
+
+**Verification.** Real exports from the Pixel 7 (1080 x 1920) for purple (Héroes del Silencio, the
+reference case), bright/saturated (Tom Misch), dark (Greta Van Fleet) and light (Angus & Julia Stone)
+covers were inspected at full resolution and scaled to phone-preview size; renderer exports for a
+long-metadata card (no collision) and the missing-artwork fallback (unchanged) were inspected too.
+Tests: signature is symbol-only and small, centred, below the content and inside the safe area, clear
+of long metadata, monochrome (not accent green), drawn at the specified opacity, has no wordmark beside
+it, and the missing-artwork symbol keeps its own size and tint.
+
+**Limitation.** On a very dark card the signature is deliberately faint; it was kept visible rather
+than raised, to stay a signature rather than a logo.
