@@ -39,6 +39,13 @@ import org.moire.ultrasonic.ui.player.SavePlaylistActions
 import org.moire.ultrasonic.ui.player.SavePlaylistSheet
 import org.moire.ultrasonic.ui.player.SleepTimerActions
 import org.moire.ultrasonic.ui.player.SleepTimerSheet
+import org.moire.ultrasonic.ui.share.SHARE_SHEET_SCRIM_TEST_TAG
+import org.moire.ultrasonic.ui.share.SHARE_SHEET_TEST_TAG
+import org.moire.ultrasonic.ui.share.ShareCardActions
+import org.moire.ultrasonic.ui.share.ShareCardContent
+import org.moire.ultrasonic.ui.share.ShareCardRequest
+import org.moire.ultrasonic.ui.share.ShareCardSheet
+import org.moire.ultrasonic.ui.share.ShareCardUiState
 import org.moire.ultrasonic.ui.playlist.ADD_TO_PLAYLIST_SHEET_TEST_TAG
 import org.moire.ultrasonic.ui.playlist.AddToPlaylistOption
 import org.moire.ultrasonic.ui.playlist.AddToPlaylistSheet
@@ -283,6 +290,15 @@ class SheetInteractionAuditTest {
     }
 
     @Test
+    fun shareCard() {
+        val request = ShareCardRequest("t", ShareCardContent("Song", "Artist", null), null)
+        host {
+            ShareCardSheet(ShareCardUiState.Generating(request), ShareCardActions.Noop.copy(onDismiss = onDismiss))
+        }
+        audit(SHARE_SHEET_TEST_TAG, tapThrough = false, backHandled = true, scrimTag = SHARE_SHEET_SCRIM_TEST_TAG)
+    }
+
+    @Test
     fun equalizerPreset() {
         host {
             EqualizerPresetSheet(listOf(EqualizerPresetUiState(0, "Normal")), 0, {}, onDismiss, 0.dp)
@@ -300,6 +316,7 @@ class SheetInteractionAuditTest {
             DiscardServerChangesSheet(false, {}, onDismiss, 0.dp)
             SavePlaylistSheet(false, "n", SavePlaylistActions.Noop.copy(onDismiss = onDismiss))
             SleepTimerSheet(false, SleepTimerState.Off, true, SleepTimerActions.Noop.copy(onDismiss = onDismiss))
+            ShareCardSheet(ShareCardUiState.Hidden, ShareCardActions.Noop.copy(onDismiss = onDismiss))
             RenamePlaylistSheet(false, "n", null, RenamePlaylistActions.Noop.copy(onDismiss = onDismiss), 0.dp)
             CreatePlaylistNameSheet(
                 false, "n", null, CreatePlaylistNameActions.Noop.copy(onDismiss = onDismiss), 0.dp,

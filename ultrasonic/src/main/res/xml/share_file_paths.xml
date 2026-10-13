@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Share cards live only in cache/share/ (issue #20); nothing else is exposed through this provider. -->
+<paths>
+    <cache-path name="share" path="share/" />
+</paths>

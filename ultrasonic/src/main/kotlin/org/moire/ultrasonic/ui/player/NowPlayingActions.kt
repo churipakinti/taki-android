@@ -54,6 +54,8 @@ data class NowPlayingActions(
     /** Opens the Up Next surface (the queue), issue #10 phase 4K1. */
     val onOpenUpNext: () -> Unit,
     val onSleepTimer: () -> Unit,
+    /** Opens the share-card preview for the current track (issue #20). */
+    val onShare: () -> Unit,
     val onOverflowItem: (NowPlayingOverflowItem) -> Unit,
     /** A point read of whether the equalizer is currently available on this device
      *  (`EqualizerController.get()` LiveData), resolved once when the overflow menu opens -
@@ -86,6 +88,7 @@ data class NowPlayingActions(
             onLyrics = {},
             onOpenUpNext = {},
             onSleepTimer = {},
+            onShare = {},
             onOverflowItem = {},
             equalizerAvailable = { false },
             keepScreenOnActive = { false },

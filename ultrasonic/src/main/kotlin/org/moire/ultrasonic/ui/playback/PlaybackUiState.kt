@@ -25,6 +25,8 @@ data class PlayerUiState(
     val trackId: String? = null,
     val title: String? = null,
     val artist: String? = null,
+    /** `Track.album`, only read by the share card (issue #20). */
+    val albumTitle: String? = null,
     /** Opaque cover-art reference (server cover-art id). Resolved to an image at the call site. */
     val coverArtId: String? = null,
     val isPlaying: Boolean = false,

@@ -495,4 +495,12 @@
     to the controller</string>
     <string name="shortcut_play_random_songs_short">Random songs</string>
     <string name="shortcut_play_random_songs_long">Play random songs</string>
+    <string name="share_card.entry">Share</string>
+    <string name="share_card.title">Share</string>
+    <string name="share_card.action">Share</string>
+    <string name="share_card.preview_description">Preview of the share card: %1$s</string>
+    <string name="share_card.preparing">Preparing your card…</string>
+    <string name="share_card.error">Couldn\'t prepare the card.</string>
+    <string name="share_card.retry">Try again</string>
+    <string name="share_card.chooser_title">Share</string>
 </resources>

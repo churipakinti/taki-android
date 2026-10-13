@@ -95,6 +95,7 @@ class NowPlayingScreenComposeTest {
             onLyrics = { events += "lyrics" },
             onOpenUpNext = { events += "openUpNext" },
             onSleepTimer = { events += "sleepTimer" },
+            onShare = { events += "share" },
             onOverflowItem = { events += "overflow:$it" },
             equalizerAvailable = { true },
             keepScreenOnActive = { false },
@@ -484,9 +485,28 @@ class NowPlayingScreenComposeTest {
     @Test
     fun `the icon-only utility items keep their accessible names and are clickable`() {
         setContent(playing)
-        listOf("Queue", "Lyrics", "Sleep timer").forEach {
+        listOf("Queue", "Lyrics", "Share", "Sleep timer").forEach {
             compose.onNodeWithContentDescription(it).assertIsDisplayed().assertHasClickAction()
         }
+    }
+
+    @Test
+    fun `the Share utility item fires the share action and nothing else`() {
+        val recorder = setContent(playing)
+        compose.onNodeWithContentDescription("Share").performClick()
+        assertEquals(listOf("share"), recorder.events)
+    }
+
+    @Test
+    fun `Share is disabled when there is no current track`() {
+        setContent(PlayerUiState())
+        compose.onNodeWithContentDescription("Share").assertIsNotEnabled()
+    }
+
+    @Test
+    fun `Share keeps a 48dp touch target`() {
+        setContent(playing)
+        compose.onNodeWithContentDescription("Share").assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
     }
 
     @Test

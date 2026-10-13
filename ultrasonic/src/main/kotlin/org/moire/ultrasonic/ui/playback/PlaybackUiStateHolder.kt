@@ -159,6 +159,7 @@ class PlaybackUiStateHolder(
             trackId = current?.id,
             title = current?.title,
             artist = current?.artist,
+            albumTitle = current?.album,
             coverArtId = current?.coverArt,
             isPlaying = isPlaying,
             phase = PlaybackPhase.fromMedia3State(state),

@@ -48,6 +48,7 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeFragment
 import org.moire.ultrasonic.NavigationGraphDirections
+import androidx.fragment.app.viewModels
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.api.subsonic.models.AlbumListType
 import org.moire.ultrasonic.audiofx.EqualizerController
@@ -69,6 +70,12 @@ import org.moire.ultrasonic.ui.player.SavePlaylistActions
 import org.moire.ultrasonic.ui.player.SavePlaylistSheet
 import org.moire.ultrasonic.ui.player.SleepTimerActions
 import org.moire.ultrasonic.ui.player.SleepTimerSheet
+import org.moire.ultrasonic.ui.share.ShareCardActions
+import org.moire.ultrasonic.ui.share.ShareCardContent
+import org.moire.ultrasonic.ui.share.ShareCardRequest
+import org.moire.ultrasonic.ui.share.ShareCardSheet
+import org.moire.ultrasonic.ui.share.ShareCardStore
+import org.moire.ultrasonic.ui.share.ShareCardViewModel
 import org.moire.ultrasonic.ui.upnext.QueueEntry
 import org.moire.ultrasonic.ui.upnext.UpNextActions
 import org.moire.ultrasonic.ui.upnext.UpNextCurrentUi
@@ -144,6 +151,12 @@ class PlayerFragment :
      *  `MediaPlayerManager.suggestedPlaylistName` or today's date on open, exactly like the
      *  legacy dialog's `EditText.setText`. */
     private val showSavePlaylist = mutableStateOf(false)
+
+    /** Share-card flow state (issue #20). A ViewModel so an open preview survives a configuration
+     *  change; it never touches playback - it only reads the snapshot [shareCurrentTrack] hands it. */
+    private val shareViewModel: ShareCardViewModel by viewModels {
+        ShareCardViewModel.Factory(requireContext().applicationContext)
+    }
     private val savePlaylistName = mutableStateOf("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -202,6 +215,8 @@ class PlayerFragment :
                             hasCurrentTrack = displayState.hasCurrentTrack,
                             actions = sleepTimerActions(),
                         )
+                        val shareState by shareViewModel.state.collectAsStateWithLifecycle()
+                        ShareCardSheet(state = shareState, actions = shareActions())
                         SavePlaylistSheet(
                             visible = showSavePlaylist.value,
                             name = savePlaylistName.value,
@@ -305,6 +320,7 @@ class PlayerFragment :
             onLyrics = { goToLyrics(currentTrack()) },
             onOpenUpNext = onOpenUpNext,
             onSleepTimer = { showSleepTimer.value = true },
+            onShare = ::shareCurrentTrack,
             onOverflowItem = { item -> handleOverflow(item, currentTrack()) },
             equalizerAvailable = { isEqualizerAvailable },
             keepScreenOnActive = { mediaPlayerManager.keepScreenOn },
@@ -418,6 +434,37 @@ class PlayerFragment :
         pendingFavoriteTrackId = track.id
         favoriteOverride = track.id to newState
         RxBus.ratingSubmitter.onNext(RatingUpdate(track.id, HeartRating(newState)))
+    }
+
+    /**
+     * Snapshots the track being played *now* and opens the share preview. The snapshot - title,
+     * artist, album and cover of the same track - is taken once here, so a track change while the
+     * card is generating cannot mix two tracks. No player call is made.
+     */
+    private fun shareCurrentTrack() {
+        val state = playbackUiStateHolder.playerState.value
+        val content = ShareCardContent.from(state.title, state.artist, state.albumTitle) ?: return
+        shareViewModel.open(ShareCardRequest(state.trackId, content, state.artworkModelLarge))
+    }
+
+    private fun shareActions() = ShareCardActions(
+        onShare = ::launchShareSheet,
+        onRetry = shareViewModel::retry,
+        onDismiss = shareViewModel::dismiss,
+    )
+
+    /** Opens the standard Android Sharesheet with the generated PNG (at most once per tap). */
+    private fun launchShareSheet() {
+        val file = shareViewModel.claimShare() ?: return
+        val intent = ShareCardStore.shareIntent(
+            ShareCardStore.uriFor(requireContext(), file),
+            getString(R.string.share_card_chooser_title),
+        )
+        try {
+            startActivity(intent)
+        } catch (@Suppress("SwallowedException") noTarget: android.content.ActivityNotFoundException) {
+            Timber.w("No application can receive the share card")
+        }
     }
 
     private fun offerSavePlaylist() {

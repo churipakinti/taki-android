@@ -31,6 +31,7 @@ import org.moire.ultrasonic.ui.theme.TakiTheme
 internal fun NowPlayingUtilityRow(
     sleepTimerState: SleepTimerState,
     sleepTimerDescription: String,
+    canShare: Boolean,
     actions: NowPlayingActions,
     modifier: Modifier = Modifier,
 ) {
@@ -47,6 +48,13 @@ internal fun NowPlayingUtilityRow(
             painter = painterResource(R.drawable.ic_np_lyrics),
             contentDescription = stringResource(R.string.download_menu_lyrics),
             iconSize = iconSize,
+        )
+        TakiIconButton(
+            onClick = actions.onShare,
+            painter = painterResource(R.drawable.ic_np_share),
+            contentDescription = stringResource(R.string.share_card_entry),
+            iconSize = iconSize,
+            enabled = canShare,
         )
         TakiIconButton(
             onClick = actions.onSleepTimer,

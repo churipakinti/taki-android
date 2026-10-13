@@ -393,6 +393,7 @@ private fun NowPlayingPlaybackSurface(
         NowPlayingUtilityRow(
             sleepTimerState = sleepTimerState,
             sleepTimerDescription = sleepTimerContentDescription(sleepTimerState),
+            canShare = state.hasCurrentTrack && !state.title.isNullOrBlank(),
             actions = actions,
         )
     }

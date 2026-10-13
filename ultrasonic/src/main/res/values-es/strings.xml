@@ -498,4 +498,12 @@
         <item quantity="many">%d listas de reproducción</item>
         <item quantity="other">%d listas de reproducción</item>
     </plurals>
+    <string name="share_card.entry">Compartir</string>
+    <string name="share_card.title">Compartir</string>
+    <string name="share_card.action">Compartir</string>
+    <string name="share_card.preview_description">Vista previa de la tarjeta: %1$s</string>
+    <string name="share_card.preparing">Preparando tu tarjeta…</string>
+    <string name="share_card.error">No se pudo preparar la tarjeta.</string>
+    <string name="share_card.retry">Reintentar</string>
+    <string name="share_card.chooser_title">Compartir</string>
 </resources>
