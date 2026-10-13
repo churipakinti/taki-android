@@ -142,11 +142,34 @@ class ShareCardRendererTest {
     }
 
     @Test
-    fun `the brand signature sits below the content and above the bottom stories ui`() {
+    fun `the signature is a footer anchored to the bottom edge`() {
         val brand = renderer.layout(short).brand
-        assertTrue(brand.top >= ShareCardSpec.CONTENT_BOTTOM)
-        assertTrue(brand.bottom <= ShareCardSpec.HEIGHT - 320f)
+        assertEquals(ShareCardSpec.HEIGHT - ShareCardSpec.BRAND_BOTTOM_MARGIN, brand.bottom, 0.5f)
+        assertEquals(124f, ShareCardSpec.BRAND_BOTTOM_MARGIN, 0f)
+        assertEquals(1740f, brand.top, 0.5f)
         assertEquals(540f, brand.centerX(), 1f)
+        // Fully inside the exported image, with a deliberate margin (not hugging the edge).
+        assertTrue(brand.left >= 0f && brand.right <= ShareCardSpec.WIDTH)
+        assertTrue(brand.bottom <= ShareCardSpec.HEIGHT - 100f)
+    }
+
+    @Test
+    fun `the footer is clearly detached from the music block`() {
+        for (content in listOf(short, long)) {
+            val layout = renderer.layout(content)
+            val lowest = listOfNotNull(layout.title, layout.artist, layout.album).maxOf { it.bottom }
+            assertTrue("gap ${layout.brand.top - lowest}", layout.brand.top - lowest >= 200f)
+        }
+    }
+
+    @Test
+    fun `the music block did not move`() {
+        val layout = renderer.layout(short)
+        // Unchanged geometry of the cover and text for the short sample (centred in 250..1470).
+        assertEquals(333f, layout.artwork.top, 1f)
+        assertEquals(1113f, layout.artwork.bottom, 1f)
+        assertEquals(150f, layout.artwork.left, 0.5f)
+        assertEquals(1113f + ShareCardSpec.GAP_ARTWORK_TEXT, layout.title.top, 0.5f)
     }
 
     @Test
@@ -157,12 +180,6 @@ class ShareCardRendererTest {
         // symbol + "aki" lockup (which was about 2.2x wider than tall).
         assertTrue("width ${brand.width()}", brand.width() < brand.height() * 1.1f)
         assertTrue(brand.height() in 50f..60f)
-    }
-
-    @Test
-    fun `the signature keeps clear of long metadata`() {
-        val layout = renderer.layout(long)
-        assertTrue(layout.album!!.bottom + 40f <= layout.brand.top)
     }
 
     /** A flat mid-grey cover makes the atmosphere a plain vertical gradient, so the same row is the

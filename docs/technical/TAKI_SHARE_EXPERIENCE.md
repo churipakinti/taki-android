@@ -46,7 +46,7 @@ Everything is in `ShareCardSpec` (`ui/share/ShareCardRenderer.kt`).
   lettering), one neutral colour (Taki ivory) at 40 % opacity, 56 px tall (about 55 px wide), centred.
   See section 18 for why.
 - **Layout**: the cover + text block is centred in the Stories-safe zone (top 250 px reserved,
-  everything above y = 1470, the signature at y = 1520..1576, the bottom 320 px left empty). A guideline,
+  everything above y = 1470; the signature is a footer at y = 1740..1796, see section 18). A guideline,
   not a platform guarantee.
 - **Missing artwork**: Taki's own palette (olive-to-black gradient, dark tile with the accent "t"), same
   layout, still a finished card.
@@ -179,7 +179,7 @@ values, all in `ShareCardSpec`:
 | Colour | Taki ivory (`TakiColors.ivory`), monochrome |
 | Opacity | `BRAND_ALPHA` = 0.40 |
 | Size | `BRAND_SYMBOL_HEIGHT` = 56 px tall, about 55 px wide |
-| Placement | horizontally centred, top at y = 1520 (below the text block, above the Stories bottom UI), unchanged |
+| Placement | horizontally centred; first placed at y = 1520, moved to the footer in the follow-up below |
 
 The footprint rectangle (`brandRect()`) now matches the symbol exactly, and the removed lettering's
 constants and drawing code are gone. The missing-artwork tile uses the same symbol geometry but has its
@@ -200,3 +200,24 @@ it, and the missing-artwork symbol keeps its own size and tint.
 
 **Limitation.** On a very dark card the signature is deliberately faint; it was kept visible rather
 than raised, to stay a signature rather than a logo.
+
+### Footer placement follow-up
+
+**Problem.** At y = 1520 the symbol sat directly under the album line, so it read as one more
+line of song information and interrupted the artwork + title + artist + album block (clearest on the
+light "Heart Beats Slow" card).
+
+**Decision.** Treat the signature as a footer, detached from the music. Its position is derived
+from the bottom edge, not from the content: `top = HEIGHT - BRAND_BOTTOM_MARGIN - BRAND_SYMBOL_HEIGHT`
+with `BRAND_BOTTOM_MARGIN = 124` and the symbol 56 px tall, i.e. **y = 1740..1796**, centred
+horizontally (the old absolute `BRAND_TOP` is gone). Size, ivory colour, 40 % opacity, geometry and the
+unioned path are unchanged; the cover, text, background, scrim and the missing-artwork tile were not
+touched (a test pins the cover and title coordinates).
+
+**Verification.** Real Pixel 7 exports (1080 x 1920) for light, purple, dark and bright covers were
+inspected at full resolution and at phone-preview size: the music block reads uninterrupted, a wide
+clear gap separates it from the footer (at least 200 px even with long text), and the symbol reads as
+a signature. Renderer exports for long metadata and the missing-artwork fallback were inspected too.
+Instagram's Stories composer showed the symbol intact inside the story frame, above the caption field
+and clear of the bottom controls (backed out, nothing posted). Instagram's overlays vary by device
+and version, so this is an observation, not a guarantee; the signature is decorative only.
