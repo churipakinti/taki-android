@@ -79,9 +79,12 @@ class MediaPlayerLifecycleSupport(
         playbackStateSerializer.deserialize { state ->
             if (state != null && state.songs.isNotEmpty()) {
                 Timber.i("Restoring %s songs", state.songs.size)
-                mediaPlayerManager.restore(state, autoPlay)
+                // afterRestore must run once the queue has actually landed in the player, not
+                // when the restore has merely been launched (issue #37).
+                mediaPlayerManager.restore(state, autoPlay, afterRestore)
+            } else {
+                afterRestore?.run()
             }
-            afterRestore?.run()
         }
     }
 

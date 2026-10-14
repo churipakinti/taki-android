@@ -31,11 +31,13 @@ import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionResult.RESULT_SUCCESS
 import com.google.common.collect.ImmutableList
+import android.os.Handler
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.guava.future
@@ -241,6 +243,14 @@ class MediaLibrarySessionCallback :
         )
     }
 
+    /**
+     * Media3's playback-resumption contract (issue #37): the returned future MUST complete with the
+     * queue to resume (or fail), otherwise the resumption request - a media-button / System UI
+     * resume tap after the process was killed - never finishes and Android is left with a stale
+     * resumption card. This used to return a future that was never completed. It now completes
+     * with the restored queue once [lifecycleSupport] has really put it in the player, fails when
+     * there is nothing to resume, and can never hang (timeout).
+     */
     @OptIn(UnstableApi::class)
     override fun onPlaybackResumption(
         mediaSession: MediaSession,
@@ -249,8 +259,22 @@ class MediaLibrarySessionCallback :
     ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
         val result = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
         serviceScope.launch {
-            // lifecycleSupport will set the MediaItems so we don't actually return them here.
-            lifecycleSupport.onCreate(isForPlayback, null)
+            lifecycleSupport.onCreate(isForPlayback) {
+                // Player access must happen on its (main) application looper.
+                Handler(mediaSession.player.applicationLooper).post {
+                    val resumption = resumptionFromPlayer(mediaSession.player)
+                    if (resumption != null) {
+                        result.set(resumption)
+                    } else {
+                        result.setException(IllegalStateException("Nothing to resume"))
+                    }
+                }
+            }
+        }
+        serviceScope.launch {
+            delay(RESUMPTION_TIMEOUT_MS)
+            // No-op when already completed; guarantees the request never hangs.
+            result.setException(IllegalStateException("Playback resumption timed out"))
         }
         return result
     }
@@ -1456,4 +1480,28 @@ class MediaLibrarySessionCallback :
             }
         }
     }
+}
+
+/** Longest a resumption request may wait for the saved queue to be restored. */
+internal const val RESUMPTION_TIMEOUT_MS = 20_000L
+
+/**
+ * The queue a resumption should hand back to Media3, taken from the (already restored) [player]:
+ * every item, the current index and the current position. Null when the queue is empty.
+ */
+@OptIn(UnstableApi::class)
+internal fun resumptionFromPlayer(player: Player): MediaSession.MediaItemsWithStartPosition? {
+    val items = List(player.mediaItemCount) { player.getMediaItemAt(it) }
+    return resumptionOf(items, player.currentMediaItemIndex, player.currentPosition)
+}
+
+@OptIn(UnstableApi::class)
+internal fun resumptionOf(
+    items: List<MediaItem>,
+    currentIndex: Int,
+    positionMs: Long
+): MediaSession.MediaItemsWithStartPosition? {
+    if (items.isEmpty()) return null
+    val index = currentIndex.coerceIn(0, items.lastIndex)
+    return MediaSession.MediaItemsWithStartPosition(items, index, positionMs.coerceAtLeast(0L))
 }

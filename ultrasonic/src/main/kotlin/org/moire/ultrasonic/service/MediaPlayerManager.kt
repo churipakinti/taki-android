@@ -746,7 +746,7 @@ class MediaPlayerManager(
     }
 
     @Synchronized
-    fun restore(state: PlaybackState, autoPlay: Boolean) {
+    fun restore(state: PlaybackState, autoPlay: Boolean, onRestored: Runnable? = null) {
         PerfMetrics.mark("session_restore_start:songs=" + state.songs.size)
         repeatMode = state.repeatMode
         isShufflePlayEnabled = state.shufflePlay
@@ -782,6 +782,8 @@ class MediaPlayerManager(
             }
 
             autoPlayStart = false
+            // The queue is now really in the player (issue #37): playback resumption waits on it.
+            onRestored?.run()
         }
     }
 
