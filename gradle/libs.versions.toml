@@ -12,6 +12,8 @@ ktlintGradle           = "14.2.0"
 detekt                 = "2.0.0-alpha.6"
 preferences            = "1.2.1"
 media3                 = "1.10.1"
+# NextLib's version prefix is the exact Media3 it was built against: bump the two together.
+nextlib                = "1.10.1-0.13.0"
 
 materialDesign         = "1.14.0"
 constraintLayout       = "2.2.2"
@@ -81,6 +83,7 @@ media3common            = { module = "androidx.media3:media3-common", version.re
 media3exoplayer         = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
 media3datasource        = { module = "androidx.media3:media3-datasource", version.ref = "media3" }
 media3okhttp            = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "media3" }
+nextlibMedia3ext       = { module = "io.github.anilbeesetti:nextlib-media3ext", version.ref = "nextlib" }
 media3session           = { module = "androidx.media3:media3-session", version.ref = "media3" }
 media3inspector         = { module = "androidx.media3:media3-inspector", version.ref = "media3" }
 swipeRefresh            = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swipeRefresh" }

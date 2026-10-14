@@ -322,7 +322,7 @@ class PlaybackService :
             CachedDataSource.Factory(resolvingDataSource)
 
         // Create the player
-        val player = ExoPlayer.Builder(this)
+        val player = ExoPlayer.Builder(this, TakiRenderersFactory(this))
             .setAudioAttributes(getAudioAttributes(), true)
             .setWakeMode(getWakeModeFlag())
             .setHandleAudioBecomingNoisy(true)

@@ -204,6 +204,8 @@ dependencies {
     implementation libs.media3datasource
     implementation libs.media3okhttp
     implementation libs.media3inspector
+    // Software (FFmpeg) FLAC decoder for hi-res files the platform decoder stalls on (issue #17)
+    implementation libs.nextlibMedia3ext
     implementation libs.swipeRefresh
 
     implementation libs.navigationFragment
