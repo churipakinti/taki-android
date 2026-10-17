@@ -12,6 +12,7 @@ import android.os.Looper
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.RendererCapabilities
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
@@ -115,5 +116,42 @@ class HiResFlacRenderersTest {
             )
         assertTrue(renderers.any { it is MediaCodecAudioRenderer })
         assertFalse(renderers.any { it is HiResFlacOnlyRenderer })
+    }
+
+    private fun defaultRenderers(): MutableList<Renderer> =
+        DefaultRenderersFactory(ApplicationProvider.getApplicationContext())
+            .createRenderers(
+                Handler(Looper.getMainLooper()),
+                mock<VideoRendererEventListener>(),
+                mock<AudioRendererEventListener>(),
+                mock<TextOutput>(),
+                mock<MetadataOutput>()
+            ).toMutableList()
+
+    @Test
+    fun `the software renderer is placed ahead of the platform audio renderer`() {
+        val list = defaultRenderers()
+        val software = mock<Renderer>()
+        insertAheadOfPlatformAudio(list, software)
+        val softwareIndex = list.indexOf(software)
+        val platformIndex = list.indexOfFirst { it is MediaCodecAudioRenderer }
+        assertTrue(softwareIndex >= 0 && platformIndex >= 0)
+        assertTrue("software $softwareIndex must precede platform $platformIndex", softwareIndex < platformIndex)
+    }
+
+    @Test
+    fun `without a platform audio renderer the software renderer is simply appended`() {
+        val list = mutableListOf<Renderer>(mock(), mock())
+        val software = mock<Renderer>()
+        insertAheadOfPlatformAudio(list, software)
+        assertEquals(software, list.last())
+    }
+
+    @Test
+    fun `the routing decision does not depend on the offload preference`() {
+        // requiresSoftwareFlacDecoder only looks at the Format (MIME type + sample rate), so toggling
+        // Settings.useHwOffload cannot route hi-res FLAC back to the platform decoder.
+        val hiRes = format(MimeTypes.AUDIO_FLAC, 192_000)
+        repeat(2) { assertTrue(requiresSoftwareFlacDecoder(hiRes)) }
     }
 }

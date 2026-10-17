@@ -85,6 +85,18 @@ android {
         }
     }
 
+    // Opt-in ABI splits (issue #17): the FFmpeg decoder adds ~5-6 MB of native code per ABI, so a
+    // universal APK carries four copies. `-PabiSplits` also produces one APK per ABI (the universal
+    // APK is still built); the default build is unchanged.
+    splits {
+        abi {
+            enable project.hasProperty('abiSplits')
+            reset()
+            include 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+            universalApk true
+        }
+    }
+
     sourceSets {
         main.java.srcDirs += "${projectDir}/src/main/kotlin"
         test.java.srcDirs += "${projectDir}/src/test/kotlin"
@@ -145,8 +157,12 @@ android {
 androidComponents {
     onVariants(selector().all()) { variant ->
         variant.outputs.forEach { output ->
+            def abi = output.filters.find {
+                it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI
+            }?.identifier
+            def abiSuffix = abi ? "-${abi}" : ""
             output.outputFileName.set(
-                    "Taki-${output.versionName.get()}-${variant.buildType}.apk"
+                    "Taki-${output.versionName.get()}${abiSuffix}-${variant.buildType}.apk"
             )
         }
     }

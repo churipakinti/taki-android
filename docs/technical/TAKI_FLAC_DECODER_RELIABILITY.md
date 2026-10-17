@@ -115,3 +115,91 @@ Media3 1.11.1). `HiResFlacOnlyRenderer` depends on `ForwardingRenderer`, `Render
 `HiResFlacRenderersTest` (8): routing rule by MIME/sample rate, gated renderer claims only hi-res FLAC and
 never asks the delegate otherwise, name/track type preserved, and the JVM "library unavailable" case still
 has the platform audio renderer and no software one. Real decoding correctness needs the device (section 7).
+
+---
+
+# Release-readiness follow-up (second pass)
+
+Done in this pass: licensing audit, ABI packaging, test hardening. **Not done: everything that needs the
+Pixel 7** - it was not connected to the build machine during this pass (see section 18).
+
+## 14. Dependency licensing assessment (verified from the shipped binaries)
+
+| Component | Version | Evidence | License |
+|---|---|---|---|
+| NextLib wrapper (`media3ext`) | tag `v1.10.1-0.13.0` | POM + repo `LICENSE` | GPL-3.0 |
+| FFmpeg (`libavcodec/avutil/swresample/swscale`) | **6.0** | `Lavc60.3.100` and "FFmpeg version 6.0" strings in the .so files; tag's `ffmpeg/setup.sh` has `FFMPEG_VERSION=6.0` | LGPL-3.0-or-later |
+| libvpx | 1.13.0 | tag's `setup.sh` (`VPX_VERSION=1.13.0`), `--enable-libvpx` in the embedded configure line | BSD-3-Clause |
+| mbed TLS | 3.4.1 | tag's `setup.sh`, `--enable-mbedtls` | Apache-2.0 OR GPL-2.0-or-later |
+
+Why LGPL and not GPL: the configure line embedded in `libavcodec.so` (read directly) contains
+`--enable-version3` and contains neither `--enable-gpl` nor `--enable-nonfree`; no GPL-only or nonfree
+libraries (x264/x265/fdk-aac/lame) are linked (the string `x264` found in the binary is the H.264 decoder's
+`x264_build` field). Built with NDK 25.2.9519653 on a GitHub Actions runner, shared libraries, 16 KB page
+aligned, `--disable-asm`.
+
+Obligations and how they are met:
+- LGPL-3.0 notice + license reference + source pointer: added to `NOTICE.md` (FFmpeg 6.0 source URL,
+  NextLib tag/build script, component versions).
+- Replaceability of the LGPL library: the FFmpeg libraries are separate shared objects loaded dynamically,
+  and Taki (GPL-3.0, full source published) can be rebuilt against a modified FFmpeg/NextLib.
+- GPL-3.0 compatibility: LGPL-3.0, Apache-2.0 and BSD-3-Clause are all compatible with Taki's GPL-3.0.
+- No in-app notice was added (no UI change); `NOTICE.md` is the documentation. Adding a line to the About
+  screen is a possible follow-up.
+
+Remaining uncertainties (not blockers I can prove, but not certified either):
+- I verified the **binary and the tag's build script**, not NextLib's CI logs; the exact libvpx/mbedtls
+  object code is inferred from the script and configure string.
+- The AAR contains no license file; the notices live in `NOTICE.md` and upstream.
+- FFmpeg 6.0 is an old release with published CVEs; Taki only feeds it FLAC from the user's own server
+  (protocols are compiled in but unused). Updating means bumping NextLib (its newer tags use FFmpeg 9.x)
+  together with Media3.
+- This is an engineering assessment, not legal advice.
+
+Conclusion: no distribution blocker found; `DEPENDENCY_LICENSING_REVIEW_COMPLETE` is YES on that basis.
+
+## 15. Packaging and ABI measurements (measured)
+
+Default build (unchanged): one universal APK. New opt-in `-PabiSplits` adds one APK per ABI and still
+builds the universal one (`splits.abi` in `ultrasonic/build.gradle`; output names carry the ABI).
+
+| Artifact (release, signed) | Size |
+|---|---|
+| Baseline universal APK (before the decoder, e66b15cd) | 6,462,728 B |
+| Universal APK with FFmpeg | 30,340,265 B (+23.9 MB) |
+| arm64-v8a split | 12,019,176 B (+5.6 MB vs baseline) |
+| armeabi-v7a split | 11,589,044 B |
+| x86 split | 12,974,808 B |
+| x86_64 split | 12,988,262 B |
+
+`CI` (`ci.yml`) runs `assembleRelease` without the flag and uploads only the debug APK, so it is unaffected.
+The documented release flow (`RELEASE_SIGNING.md`) expects the APK(s) in
+`ultrasonic/build/outputs/apk/release/` and uses globs; both layouts satisfy it. Recommendation: publish the
+arm64-v8a split to modern phones and keep the universal APK as the compatibility download; an AAB would do
+this automatically for a store, but Taki is distributed as direct APKs. Installed size on the device was
+**not measured** (no device).
+
+## 16. R8 / release package checks (done)
+
+The release dex keeps `FfmpegAudioRenderer`, `FfmpegLibrary`, `FfmpegAudioDecoder` and
+`HiResFlacOnlyRenderer`; `lib/<abi>/libavcodec.so`, `libavutil.so`, `libswresample.so`, `libswscale.so`,
+`libmedia3ext.so` are packaged for all four ABIs; the signing certificate verifies on the universal and
+the arm64 split. Running the release build on the phone was not possible (see 18).
+
+## 17. CPU note
+
+`--disable-asm` in NextLib's FFmpeg build means no NEON assembly; this is the likely reason FFmpeg used
+~59-68 % of a core vs ~33-42 % for the platform decoder on 24/192 FLAC. Not optimised (out of scope); the
+cost is paid only while a file at >= 88.2 kHz plays.
+
+## 18. Still open (needs the Pixel 7)
+
+Not verified in this pass, because the phone was disconnected:
+- Packet-rejection investigation (the FLAC was not available on the build machine; it needs either the
+  file or the phone): FFmpeg logs one `Invalid data` packet at ~154 s. Whether that is a damaged frame, an
+  extractor framing quirk or a harmless message, and whether it is audible, is **unverified**. A listening
+  comparison around 2:30-2:40 is required before claiming audio integrity.
+- Offline playback of a downloaded hi-res original (earlier blocked by Subsonic error 70 on the download
+  request; cause not yet diagnosed).
+- Screen-locked / background / media-control playback, Next/Previous across formats, 24/96 and 24/88.2
+  files, long playback, sustained CPU/battery observations, installed size, release-build run.

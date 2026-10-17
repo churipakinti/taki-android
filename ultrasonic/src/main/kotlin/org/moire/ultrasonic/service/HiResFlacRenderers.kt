@@ -91,8 +91,16 @@ internal class TakiRenderersFactory(context: Context) : DefaultRenderersFactory(
         val renderer = HiResFlacOnlyRenderer(
             FfmpegAudioRenderer(eventHandler, eventListener, audioSink)
         )
-        // Renderer order is preference order: ahead of the platform audio renderer.
-        val platformIndex = out.indexOfFirst { it is MediaCodecAudioRenderer }
-        out.add(if (platformIndex >= 0) platformIndex else out.size, renderer)
+        insertAheadOfPlatformAudio(out, renderer)
     }
+}
+
+/**
+ * Renderer order is preference order, so the software renderer must sit ahead of the platform
+ * [MediaCodecAudioRenderer]; with no platform renderer it is simply appended.
+ */
+@UnstableApi
+internal fun insertAheadOfPlatformAudio(renderers: MutableList<Renderer>, software: Renderer) {
+    val platformIndex = renderers.indexOfFirst { it is MediaCodecAudioRenderer }
+    renderers.add(if (platformIndex >= 0) platformIndex else renderers.size, software)
 }
