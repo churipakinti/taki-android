@@ -192,14 +192,46 @@ the arm64 split. Running the release build on the phone was not possible (see 18
 ~59-68 % of a core vs ~33-42 % for the platform decoder on 24/192 FLAC. Not optimised (out of scope); the
 cost is paid only while a file at >= 88.2 kHz plays.
 
-## 18. Still open (needs the Pixel 7)
+## 18. Device validation (Pixel 7) and remaining gaps
 
-Not verified in this pass, because the phone was disconnected:
-- Packet-rejection investigation (the FLAC was not available on the build machine; it needs either the
-  file or the phone): FFmpeg logs one `Invalid data` packet at ~154 s. Whether that is a damaged frame, an
-  extractor framing quirk or a harmless message, and whether it is audible, is **unverified**. A listening
-  comparison around 2:30-2:40 is required before claiming audio integrity.
-- Offline playback of a downloaded hi-res original (earlier blocked by Subsonic error 70 on the download
-  request; cause not yet diagnosed).
-- Screen-locked / background / media-control playback, Next/Previous across formats, 24/96 and 24/88.2
-  files, long playback, sustained CPU/battery observations, installed size, release-build run.
+### Verified on the device
+- Decoder identity: `onAudioDecoderInitialized` reports `ffmpegLavc60.3.100-flac` for audio/flac 192 kHz,
+  2 ch, 24-bit; ordinary tracks still log `setOffload: offload = true` with offload enabled.
+- Streaming playback of a 24/192 FLAC (404.2 s, 287.6 MB) runs through 154 s with no stall and no watchdog
+  nudge (the platform decoder needed one). Seek, pause/resume via media key, and Next work.
+- A media-key resume with the screen off played the tail of the hi-res track to its natural end.
+  This is a short run, not a long locked-screen soak.
+- Peak memory is no higher than with the platform decoder (PSS ~312-318 MB vs ~338 MB).
+
+### Packet near 154 s (investigated, cause NOT resolved)
+Confirmed:
+- The source file (captured byte-for-byte from the live stream) is a valid FLAC: 16,843 frames of 4608
+  samples, a CRC-checked desktop FFmpeg decode reports no errors, no false sync candidates, and the declared
+  maximum frame size equals the real maximum.
+- The frame at 154.200 s (#6425, 17,502 bytes, right/side stereo) is where the in-app FFmpeg 6.0 decoder
+  rejects one packet. Measured effect: a ~22 ms discontinuity.
+
+Strong inference: the file is not damaged; the rejection is specific to the in-app decoder/extractor
+path on that frame (right/side frames are common in the file, 386 of them, so the channel mode alone is not
+the explanation).
+
+Unverified: whether the ~22 ms gap is audible. No human listening comparison was possible in this session.
+**Audio integrity is therefore not claimed.**
+
+### Offline hi-res playback (not verified)
+`download.view` and non-player `stream` requests for the hi-res files tried return Subsonic error 70
+("data not found") from the server, while the same files stream fine inside the player. The cause appears
+to be server-side or request-specific and is unrelated to the decoder; it is tracked separately. No
+hi-res download could be made, so offline playback of a hi-res original is unverified.
+
+### Not tested
+Long locked-screen soak, Next/Previous across mixed formats, 24/96 and 24/88.2 files, AAC/Opus, sustained
+battery, a release-build run on the device (release uses a separate package and needs a login).
+
+### Gates
+`testDebugUnitTest`, `:core:subsonic-api:test`, `assembleDebug`, `assembleRelease`, `lintDebug` and
+`lintVitalRelease` pass. detekt (`-Pqc`) reports 43 issues, below the earlier 47-49 count.
+
+### Status
+Decoder implemented and active on the Pixel; streaming verified. Audio integrity, offline playback and the
+wider device matrix are open, so the #17 fix is **not** declared complete.
