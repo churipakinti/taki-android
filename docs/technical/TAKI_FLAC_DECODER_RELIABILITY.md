@@ -324,3 +324,143 @@ from an existing file, plus a hand-written resume record), because Taki now disc
 own retry, so a real one cannot be switched to another quality in time. Also, `CacheCleaner.clean()` runs when
 the app restarts and removes `.partial.` files, so an interrupted transfer only resumes within the running app
 (existing behaviour, unchanged).
+
+## 21. Streaming, background and format-transition validation (Pixel 7, 2026-10-18)
+
+Source commit `c2532ba5`. Debug build `0.1.0-beta` (versionCode 131), package `...taki.debug`, Pixel 7,
+Android 17, Media3 1.10.1, NextLib 1.10.1-0.13.0 (FFmpeg `Lavc60.3.100`), Navidrome 0.64.2 over Tailscale,
+Wi-Fi, USB-powered. Not repeated: the offline 33-minute soak. All results are `PIXEL_VERIFIED` unless stated.
+The phone was charging, so there is no battery or real Doze result (`deviceidle` stayed `ACTIVE`).
+
+### 21.1 Forcing a real network stream (the local `.opus` problem)
+`07-Lover...opus` is a transcoded copy (#39) and `CachedDataSource` resolves it by stem, so asking for the
+original would have played the local file. Method used (smallest, non-destructive, never committed):
+- A temporary, uncommitted hook in `CachedDataSource.checkCache` returned "no cache hit" for stems listed in a
+  file under the app's private `files/` dir (`val_bypass.txt`, read on every open). Only five Grace stems
+  (`07-Lover`, `06-Hallelujah`, `11-Forget Her`, `10-Dream Brother`, `08-Corpus Christi`) were listed; the local
+  files were not touched (sizes re-listed after the run: identical).
+- A temporary OkHttp network interceptor logged method, path, non-credential query keys, status, content type and
+  length/range headers (no host, no credentials). A second marker file (`val_diag`) enabled `EventLogger`, a
+  one-off FLAC `STREAMINFO` bit-depth decode and a poll of `audioDecoderCounters`.
+- All of it was removed afterwards (see 21.9). Production resolution policy was not changed.
+
+Proof that the Lover stream is the original 24/192 FLAC:
+1. Request: `GET /rest/stream.view` with only `id` (no `maxBitRate`, no `format`); the app's streaming bitrate
+   for Wi-Fi was 0 (original).
+2. Response: `200`, `Content-Type: audio/flac`, `Content-Length: 287632969`, equal to the library `size` for the
+   track; no transcode (a transcode would be `audio/ogg`, as the `stream` 320 case showed in section 19).
+3. `CachedDataSource` logged the bypass line and `No cache hit, forwarding call`; the local `.opus` was never opened.
+4. Media3 input format: `audio/flac`, 192000 Hz, 2 ch, `pcmEnc=21` (24-bit), STREAMINFO bits per sample = 24.
+5. Decoder: `audioDecoderInitialized ... ffmpegLavc60.3.100-flac`.
+6. AudioFlinger track for the app's pid: 192000 Hz, PCM_16, frames served increasing at real time, underruns 0
+   (the output is 16-bit: the FFmpeg path does not give bit-perfect 24-bit output).
+Result: `ORIGINAL_24_192_STREAM_CONFIRMED` = yes.
+
+### 21.2 154.2 s check and FFmpeg packet message
+The Lover track was played from 0 four times, to its natural end each time (404 s):
+
+| Run | Build | Result at the 154 s frame |
+|---|---|---|
+| A | bypass + network log only | played through; **no** `ffmpeg_jni` error in the full logcat covering the crossing |
+| B | + diagnostics (started at 119 s, then seeked to 0) | 2 x `E ffmpeg_jni: Error in avcodec_send_packet: Invalid data found` at 13:31:30.594; `skippedOutputBufferCount` 0 -> 2 at position ~153.85 s (decoder ~0.5-0.8 s ahead of output); `rendered=6443` |
+| C | + diagnostics, no seek (after another track) | same pair of errors, `skipped=2`, `rendered=6431` |
+| Soak | bypass + network log only, screen locked | same pair at 14:18:07, during Lover |
+
+- **No stall in any run**: position kept advancing past 154.2 s and to the end, `isPlaying` true, state READY,
+  AudioFlinger underruns 0, no watchdog log, no recovery seek, no player error, no queue change.
+- The message appears in 3 of 4 runs including a clean build. Run A is an unexplained outlier; it is not
+  evidence that the anomaly is gone. Likely nondeterministic (timing or packetisation); unproven.
+- No other track produced a packet message: the other Grace tracks, the 24/96 files and the Opus/MP3 tracks
+  played with none (the full soak log has one pair only, at Lover).
+- Characterisation: 1-2 packets rejected at frame ~#6425 (4608 samples = 24 ms at 192 kHz; the earlier measurement
+  was a ~22 ms discontinuity). Whether `skipped=2` is two frames or one frame counted twice is unresolved. The
+  decoder recovers on the next packet; `decoderInitCount` stayed 1.
+- Not verified: sample-accurate integrity. The user's earlier A/B listening (no audible interruption) stands as
+  `USER_LISTENING_VERIFIED`; it is not proof of bit-perfect decoding. No FFmpeg or NextLib change was made.
+- Severity: low (one short dropout, no stall) but unexplained. It does not undo the stall fix. Recommendation:
+  do not block the stall fix on it, and keep it recorded as an open integrity question for #17.
+
+### 21.3 Long-duration streaming, screen locked (clean build, no diagnostics)
+Grace album from track 1, 13:43:48-14:41:00 = **57 min 12 s**, 11 tracks, screen off the whole time (no wakelock),
+app in background, one process (pid unchanged, never killed), `MediaSession` present throughout.
+- Sources: 3 local Opus (48 kHz), 8 streamed original 24/192 FLAC (192 kHz; all `200 audio/flac`). Transitions
+  Opus <-> 24/192 FLAC all advanced automatically and in order (queue index 0..10).
+- 304 samples every ~10 s: 0 non-zero AudioFlinger underruns, 0 unexpected pauses, state PLAYING until the
+  correct end of queue (STOPPED). No stall-watchdog log, no player error, no `ffmpeg_jni` message other than the
+  Lover pair.
+- Decoder identity in this run is inferred from the AudioFlinger sample rate class (192000 = FFmpeg, 48000 =
+  Opus) plus the Lover message; exact names come from the diagnostic runs (21.5). Compressed-track coverage here
+  is Opus; streamed MP3 and ordinary FLAC are covered in 21.5.
+- Resources (clean build; `dumpsys meminfo` TOTAL PSS and one `top` CPU sample per ~10 s, so noisy): PSS
+  226-272 MB, mean 238 MB; CPU samples 0-78 %, mean 29 %. No growth over 57 min. For comparison, Phase 1B
+  offline reported 277-289 MB. PSS drops to ~160-175 MB while the UI is backgrounded and the app is trimmed.
+
+### 21.4 Lifecycle and controls (diagnostic build, Hallelujah and Grace queues, 24/192 streams)
+- Lock, unlock, home, foreground: position advanced in real time through each, no decoder reinit, no state change.
+- Notification (quick-settings media card): Pause, Play (resumed at the same position, 110.55 s), Previous. Paused
+  for 83 s with no automatic resume. Media keys and `cmd media_session dispatch`: pause, play, play-pause toggle,
+  fast-forward (+5 s), rewind (-5 s), next (no-op at the end of the queue) all correct.
+- Lock-screen media card (the device has a secure lock): Next, Pause, Play, Previous worked. Earlier attempts
+  failed only because the screen had timed out before the tap.
+- Seek forward 122.9 -> 253.0 s and back 264.3 -> 121.2 s via the seek bar: correct, no watchdog log.
+- Previous: the first press after the start restarts the track (Media3 behaviour), a second press within 3 s goes
+  to the previous item; Next followed by a quick Previous returns to the earlier item.
+- Pause near a transition (Eternal Life, 287.7 s of 292 s): paused 6 s, resumed at 287.70 s, then advanced by
+  AUTO_TRANSITION into the next 24/192 track with the decoder swap Opus -> FFmpeg.
+- Seek to 97 % then natural end: 24/192 FLAC -> Opus on its own, correct next item.
+- Seek to 50 % then Next: correct next item.
+- Locked playback for 3 min 40 s, then return to the app: position in sync (4:17 shown), no restart.
+- Not exercised: Bluetooth or second-device controls, and #34 audio-focus interplay with another app (no
+  AudioManager change was made).
+
+### 21.5 Mixed-format transitions (diagnostic build; exact decoder from `audioDecoderInitialized`)
+Sources identified from stream/format logs, not file names. In this library the downloaded `Stromae/Cheese/*.flac`
+files are Opus (pre-#39 mislabel), and no 44.1 kHz FLAC was found; the ordinary FLAC used is Geography (FLAC
+16-bit 48 kHz, streamed, `c2.android.flac.decoder`).
+
+| Transition | Result | Decoders |
+|---|---|---|
+| MP3 -> ordinary FLAC (16/48) | pass | `c2.android.mp3` -> `c2.android.flac` |
+| ordinary FLAC -> MP3 | pass | `c2.android.flac` -> `c2.android.mp3` |
+| MP3 -> 24/192 FLAC | pass, ~0.28 s | mp3 -> `ffmpegLavc60.3.100-flac` |
+| 24/192 FLAC -> MP3 | pass | ffmpeg -> mp3 |
+| Opus -> 24/192 FLAC | pass, 0.24-0.33 s | `c2.android.opus` -> ffmpeg |
+| 24/192 FLAC -> Opus | pass | ffmpeg -> `c2.android.opus` |
+| 24/192 -> another 24/192 FLAC | pass | ffmpeg re-created per track |
+| 24/192 -> 24/96 FLAC | pass | ffmpeg (96000 Hz) |
+| 24/96 -> ordinary FLAC | pass | ffmpeg -> `c2.android.flac` |
+| ordinary FLAC <-> 24/192 FLAC (both directions) | pass | `c2.android.flac` <-> ffmpeg |
+| Opus -> MP3, MP3 -> Opus, ordinary FLAC -> Opus | pass | platform decoders |
+| Manual Next (~100 presses over two queues), Previous, seek then Next, pause near a transition, natural completion | pass | see 21.4 |
+
+Each transition selected the requested queue item (index +1 per press, correct title/album/suffix), began audio
+(`audioTrackInit` 0.19-0.43 s after the key press, `adb` latency included, preloaded items), kept the queue intact,
+and showed no stall watchdog and no persistent buffering. Opus items were local, the rest streamed; the 24/192
+items were also played offline in earlier phases. Not claimed: gapless playback (no suitable material, no
+measurement). One expected result: streaming a `Stromae` track with its local copy bypassed returned a 182-byte
+JSON error (the server no longer has that file) and the app showed its existing "Couldn't play this track" dialog
+(`ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE`). That came from forcing a stream of a missing file, not a regression.
+
+### 21.6 Other high-resolution rates
+- 24-bit/96 kHz FLAC: **verified** with two albums (Random Access Memories, Discovery). `One More Time` played
+  start to end (320 s): AudioFlinger 96000 Hz, underruns 0, no packet message, FFmpeg selected.
+- 24-bit/192 kHz: verified (Grace, 8 tracks).
+- 24-bit/88.2 kHz: **UNTESTED** (no such file found in a limited probe of about 12 albums). 176.4 kHz: not found.
+
+### 21.7 Findings and remaining limitations
+- The stall fix holds for streaming, locked, 57-minute and mixed-queue playback on this build.
+- The FFmpeg packet message at ~154.2 s of the Lover file recurs (3 of 4 runs). Cause unknown; not audible in
+  the earlier A/B; integrity is not claimed.
+- The FFmpeg path outputs 16-bit PCM for 24-bit sources, so playback is not bit-perfect.
+- Charging device: no battery or real Doze data; PSS and CPU are coarse samples.
+- Debug build only. The release package (different application id, its own login) is not validated.
+
+### 21.8 Not touched
+No source change is committed by this validation. Offload and watchdog policy, #19/#34/#39/#40 behaviour and the
+NextLib dependency are unchanged. Automated gates were not re-run because there is no application code change.
+
+### 21.9 Restoration
+The diagnostics (cache-bypass hook, network log, event logger, counters poll) and one older uncommitted
+`EventLogger` line that was already in the working tree were reverted with `git checkout`; the marker files were
+deleted from the app's private dir; a clean `assembleDebug` of `c2532ba5` was reinstalled (versionCode 131; the
+APK contains none of the diagnostic strings). `git status` was clean before this document was added.
