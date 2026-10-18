@@ -486,7 +486,7 @@ open class RESTMusicService(
         offset: Long,
         maxBitrate: Int?,
         save: Boolean
-    ): Pair<InputStream, Boolean> {
+    ): DownloadStream {
         val songOffset = if (offset < 0) 0 else offset
         val subsonicMaxBitRate = maxBitrate?.toSubsonicMaxBitRate()
 
@@ -499,14 +499,26 @@ open class RESTMusicService(
                 .execute().toStreamResponse()
         }
 
+        // The requested range does not fit the representation: let the caller decide, it is not
+        // proof that the partial file is complete.
+        if (response.responseHttpCode == DownloadStream.HTTP_RANGE_NOT_SATISFIABLE) {
+            return DownloadStream(null, response.responseHttpCode)
+        }
+
         response.throwOnFailure()
 
         if (response.stream == null) {
             throw IOException("Null stream response")
         }
 
-        val partial = response.responseHttpCode == 206
-        return Pair(response.stream!!, partial)
+        return DownloadStream(
+            response.stream,
+            response.responseHttpCode,
+            response.contentType,
+            response.contentRange,
+            response.contentLength,
+            response.etag
+        )
     }
 
     /**

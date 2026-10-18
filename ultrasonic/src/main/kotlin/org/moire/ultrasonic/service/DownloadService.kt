@@ -444,6 +444,7 @@ class DownloadService :
                 cancelDownload(track)
 
                 Storage.delete(track.getPartialFile())
+                Storage.delete(track.getPartialFile() + ".resume")
                 FileUtil.fileVariants(track.getCompleteFile()).forEach { Storage.delete(it) }
                 FileUtil.fileVariants(track.getPinnedFile()).forEach { Storage.delete(it) }
 

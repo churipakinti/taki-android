@@ -13,7 +13,12 @@ import org.moire.ultrasonic.api.subsonic.SubsonicError
 class StreamResponse(
     val stream: InputStream? = null,
     val apiError: SubsonicError? = null,
-    val responseHttpCode: Int
+    val responseHttpCode: Int,
+    /** Response headers needed to validate a resumed transfer; null when absent. */
+    val contentType: String? = null,
+    val contentRange: String? = null,
+    val contentLength: Long = -1L,
+    val etag: String? = null
 ) {
     /**
      * Check if this response has error.

@@ -488,7 +488,7 @@ class OfflineMusicService :
         offset: Long,
         maxBitrate: Int?,
         save: Boolean
-    ): Pair<InputStream, Boolean> =
+    ): DownloadStream =
         throw OfflineException("getDownloadInputStream isn't available in offline mode")
 
     @Throws(OfflineException::class)

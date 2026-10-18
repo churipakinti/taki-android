@@ -408,7 +408,7 @@ class CachedMusicService(private val musicService: MusicService) :
         offset: Long,
         maxBitrate: Int?,
         save: Boolean
-    ): Pair<InputStream, Boolean> =
+    ): DownloadStream =
         musicService.getDownloadInputStream(song, offset, maxBitrate, save)
 
     @Throws(Exception::class)

@@ -27,7 +27,11 @@ fun Response<out ResponseBody>.toStreamResponse(): StreamResponse {
         } else {
             StreamResponse(
                 stream = responseBody?.byteStream(),
-                responseHttpCode = response.code()
+                responseHttpCode = response.code(),
+                contentType = response.headers()["Content-Type"],
+                contentRange = response.headers()["Content-Range"],
+                contentLength = response.headers()["Content-Length"]?.toLongOrNull() ?: -1L,
+                etag = response.headers()["ETag"]
             )
         }
     } else {

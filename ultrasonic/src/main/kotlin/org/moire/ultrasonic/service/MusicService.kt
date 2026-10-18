@@ -162,8 +162,8 @@ interface MusicService {
     suspend fun getStarred2(): SearchResult
 
     /**
-     * Return response [InputStream] and a [Boolean] that indicates if this response is
-     * partial.
+     * Return the download response: its [java.io.InputStream] (null for a 416), HTTP status and
+     * the headers needed to decide whether it may be appended to a partial file.
      */
     @Throws(Exception::class)
     fun getDownloadInputStream(
@@ -171,7 +171,7 @@ interface MusicService {
         offset: Long,
         maxBitrate: Int?,
         save: Boolean
-    ): Pair<InputStream, Boolean>
+    ): DownloadStream
 
     @Throws(Exception::class)
     fun getStreamUrl(id: String, maxBitRate: Int?, format: String?): String?

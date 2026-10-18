@@ -37,6 +37,7 @@ import timber.log.Timber
 
 private const val MAX_RETRIES = 5
 private const val REFRESH_INTERVAL = 50
+private const val RESUME_SUFFIX = ".resume"
 
 class DownloadTask(
     val downloadTrack: DownloadableTrack,
@@ -102,28 +103,42 @@ class DownloadTask(
     fun download() {
         setState(DownloadState.DOWNLOADING, null)
 
-        val fileLength = Storage.getFromPath(downloadTrack.partialFile)?.length ?: 0
-
-        // Attempt partial HTTP GET, appending to the file if it exists.
-        val (inStream, isPartial) = musicService.getDownloadInputStream(
-            downloadTrack.track,
-            fileLength,
-            if (downloadTrack.pinned) Settings.maxBitRatePinning else Settings.maxBitRate,
-            downloadTrack.pinned && Settings.pinWithHighestQuality
+        val bitRate = if (downloadTrack.pinned) Settings.maxBitRatePinning else Settings.maxBitRate
+        val save = downloadTrack.pinned && Settings.pinWithHighestQuality
+        val identity = RequestIdentity(
+            downloadTrack.track.id,
+            if (save) "download" else "stream",
+            bitRate.coerceAtLeast(0)
         )
 
-        inputStream = inStream
+        // Bytes may only be appended to a partial file that provably belongs to the same
+        // representation (issue #40); otherwise the transfer starts again from zero.
+        val partialLength = Storage.getFromPath(downloadTrack.partialFile)?.length ?: 0
+        val record = if (partialLength > 0) readResumeRecord() else null
+        val outcome = DownloadResume.open(
+            partialLength,
+            record,
+            identity,
+            ::discardPartial
+        ) { offset -> musicService.getDownloadInputStream(downloadTrack.track, offset, bitRate, save) }
+        val response = outcome.response
+        val resumed = outcome.resumed
 
-        if (isPartial) {
-            Timber.i("Executed partial HTTP GET, skipping %d bytes", fileLength)
+        inputStream = response.stream ?: throw IOException("Download failed: HTTP ${response.httpCode}")
+
+        val baseLength = if (resumed) partialLength else 0L
+        if (resumed) {
+            Timber.i("Resuming at byte %d", baseLength)
+        } else {
+            writeResumeRecord(DownloadResume.recordFor(identity, response))
         }
 
+        // A 200 replaces the file, a 206 (resumed, or a fresh range from zero) extends it.
         outputStream = Storage.getOrCreateFileFromPath(downloadTrack.partialFile)
-            .getFileOutputStream(isPartial)
+            .getFileOutputStream(response.isPartial)
 
         val len = inputStream!!.copyWithProgress(outputStream!!) { totalBytesCopied ->
-            // Add previous existing file length for correct display when resuming
-            publishProgressUpdate(fileLength + totalBytesCopied)
+            publishProgressUpdate(baseLength + totalBytesCopied)
         }
 
         Timber.i("Downloaded %d bytes to %s", len, downloadTrack.partialFile)
@@ -131,6 +146,35 @@ class DownloadTask(
         inputStream?.close()
         outputStream?.flush()
         outputStream?.close()
+
+        // Never promote a truncated transfer to a finished file
+        val expected = DownloadResume.recordFor(identity, response).totalLength
+        val actual = Storage.getFromPath(downloadTrack.partialFile)?.length ?: 0
+        if (expected >= 0 && actual != expected) {
+            throw IOException("Incomplete download: $actual of $expected bytes")
+        }
+    }
+
+    private val resumeRecordPath: String get() = downloadTrack.partialFile + RESUME_SUFFIX
+
+    private fun readResumeRecord(): ResumeRecord? = try {
+        Storage.getFromPath(resumeRecordPath)
+            ?.takeIf { Storage.isPathExists(resumeRecordPath) }
+            ?.getFileInputStream()?.use { ResumeRecord.parse(it.readBytes().decodeToString()) }
+    } catch (e: IOException) {
+        Timber.w(e, "Could not read the resume record")
+        null
+    }
+
+    private fun writeResumeRecord(record: ResumeRecord) {
+        Storage.getOrCreateFileFromPath(resumeRecordPath).getFileOutputStream(false).use {
+            it.write(record.serialize().encodeToByteArray())
+        }
+    }
+
+    private fun discardPartial() {
+        Storage.delete(downloadTrack.partialFile)
+        Storage.delete(resumeRecordPath)
     }
 
     private fun publishProgressUpdate(totalBytesCopied: Long) {
@@ -168,6 +212,7 @@ class DownloadTask(
         val finalPath = withActualExtension(target, actualExtension)
 
         Storage.rename(downloadTrack.partialFile, finalPath)
+        Storage.delete(resumeRecordPath)
         Timber.i("Renamed file to $finalPath")
         if (downloadTrack.pinned) {
             setState(DownloadState.PINNED, null)

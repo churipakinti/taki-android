@@ -273,3 +273,54 @@ re-download.
 Verified on a Pixel 7: bitrate 320 download of "Last Goodbye" was saved as `03-Last Goodbye.opus` (Ogg/Opus,
 48 kHz stereo); it played offline with no stream request; delete removed the `.opus`; original-quality
 `06-Hallelujah.flac` still plays offline.
+
+## 20. Safe partial-download resume (#40)
+
+Reproduced on a Pixel 7 before the fix: a 320 kbps download of a disposable track was interrupted at
+2,848,302 bytes (an Ogg/Opus partial). After switching the pinning bitrate to 0 (original), Taki sent
+`download.view` with `Range: bytes=2848302-`; Navidrome answered `206` with `Content-Type: audio/flac` and a
+`Content-Range` for the FLAC, and Taki appended it. The result was a 215,611,102-byte file (the size of the
+FLAC) with an Opus header, labelled `.opus`: `ffprobe` duration `N/A`, `ffmpeg` "CRC mismatch / Invalid data
+found". The reverse direction was already safe because Navidrome answers a transcoded `stream.view` Range
+request with a full `200` (`Accept-Ranges: none`), which Taki treats as a fresh transfer.
+
+Root cause: `DownloadTask` resumed whenever a `.partial` file existed, using only its length, and treated any
+`206` as safe to append. Nothing recorded which request produced the partial.
+
+Resume contract (`DownloadResume`, `ResumeRecord`):
+- A small `<partial>.resume` sidecar is written when a transfer starts from zero: track id, endpoint
+  (`download`/`stream`), max bitrate, response Content-Type, total length, ETag.
+- A Range is attempted only if the partial exists, the sidecar exists and matches the new request, and the
+  request is for the original representation (bitrate 0). A transcoded response is never assumed to be
+  byte-identical across requests, so transcoded transfers always restart from zero; a partial without a
+  sidecar (pre-fix) is restarted.
+- The response is appended only if it is `206`, its `Content-Range` starts exactly at the partial length, its
+  total equals the recorded total, `Content-Length` equals total minus start, Content-Type (media type) matches,
+  and the ETag matches when one was recorded. Anything else (including a `206` that does not continue our bytes,
+  a `416`, or a `200`) discards the partial and restarts from zero. `416` is never treated as completion.
+- After the copy, if the total is known and the file length differs, the download fails and stays a recoverable
+  partial; it is never renamed to a finished file.
+- The sidecar is deleted on completion and on delete; `CacheCleaner` already treats `.partial.` names as cache.
+
+Cost: one tiny text file (~100 bytes) per interrupted transfer, one extra write when a transfer starts, no
+hashing or reading of the partial, and at most one extra HTTP request only when a resume is rejected.
+
+Known limits: a partial is trusted by length plus the recorded identity and validators; its bytes are not
+re-hashed. The sidecar of an abandoned partial is removed with the partial by the cache cleaner.
+
+Pixel 7 validation of the fix (disposable tracks, Navidrome 0.64.2):
+- Same-quality resume (original, in-process socket failure): the retry logged `Resuming at byte 50318356`,
+  Navidrome answered `206` with `Content-Range: bytes 50318356-118459578/118459579`, 68,141,223 bytes were
+  transferred, and the 118,459,579-byte result is a 24/192 FLAC whose CRC-checked decode is clean.
+- Opus partial + `stream` 320 record, then an original-quality request: one request from byte 0, the planted
+  partial was discarded, result `09-Eternal Life.flac`, 215,611,102 bytes, CRC-clean FLAC (the pre-fix build
+  produced a corrupt 215,611,102-byte `.opus` from the same state).
+- FLAC partial + `download` 0 record, then a 320 request: fresh `stream.view` (200, `audio/ogg`), result a
+  11,420,144-byte Opus file (292.37 s) that decodes without errors.
+- Offline (Wi-Fi and data off) playback of the resumed FLAC and the new Opus: 0 cache misses, 0 stream
+  requests, state PLAYING.
+Observations: the cross-quality states for the last two cases were planted on disk (a real Opus partial copied
+from an existing file, plus a hand-written resume record), because Taki now discards a transcoded partial on its
+own retry, so a real one cannot be switched to another quality in time. Also, `CacheCleaner.clean()` runs when
+the app restarts and removes `.partial.` files, so an interrupted transfer only resumes within the running app
+(existing behaviour, unchanged).
