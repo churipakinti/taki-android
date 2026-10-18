@@ -218,11 +218,21 @@ the explanation).
 Unverified: whether the ~22 ms gap is audible. No human listening comparison was possible in this session.
 **Audio integrity is therefore not claimed.**
 
-### Offline hi-res playback (not verified)
-`download.view` and non-player `stream` requests for the hi-res files tried return Subsonic error 70
-("data not found") from the server, while the same files stream fine inside the player. The cause appears
-to be server-side or request-specific and is unrelated to the decoder; it is tracked separately. No
-hi-res download could be made, so offline playback of a hi-res original is unverified.
+### Offline hi-res playback (verified, Pixel 7, 2026-10-17)
+Error 70 was **not reproduced** through Taki's own download path (issue #38), so its original cause is
+still unknown; the earlier error-70 responses came from ad hoc requests made outside the app.
+- Taki's pinned download uses `download.view` when the pinning bitrate is 0 (the default, "original"), and
+  `stream.view` with `maxBitRate=N` otherwise. This device had the pinning bitrate at 320.
+- With 0: `download.view` returned `206`, `audio/flac`, 268,748,292 bytes; the file on the device is a
+  24-bit/192 kHz FLAC (ffprobe), size equals `Content-Length`, and a CRC-checked decode reports no errors.
+- With the network disabled, the downloaded file was opened from the local path (no stream request),
+  decoded by `ffmpegLavc60.3.100-flac`, seeked to 2:20, played continuously across 154 s with no stall,
+  and paused/resumed. No playback errors in logcat.
+- Not verified: a byte-for-byte hash against the server original (no second trusted copy available).
+- Side finding (separate defect): with a non-zero pinning bitrate the server transcodes (Opus in Ogg for
+  320) and Taki saves it under the original `.flac` name. Playback still works, but the extension is
+  misleading. Two such files (`01-Mojo Pin.flac`, `07-Lover...flac`) were created by this test and remain
+  on the test device.
 
 ### Not tested
 Long locked-screen soak, Next/Previous across mixed formats, 24/96 and 24/88.2 files, AAC/Opus, sustained
@@ -233,5 +243,6 @@ battery, a release-build run on the device (release uses a separate package and 
 `lintVitalRelease` pass. detekt (`-Pqc`) reports 43 issues, below the earlier 47-49 count.
 
 ### Status
-Decoder implemented and active on the Pixel; streaming verified. Audio integrity, offline playback and the
-wider device matrix are open, so the #17 fix is **not** declared complete.
+Decoder implemented and active on the Pixel; streaming and offline playback verified. Listening comparison
+(user, around 2:30-2:40: Taki and Feishin both without audible interruption) is a passed subjective check,
+not proof of bit-perfect decoding. The wider device matrix is open, so the #17 fix is **not** declared complete.
