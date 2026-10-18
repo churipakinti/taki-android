@@ -185,15 +185,10 @@ class CachedDataSource(private var upstreamDataSource: DataSource) : BaseDataSou
      * Checks our cache for a matching media file
      */
     private fun checkCache(path: String): Long {
-        var filePath: String = path
-        var found = Storage.isPathExists(path)
-
-        if (!found) {
-            filePath = FileUtil.getCompleteFile(path)
-            found = Storage.isPathExists(filePath)
-        }
-
-        if (!found) return -1
+        // A transcoded download keeps the stem but carries the extension of its real format
+        val filePath: String = FileUtil.resolveExistingFile(path)
+            ?: FileUtil.resolveExistingFile(FileUtil.getCompleteFile(path))
+            ?: return -1
 
         cachePath = filePath
         openedFile = true

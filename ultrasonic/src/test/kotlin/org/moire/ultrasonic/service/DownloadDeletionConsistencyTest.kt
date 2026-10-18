@@ -32,6 +32,7 @@ import org.mockito.kotlin.verify
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.util.AbstractFile
 import org.moire.ultrasonic.util.CacheCleaner
+import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.FileUtil.getCompleteFile
 import org.moire.ultrasonic.util.FileUtil.getPartialFile
 import org.moire.ultrasonic.util.FileUtil.getPinnedFile
@@ -214,6 +215,40 @@ class DownloadDeletionConsistencyTest {
         assertFalse(fakeRoot.present.contains(otherTrack.pinned))
         verify(cacheCleaner).cleanDatabaseSelective(otherTrack)
         assertEquals(listOf(DownloadState.IDLE), emissionsFor(otherTrack))
+    }
+
+    @Test
+    fun `a transcoded copy under another extension still counts as downloaded`() {
+        fakeRoot.present += FileUtil.withExtension(track.pinned, "opus")
+        assertEquals(DownloadState.PINNED, DownloadService.getDownloadState(track))
+
+        fakeRoot.present.clear()
+        fakeRoot.present += FileUtil.withExtension(track.complete, "opus")
+        assertEquals(DownloadState.DONE, DownloadService.getDownloadState(track))
+    }
+
+    @Test
+    fun `deleting a track removes its transcoded copy too`() {
+        val opus = FileUtil.withExtension(track.pinned, "opus")
+        fakeRoot.present += opus
+
+        runBlocking { DownloadService.deleteAsync(listOf(track)) }
+
+        assertFalse("the .opus copy must be removed", fakeRoot.present.contains(opus))
+        verify(cacheCleaner).cleanDatabaseSelective(track)
+        assertEquals(listOf(DownloadState.IDLE), emissionsFor(track))
+    }
+
+    @Test
+    fun `an original and a transcoded copy are both found and the original wins lookup`() {
+        val opus = FileUtil.withExtension(track.pinned, "opus")
+        fakeRoot.present += track.pinned
+        fakeRoot.present += opus
+        assertEquals(track.pinned, FileUtil.resolveExistingFile(track.pinned))
+        fakeRoot.present -= track.pinned
+        assertEquals(opus, FileUtil.resolveExistingFile(track.pinned))
+        fakeRoot.present.clear()
+        assertEquals(null, FileUtil.resolveExistingFile(track.pinned))
     }
 
     // --- helpers ----------------------------------------------------------------------------

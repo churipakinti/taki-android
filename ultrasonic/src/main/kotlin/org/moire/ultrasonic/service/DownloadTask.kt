@@ -8,6 +8,7 @@
 package org.moire.ultrasonic.service
 
 import android.os.SystemClock
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import kotlinx.coroutines.CancellationException
@@ -25,6 +26,7 @@ import org.moire.ultrasonic.domain.Artist
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.DownloadState.Companion.isFinalState
 import org.moire.ultrasonic.subsonic.ImageLoaderProvider
+import org.moire.ultrasonic.util.AudioContainerSniffer
 import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.FileUtil.copyWithProgress
 import org.moire.ultrasonic.util.Settings
@@ -57,24 +59,30 @@ class DownloadTask(
     }
 
     private suspend fun checkIfExists(): Boolean {
-        if (Storage.isPathExists(downloadTrack.pinnedFile)) {
-            Timber.i("%s already exists. Skipping.", downloadTrack.pinnedFile)
+        // An existing copy may carry the extension of its real (possibly transcoded) format
+        val existingPinned = FileUtil.resolveExistingFile(downloadTrack.pinnedFile)
+        if (existingPinned != null) {
+            Timber.i("%s already exists. Skipping.", existingPinned)
             setState(DownloadState.PINNED, null)
             return true
         }
 
-        if (Storage.isPathExists(downloadTrack.completeFile)) {
+        val existingComplete = FileUtil.resolveExistingFile(downloadTrack.completeFile)
+        if (existingComplete != null) {
             var newStatus: DownloadState = DownloadState.DONE
             if (downloadTrack.pinned) {
                 Storage.rename(
-                    downloadTrack.completeFile,
-                    downloadTrack.pinnedFile
+                    existingComplete,
+                    FileUtil.withExtension(
+                        downloadTrack.pinnedFile,
+                        FileUtil.getExtension(existingComplete)
+                    )
                 )
                 newStatus = DownloadState.PINNED
             } else {
                 Timber.i(
                     "%s already exists. Skipping.",
-                    downloadTrack.completeFile
+                    existingComplete
                 )
             }
 
@@ -154,22 +162,48 @@ class DownloadTask(
             Timber.w(ignore)
         }
 
+        // The server may have transcoded the download, so name the file after the bytes received
+        val actualExtension = detectDownloadedExtension()
+        val target = if (downloadTrack.pinned) downloadTrack.pinnedFile else downloadTrack.completeFile
+        val finalPath = withActualExtension(target, actualExtension)
+
+        Storage.rename(downloadTrack.partialFile, finalPath)
+        Timber.i("Renamed file to $finalPath")
         if (downloadTrack.pinned) {
-            Storage.rename(
-                downloadTrack.partialFile,
-                downloadTrack.pinnedFile
-            )
-            Timber.i("Renamed file to ${downloadTrack.pinnedFile}")
             setState(DownloadState.PINNED, null)
-            Util.scanMedia(downloadTrack.pinnedFile)
+            Util.scanMedia(finalPath)
         } else {
-            Storage.rename(
-                downloadTrack.partialFile,
-                downloadTrack.completeFile
-            )
-            Timber.i("Renamed file to ${downloadTrack.completeFile}")
             setState(DownloadState.DONE, null)
         }
+    }
+
+    private fun withActualExtension(path: String, actualExtension: String?): String =
+        if (actualExtension == null || actualExtension == FileUtil.getExtension(path)) {
+            path
+        } else {
+            Timber.w(
+                "Downloaded data is %s, not %s: storing it with the matching extension",
+                actualExtension,
+                FileUtil.getExtension(path)
+            )
+            FileUtil.withExtension(path, actualExtension)
+        }
+
+    /** Extension matching the container of the downloaded bytes, or null when unrecognised. */
+    private fun detectDownloadedExtension(): String? = try {
+        Storage.getFromPath(downloadTrack.partialFile)?.getFileInputStream()?.use { stream ->
+            val header = ByteArray(AudioContainerSniffer.HEADER_BYTES)
+            var read = 0
+            while (read < header.size) {
+                val n = stream.read(header, read, header.size - read)
+                if (n < 0) break
+                read += n
+            }
+            AudioContainerSniffer.detectExtension(header, read)
+        }
+    } catch (e: IOException) {
+        Timber.w(e, "Could not inspect the downloaded file")
+        null
     }
 
     private fun onCompletion(e: Throwable?) {

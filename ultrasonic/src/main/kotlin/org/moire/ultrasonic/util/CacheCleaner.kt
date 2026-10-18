@@ -20,9 +20,11 @@ import org.moire.ultrasonic.domain.Playlist
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.RxBus
 import org.moire.ultrasonic.util.FileUtil.getAlbumArtFile
+import org.moire.ultrasonic.util.FileUtil.fileVariants
 import org.moire.ultrasonic.util.FileUtil.getCompleteFile
 import org.moire.ultrasonic.util.FileUtil.getPartialFile
 import org.moire.ultrasonic.util.FileUtil.getPinnedFile
+import org.moire.ultrasonic.util.FileUtil.resolveExistingFile
 import org.moire.ultrasonic.util.FileUtil.getPlaylistDirectory
 import org.moire.ultrasonic.util.FileUtil.getPlaylistFile
 import org.moire.ultrasonic.util.FileUtil.listFiles
@@ -95,7 +97,8 @@ class CacheCleaner :
 
         // Check all tracks if they have files
         val orphanedTracks = tracks.filter {
-            !Storage.isPathExists(it.getPinnedFile()) && !Storage.isPathExists(it.getCompleteFile())
+            resolveExistingFile(it.getPinnedFile()) == null &&
+                resolveExistingFile(it.getCompleteFile()) == null
         }
 
         // Delete orphaned tracks
@@ -244,8 +247,8 @@ class CacheCleaner :
             ?: return filesToNotDelete
         for (track in playlist) {
             filesToNotDelete.add(track.getPartialFile())
-            filesToNotDelete.add(track.getCompleteFile())
-            filesToNotDelete.add(track.getPinnedFile())
+            filesToNotDelete.addAll(fileVariants(track.getCompleteFile()))
+            filesToNotDelete.addAll(fileVariants(track.getPinnedFile()))
         }
         filesToNotDelete.add(musicDirectory.path)
         return filesToNotDelete

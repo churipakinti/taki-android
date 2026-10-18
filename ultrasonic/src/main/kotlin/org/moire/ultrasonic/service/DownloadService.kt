@@ -39,6 +39,7 @@ import org.moire.ultrasonic.app.UApp
 import org.moire.ultrasonic.domain.Track
 import org.moire.ultrasonic.service.DownloadState.Companion.isFinalState
 import org.moire.ultrasonic.util.CacheCleaner
+import org.moire.ultrasonic.util.FileUtil
 import org.moire.ultrasonic.util.FileUtil.getCompleteFile
 import org.moire.ultrasonic.util.FileUtil.getPartialFile
 import org.moire.ultrasonic.util.FileUtil.getPinnedFile
@@ -342,11 +343,11 @@ class DownloadService :
             // showed "No media found" while affected tracks still showed the downloaded
             // checkmark.
             return tracks.filter { track ->
-                if (Storage.isPathExists(track.getCompleteFile())) {
+                if (FileUtil.resolveExistingFile(track.getCompleteFile()) != null) {
                     postState(track, DownloadState.DONE)
                     return@filter false
                 }
-                if (Storage.isPathExists(track.getPinnedFile())) {
+                if (FileUtil.resolveExistingFile(track.getPinnedFile()) != null) {
                     postState(track, DownloadState.PINNED)
                     return@filter false
                 }
@@ -390,15 +391,21 @@ class DownloadService :
             // catch-all) before the track was ever actually queued.
             val filteredTracks: List<Track> = tracks.map { track ->
                 if (shouldPin) {
-                    if (Storage.isPathExists(track.getCompleteFile())) {
-                        val completeFile = Storage.getFromPath(track.getCompleteFile())!!
-                        Storage.renameOrDeleteIfAlreadyExists(completeFile, track.getPinnedFile())
+                    FileUtil.resolveExistingFile(track.getCompleteFile())?.let { existing ->
+                        val completeFile = Storage.getFromPath(existing)!!
+                        Storage.renameOrDeleteIfAlreadyExists(
+                            completeFile,
+                            FileUtil.withExtension(track.getPinnedFile(), FileUtil.getExtension(existing))
+                        )
                         postState(track, DownloadState.PINNED)
                     }
                 } else {
-                    if (Storage.isPathExists(track.getPinnedFile())) {
-                        val pinnedFile = Storage.getFromPath(track.getPinnedFile())!!
-                        Storage.renameOrDeleteIfAlreadyExists(pinnedFile, track.getCompleteFile())
+                    FileUtil.resolveExistingFile(track.getPinnedFile())?.let { existing ->
+                        val pinnedFile = Storage.getFromPath(existing)!!
+                        Storage.renameOrDeleteIfAlreadyExists(
+                            pinnedFile,
+                            FileUtil.withExtension(track.getCompleteFile(), FileUtil.getExtension(existing))
+                        )
                         postState(track, DownloadState.DONE)
                     }
                 }
@@ -437,8 +444,8 @@ class DownloadService :
                 cancelDownload(track)
 
                 Storage.delete(track.getPartialFile())
-                Storage.delete(track.getCompleteFile())
-                Storage.delete(track.getPinnedFile())
+                FileUtil.fileVariants(track.getCompleteFile()).forEach { Storage.delete(it) }
+                FileUtil.fileVariants(track.getPinnedFile()).forEach { Storage.delete(it) }
 
                 // If a persisted media file could not actually be removed from disk, we must not
                 // then wipe its offline/database record: "row gone, file still present" is
@@ -447,8 +454,8 @@ class DownloadService :
                 // still cleaned up idempotently. A leftover .partial is transient cache scratch
                 // (swept separately by CacheCleaner), not persisted media, so it does not block
                 // cleanup here.
-                if (Storage.isPathExists(track.getCompleteFile()) ||
-                    Storage.isPathExists(track.getPinnedFile())
+                if (FileUtil.resolveExistingFile(track.getCompleteFile()) != null ||
+                    FileUtil.resolveExistingFile(track.getPinnedFile()) != null
                 ) {
                     Timber.w(
                         "Could not delete downloaded media for %s; keeping its offline state",
@@ -485,8 +492,8 @@ class DownloadService :
                 return DownloadState.DOWNLOADING
             }
             if (failedList[track.id] != null) return DownloadState.FAILED
-            if (Storage.isPathExists(track.getCompleteFile())) return DownloadState.DONE
-            if (Storage.isPathExists(track.getPinnedFile())) return DownloadState.PINNED
+            if (FileUtil.resolveExistingFile(track.getCompleteFile()) != null) return DownloadState.DONE
+            if (FileUtil.resolveExistingFile(track.getPinnedFile()) != null) return DownloadState.PINNED
             return DownloadState.IDLE
         }
 

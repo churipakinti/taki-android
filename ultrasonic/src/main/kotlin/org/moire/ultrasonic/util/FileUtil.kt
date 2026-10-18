@@ -431,6 +431,27 @@ object FileUtil {
     fun getPartialFile(name: String): String =
         String.format(Locale.ROOT, "%s.partial.%s", getBaseName(name), getExtension(name))
 
+    // Extensions a transcoded download can legitimately be stored under (issue #39).
+    private val ALTERNATE_DOWNLOAD_EXTENSIONS = listOf("opus", "ogg", "mp3", "m4a")
+
+    /** [path] with its extension replaced by [extension]. */
+    fun withExtension(path: String, extension: String): String =
+        "${getBaseName(path)}.$extension"
+
+    /**
+     * [path] followed by the same stem under every extension a transcoded copy of the track may
+     * carry. Download identity is the stem; the extension reflects the bytes actually stored.
+     */
+    fun fileVariants(path: String): List<String> {
+        val ext = getExtension(path)
+        return listOf(path) + ALTERNATE_DOWNLOAD_EXTENSIONS.filter { it != ext }
+            .map { withExtension(path, it) }
+    }
+
+    /** The existing file for [path], whatever extension it was stored with, or null. */
+    fun resolveExistingFile(path: String): String? =
+        fileVariants(path).firstOrNull { Storage.isPathExists(it) }
+
     fun getNameFromPath(path: String): String = path.substringAfterLast('/')
 
     fun getParentPath(path: String?): String? {

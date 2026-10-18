@@ -246,3 +246,30 @@ battery, a release-build run on the device (release uses a separate package and 
 Decoder implemented and active on the Pixel; streaming and offline playback verified. Listening comparison
 (user, around 2:30-2:40: Taki and Feishin both without audible interruption) is a passed subjective check,
 not proof of bit-perfect decoding. The wider device matrix is open, so the #17 fix is **not** declared complete.
+
+## 19. Downloaded file format integrity (#39)
+
+A download whose bitrate setting is non-zero is requested with `stream.view?maxBitRate=N`, which Navidrome
+transcodes (FLAC -> Ogg/Opus). Taki named the file from the track's metadata (`suffix`), so Opus bytes were
+stored as `.flac`. Download identity in Taki is the file path itself (there is no download table), so every
+lookup - download state, delete, the playback `CachedDataSource`, `CacheCleaner` - assumed the original suffix.
+
+Fix: after a download finishes, `AudioContainerSniffer` reads the first 64 bytes of the partial file and the
+file is renamed to the extension of the bytes actually received (`flac`, `opus` for Ogg+OpusHead, `ogg` for other
+Ogg, `mp3`, `aac`, `m4a`, `wav`; unrecognised data keeps the requested name and is never labelled). All lookups
+go through `FileUtil.resolveExistingFile` / `fileVariants`, which treat the stem as the identity and try the
+transcode extensions (`opus`, `ogg`, `mp3`, `m4a`), so state, delete, offline playback and cache cleaning keep
+working for a renamed file. Taki does not transcode anything itself.
+
+Behaviour kept: an existing copy (original or transcoded) is reused, never overwritten; a changed bitrate
+setting does not silently replace a valid original. Known limitation: a resumed `.partial` from a different
+quality than the new request is still appended to (pre-existing behaviour).
+
+Existing mislabeled files are NOT migrated automatically. On the test device `01-Mojo Pin.flac` and
+`07-Lover, You Should've Come Over.flac` are Opus-in-Ogg stored as `.flac`; they still play (the player sniffs
+content). Proposed, needing approval: rename each to `.opus` (non-destructive, same stem) or delete and
+re-download.
+
+Verified on a Pixel 7: bitrate 320 download of "Last Goodbye" was saved as `03-Last Goodbye.opus` (Ogg/Opus,
+48 kHz stereo); it played offline with no stream request; delete removed the `.opus`; original-quality
+`06-Hallelujah.flac` still plays offline.
