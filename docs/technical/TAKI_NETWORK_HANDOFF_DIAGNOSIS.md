@@ -357,3 +357,80 @@ detekt ultrasonic 42, core 1.
 2. If a stale established read is shown to block recovery after the route returns (observed, always ending at
    the 10 s read timeout), evaluate a bounded in-place recovery or a shorter read timeout against that data.
 3. Re-test a long outage that straddles a track boundary with the fix, to measure next-item readiness.
+
+---
+
+# Phase 2C - Degraded-Wi-Fi reproduction and handoff recovery (issue #35)
+
+Baseline: `af880413` on `develop` (clean tree, in sync with `origin/develop`). **Outcome: investigation
+stopped at Phase 0; no production code changed; #35 stays OPEN.** Evidence labels as above.
+
+## Architecture re-check (Phase 0, OBSERVED from source/git)
+
+- Buffering: `PlaybackLoadControl.kt` still sets the Phase 2B local-playback thresholds (min 30 s / max 50 s /
+  start 1 s / rebuffer 1 s). Unchanged.
+- HTTP: `BaseNetworkModule` provides `OkHttpClient.Builder().build()` (10 s connect/read/write, no call timeout,
+  default retry-on-connection-failure). `MusicServiceModule` has the perf-metrics and image clients; no timeout or
+  pool tuning anywhere. Unchanged since Phase 2A.
+- Recovery: Media3 `DefaultLoadErrorHandlingPolicy` -> `onPlayerError` -> #19 bounded in-place `prepare()`
+  (2/4/8 s, 3 attempts); #17 watchdog and #34 suppression guard are separate. No connectivity-callback-driven recovery
+  exists, and none was added.
+- Commits since Phase 2B (`b67f9cb9`) touching `service/`, `di/` or `subsonic-api`: #37 playback-resumption future,
+  #17 software FLAC decoder (+ packaging docs), #39 and #40 download integrity. None changes network, buffering or
+  load-error behavior.
+
+## Reproduction decision
+
+| Scenario | Status | Why |
+|---|---|---|
+| A. Leaving home (Wi-Fi associated, unusable) | **UNAVAILABLE** | Needs RF degradation (walk-out) or an impairable AP |
+| B. Arriving home (early association, server unreachable) | **UNAVAILABLE** | Same |
+| Automatic vs manual disable on the same failing link | **NOT COMPARED** | Requires A/B above |
+| 2 s / 10 s clean outages | not run | See below |
+
+The test environment is identical to Phase 2A/2B: Pixel 7 over USB, no root, no router/AP control, Tailscale
+mandatory. Clean toggles (`svc wifi`, airplane mode) are what Phase 2A/2B already ran; they black-hole or drop the
+transport instantly, which is exactly the behavior the task says must not be assumed to represent edge-of-coverage
+Wi-Fi. Re-running them (including 2 s / 10 s) would add masked-by-socket-buffer data points that cannot answer the
+open question (does Taki wait on a stale read *after* Android has a usable route), so they were deliberately skipped
+rather than padded in. The temporary Phase 2A logger was never committed, so a field run needs it rebuilt first.
+
+## Conclusions (what is and is not established)
+
+- OBSERVED (2A): once a route is usable again, a pre-existing established read ends only at the 10 s OkHttp read
+  timeout; a new connection refills in ~0.3 s. This is the only app-controlled post-route delay measured so far,
+  bounded at <=10 s and only for black-holed paths with an in-flight read.
+- OBSERVED (2A/2B): the 30 s reserve now keeps playback going through outages shorter than the reserve; the original
+  16.3 s boundary silence is not reproduced, but that is unverified for a real degraded link.
+- NOT ESTABLISHED: whether the user's long silences are Android route selection / Tailscale reconnection (OS-controlled)
+  or a stale-read wait (app-controlled). Root cause for the reported complaint is **not identified**.
+- Therefore no read-timeout change, load cancellation on route change, or connectivity-triggered `prepare()` is
+  justified. Shortening the timeout trades dead-route recovery against false failures on slow cellular, with no
+  data on the real failure mode. No fake app-level network selection was added; VPN and OS routing are untouched.
+
+## Recommended field reproduction (needed to unblock Phase 2C)
+
+1. Rebuild the debug-only logger (Media3 `AnalyticsListener` + OkHttp `EventListener`, class names / durations only,
+   plus `ConnectivityManager.NetworkCallback` for default-network, `onLost`, capabilities incl. `VALIDATED`, and a
+   1 Hz buffered-ahead sample), all on `elapsedRealtime`. Never log URLs, query strings, tokens or Tailscale IDs.
+2. Walk MP3 320 playback out of home Wi-Fi range and back in, >=3 times each. Do the same with a lossless FLAC.
+3. For each silence record T0..T7 from the task (last media byte, buffer exhaustion, silence start, Wi-Fi change,
+   usable route, first byte on new route, READY, audible). Audible resume can be approximated by position advancing
+   plus the user marking it by ear.
+4. Run the manual-disable variant (turn Wi-Fi off at the moment of silence) on a comparable walk.
+5. Decision rule: if the gap between "usable route" and "first byte" is >2 s and ends at the read timeout, evaluate
+   one change (cancel/re-prepare the stalled load after a validated default-network change while buffer is low, or a
+   shorter read timeout) against that data. If the delay sits before the route is usable, accept as OS/VPN-controlled.
+
+## Quality gates
+
+No production or test code changed in this phase; the Phase 2B gates (1627 tests, builds, lint, detekt 42 / 1) and
+the later per-commit gates for #37/#17/#39/#40 are unaffected and were not re-run.
+
+## Outstanding
+
+Everything in the "Known limitations" list above remains open: degraded-Wi-Fi repro, automatic-vs-manual comparison,
+hi-res FLAC buffer memory, cellular data metering.
+
+Status: DEGRADED_ASSOCIATED_WIFI_REPRODUCED = NO; EARLY_UNUSABLE_WIFI_ASSOCIATION_REPRODUCED = NO;
+AUTOMATIC_VS_MANUAL_HANDOFF_COMPARED = NO; ISSUE_35_COMPLETE = NO.
