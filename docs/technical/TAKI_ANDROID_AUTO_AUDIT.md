@@ -420,3 +420,53 @@ should precede the beta; the P2 items can follow the beta unless the DHU shows u
 Official documentation used (fetched 2026-10-18): Android for Cars media overview, content hierarchy, voice actions,
 playback errors, testing and DHU pages on developer.android.com (`/training/cars/media`, `.../content-hierarchy`,
 `.../voice-actions`, `.../errors`, `/training/cars/testing`, `/training/cars/testing/dhu`).
+
+## 18. Phase B initial validation results (2026-10-18)
+
+Environment: Android Auto Desktop Head Unit 2.0 (build 2022-03-30), installed with `sdkmanager extras/google/auto`
+(SDK Command-line Tools 23.0 were added to the SDK for that); Pixel 7 with Android Auto 17.8, developer mode,
+"Unknown sources" and the head unit server on; ADB tunnelling (`adb forward tcp:5277 tcp:5277`). The debug
+(`...taki.debug`) and release (`io.github.churipakinti.taki`) builds were both installed and untouched (no data
+cleared). The DHU was driven through its console (`tap`, `screenshot`); the debug build's Timber log was used as
+evidence. Only the two priority checks were run.
+
+### 18.1 Discovery
+Both builds are listed as separate, identically labelled "Taki" entries in the Android Auto app grid. Android Auto
+also binds **every** installed Taki `PlaybackService` at connect time: both processes were started cold as bound
+services with no activity, and the debug process logged two `onConnect` calls, two `CarConnection` observers and
+`[CarConnection] Setting repeat mode to ALL` before the user opened anything (runtime confirmation of AA-03/AA-04).
+
+### 18.2 AA-02 (browse rows with legacy flags 0): not reproduced
+On Android Auto 17.8 / DHU 2.0 every row that the code builds with `isBrowsable=false, isPlayable=false` is usable:
+the four tabs, the alphabetical sections (A..Z, #), artist rows, album rows and playlist rows all opened, and "Play
+All" and tracks started playback. The flag-less rows are therefore treated as folders by this Android Auto version.
+Reclassified **P3** (still worth setting `isBrowsable=true` explicitly for other cars/clients). Observed UX gaps:
+folder rows have no artwork and no subtitle (AA-11).
+
+### 18.3 AA-01 (cold session without the phone UI): confirmed at runtime
+Method: force-stop both builds, open the debug Taki from the car grid, browse, play ("Play All" from Random songs,
+and a single song), never open the phone app. In the debug process, over the ~70 s of car playback that followed:
+no `MediaPlayerController started`, no `LifecycleSupport created`, no `Media3 Event` lines, no
+`PlaybackStateSerializer`/`Serialized ...` checkpoint lines, no scrobble line, no stall-watchdog activity, and
+`FILENAME_PLAYLIST_SER` (the saved queue) was not written (cache listing unchanged). `onAddMediaItems` and
+`onAddLegacyAutoItems` ran and the track played normally, so the **player** works; only the controller-side
+`MediaPlayerManager` safeguards are absent, exactly as the static audit predicted.
+Side result: one tapped song (a track the server no longer serves; `stream.view` answered with a JSON error)
+produced `InvalidContentTypeException: application/json` and the car showed the raw Media3 text "Source error".
+Taki's own handling (`onPlayerError` log, friendly message, album-cache invalidation) did not run in that session.
+Separately, the release build resumed its last queue on its own when Android Auto connected (the
+`onPlaybackResumption` path creates the manager), so the gap applies to browse-and-play cold starts, not to
+Android Auto's automatic resume.
+
+### 18.4 Other observations
+- Repeat is forced to ALL at Android Auto connect for each Taki build, whether or not the user uses it (AA-04).
+- Android Auto calls `onGetItem` for every browse node id; for folder ids this returns an error result (benign,
+  chatty).
+- 51 `AlbumArtContentProvider rejected unrecognized cover art id` warnings and `Failed to load bitmap: null` for
+  the session/notification appeared in the cold session (the in-memory minted-key map starts empty); the cause was
+  not isolated (AA-11).
+
+### 18.5 Status after the initial checks
+AA-01 remains **P1, now runtime-confirmed**; AA-02 is **P3 (not reproduced)**; no new P0/P1 was found. Phase B can
+continue with the remaining matrix without code changes. Note for the DHU: touch input to the app grid scroll
+chevrons was unreliable via the console `tap`; selecting the second "Taki" required a manual click.
