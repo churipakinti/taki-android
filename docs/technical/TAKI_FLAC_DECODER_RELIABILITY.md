@@ -453,7 +453,7 @@ JSON error (the server no longer has that file) and the app showed its existing 
   the earlier A/B; integrity is not claimed.
 - The FFmpeg path outputs 16-bit PCM for 24-bit sources, so playback is not bit-perfect.
 - Charging device: no battery or real Doze data; PSS and CPU are coarse samples.
-- Debug build only. The release package (different application id, its own login) is not validated.
+- Debug build only at the time of this section; the release package was validated afterwards (section 22).
 
 ### 21.8 Not touched
 No source change is committed by this validation. Offload and watchdog policy, #19/#34/#39/#40 behaviour and the
@@ -464,3 +464,73 @@ The diagnostics (cache-bypass hook, network log, event logger, counters poll) an
 `EventLogger` line that was already in the working tree were reverted with `git checkout`; the marker files were
 deleted from the app's private dir; a clean `assembleDebug` of `c2532ba5` was reinstalled (versionCode 131; the
 APK contains none of the diagnostic strings). `git status` was clean before this document was added.
+
+## 22. Release-build validation and #17 closure (Pixel 7, 2026-10-18)
+
+Source: develop `6364d415` (application code unchanged since `c2532ba5`; `6364d415` only adds documentation).
+Device: Pixel 7, Android 17, Wi-Fi, USB-powered, Navidrome 0.64.2 over Tailscale. Media3 1.10.1,
+NextLib 1.10.1-0.13.0 (FFmpeg `Lavc60.3.100`).
+
+### 22.1 Artifact and installation
+- The pre-existing `Taki-0.1.0-beta-release.apk` (built 2026-10-17 20:38) pre-dated the last code commit
+  (`af880413`, #40 at 20:39), so it was **not** used. A fresh `:ultrasonic:assembleRelease` from `6364d415` was
+  built (30,340,265 bytes, SHA-256 `431f8c45...d793e`), signed with the project's own release key (cert CN
+  "Taki Release"; no key material was read), not debuggable, `libavcodec.so`/`libmedia3ext.so` (arm64) present,
+  and none of the temporary diagnostic strings (`VALNET`, `VALDEC`, `VALLOG`, `val_bypass`) in any dex.
+- Release application ID `io.github.churipakinti.taki`, `versionName 0.1.0-beta`, `versionCode 131`. The debug
+  build is `io.github.churipakinti.taki.debug`; they are separate packages, so installing release did not touch
+  debug. After installation the 8 downloaded Grace files in the debug profile had the same sizes as before.
+  Nothing was uninstalled, cleared or overwritten. The release app launched without a crash (empty crash buffer).
+- The release profile starts empty (no library, no downloads): the user logged in with their own credentials on
+  the Add-library screen, and unlocked the phone once, for the lock-screen return step. No credential was
+  requested, read or copied by the validation.
+
+### 22.2 Original 24/192 FLAC, release (Lover, You Should've Come Over)
+No instrumentation was added to the release build; evidence is non-intrusive.
+- Source: the release profile has no local copy (0 files), so the track streamed. AudioFlinger showed the app's
+  track at **192000 Hz** (a 320 kbps Opus transcode would be 48000 Hz). Network receive on the VPN interface
+  during the last ~324 s was ~215 MB (the whole original is 287.6 MB; a 320 kbps Opus is ~16 MB).
+- Decoder: not directly observable in release (no Timber/decoder log). Non-intrusive evidence: 192 kHz and the
+  `E ffmpeg_jni` native log tag, which only the FFmpeg path produces. Stated as inferred, not observed by name.
+- Playback from 0:00 with no seeking: audio position advanced continuously to 400.6 s, session `STOPPED` at
+  404,218 ms (natural end), 0 AudioFlinger underruns, no unexpected seek, no queue change (single-item queue).
+- 154.2 s: no stall. One pair of `avcodec_send_packet: Invalid data found` at ~154 s (17:45:40.26) - the known
+  packet message (#41); playback continued. Sole `ffmpeg_jni` message of the whole release session (about 35 min of
+  other 24/192, 24/96, Opus, MP3 and FLAC playback in that session produced none).
+- PASS: original high-res track played through the historical failure point to its natural end without a stall.
+
+### 22.3 Release smoke test (sample rate via AudioFlinger, title via the app's own MediaSession)
+| Check | Result |
+|---|---|
+| Ordinary FLAC (Geography, 16/48 -> 48000 Hz) | plays, Next x13, Previous (restart, then previous item), pause/resume at same position |
+| Seek forward/back (Now Playing bar) | 93.2 s forward, 32.9 s back, correct |
+| ordinary FLAC -> 24/192 | pass (48000 -> 192000 Hz, Mojo Pin) |
+| 24/192 -> MP3 | pass (192000 -> 44100 Hz) |
+| MP3 -> Opus | pass (44100 -> 48000 Hz) |
+| Opus -> 24/96 | pass (48000 -> 96000 Hz) |
+| MP3 -> 24/192 | pass (44100 -> 192000 Hz) |
+| 24/96 natural advance (seek to 97 %) | advanced to the next track, position kept |
+| Automatic advance 24/192 -> 24/192 | Hallelujah -> Lover on its own (locked) |
+| Screen lock / 13 min locked background | queue Hallelujah, Lover, Corpus Christi Carol, Eternal Life (24/192 streams), same process, `MediaSession` present, 0 underruns; the app was unlocked by the user afterwards and was still playing |
+| Lock-screen card | Pause, Play, Next worked (taps must follow wake within seconds) |
+| Notification shade card | Pause, Play (same position), Next worked; Previous restarted the track (>3 s) |
+| Return to foreground | app resumed with playback uninterrupted |
+- 220 samples over the smoke run: 0 non-zero underruns. Two samples caught a transient `BUFFERING`/no-audio state
+  while the test skipped streamed tracks every ~3.4 s; no persistent buffering, no crash, no unexpected restart.
+- Resources (coarse, one `dumpsys meminfo`/`top` sample per ~5 s; release): Lover alone PSS 147-179 MB
+  (mean 149), CPU samples 4-73 % (mean 45 %); smoke run (all formats, background included) PSS 112-228 MB
+  (mean 144), CPU mean ~20 %. Debug soak had PSS 226-272 MB; the release app is lighter. No decoder
+  initialisation failure and no crash (`FATAL`, ANR, process death: none). The phone was charging: no battery
+  or Doze result.
+
+### 22.4 Result and limits
+- Release validation **passed** for the original 24/192 FLAC and the mixed-format/background/control checks.
+- The original silent stall at ~154.2 s no longer reproduces: 4 debug passes (one inside the 57 min soak) and 1 release pass all crossed it.
+- Limits: decoder identity in release is inferred; ordinary-FLAC/MP3/Opus decoder names rely on the debug
+  diagnostic runs (section 21) plus sample rates; 24/88.2 untested; 16-bit output (not bit-perfect); gapless not
+  claimed; Bluetooth and other-app audio focus not exercised.
+
+### 22.5 Separate follow-ups (not part of the stall)
+- #41 - FFmpeg rejects a packet near 154.2 s of one file (cause unknown, integrity not claimed).
+- #42 - 24-bit FLAC reaches Android as 16-bit PCM: where the conversion happens is inferred (decoder, from
+  `shouldOutputFloat` in the shipped NextLib jar) but not measured; no bit-perfect claim.
