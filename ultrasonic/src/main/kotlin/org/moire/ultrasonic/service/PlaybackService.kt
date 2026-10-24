@@ -360,6 +360,11 @@ class PlaybackService :
             updateReplayGain(tracks)
         }
 
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            // Repeat can change from any controller; keep the buttons shown by the others in step.
+            librarySessionCallback.refreshCustomLayout(mediaLibrarySession)
+        }
+
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             // Since we cannot update the metadata of the media item after creation,
             // we cannot set change the rating on it

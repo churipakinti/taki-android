@@ -544,3 +544,68 @@ specific exceptions) and 1 in `subsonic-api`.
 Item resolution for legacy Android Auto taps still blocks the main thread on `.get()` (AA-08). Starting the
 manager adds about 16 MB and one controller per process on first play. The final detekt `catch` refactor was
 re-verified by unit tests and the gates but not re-run on the device.
+
+## 20. AA-03 and AA-04 fix: no CarConnection observer, no forced repeat mode (2026-10-24)
+
+### 20.1 Root cause
+- **AA-03.** `onConnect` (called for every controller: Android Auto, the notification, the phone UI) called
+  `configureRepeatMode()`, which created a new `CarConnection(...)` and registered
+  `.type.observeForever {...}` that was never removed. Each registration activates a
+  `CarConnectionTypeLiveData`, i.e. a broadcast receiver and a content query, and captured the `Player` and the
+  callback. Observed on the Pixel (old code, release build, `dumpsys activity broadcasts`): the number of
+  `CAR_CONNECTION_UPDATED` receivers in the app grew 2 -> 3 -> 5 -> 7 -> 9 over the DHU connect/disconnect cycles of
+  this validation. Memory growth was not measured.
+- **AA-04.** The same observer forced `REPEAT_MODE_ALL` when a projection started and restored an
+  `originalRepeatMode` snapshot taken at the *first* `onConnect` of the process when it ended, with a shared
+  `customRepeatModeSet` flag that a car repeat tap also set. So connecting overwrote the user's repeat mode, and
+  disconnecting could revert a car or phone change to a stale value.
+
+### 20.2 Why it existed
+Upstream Ultrasonic commit `77c1329b` ("custom buttons for shuffling the current queue and setting repeat mode",
+2023-07-24) set `player.repeatMode = REPEAT_MODE_ALL` in `onConnect`; `82f67586` (2023-08-09) made that conditional
+on `CarConnection`. The only technical link in the code is the button layout: `buildCustomCommands` inserts a
+disabled "Placeholder" button when repeat is not ALL and the last item plays, so that the heart does not sit next
+to play/pause; with ALL a Next button always exists. No Android Auto requirement exists (the official docs state
+none), and the placeholder already covers the other modes, so the override is cosmetic.
+
+### 20.3 Change
+- Removed `configureRepeatMode`, the `CarConnection` observer, `originalRepeatMode` and `customRepeatModeSet`.
+  Nothing observes the car connection any more (the owner question disappears; there is nothing to remove).
+- The repeat mode is owned by the single player and changed only by explicit commands (the car's repeat button,
+  the phone, media controls). It is persisted by the existing queue serializer; no Android Auto preference exists.
+- New: `PlaybackService`'s player listener refreshes the custom buttons on `onRepeatModeChanged`
+  (`MediaLibrarySessionCallback.refreshCustomLayout`), so a repeat change from the phone or any controller
+  shows on the car and the notification; before, only changes made through the custom command did. The
+  `androidx.car.app` dependency and its manifest entries are now unused by Taki code and left untouched
+  (removal is a separate build change).
+
+### 20.4 Tests
+`AndroidAutoRepeatModeTest` (7): connecting never sets a repeat mode (Off/One/All, repeated connects); a car
+change survives later connections; the repeat command cycles Off -> All -> One -> Off; the button follows the
+player after a car tap and after an external change (`refreshCustomLayout`); repeated connections register no
+broadcast receiver; connecting does not start the playback infrastructure. A mutation (re-adding the override in
+`onConnect`) makes two of them fail. `:ultrasonic` 1754 tests, 0 failures (`:core:subsonic-api` unchanged);
+`assembleDebug`, `assembleRelease`, `lintDebug` (no new issues) and `lintVitalRelease` pass; detekt unchanged at 42
+(`ultrasonic`) + 1 (`subsonic-api`). Service/player recreation needs no test of its own: there is no observer,
+subscription or player reference left to go stale (player replacement in `updateBackend` keeps working because
+nothing captures the player).
+
+### 20.5 Pixel 7 + DHU (debug build; release left installed and untouched; no data cleared)
+- AA-01 regression: cold start, phone UI never opened, browse then "Play All": `MediaPlayerController started` and
+  `LifecycleSupport created` once, scrobble, queue checkpoints every 5 s. Browsing alone started nothing.
+- Repeat: connecting with the persisted state repeat Off left it Off (the old code logged
+  `Setting repeat mode to ALL`; no such line and no `CarConnection` line appeared). In the car: Off -> All (checkpoint
+  `repeat: 2`); DHU disconnect: still All; reconnect: still All; car All -> One (`repeat: 1`); disconnect, reconnect:
+  still One (phone Now Playing shows One); phone tap while connected One -> All (`repeat: 2`) and the car's repeat
+  icon changed accordingly; car All -> One -> Off (`repeat: 0`); final reconnect: Off, paused, no autoplay.
+- Observers: 7 `onConnect` calls in one process over 4 DHU connections, the debug app held a constant single
+  `CAR_CONNECTION_UPDATED` receiver throughout (its source is not Taki code and does not grow), while the release
+  build, still running the old code in the same session, went from 2 to 9.
+- One manager start, same process throughout, no duplicate player, no unexpected autoplay or queue movement.
+- Not quantified: memory impact of the old leak (a debug PSS reading of 319 MB with the phone UI open is not
+  comparable with the 147 MB car-only reading); service destruction/recreation was covered by reasoning and unit
+  tests, not a dedicated device cycle. A repeat control only exists in the car's player screen (used) and the phone.
+
+### 20.6 Remaining
+AA-06, AA-07, AA-08 and the other findings are unchanged. The unused `androidx.car.app` dependency can be dropped
+in a separate change.

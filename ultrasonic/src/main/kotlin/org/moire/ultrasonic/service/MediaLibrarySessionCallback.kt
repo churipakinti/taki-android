@@ -9,7 +9,6 @@ package org.moire.ultrasonic.service
 
 import android.os.Bundle
 import androidx.annotation.OptIn
-import androidx.car.app.connection.CarConnection
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_ALBUMS
@@ -120,7 +119,6 @@ class MediaLibrarySessionCallback :
     private val placeholderButton = getPlaceholderButton()
 
     private var heartIsCurrentlyOn = false
-    private var customRepeatModeSet = false
 
     // This button is used for an unstarred track, and its action will star the track
     private val heartButtonToggleOn =
@@ -236,7 +234,9 @@ class MediaLibrarySessionCallback :
             commandButton.sessionCommand?.let { availableSessionCommands.add(it) }
         }
 
-        configureRepeatMode(session.player)
+        // Connecting a controller (Android Auto, the notification, the phone UI) never touches the
+        // player's repeat mode: it belongs to the user. Android Auto used to force REPEAT_MODE_ALL
+        // here and later via a CarConnection observer; see AA-03/AA-04 in the Android Auto audit.
 
         return MediaSession.ConnectionResult.accept(
             availableSessionCommands.build(),
@@ -278,40 +278,6 @@ class MediaLibrarySessionCallback :
             result.setException(IllegalStateException("Playback resumption timed out"))
         }
         return result
-    }
-
-    private fun configureRepeatMode(player: Player) {
-        Timber.d("Car app library available, observing CarConnection")
-
-        val originalRepeatMode = player.repeatMode
-
-        var lastCarConnectionType = -1
-
-        CarConnection(UApp.applicationContext()).type.observeForever {
-            if (lastCarConnectionType == it) {
-                return@observeForever
-            }
-
-            lastCarConnectionType = it
-
-            Timber.d("CarConnection type changed to %s", it)
-
-            when (it) {
-                CarConnection.CONNECTION_TYPE_PROJECTION ->
-                    if (!customRepeatModeSet) {
-                        Timber.d("[CarConnection] Setting repeat mode to ALL")
-                        player.repeatMode = Player.REPEAT_MODE_ALL
-                        customRepeatModeSet = true
-                    }
-
-                CarConnection.CONNECTION_TYPE_NOT_CONNECTED ->
-                    if (customRepeatModeSet) {
-                        Timber.d("[CarConnection] Resetting repeat mode")
-                        player.repeatMode = originalRepeatMode
-                        customRepeatModeSet = false
-                    }
-            }
-        }
     }
 
     override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
@@ -453,7 +419,6 @@ class MediaLibrarySessionCallback :
 
             PlaybackService.CUSTOM_COMMAND_REPEAT_MODE -> {
                 customCommandFuture = Futures.immediateFuture(SessionResult(RESULT_SUCCESS))
-                customRepeatModeSet = true
 
                 session.player.setNextRepeatMode()
                 session.updateCustomCommands()
@@ -1408,6 +1373,13 @@ class MediaLibrarySessionCallback :
             )
         )
     }
+
+    /**
+     * Rebuilds the custom buttons from the player's current repeat/shuffle state, so a change made
+     * from another controller (the phone UI, a media button) is reflected on the car and in the
+     * notification instead of only changes made through the custom commands.
+     */
+    fun refreshCustomLayout(session: MediaSession) = session.updateCustomCommands()
 
     fun updateCustomHeartButton(session: MediaSession, isHeart: Boolean) {
         with(session) {
