@@ -831,7 +831,7 @@ the `PlaybackStateSerializer` checkpoint log.
   the car showed the same track, still PAUSED (no autoplay), queue 30, index 0, same process, no second
   `MediaPlayerController started`.
 - Resumption: process force-stopped, a media-play key restored 30 songs from the saved queue (index 0) and played.
-  Observation, not an AA-07 change: the saved position (3458 ms) was deserialized but playback started at 0.
+  (Correction, see section 24: the saved position WAS restored; the first reading of this log was wrong.)
 - Timing (log timestamps, `onSetMediaItems` -> session state PLAYING): warm session 0.54 s, cold process 1.15 s;
   queue construction + checkpoint ~0.2 s. No frame-skip/ANR lines from the app's process. PSS 139-144 MB.
 - Not exercised on the device: duplicate occurrences (no such playlist; unit tests), a server switch, concurrent
@@ -847,5 +847,49 @@ hazard (tests with a real `MediaPlayerManager` leaving IO work running past `sto
 proven so; the suite is NOT shown to be order-independent (Gradle offers no way to force an order here).
 
 ### 23.7 Remaining
-Saved position is not restored on resumption (observation above); folder-style album trees with sub-directories queue tracks only; random-list duplicates use the first occurrence;
+Folder-style album trees with sub-directories queue tracks only; random-list duplicates use the first occurrence;
 AA-09, AA-10 untouched.
+
+## 24. Playback resumption position follow-up (2026-10-24)
+
+### 24.1 Original observation and its classification
+During AA-07 validation a 30-song queue saved at 3458 ms was restored after a force-stop and a media-play key, and it
+looked as if playback restarted at 0. **That reading was wrong.** The session reported 6610 ms about 4 s after the
+restore, i.e. playback resumed at the saved position. Classification of the position loss: **TEST_ARTIFACT (not
+reproduced)**.
+
+### 24.2 Reproduction (Pixel 7, debug build, data kept; logs from `PlaybackStateSerializer` / `MediaPlayerManager`)
+| Scenario | Saved | Restored |
+|---|---|---|
+| Pause / play, same process | idx 2, 43781 ms | idx 2, playing at 43247 -> continues |
+| Force-stop + media-play key (no phone UI), index 2 | idx 2, 43781 | idx 2, `SeekTo: 2 43781`, 47416 ms 6 s later |
+| Same, after the fix, index 8 | idx 8, 46660 | idx 8, `SeekTo: 8 46660`, 46718 ms right after play |
+| Android Auto: force-stop, DHU opens Taki, play key in the car | idx 8, 55198 | idx 8, `SeekTo: 8 55198`, 59171 ms ~4 s later; opening Taki alone started nothing |
+| `am kill` (not force-stop) | - | the process survives (foreground service), so this is a plain resume (74167 ms); a non-force-stop process death could not be forced |
+Paused-state: connecting Android Auto or opening Taki in the car never starts playback; resumption only plays when
+a play key (`isForPlayback`) was sent. One controller start per process in every run.
+Data flow: player position -> `PlaybackStateSerializer` file -> `deserialize` -> `MediaPlayerManager.restore`
+(queue added, then `seekTo(index, position)`, `prepare`) -> `onPlaybackResumption` -> `resumptionFromPlayer`
+(items + index + `currentPosition`). The index and position are restored correctly at every step. AA-07's
+`onSetMediaItems` is not on this path.
+
+### 24.3 The real (small) defect found: interim checkpoint clobber
+While the restore is in flight the controller has the queue but has not applied the seek yet, so a queue event wrote
+a checkpoint `index 0 / position 0` over the saved one (log: `Restoring`, `Serialized 0/0` 130 ms later, then
+`SeekTo`, then the correct checkpoint). A process death in that ~300 ms window would have lost the saved
+index and position. Fix: `MediaPlayerManager.restoringSession` (set when `restore()` starts, cleared in a `finally`
+after the seek/prepare/play) makes `serializeCurrentSession` and `serializeCurrentPositionCheckpoint` skip meanwhile.
+No explicit write is added afterwards; the ordinary events write the correct state (seen in the logs).
+After the fix the log shows no `0/0` write between `Restoring` and `SeekTo`.
+
+### 24.4 Tests
+`PlaybackRestorePositionTest` (6): no interim 0/0 checkpoint (**fails on the previous code**, passes now; the fake
+player gained a `beforeSeek` hook to model the asynchronous controller), checkpoints resume after the restore,
+Media3 resumption returns the saved item/index/`startPositionMs`, paused restore stays paused, autoplay restore starts
+at the saved position, a later user seek is not overwritten. Existing `QueueRestoreRoundTripTest`,
+`PlaybackResumptionTest` (empty/invalid/clamped queues) and the AA-07 tests unchanged. Full `:ultrasonic` suite
+1812 tests, 0 failures; assembleDebug/Release, lintDebug, lintVitalRelease pass.
+
+### 24.5 Remaining
+A completed track near its end resumes at the saved position (Media3 handles a position past the end); not tested on
+the device. Ordinary (non-force-stop) process death could not be provoked on the device.

@@ -42,6 +42,9 @@ internal class FakeMedia3Player(
 
     private val allCommands = Player.Commands.Builder().addAllCommands().build()
 
+    /** Runs just before a seek is applied: the real controller applies seeks asynchronously. */
+    var beforeSeek: (() -> Unit)? = null
+
     override fun getState(): State {
         val builder = State.Builder()
             .setAvailableCommands(allCommands)
@@ -106,6 +109,7 @@ internal class FakeMedia3Player(
         positionMs: Long,
         seekCommand: Int
     ): ListenableFuture<*> {
+        beforeSeek?.invoke()
         if (mediaItemIndex != C.INDEX_UNSET) currentIndex = mediaItemIndex
         this.positionMs = if (positionMs == C.TIME_UNSET) 0L else positionMs
         return Futures.immediateVoidFuture()

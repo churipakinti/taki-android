@@ -789,9 +789,16 @@ class MediaPlayerManager(
         Timber.i("MediaPlayerManager destroyed")
     }
 
+    // True from the start of restore() until the saved index/position has been applied. The controller
+    // applies the seek asynchronously, so a queue event arriving in between would persist the player's
+    // transient index 0 / position 0 over the very checkpoint being restored.
+    @Volatile
+    private var restoringSession = false
+
     @Synchronized
     fun restore(state: PlaybackState, autoPlay: Boolean, onRestored: Runnable? = null) {
         PerfMetrics.mark("session_restore_start:songs=" + state.songs.size)
+        restoringSession = true
         repeatMode = state.repeatMode
         isShufflePlayEnabled = state.shufflePlay
 
@@ -805,24 +812,28 @@ class MediaPlayerManager(
         // of the persisted index/position). Awaiting addToPlaylistLocked() in the same coroutine
         // before seeking fixes the race.
         mainScope.launch {
-            addToPlaylistMutex.withLock {
-                addToPlaylistLocked(
-                    songs = state.songs,
-                    autoPlay = false,
-                    shuffle = false,
-                    insertionMode = InsertionMode.APPEND,
-                    startIndex = null,
-                    startPositionMs = 0
-                )
-            }
-
-            if (state.currentPlayingIndex != -1) {
-                seekTo(state.currentPlayingIndex, state.currentPlayingPosition)
-                prepare()
-
-                if (autoPlay) {
-                    play()
+            try {
+                addToPlaylistMutex.withLock {
+                    addToPlaylistLocked(
+                        songs = state.songs,
+                        autoPlay = false,
+                        shuffle = false,
+                        insertionMode = InsertionMode.APPEND,
+                        startIndex = null,
+                        startPositionMs = 0
+                    )
                 }
+
+                if (state.currentPlayingIndex != -1) {
+                    seekTo(state.currentPlayingIndex, state.currentPlayingPosition)
+                    prepare()
+
+                    if (autoPlay) {
+                        play()
+                    }
+                }
+            } finally {
+                restoringSession = false
             }
 
             autoPlayStart = false
@@ -1311,6 +1322,8 @@ class MediaPlayerManager(
     private fun serializeCurrentSession() {
         // Don't serialize invalid sessions
         if (currentMediaItemIndex == -1) return
+        // The saved checkpoint is being restored: don't overwrite it with the not-yet-seeked player
+        if (restoringSession) return
 
         playbackStateSerializer.serializeAsync(
             songs = playlist.map { it.toTrack() },
@@ -1323,7 +1336,7 @@ class MediaPlayerManager(
 
     @Synchronized
     private fun serializeCurrentPositionCheckpoint() {
-        if (currentMediaItemIndex == -1) return
+        if (currentMediaItemIndex == -1 || restoringSession) return
         playbackStateSerializer.serializeCheckpointAsync(
             currentPlayingIndex = currentMediaItemIndex,
             currentPlayingPosition = playerPosition,
