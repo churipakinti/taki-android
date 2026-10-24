@@ -89,6 +89,9 @@ private const val MEDIA_SONG_STARRED_ITEM = "MEDIA_SONG_STARRED_ITEM"
 private const val MEDIA_SONG_RANDOM_ITEM = "MEDIA_SONG_RANDOM_ITEM"
 private const val MEDIA_SEARCH_SONG_ITEM = "MEDIA_SEARCH_SONG_ITEM"
 
+// MEDIA_PLAYLIST_ITEM|<id>|<name>
+private const val PLAYLIST_NODE_ID_PARTS = 3
+
 // Currently the display limit for long lists is 100 items
 private const val DISPLAY_LIMIT = 100
 private const val SEARCH_LIMIT = 10
@@ -129,12 +132,15 @@ class MediaLibrarySessionCallback :
         pendingPlaybackRequest = null
     }
 
-    private var playlistCache: List<Track>? = null
-    private var starredSongsCache: List<Track>? = null
-    private var randomSongsCache: List<Track>? = null
+    // What the user was last shown (browse) so that a tap plays that very list, even when the list
+    // is random or changes on the server meanwhile. Keyed by server AND list identity, immutable
+    // values, written only by a browse that succeeded; playback resolution never writes it.
+    private val shownLists = ShownLists()
     private var searchSongsCache: List<Track>? = null
 
-    private val musicService get() = MusicServiceFactory.getMusicService()
+    internal var ioDispatcher: kotlinx.coroutines.CoroutineDispatcher = Dispatchers.IO
+    internal var musicServiceProvider: () -> MusicService = { MusicServiceFactory.getMusicService() }
+    private val musicService get() = musicServiceProvider()
     private val isOffline get() = ActiveServerProvider.isOffline()
     private val musicFolderId get() = activeServerProvider.getActiveServer().musicFolderId
 
@@ -384,6 +390,24 @@ class MediaLibrarySessionCallback :
         mediaId: String
     ): ListenableFuture<LibraryResult<MediaItem>> {
         Timber.i("onGetItem")
+
+        // A playlist node is described by its own id and name; fetching the whole playlist (once per
+        // row Android Auto asks about) just to answer with one of its tracks cost a request per
+        // playlist every time the list was shown, and answered with a track for a folder id.
+        val playlistParts = mediaId.split('|')
+        if (playlistParts.first() == MEDIA_PLAYLIST_ITEM && playlistParts.size >= PLAYLIST_NODE_ID_PARTS) {
+            return Futures.immediateFuture(
+                LibraryResult.ofItem(
+                    buildMediaItem(
+                        playlistParts[2],
+                        mediaId,
+                        isPlayable = false,
+                        mediaType = MEDIA_TYPE_PLAYLIST
+                    ),
+                    null
+                )
+            )
+        }
 
         // Resolving an item can need the server (an album or playlist that is not cached), so it must
         // not run on the session's application looper: resolve off it and complete on the main thread.
@@ -1103,9 +1127,10 @@ class MediaLibrarySessionCallback :
         val mediaItems: MutableList<MediaItem> = ArrayList()
 
         return mainScope.future {
-            val content = serviceScope.future {
+            val server = activeServerId()
+            val content = withContext(ioDispatcher) {
                 callWithErrorHandling { musicService.getPlaylist(id, name) }
-            }.await()
+            }
 
             if (content != null) {
                 if (content.size > 1) {
@@ -1114,9 +1139,10 @@ class MediaLibrarySessionCallback :
                     )
                 }
 
-                // Playlist should be cached as it may contain random elements
-                playlistCache = content.getTracks()
-                playlistCache!!.take(DISPLAY_LIMIT).map { item ->
+                // The list may contain random elements: remember what is shown (see shownLists)
+                val shown = content.getTracks()
+                shownLists.put(ShownLists.playlist(server, id), shown)
+                shown.take(DISPLAY_LIMIT).map { item ->
                     mediaItems.add(
                         item.toMediaItem(
                             listOf(
@@ -1134,26 +1160,17 @@ class MediaLibrarySessionCallback :
     }
 
     private suspend fun playPlaylist(id: String, name: String): List<Track>? {
-        if (playlistCache == null) {
-            // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
-            val content = withContext(Dispatchers.IO) {
-                callWithErrorHandling { musicService.getPlaylist(id, name) }
-            }
-            playlistCache = content?.getTracks()
+        val server = activeServerId()
+        shownLists.get(ShownLists.playlist(server, id))?.let { return it }
+        // Not browsed in this session (or evicted): fetch this very playlist, for this request only.
+        val content = withContext(ioDispatcher) {
+            callWithErrorHandling { musicService.getPlaylist(id, name) }
         }
-        if (playlistCache != null) return playlistCache!!
-        return null
+        return content?.getTracks()
     }
 
     private suspend fun playPlaylistSong(id: String, name: String, songId: String): List<Track>? {
-        if (playlistCache == null) {
-            // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
-            val content = withContext(Dispatchers.IO) {
-                callWithErrorHandling { musicService.getPlaylist(id, name) }
-            }
-            playlistCache = content?.getTracks()
-        }
-        val song = playlistCache?.firstOrNull { x -> x.id == songId }
+        val song = playPlaylist(id, name)?.firstOrNull { x -> x.id == songId }
         if (song != null) return listOf(song)
         return null
     }
@@ -1175,6 +1192,7 @@ class MediaLibrarySessionCallback :
         val mediaItems: MutableList<MediaItem> = ArrayList()
 
         return mainScope.future {
+            val server = activeServerId()
             val songs = listStarredSongsInMusicService()
 
             if (songs != null) {
@@ -1184,7 +1202,7 @@ class MediaLibrarySessionCallback :
 
                 // TODO: Paging is not implemented for songs, is it necessary at all?
                 val items = songs.songs.take(DISPLAY_LIMIT)
-                starredSongsCache = items
+                shownLists.put(ShownLists.starred(server), items)
                 items.map { song ->
                     mediaItems.add(
                         song.toMediaItem(
@@ -1198,22 +1216,12 @@ class MediaLibrarySessionCallback :
     }
 
     private suspend fun playStarredSongs(): List<Track>? {
-        if (starredSongsCache == null) {
-            // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
-            val content = listStarredSongsInMusicService()
-            starredSongsCache = content?.songs
-        }
-        if (starredSongsCache != null) return starredSongsCache!!
-        return null
+        shownLists.get(ShownLists.starred(activeServerId()))?.let { return it }
+        return listStarredSongsInMusicService()?.songs
     }
 
     private suspend fun playStarredSong(songId: String): List<Track>? {
-        if (starredSongsCache == null) {
-            // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
-            val content = listStarredSongsInMusicService()
-            starredSongsCache = content?.songs
-        }
-        val song = starredSongsCache?.firstOrNull { x -> x.id == songId }
+        val song = playStarredSongs()?.firstOrNull { x -> x.id == songId }
         if (song != null) return listOf(song)
         return null
     }
@@ -1222,9 +1230,10 @@ class MediaLibrarySessionCallback :
         val mediaItems: MutableList<MediaItem> = ArrayList()
 
         return mainScope.future {
-            val songs = serviceScope.future {
+            val server = activeServerId()
+            val songs = withContext(ioDispatcher) {
                 callWithErrorHandling { musicService.getRandomSongs(DISPLAY_LIMIT) }
-            }.await()
+            }
 
             if (songs != null) {
                 if (songs.size > 1) {
@@ -1233,7 +1242,7 @@ class MediaLibrarySessionCallback :
 
                 // TODO: Paging is not implemented for songs, is it necessary at all?
                 val items = songs.getTracks()
-                randomSongsCache = items
+                shownLists.put(ShownLists.random(server), items)
                 items.map { song ->
                     mediaItems.add(
                         song.toMediaItem(
@@ -1247,29 +1256,24 @@ class MediaLibrarySessionCallback :
     }
 
     private suspend fun playRandomSongs(): List<Track>? {
-        if (randomSongsCache == null) {
-            // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
-            // In this case we request a new set of random songs
-            val content = withContext(Dispatchers.IO) {
-                callWithErrorHandling { musicService.getRandomSongs(DISPLAY_LIMIT) }
-            }
-            randomSongsCache = content?.getTracks()
+        shownLists.get(ShownLists.random(activeServerId()))?.let { return it }
+        // Nothing was shown: ask for a new set of random songs (this request only)
+        val content = withContext(ioDispatcher) {
+            callWithErrorHandling { musicService.getRandomSongs(DISPLAY_LIMIT) }
         }
-        if (randomSongsCache != null) return randomSongsCache!!
-        return null
+        return content?.getTracks()
     }
 
     private fun playRandomSong(songId: String): List<Track>? {
-        // If there is no cache, we can't play the selected song.
-        if (randomSongsCache != null) {
-            val song = randomSongsCache!!.firstOrNull { x -> x.id == songId }
-            if (song != null) return listOf(song)
-        }
+        // A random song can only be played from the set that was shown; without it there is no
+        // way to find the selected song.
+        val song = shownLists.get(ShownLists.random(activeServerId()))?.firstOrNull { x -> x.id == songId }
+        if (song != null) return listOf(song)
         return null
     }
 
     private suspend fun listSongsInMusicService(id: String, name: String?): MusicDirectory? =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             if (ActiveServerProvider.shouldUseId3Tags()) {
                 callWithErrorHandling { musicService.getAlbumAsDir(id, name, false) }
             } else {
@@ -1278,7 +1282,7 @@ class MediaLibrarySessionCallback :
         }
 
     private suspend fun listStarredSongsInMusicService(): SearchResult? =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             if (ActiveServerProvider.shouldUseId3Tags()) {
                 callWithErrorHandling { musicService.getStarred2() }
             } else {
@@ -1494,6 +1498,36 @@ class MediaLibrarySessionCallback :
 
 /** Longest a playback request waits for the playback infrastructure before it proceeds anyway. */
 internal const val PLAYBACK_INFRASTRUCTURE_TIMEOUT_MS = 5_000L
+
+/**
+ * The most recently shown Android Auto track lists, keyed by server and list identity (never by name),
+ * least-recently-used eviction. Values are immutable lists; every access is synchronized, so concurrent
+ * requests can neither see another list's tracks nor corrupt it.
+ */
+internal class ShownLists(private val limit: Int = SHOWN_LISTS_LIMIT) {
+    private val lists = object : LinkedHashMap<String, List<Track>>(INITIAL_CAPACITY, LOAD_FACTOR, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<Track>>?) =
+            size > limit
+    }
+
+    @Synchronized
+    fun get(key: String): List<Track>? = lists[key]
+
+    @Synchronized
+    fun put(key: String, tracks: List<Track>) {
+        lists[key] = tracks.toList()
+    }
+
+    companion object {
+        private const val SHOWN_LISTS_LIMIT = 8
+        private const val INITIAL_CAPACITY = 16
+        private const val LOAD_FACTOR = 0.75f
+
+        fun playlist(server: Int, id: String) = "$server|playlist|$id"
+        fun starred(server: Int) = "$server|starred"
+        fun random(server: Int) = "$server|random"
+    }
+}
 
 /** Longest a media-item resolution may take before its request fails (never left pending). */
 internal const val RESOLUTION_TIMEOUT_MS = 20_000L

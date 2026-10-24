@@ -684,3 +684,83 @@ switch or service destruction during a request.
 `playlistCache` and the other in-memory caches are still unkeyed (AA-06) and, now that resolution is asynchronous,
 two overlapping requests can share them; the playlist caches are written without synchronisation (AA-06 scope).
 `playFromSearch` still throws on an empty result (AA-09) but now fails its future instead of the callback.
+
+## 22. AA-06 fix: shown track lists keyed by server and list (2026-10-24)
+
+### 22.1 Original implementation and root cause
+`MediaLibrarySessionCallback` kept four unkeyed fields (`playlistCache`, `starredSongsCache`, `randomSongsCache`,
+`searchSongsCache`). The playlist one held whatever playlist was fetched last: `getPlaylist` (browse) overwrote it,
+and `playPlaylist`/`playPlaylistSong` returned it **for any playlist id** while it was non-null, and only fetched
+when it was null. Nothing recorded the playlist or the server it came from, nothing cleared it on a server switch,
+and with AA-08 the fields could be read and written by overlapping coroutines.
+
+### 22.2 Cache ownership (before)
+| Field | Data | Written by | Read by | Keyed by | Cleared |
+|---|---|---|---|---|---|
+| `playlistCache` | tracks of the last fetched playlist | browse of a playlist, and playback when null | playlist play-all, playlist song | nothing | never |
+| `starredSongsCache` | first 100 liked songs (browse) or all (fetch) | browse, playback when null | liked play-all, liked song | nothing | never |
+| `randomSongsCache` | the random set last shown | browse, playback when null | random play-all, random song | nothing | never |
+| `searchSongsCache` | last voice-search songs | voice search | search song | nothing | never (AA-09 scope, untouched) |
+All influence playback (not only browsing), all were reachable across servers and across lists, none synchronized.
+
+### 22.3 Reproduction
+Before the fix, `AndroidAutoPlaylistCacheTest` (fake `MusicService`, controllable answers, no sleeps) failed 10 of
+its 16 tests: playing playlist B after A returned A's tracks; B -> A -> B returned the previous list each time; a
+track of B was looked up in A's data; a track that is not in the selected playlist was "found" in another playlist;
+an empty or deleted playlist played the previous playlist; the same playlist id on server 2 returned server 1's
+tracks. On the Pixel the wrong-playlist symptom was **not** reproduced: Android Auto always browses a playlist
+before playing it, and the browse refreshed the cache. It does call `onGetItem` for every playlist row, and that
+returned another playlist's track (visible only in metadata).
+
+### 22.4 Selected design
+One small `ShownLists` holder replaces the three list caches: immutable lists, keyed `"<serverId>|playlist|<id>"`,
+`"<serverId>|starred"`, `"<serverId>|random"` (never the name), synchronized `get`/`put`, least-recently-used
+eviction at 8 entries. Rules:
+- Only a successful **browse** writes it. Its purpose is that a tap plays what the user was shown even when the
+  list is random (Random Mix) or changes on the server meanwhile.
+- Playback resolution reads it; on a miss it fetches that playlist for that request only and does **not** store the
+  result, so a failed, cancelled, late or stale fetch can never poison it, and an unbrowsed or deleted playlist is
+  always fetched fresh (a deleted one fails cleanly).
+- The server id is part of every key; a server switch simply stops matching the old entries (AA-08's check still
+  rejects a result that finishes after a switch).
+- Request ordering is unchanged (AA-08: the newest playback request supersedes the older); `ShownLists` is safe for
+  concurrent access and no lock is held across a network call. An unkeyed removal of the cache was rejected
+  because `getPlaylist` is not cached by `CachedMusicService` and a random list would change between browse and tap;
+  a general LRU/cache framework was not introduced.
+- Freshness: a shown list is replayed until the same list is browsed again (which refreshes it) or it is evicted;
+  edits made on the server in the meantime appear after the next open. This is the previous behaviour, now scoped
+  to the right list.
+- `onGetItem` for a playlist node (`MEDIA_PLAYLIST_ITEM|id|name`) now answers from the id itself instead of
+  fetching the playlist: Android Auto asks about every row of the list, which cost one request per playlist on every
+  listing (and, before the fix, answered with a track of some other playlist).
+- Same class of defect closed for the liked and random lists by the same holder. The search list is left for AA-09.
+- Test seams added: `ioDispatcher`, `musicServiceProvider`.
+
+### 22.5 Tests
+`AndroidAutoPlaylistCacheTest` (18): A then B, B/A/B/A, a track from its own playlist, a foreign track is never
+found, equal titles in two playlists, the same id on two servers, two concurrent resolutions with either finishing
+first (newest wins, the cancelled one stays cancelled), two playlists browsed concurrently with B finishing first
+keep their own lists, two concurrent browses of one playlist, a cancelled request finishing late, a failed lookup
+then recovery, empty and deleted playlists, order preserved, a browsed list is played from its snapshot with no extra
+request and a new browse refreshes it, an unbrowsed playlist is fetched fresh per selection, random list isolation
+per server, and a playlist node needing no request. With the existing Android Auto tests `:ultrasonic` has 1785 tests,
+0 failures; `assembleDebug`, `assembleRelease`, `lintDebug` (no new issues), `lintVitalRelease` pass; detekt stays
+at 42 + 1.
+
+### 22.6 Pixel 7 + DHU (debug build; release untouched; no data cleared)
+Random Mix and Recently Added (existing smart playlists, no playlist was modified): Play All played exactly the
+list shown (first track matches the first row, including the random list); switching A -> B -> A -> B played each
+playlist's own tracks every time; tapping the second row played that row of the list shown (Random Mix, which
+changes on each open, and Recently Added); after a force-stop of the process Android Auto kept showing the old
+screen and a Play All in the **new, empty** process fetched and played the correct playlist (cold start: manager
+started once, scrobble, queue checkpoints, `restoreSession=false`); repeat stayed Off throughout (no AA-04
+regression); 1 manager start, no autoplay, no unexpected queue change. Requests: showing the Playlists list now
+causes 0 `getPlaylist` requests (the first build of this change still issued one per row), opening a playlist 1,
+playing the browsed list 0. Before the fix a listing issued one fetch through `onGetItem` (4 requests over the
+baseline scenario of 3 plays); the two scenarios are not identical, so no speedup is claimed. PSS 152 MB (car only).
+Not exercised on the device: a server switch, concurrent controllers and a playlist edited on the server between
+browse and play (unit tests only).
+
+### 22.7 Remaining
+AA-07 (a tapped song plays alone; Play All of liked songs is limited to the 100 shown), AA-09 (`searchSongsCache`,
+the voice-search crash on empty results), the album `onGetItem` still fetches an album that is not cached.
