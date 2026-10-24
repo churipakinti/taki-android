@@ -225,8 +225,8 @@ class AndroidAutoPlaylistCacheTest {
 
         assertTrue(a.isDone && b.isDone)
         // Each was shown its own songs, and playing each plays that list.
-        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|A|name-A|A1", a.get().value!![1].mediaId)
-        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|B|name-B|B1", b.get().value!![1].mediaId)
+        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|A|name-A|A1|0", a.get().value!![1].mediaId)
+        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|B|name-B|B1|0", b.get().value!![1].mediaId)
         wheneverBlocking { service.getPlaylist(any(), any()) }.doSuspendableAnswer { throw IllegalStateException("offline") }
         assertEquals(listOf("A1", "A2", "A3"), ids(playAll("A")))
         assertEquals(listOf("B1", "B2", "B3"), ids(playAll("B")))
@@ -244,8 +244,8 @@ class AndroidAutoPlaylistCacheTest {
         val second = callback.onGetChildren(library, controller, "MEDIA_PLAYLIST_ITEM|A|name-A", 0, Int.MAX_VALUE, null)
         gate.complete(Unit)
         idle()
-        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|A|name-A|A1", first.get().value!![1].mediaId)
-        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|A|name-A|A1", second.get().value!![1].mediaId)
+        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|A|name-A|A1|0", first.get().value!![1].mediaId)
+        assertEquals("MEDIA_PLAYLIST_SONG_ITEM|A|name-A|A1|0", second.get().value!![1].mediaId)
     }
 
     @Test

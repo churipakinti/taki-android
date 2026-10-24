@@ -9,6 +9,7 @@ package org.moire.ultrasonic.service
 
 import android.os.Bundle
 import androidx.annotation.OptIn
+import androidx.media3.common.C
 import androidx.media3.common.HeartRating
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_ALBUMS
@@ -414,7 +415,8 @@ class MediaLibrarySessionCallback :
         return mainScope.future {
             val mediaItem = try {
                 withTimeout(resolutionTimeoutMs) { mediaIdResolver(mediaId) }
-                    ?.firstOrNull()?.toMediaItem()
+                    ?.let { tracks -> tracks.getOrNull(selectedIndexOf(mediaId, tracks)) }
+                    ?.toMediaItem()
             } catch (e: TimeoutCancellationException) {
                 Timber.w(e, "onGetItem timed out for %s", mediaId.substringBefore('|'))
                 null
@@ -559,6 +561,62 @@ class MediaLibrarySessionCallback :
 
         if (mediaItems.isEmpty()) return Futures.immediateFuture(mediaItems)
 
+        // Appending a song (as opposed to starting playback of it) adds that song only.
+        return supersedePending(
+            Futures.transform(
+                requestPlayback(mediaItems),
+                { it.itemsToAdd() },
+                MoreExecutors.directExecutor()
+            )
+        )
+    }
+
+    /**
+     * Starting playback (AA-07): a song picked from an album, playlist, favorites or random list
+     * starts inside its list, at its own position. Android Auto sends only the media id of the song;
+     * the whole list and the index of that song are returned, so Media3 queues the list and begins
+     * at the selected item instead of playing it alone.
+     */
+    @OptIn(UnstableApi::class)
+    override fun onSetMediaItems(
+        mediaSession: MediaSession,
+        controller: MediaSession.ControllerInfo,
+        mediaItems: MutableList<MediaItem>,
+        startIndex: Int,
+        startPositionMs: Long
+    ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+        Timber.i("onSetMediaItems")
+
+        if (mediaItems.isEmpty()) {
+            return Futures.immediateFuture(
+                MediaSession.MediaItemsWithStartPosition(mediaItems, startIndex, startPositionMs)
+            )
+        }
+
+        return supersedePending(
+            Futures.transform(
+                requestPlayback(mediaItems),
+                {
+                    // Items the controller built itself keep the start it asked for.
+                    MediaSession.MediaItemsWithStartPosition(
+                        it.items,
+                        it.startIndex ?: startIndex,
+                        if (it.startIndex != null) C.TIME_UNSET else startPositionMs
+                    )
+                },
+                MoreExecutors.directExecutor()
+            )
+        )
+    }
+
+    // The newest playback request wins: supersede one that is still resolving.
+    private fun <T> supersedePending(request: ListenableFuture<T>): ListenableFuture<T> {
+        pendingPlaybackRequest?.takeIf { !it.isDone }?.cancel(true)
+        pendingPlaybackRequest = request
+        return request
+    }
+
+    private fun requestPlayback(mediaItems: MutableList<MediaItem>): ListenableFuture<ResolvedPlayback> {
         // A playback request is the moment the playback infrastructure (MediaPlayerManager and its
         // controller: stall watchdog, network recovery, scrobbling, queue persistence, error
         // handling) is needed. Browsing and connecting do not start it. Without this, a cold,
@@ -572,23 +630,23 @@ class MediaLibrarySessionCallback :
                 ready.set(Unit)
             }
         }
-        val request = Futures.transformAsync(
+        return Futures.transformAsync(
             ready,
             { resolveMediaItems(mediaItems) },
             MoreExecutors.directExecutor()
         )
-        // The newest playback request wins: supersede one that is still resolving.
-        pendingPlaybackRequest?.takeIf { !it.isDone }?.cancel(true)
-        pendingPlaybackRequest = request
-        return request
     }
 
     private fun resolveMediaItems(
         mediaItems: MutableList<MediaItem>
-    ): ListenableFuture<List<MediaItem>> {
+    ): ListenableFuture<ResolvedPlayback> {
         // Return early if its a search
         if (mediaItems[0].requestMetadata.searchQuery != null) {
-            return playFromSearch(mediaItems[0].requestMetadata.searchQuery!!)
+            return Futures.transform(
+                playFromSearch(mediaItems[0].requestMetadata.searchQuery!!),
+                { ResolvedPlayback(it, startIndex = null) },
+                MoreExecutors.directExecutor()
+            )
         }
 
         val updatedMediaItems: List<MediaItem> =
@@ -603,7 +661,7 @@ class MediaLibrarySessionCallback :
             }
 
         return if (updatedMediaItems.isNotEmpty()) {
-            Futures.immediateFuture(updatedMediaItems)
+            Futures.immediateFuture(ResolvedPlayback(updatedMediaItems, startIndex = null))
         } else {
             // Android Auto devices still only use the MediaId to identify the selected Items
             // They also only select a single item at once
@@ -620,7 +678,7 @@ class MediaLibrarySessionCallback :
     @Suppress("TooGenericExceptionCaught") // a malformed id surfaces as IndexOutOfBounds
     private fun onAddLegacyAutoItems(
         mediaItems: MutableList<MediaItem>
-    ): ListenableFuture<List<MediaItem>> {
+    ): ListenableFuture<ResolvedPlayback> {
         val mediaId = mediaItems.first().mediaId
         Timber.i("onAddLegacyAutoItems %s", mediaId.substringBefore('|'))
 
@@ -637,7 +695,13 @@ class MediaLibrarySessionCallback :
                 "The server changed while the item was resolving"
             }
             check(!tracks.isNullOrEmpty()) { "Nothing to play for the selected item" }
-            tracks.map { track -> track.toMediaItem() }
+            val selected = selectedIndexOf(mediaId, tracks)
+            check(selected != NOT_FOUND) { "The selected song is not in its list" }
+            ResolvedPlayback(
+                tracks.map { track -> track.toMediaItem() },
+                startIndex = selected,
+                isSongSelection = isSongSelection(mediaId)
+            )
         }
     }
 
@@ -1142,14 +1206,16 @@ class MediaLibrarySessionCallback :
                 // The list may contain random elements: remember what is shown (see shownLists)
                 val shown = content.getTracks()
                 shownLists.put(ShownLists.playlist(server, id), shown)
-                shown.take(DISPLAY_LIMIT).map { item ->
+                shown.take(DISPLAY_LIMIT).mapIndexed { position, item ->
                     mediaItems.add(
                         item.toMediaItem(
+                            // The position tells apart a song the playlist holds more than once
                             listOf(
                                 MEDIA_PLAYLIST_SONG_ITEM,
                                 id,
                                 name,
-                                item.id
+                                item.id,
+                                position.toString()
                             ).joinToString("|")
                         )
                     )
@@ -1170,9 +1236,8 @@ class MediaLibrarySessionCallback :
     }
 
     private suspend fun playPlaylistSong(id: String, name: String, songId: String): List<Track>? {
-        val song = playPlaylist(id, name)?.firstOrNull { x -> x.id == songId }
-        if (song != null) return listOf(song)
-        return null
+        val tracks = playPlaylist(id, name)
+        return tracks?.takeIf { list -> list.any { x -> x.id == songId } }
     }
 
     private suspend fun playAlbum(id: String, name: String?): List<Track>? {
@@ -1182,10 +1247,8 @@ class MediaLibrarySessionCallback :
     }
 
     private suspend fun playAlbumSong(id: String, name: String?, songId: String): List<Track>? {
-        val songs = listSongsInMusicService(id, name)
-        val song = songs?.getTracks()?.firstOrNull { x -> x.id == songId }
-        if (song != null) return listOf(song)
-        return null
+        val tracks = listSongsInMusicService(id, name)?.getTracks()
+        return tracks?.takeIf { list -> list.any { x -> x.id == songId } }
     }
 
     private fun getStarredSongs(): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
@@ -1201,9 +1264,10 @@ class MediaLibrarySessionCallback :
                 }
 
                 // TODO: Paging is not implemented for songs, is it necessary at all?
-                val items = songs.songs.take(DISPLAY_LIMIT)
-                shownLists.put(ShownLists.starred(server), items)
-                items.map { song ->
+                // Android Auto shows the first DISPLAY_LIMIT rows, but Play All and a tapped favorite
+                // use the complete list (the server returns all favorites in one response).
+                shownLists.put(ShownLists.starred(server), songs.songs)
+                songs.songs.take(DISPLAY_LIMIT).map { song ->
                     mediaItems.add(
                         song.toMediaItem(
                             listOf(MEDIA_SONG_STARRED_ITEM, song.id).joinToString("|")
@@ -1221,9 +1285,7 @@ class MediaLibrarySessionCallback :
     }
 
     private suspend fun playStarredSong(songId: String): List<Track>? {
-        val song = playStarredSongs()?.firstOrNull { x -> x.id == songId }
-        if (song != null) return listOf(song)
-        return null
+        return playStarredSongs()?.takeIf { list -> list.any { x -> x.id == songId } }
     }
 
     private fun getRandomSongs(): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
@@ -1267,9 +1329,8 @@ class MediaLibrarySessionCallback :
     private fun playRandomSong(songId: String): List<Track>? {
         // A random song can only be played from the set that was shown; without it there is no
         // way to find the selected song.
-        val song = shownLists.get(ShownLists.random(activeServerId()))?.firstOrNull { x -> x.id == songId }
-        if (song != null) return listOf(song)
-        return null
+        return shownLists.get(ShownLists.random(activeServerId()))
+            ?.takeIf { list -> list.any { x -> x.id == songId } }
     }
 
     private suspend fun listSongsInMusicService(id: String, name: String?): MusicDirectory? =
@@ -1555,3 +1616,43 @@ internal fun resumptionOf(
     val index = currentIndex.coerceIn(0, items.lastIndex)
     return MediaSession.MediaItemsWithStartPosition(items, index, positionMs.coerceAtLeast(0L))
 }
+
+/** A resolved playback request. [startIndex] null: keep the start the controller supplied. */
+internal class ResolvedPlayback(
+    val items: List<MediaItem>,
+    val startIndex: Int?,
+    val isSongSelection: Boolean = false
+) {
+    /** What an append request takes: only the song that was picked, never its whole list. */
+    fun itemsToAdd(): List<MediaItem> =
+        if (isSongSelection && startIndex != null) listOf(items[startIndex]) else items
+}
+
+internal const val NOT_FOUND = -1
+
+private val SONG_ITEM_TYPES = setOf(
+    MEDIA_ALBUM_SONG_ITEM,
+    MEDIA_PLAYLIST_SONG_ITEM,
+    MEDIA_SONG_STARRED_ITEM,
+    MEDIA_SONG_RANDOM_ITEM
+)
+
+/** True for the media id of one song inside a list (not Play All, not a search result). */
+internal fun isSongSelection(mediaId: String): Boolean = mediaId.substringBefore('|') in SONG_ITEM_TYPES
+
+/**
+ * Position of the song [mediaId] names inside the resolved [tracks]. A playlist may hold the same
+ * song twice, so a playlist row also carries the position it was shown at; it is used when it still
+ * points at that song, otherwise the first occurrence is taken. Not a song row: 0 (start of list).
+ */
+internal fun selectedIndexOf(mediaId: String, tracks: List<Track>): Int {
+    if (!isSongSelection(mediaId)) return 0
+    val parts = mediaId.split('|')
+    val type = parts.first()
+    val songId = if (type == MEDIA_SONG_STARRED_ITEM || type == MEDIA_SONG_RANDOM_ITEM) parts[1] else parts[3]
+    val shownAt = if (type == MEDIA_PLAYLIST_SONG_ITEM) parts.getOrNull(PLAYLIST_SHOWN_AT_PART)?.toIntOrNull() else null
+    if (shownAt != null && tracks.getOrNull(shownAt)?.id == songId) return shownAt
+    return tracks.indexOfFirst { it.id == songId }
+}
+
+private const val PLAYLIST_SHOWN_AT_PART = 4

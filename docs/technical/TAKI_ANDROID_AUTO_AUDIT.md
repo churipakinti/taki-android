@@ -764,3 +764,88 @@ browse and play (unit tests only).
 ### 22.7 Remaining
 AA-07 (a tapped song plays alone; Play All of liked songs is limited to the 100 shown), AA-09 (`searchSongsCache`,
 the voice-search crash on empty results), the album `onGetItem` still fetches an album that is not cached.
+
+
+## 23. AA-07 fix: a tapped song plays inside its list; favorites are not cut at 100 (2026-10-24)
+
+**Status: resolved. Implemented, unit-tested and validated on the Pixel 7 + DHU 2.0 (debug build).**
+
+### 23.1 Original behaviour and root cause
+Android Auto sends only the media id of the tapped song. `playAlbumSong`, `playPlaylistSong`, `playStarredSong` and
+`playRandomSong` resolved the parent list and then returned `listOf(song)`, so the queue was one item. Favorites
+cached `songs.take(DISPLAY_LIMIT)`, so Play All of favorites stopped at 100 although the server returns all of them
+in a single `getStarred(2)` response (no pagination exists in the API, nothing to loop over).
+
+### 23.2 Design
+- Media3 supplies the seam: `MediaSession.Callback.onSetMediaItems` returns `MediaItemsWithStartPosition` (items +
+  start index). `MediaLibrarySessionCallback` now overrides it. `onAddMediaItems` stays the append path and still
+  adds only the picked song. Both share one request pipeline (`requestPlayback`), so AA-01 (playback
+  infrastructure), AA-08 (async, 20 s timeout, newest-request-wins, server-switch check) and AA-06 (`ShownLists`
+  snapshots; no second cache) are unchanged.
+- The `play*Song` resolvers return the whole list (null if the song is not in it); `selectedIndexOf` finds the index.
+  Playlist rows now carry their position as a 5th media-id part so a song held twice starts at the tapped
+  occurrence; an id without a position (or a stale one) falls back to the first occurrence.
+- Favorites: `ShownLists` stores the full list, the browse still shows 100 rows. Display limit and queue are separate.
+- Items a controller built itself (phone: `requestMetadata.mediaUri`) keep the start index/position they asked for.
+- Play All starts at index 0. Search results stay single-song (AA-09 untouched). No shuffle/repeat code was touched:
+  ExoPlayer starts the selected item first even with shuffle on; repeat is not modified (AA-04 preserved). No
+  autoplay/recommendations; with Repeat Off playback stops after the last item.
+
+### 23.3 Phone vs car
+The phone already queues the list and index through `MediaPlayerManager`; Android Auto now produces the same shape
+of queue (list + index) through the same player.
+
+### 23.4 Large queues
+Favorites of 1000 tracks resolve in the unit tests without issue (one `getStarred` call, `toMediaItem` per track,
+no extra requests). On the device only the real collections were measurable (queues of 12, 30, 76 and 100), see 23.6;
+no limit was introduced and none was needed for those sizes.
+
+### 23.5 Tests
+`AndroidAutoContextualPlaybackTest` (21 tests: album/playlist/first/last/single, Play All order, empty, favorites
+1/100/101/500/1000, 100-row display, tapped favorite, duplicate occurrences, A/B and server isolation, server switch,
+newest wins, random snapshot with no new request, search single song, controller start preserved, append-only,
+`onGetItem`). Existing AA tests adjusted for the new media-id suffix / matching fake data. Full `:ultrasonic`
+suite: 1806 tests, 0 failures. assembleDebug, assembleRelease, lintDebug, lintVitalRelease pass.
+Note: a test that set `Settings.*` leaked state into an unrelated test class; the new test does not touch Settings.
+
+### 23.6 Pixel 7 / DHU (debug build; release untouched; no data cleared; DHU driven through its console)
+Queue contents were read from the media session (`dumpsys media_session`: queue size, active item id) and from
+the `PlaybackStateSerializer` checkpoint log.
+- Playlist "Recently Added" (100 songs): tap on row 2 -> queue 100, index 1, that song playing; Next -> index 2;
+  Previous after > 3 s restarts the song (same index), Previous within 3 s -> index 1 (established behaviour).
+  Play All -> index 0, queue 100.
+- Album "Aztlan": tap on track 2 -> queue 12, index 1; Next -> index 2; Play All -> index 0, queue 12.
+- Random Mix (smart playlist, regenerates on every open): the tapped song started at its row index in the list that
+  was shown (index 0, Next gave the next shown row); a new open shows (and plays) a new list, as designed.
+- Liked Songs: the real collection is 76 tracks (all displayed, so the 100-row limit and the beyond-100 case could
+  NOT be exercised; the 101/500/1000 cases rest on the unit tests, the favorites were not modified). Play All ->
+  queue 76, index 0; tap on favorite 2 -> queue 76 (still the favorites), index 1.
+- Repeat: set to One in the car, then selected songs (also after a shuffle toggle): repeat stayed One in every
+  checkpoint (`repeat: 1`); set back to None afterwards. Shuffle toggle keeps the selected song current (existing
+  contract); selecting a song after it produced a fresh list queue at the tapped index.
+- Cold start: debug process force-stopped (data kept), tap on a song in the car (which still showed the old screen):
+  new process, `MediaPlayerController started` once, queue 12, index 1, checkpoint written, scrobble `submission=false`
+  got `200 OK` (AA-01).
+- Car -> phone: opening Taki on the phone showed the same session (same song, same queue; no replacement).
+- Phone -> car, disconnect/reconnect: Daily Mix started on the phone and paused; DHU stopped and started again:
+  the car showed the same track, still PAUSED (no autoplay), queue 30, index 0, same process, no second
+  `MediaPlayerController started`.
+- Resumption: process force-stopped, a media-play key restored 30 songs from the saved queue (index 0) and played.
+  Observation, not an AA-07 change: the saved position (3458 ms) was deserialized but playback started at 0.
+- Timing (log timestamps, `onSetMediaItems` -> session state PLAYING): warm session 0.54 s, cold process 1.15 s;
+  queue construction + checkpoint ~0.2 s. No frame-skip/ANR lines from the app's process. PSS 139-144 MB.
+- Not exercised on the device: duplicate occurrences (no such playlist; unit tests), a server switch, concurrent
+  controllers, favorites beyond 100, search selection (AA-09).
+
+### 23.6b Test-order dependency (SheetInteractionAuditTest)
+An earlier version of `AndroidAutoContextualPlaybackTest` wrote `Settings.activeServer/id3Tags*`; in two consecutive
+full runs `SheetInteractionAuditTest.createPlaylistName` then failed with `UncaughtExceptionsBeforeTest` (background
+`Scrobbler` coroutines from other tests hitting a stopped Koin). After removing those writes the full suite passed
+three times in a row (1806 tests, 0 failures, `--rerun-tasks`), and the two classes pass together. The new class
+now touches only Koin, the `MediaItemConverter` caches and its callback, all restored in `tearDown`. The latent
+hazard (tests with a real `MediaPlayerManager` leaving IO work running past `stopKoin`) looks pre-existing but was not
+proven so; the suite is NOT shown to be order-independent (Gradle offers no way to force an order here).
+
+### 23.7 Remaining
+Saved position is not restored on resumption (observation above); folder-style album trees with sub-directories queue tracks only; random-list duplicates use the first occurrence;
+AA-09, AA-10 untouched.

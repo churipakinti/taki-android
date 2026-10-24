@@ -204,11 +204,11 @@ class AndroidAutoItemResolutionTest {
         assertTrue("the superseded request is cancelled", a.isCancelled)
 
         // The old response arrives late: it must not produce a result for the queue.
-        gateA.complete(listOf(track("A")))
-        gateB.complete(listOf(track("B")))
+        gateA.complete(listOf(track("trackA")))
+        gateB.complete(listOf(track("trackB")))
         idle()
 
-        assertEquals(listOf("B"), b.get().map { it.mediaId })
+        assertEquals(listOf("trackB"), b.get().map { it.mediaId })
         assertTrue(a.isCancelled)
     }
 
