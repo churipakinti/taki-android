@@ -126,6 +126,17 @@ class PlaybackStateSerializer : KoinComponent {
 
     val isReady: Boolean get() = isSetup.get()
 
+    /**
+     * Enables persistence for a session that starts from a live queue instead of a restored one
+     * (service-only Android Auto playback): the saved session is deliberately not read, so there is
+     * no stale queue to protect from being overwritten, and the debounce bookkeeping starts clean.
+     */
+    fun startFresh() {
+        writeGate.reset()
+        lastSerializedTracks = emptyList()
+        isSetup.set(true)
+    }
+
     @Synchronized
     internal fun serializeNow(
         tracks: Iterable<Track>,

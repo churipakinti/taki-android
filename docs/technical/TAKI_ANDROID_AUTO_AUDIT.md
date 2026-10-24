@@ -470,3 +470,77 @@ Android Auto's automatic resume.
 AA-01 remains **P1, now runtime-confirmed**; AA-02 is **P3 (not reproduced)**; no new P0/P1 was found. Phase B can
 continue with the remaining matrix without code changes. Note for the DHU: touch input to the app grid scroll
 chevrons was unreliable via the console `tap`; selecting the second "Taki" required a manual click.
+
+## 19. AA-01 fix: start the playback infrastructure on the first playback request (2026-10-24)
+
+### 19.1 Root cause
+`MediaPlayerManager` (and with it the `MediaController` that carries the stall watchdog, network recovery,
+scrobbling, queue persistence and error handling) is started only through
+`MediaPlayerLifecycleSupport.onCreate()`. Its callers were `NavigationActivity.onCreate`, the media-button and
+`UltrasonicIntentReceiver` paths and `onPlaybackResumption`. `PlaybackService`, `onConnect`, browsing and
+`onAddMediaItems` never called it, so a service-only Android Auto session that browsed and played ran on the bare
+`ExoPlayer`. (The queue file was also never written: `PlaybackStateSerializer` refuses writes until it has read a
+session.)
+
+### 19.2 Chosen ownership and change
+`MediaPlayerLifecycleSupport` stays the single owner (it already owns startup, is a Koin singleton and needs no
+Activity). Nothing is started on service creation or `onConnect`; Android Auto binds every installed Taki build
+at connect time and browsing must stay free of side effects.
+- `MediaPlayerLifecycleSupport.ensureCreatedForPlayback(afterReady)`: starts the manager exactly once, without
+  restoring the saved queue, and calls `PlaybackStateSerializer.startFresh()` so the live queue is persisted.
+  Callers that arrive while the controller is still connecting wait in a queue and run when it is ready; a 10 s
+  timeout releases them anyway. `onCreate(autoPlay, afterRestore)` (phone, media button, resumption) keeps its
+  behaviour (it restores the saved queue and completes only after the queue landed, #37) but now shares the same
+  idempotent, synchronized creation, so concurrent entry points start one manager.
+- `MediaLibrarySessionCallback.onAddMediaItems`: a playback request calls `ensureCreatedForPlayback` and hands the
+  items to the player once it is ready (5 s timeout, so playback never blocks). `onConnect`, `onGetLibraryRoot`,
+  `onGetChildren` and `onGetItem` do not start anything.
+- `MediaPlayerManager.onCreate(onFailed, onCreated)`: a controller that cannot connect now tears the half-started
+  state down and reports failure, so a later request retries. `onDestroy` clears (not disposes) its
+  subscriptions, and the lifecycle support re-subscribes to stop/shutdown for every lifecycle: before, the first
+  service teardown in a process disabled queue persistence and stop handling for every later session.
+- Idempotence: creation state is flipped under a lock; a second entry point either runs immediately (ready) or
+  joins the waiting list; one controller, one set of listeners, one watchdog tick, one serializer.
+
+### 19.3 Tests
+`PlaybackInfrastructureStartTest` (11) and `AndroidAutoPlaybackStartTest` (4): cold start, waiting until
+connected, no restore and persistence enabled, repeated and 16-thread concurrent starts, phone first, car first
+then phone, resumption (restores and completes only after the queue landed), failure releases the caller and allows
+a retry, timeout, receiver/subscription cleanup over three lifecycles, a playback request starts and is held until
+ready, an empty request and connect/browse do not start anything. A mutation check (removing the shutdown
+re-subscription) makes the cleanup test fail. Full `:ultrasonic` suite 1747 tests, 0 failures; `:core:subsonic-api`
+unchanged. Gates: `assembleDebug`, `assembleRelease`, `lintDebug` (no new issues), `lintVitalRelease` pass; detekt
+stays at the 42 historical findings in `ultrasonic` (the one extra I introduced, a generic `catch`, was replaced by
+specific exceptions) and 1 in `subsonic-api`.
+
+### 19.4 Pixel 7 + DHU validation (debug build, both builds force-stopped first, no data cleared)
+- Cold session, browsing only (Library, Artists, Albums, Playlists, a track list): no `MediaPlayerController
+  started`, no queue write, no `MediaController` - browsing has no side effects.
+- First "Play All" from the car, phone UI never opened: `onAddMediaItems` -> `MediaPlayerController started` and
+  `LifecycleSupport created (restoreSession=false)` once, controller connected in about 350 ms, the track playing
+  about 1 s after the request, "now playing" scrobbled, and the queue checkpoint written every 5 s
+  (`Serialized currentPlayingIndex ...`; the persisted `downloadstate.ser` updated). The stall watchdog runs on the
+  same 5 s tick as those checkpoints, and the manager's `Media3 Event` listener logged (listeners attached). Healthy
+  playback produces no watchdog action by design.
+- Second car playback in the same process: no second start, no duplicate scrobble.
+- Missing track (the album whose file the server no longer has): the error reached the manager's listener
+  (`MediaPlayerManager$listeners` logged it), the stale album metadata cache was invalidated
+  (`Invalidating stale metadata cache`), no network-retry loop (non-network error, single failure), the queue did
+  not advance, and the car showed "Source error". The phone's error sheet needs an Activity; no car-specific
+  error UI was added (out of scope).
+- Car -> phone: with the car's queue paused, opening the phone UI showed the same queue and paused state in the mini
+  player, no second manager start, no restore. Disconnect and reconnect of the DHU while paused: same process,
+  state still paused at the same position, no autoplay, no new manager.
+- Process recreation: force-stop the debug app, then a play request: `LifecycleSupport created
+  (restoreSession=true)`, "Restoring 11 songs", playing from about the saved position (the resumption path is
+  unchanged).
+- Resources: debug process 131 MB PSS after browsing, 147 MB after the manager started and a track was playing; one
+  manager, one controller.
+- Not measured: phone-to-car start with the phone UI first (covered by unit test only), a real network-recovery
+  event in the car (the Tailscale tunnel absorbs handoffs), a watchdog recovery event in the car (no stall
+  occurred). AA-03/AA-04 behaviour is unchanged (observers and repeat-all at connect still logged).
+
+### 19.5 Remaining limitations
+Item resolution for legacy Android Auto taps still blocks the main thread on `.get()` (AA-08). Starting the
+manager adds about 16 MB and one controller per process on first play. The final detekt `catch` refactor was
+re-verified by unit tests and the gates but not re-run on the device.

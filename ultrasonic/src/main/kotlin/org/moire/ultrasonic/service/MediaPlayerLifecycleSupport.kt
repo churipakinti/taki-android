@@ -13,6 +13,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import org.koin.core.component.KoinComponent
@@ -36,6 +38,16 @@ class MediaPlayerLifecycleSupport(
     private lateinit var ratingManager: RatingManager
 
     private var created = false
+
+    // True from the moment creation starts until the controller is connected (and, when the saved
+    // session is restored, until the restored queue has landed in the player). Callers that arrive
+    // in that window wait in [pendingReady] instead of acting on a controller that does not exist
+    // yet. Deliberately separate from [created]: a started creation never runs a second time.
+    private var initializing = false
+    private val pendingReady = mutableListOf<Runnable>()
+    private var readyTimeout: Runnable? = null
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+
     private var headsetEventReceiver: BroadcastReceiver? = null
 
     private var rxBusSubscription = CompositeDisposable()
@@ -45,34 +57,107 @@ class MediaPlayerLifecycleSupport(
         rxBusSubscription += RxBus.createServiceCommandObservable.subscribe {
             onCreate()
         }
-        rxBusSubscription += RxBus.shutdownCommandObservable.subscribe {
-            onDestroy()
-        }
-        rxBusSubscription += RxBus.stopServiceCommandObservable.subscribe {
-            onDestroy()
-        }
     }
 
     fun onCreate() {
         onCreate(false, null)
     }
 
+    /**
+     * Starts the playback infrastructure ([MediaPlayerManager] and its controller) if needed and
+     * restores the last saved session into the player.
+     */
     fun onCreate(autoPlay: Boolean, afterRestore: Runnable?) {
-        if (created) {
-            afterRestore?.run()
-            return
+        create(autoPlay, restoreSession = true, afterReady = afterRestore)
+    }
+
+    /**
+     * Starts the same playback infrastructure for a session that begins from a *live* queue the
+     * service was just handed (Android Auto selecting a track on a cold, service-only start),
+     * without restoring the saved session on top of it. Idempotent and safe from any thread;
+     * [afterReady] runs once the controller is connected and its listeners (stall watchdog,
+     * network recovery, scrobbling, queue persistence, error handling) are attached.
+     */
+    fun ensureCreatedForPlayback(afterReady: Runnable? = null) {
+        create(autoPlay = false, restoreSession = false, afterReady = afterReady)
+    }
+
+    private fun create(autoPlay: Boolean, restoreSession: Boolean, afterReady: Runnable?) {
+        var runNow = false
+        synchronized(this) {
+            if (created) {
+                if (initializing && afterReady != null) {
+                    pendingReady += afterReady
+                } else {
+                    runNow = true
+                }
+            } else {
+                created = true
+                initializing = true
+                if (afterReady != null) pendingReady += afterReady
+                subscribeToShutdown()
+
+                mediaPlayerManager.onCreate(onFailed = { onInitializationFailed() }) {
+                    if (restoreSession) {
+                        restoreLastSession(autoPlay, Runnable { markReady() })
+                    } else {
+                        // The saved queue is not read, so the serializer has to be told that it
+                        // may persist the live one (it refuses writes until a session was read).
+                        playbackStateSerializer.startFresh()
+                        markReady()
+                    }
+                }
+
+                registerHeadsetReceiver()
+
+                cacheCleaner.clean()
+                ratingManager = RatingManager.instance
+
+                // Never leave callers waiting forever (e.g. a restore that fails to complete).
+                val timeout = Runnable { markReady() }
+                readyTimeout = timeout
+                mainHandler.postDelayed(timeout, READY_TIMEOUT_MS)
+                Timber.i("LifecycleSupport created (restoreSession=%s)", restoreSession)
+            }
         }
+        if (runNow) afterReady?.run()
+    }
 
-        mediaPlayerManager.onCreate {
-            restoreLastSession(autoPlay, afterRestore)
+    private fun markReady() {
+        val toRun: List<Runnable>
+        synchronized(this) {
+            if (!initializing) return
+            initializing = false
+            readyTimeout?.let { mainHandler.removeCallbacks(it) }
+            readyTimeout = null
+            toRun = pendingReady.toList()
+            pendingReady.clear()
         }
+        toRun.forEach { it.run() }
+    }
 
-        registerHeadsetReceiver()
+    private fun onInitializationFailed() {
+        Timber.e("MediaPlayerManager failed to start; playback infrastructure is not active")
+        // Fail open: tear the half-built state down so the next request retries, and release the
+        // waiting callers (a playback request must still reach the player).
+        onDestroy()
+        val toRun: List<Runnable>
+        synchronized(this) {
+            toRun = pendingReady.toList()
+            pendingReady.clear()
+        }
+        toRun.forEach { it.run() }
+    }
 
-        cacheCleaner.clean()
-        created = true
-        ratingManager = RatingManager.instance
-        Timber.i("LifecycleSupport created")
+    // Re-created for every lifecycle: onDestroy() disposes the subscriptions, so subscribing only
+    // once (in init) left every later session deaf to the stop/shutdown commands.
+    private fun subscribeToShutdown() {
+        rxBusSubscription += RxBus.shutdownCommandObservable.subscribe {
+            onDestroy()
+        }
+        rxBusSubscription += RxBus.stopServiceCommandObservable.subscribe {
+            onDestroy()
+        }
     }
 
     private fun restoreLastSession(autoPlay: Boolean, afterRestore: Runnable?) {
@@ -89,14 +174,28 @@ class MediaPlayerLifecycleSupport(
     }
 
     private fun onDestroy() {
-        if (!created) return
-        rxBusSubscription.dispose()
+        synchronized(this) {
+            if (!created) return
+            rxBusSubscription.dispose()
+            rxBusSubscription = CompositeDisposable()
 
-        applicationContext().unregisterReceiver(headsetEventReceiver)
+            headsetEventReceiver?.let {
+                try {
+                    applicationContext().unregisterReceiver(it)
+                } catch (e: IllegalArgumentException) {
+                    Timber.w(e, "Headset receiver was not registered")
+                }
+            }
+            headsetEventReceiver = null
 
-        imageLoaderProvider.clearImageLoader()
+            imageLoaderProvider.clearImageLoader()
 
-        created = false
+            readyTimeout?.let { mainHandler.removeCallbacks(it) }
+            readyTimeout = null
+            initializing = false
+
+            created = false
+        }
         Timber.i("LifecycleSupport destroyed")
     }
 
@@ -242,3 +341,6 @@ class MediaPlayerLifecycleSupport(
         }
     }
 }
+
+/** Longest a caller waits for the playback infrastructure before it proceeds regardless. */
+internal const val READY_TIMEOUT_MS = 10_000L

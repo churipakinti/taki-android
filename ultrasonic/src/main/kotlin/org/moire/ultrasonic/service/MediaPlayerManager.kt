@@ -26,6 +26,8 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -522,11 +524,17 @@ class MediaPlayerManager(
 
     private var cachedMediaItem: MediaItem? = null
 
-    fun onCreate(onCreated: () -> Unit) {
+    /**
+     * Starts the manager: connects the [MediaController] and attaches [listeners] (stall watchdog,
+     * network recovery, scrobbling, error handling, queue persistence ticks). [onCreated] runs once
+     * the controller is connected; [onFailed] runs instead if it cannot be connected, after the
+     * half-started state has been torn down so a later call can start again.
+     */
+    fun onCreate(onFailed: () -> Unit = {}, onCreated: () -> Unit) {
         if (created) return
         externalStorageMonitor.onCreate { reset() }
 
-        createMediaController(onCreated)
+        createMediaController(onCreated, onFailed)
 
         rxBusSubscription += RxBus.activeServerChangingObservable
             // All interaction with the Media3 needs to happen on the main thread
@@ -601,7 +609,7 @@ class MediaPlayerManager(
         Timber.i("MediaPlayerController started")
     }
 
-    private fun createMediaController(onCreated: () -> Unit) {
+    private fun createMediaController(onCreated: () -> Unit, onFailed: (() -> Unit)? = null) {
         // Clear any teardown flag left over from a previous lifecycle so disconnects in this one
         // are still recovered.
         isReleasingController = false
@@ -615,7 +623,28 @@ class MediaPlayerManager(
             .buildAsync()
 
         mediaControllerFuture?.addListener({
-            controller = mediaControllerFuture?.get()
+            val connected = try {
+                mediaControllerFuture?.get()
+            } catch (e: ExecutionException) {
+                Timber.e(e, "MediaController could not connect to the PlaybackService")
+                null
+            } catch (e: CancellationException) {
+                Timber.e(e, "MediaController connection was cancelled")
+                null
+            }
+            if (connected == null) {
+                if (onFailed != null) {
+                    // First start: leave nothing half-initialized behind.
+                    abortCreate()
+                    onFailed()
+                } else {
+                    // A rebuild of an established manager keeps its state and simply retries on
+                    // the next command (see rebuildControllerIfDisconnected).
+                    isRebuildingController = false
+                }
+                return@addListener
+            }
+            controller = connected
 
             Timber.i("MediaController Instance received")
             controller?.addListener(listeners)
@@ -625,6 +654,19 @@ class MediaPlayerManager(
             onCreated()
             Timber.i("MediaPlayerController creation complete")
         }, MoreExecutors.directExecutor())
+    }
+
+    /**
+     * Undoes a start whose controller never connected, so the manager is not left half-initialized
+     * (subscriptions and a `created` flag without a controller) and a later [onCreate] can retry.
+     */
+    private fun abortCreate() {
+        rxBusSubscription.clear()
+        mainHandler.removeCallbacks(playbackCheckpoint)
+        externalStorageMonitor.onDestroy()
+        mediaControllerFuture = null
+        isRebuildingController = false
+        created = false
     }
 
     /**
@@ -654,7 +696,7 @@ class MediaPlayerManager(
         mediaControllerFuture?.let { MediaController.releaseFuture(it) }
         mediaControllerFuture = null
 
-        createMediaController {}
+        createMediaController(onCreated = {})
     }
 
     /**
@@ -727,8 +769,10 @@ class MediaPlayerManager(
     fun onDestroy() {
         if (!created) return
 
-        // First stop listening to events
-        rxBusSubscription.dispose()
+        // First stop listening to events. clear(), not dispose(): a disposed CompositeDisposable
+        // silently drops every later add(), which left the next session (the service is stopped
+        // and restarted within one process) without queue persistence or server-change handling.
+        rxBusSubscription.clear()
         mainHandler.removeCallbacks(playbackCheckpoint)
         mainHandler.removeCallbacks(networkErrorRetryRunnable)
         stallWatchdog.reset()

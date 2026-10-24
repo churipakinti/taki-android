@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList
 import android.os.Handler
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -542,6 +543,30 @@ class MediaLibrarySessionCallback :
         Timber.i("onAddMediaItems")
 
         if (mediaItems.isEmpty()) return Futures.immediateFuture(mediaItems)
+
+        // A playback request is the moment the playback infrastructure (MediaPlayerManager and its
+        // controller: stall watchdog, network recovery, scrobbling, queue persistence, error
+        // handling) is needed. Browsing and connecting do not start it. Without this, a cold,
+        // service-only Android Auto session played on the bare player (issue #43, AA-01).
+        val ready = SettableFuture.create<Unit>()
+        lifecycleSupport.ensureCreatedForPlayback { ready.set(Unit) }
+        // Playback must never wait indefinitely for it.
+        if (!ready.isDone) {
+            serviceScope.launch {
+                delay(PLAYBACK_INFRASTRUCTURE_TIMEOUT_MS)
+                ready.set(Unit)
+            }
+        }
+        return Futures.transformAsync(
+            ready,
+            { resolveMediaItems(mediaItems) },
+            MoreExecutors.directExecutor()
+        )
+    }
+
+    private fun resolveMediaItems(
+        mediaItems: MutableList<MediaItem>
+    ): ListenableFuture<List<MediaItem>> {
         // Return early if its a search
         if (mediaItems[0].requestMetadata.searchQuery != null) {
             return playFromSearch(mediaItems[0].requestMetadata.searchQuery!!)
@@ -1481,6 +1506,9 @@ class MediaLibrarySessionCallback :
         }
     }
 }
+
+/** Longest a playback request waits for the playback infrastructure before it proceeds anyway. */
+internal const val PLAYBACK_INFRASTRUCTURE_TIMEOUT_MS = 5_000L
 
 /** Longest a resumption request may wait for the saved queue to be restored. */
 internal const val RESUMPTION_TIMEOUT_MS = 20_000L
