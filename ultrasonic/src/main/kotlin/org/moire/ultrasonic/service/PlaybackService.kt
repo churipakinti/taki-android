@@ -123,6 +123,8 @@ class PlaybackService :
         player.removeListener(listener)
         player.release()
         mediaLibrarySession.release()
+        // Cancel browse/resolution requests still in flight; they must not outlive the session.
+        librarySessionCallback.release()
         rxBusSubscription.dispose()
         isStarted = false
         stopForegroundRemoveNotification()

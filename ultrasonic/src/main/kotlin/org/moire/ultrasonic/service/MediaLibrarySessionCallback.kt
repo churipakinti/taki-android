@@ -35,13 +35,18 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.SettableFuture
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -105,7 +110,24 @@ class MediaLibrarySessionCallback :
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
-    private val mainScope = CoroutineScope(Dispatchers.Main)
+    private val mainJob = SupervisorJob()
+    private val mainScope = CoroutineScope(mainJob + Dispatchers.Main)
+
+    // Seams for tests (the defaults are the production behaviour).
+    internal var activeServerId: () -> Int = { ActiveServerProvider.getActiveServerId() }
+    internal var resolutionTimeoutMs: Long = RESOLUTION_TIMEOUT_MS
+    internal var mediaIdResolver: suspend (String) -> List<Track>? = { tracksFromMediaId(it) }
+
+    // The playback request currently being resolved; a newer one supersedes (cancels) it, so a late
+    // result for an older tap can never replace the queue the user asked for last.
+    private var pendingPlaybackRequest: ListenableFuture<*>? = null
+
+    /** Cancels everything still in flight; called when the owning service is destroyed. */
+    fun release() {
+        serviceJob.cancel()
+        mainJob.cancel()
+        pendingPlaybackRequest = null
+    }
 
     private var playlistCache: List<Track>? = null
     private var starredSongsCache: List<Track>? = null
@@ -363,20 +385,24 @@ class MediaLibrarySessionCallback :
     ): ListenableFuture<LibraryResult<MediaItem>> {
         Timber.i("onGetItem")
 
-        val tracks = tracksFromMediaId(mediaId)
-        val mediaItem = tracks?.firstOrNull()?.toMediaItem()
-        // TODO:
-        // Create LRU Cache of MediaItems, fill it in the other calls
-        // and retrieve it here.
-
-        return if (mediaItem != null) {
-            Futures.immediateFuture(
+        // Resolving an item can need the server (an album or playlist that is not cached), so it must
+        // not run on the session's application looper: resolve off it and complete on the main thread.
+        return mainScope.future {
+            val mediaItem = try {
+                withTimeout(resolutionTimeoutMs) { mediaIdResolver(mediaId) }
+                    ?.firstOrNull()?.toMediaItem()
+            } catch (e: TimeoutCancellationException) {
+                Timber.w(e, "onGetItem timed out for %s", mediaId.substringBefore('|'))
+                null
+            }
+            // TODO:
+            // Create LRU Cache of MediaItems, fill it in the other calls
+            // and retrieve it here.
+            if (mediaItem != null) {
                 LibraryResult.ofItem(mediaItem, null)
-            )
-        } else {
-            Futures.immediateFuture(
+            } else {
                 LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
-            )
+            }
         }
     }
 
@@ -522,11 +548,15 @@ class MediaLibrarySessionCallback :
                 ready.set(Unit)
             }
         }
-        return Futures.transformAsync(
+        val request = Futures.transformAsync(
             ready,
             { resolveMediaItems(mediaItems) },
             MoreExecutors.directExecutor()
         )
+        // The newest playback request wins: supersede one that is still resolving.
+        pendingPlaybackRequest?.takeIf { !it.isDone }?.cancel(true)
+        pendingPlaybackRequest = request
+        return request
     }
 
     private fun resolveMediaItems(
@@ -557,52 +587,34 @@ class MediaLibrarySessionCallback :
         }
     }
 
-    @Suppress("MagicNumber", "ComplexMethod")
+    /**
+     * Resolves a legacy, media-id-only selection off the main thread (it may need the server) and
+     * completes on the main thread. Fails (never hangs): after [resolutionTimeoutMs], when nothing
+     * could be resolved, when the media id is malformed, or when the active server changed meanwhile,
+     * so a late response can not put another server's tracks into the queue.
+     */
+    @Suppress("TooGenericExceptionCaught") // a malformed id surfaces as IndexOutOfBounds
     private fun onAddLegacyAutoItems(
         mediaItems: MutableList<MediaItem>
     ): ListenableFuture<List<MediaItem>> {
-        Timber.i("onAddLegacyAutoItems %s", mediaItems.first().mediaId)
+        val mediaId = mediaItems.first().mediaId
+        Timber.i("onAddLegacyAutoItems %s", mediaId.substringBefore('|'))
 
-        val mediaIdParts = mediaItems.first().mediaId.split('|')
-
-        val tracks = when (mediaIdParts.first()) {
-            MEDIA_PLAYLIST_ITEM -> playPlaylist(mediaIdParts[1], mediaIdParts[2])
-
-            MEDIA_PLAYLIST_SONG_ITEM -> playPlaylistSong(
-                mediaIdParts[1],
-                mediaIdParts[2],
-                mediaIdParts[3]
-            )
-
-            MEDIA_ALBUM_ITEM -> playAlbum(mediaIdParts[1], mediaIdParts[2])
-
-            MEDIA_ALBUM_SONG_ITEM -> playAlbumSong(
-                mediaIdParts[1],
-                mediaIdParts[2],
-                mediaIdParts[3]
-            )
-
-            MEDIA_SONG_STARRED_ID -> playStarredSongs()
-
-            MEDIA_SONG_STARRED_ITEM -> playStarredSong(mediaIdParts[1])
-
-            MEDIA_SONG_RANDOM_ID -> playRandomSongs()
-
-            MEDIA_SONG_RANDOM_ITEM -> playRandomSong(mediaIdParts[1])
-
-            MEDIA_SEARCH_SONG_ITEM -> playSearch(mediaIdParts[1])
-
-            else -> null
-        }
-
-        return tracks
-            ?.let {
-                Futures.immediateFuture(
-                    it.map { track -> track.toMediaItem() }
-                        .toMutableList()
-                )
+        val serverAtRequest = activeServerId()
+        return mainScope.future {
+            val tracks = try {
+                withTimeout(resolutionTimeoutMs) { mediaIdResolver(mediaId) }
+            } catch (e: TimeoutCancellationException) {
+                throw IllegalStateException("Resolving the selected item timed out", e)
+            } catch (e: IndexOutOfBoundsException) {
+                throw IllegalArgumentException("Malformed media id", e)
             }
-            ?: Futures.immediateFuture(mediaItems)
+            check(activeServerId() == serverAtRequest) {
+                "The server changed while the item was resolving"
+            }
+            check(!tracks.isNullOrEmpty()) { "Nothing to play for the selected item" }
+            tracks.map { track -> track.toMediaItem() }
+        }
     }
 
     @Suppress("ReturnCount", "ComplexMethod")
@@ -718,7 +730,7 @@ class MediaLibrarySessionCallback :
     }
 
     @Suppress("MagicNumber", "ComplexMethod")
-    private fun tracksFromMediaId(mediaId: String?): List<Track>? {
+    private suspend fun tracksFromMediaId(mediaId: String?): List<Track>? {
         Timber.d(
             "AutoMediaBrowserService onPlayFromMediaIdRequested called. mediaId: %s",
             mediaId
@@ -965,7 +977,7 @@ class MediaLibrarySessionCallback :
         val mediaItems: MutableList<MediaItem> = ArrayList()
 
         return mainScope.future {
-            val songs = serviceScope.future { listSongsInMusicService(id, name) }.await()
+            val songs = listSongsInMusicService(id, name)
 
             if (songs != null) {
                 if (songs.getChildren(includeDirs = true, includeFiles = false).isEmpty() &&
@@ -1121,25 +1133,24 @@ class MediaLibrarySessionCallback :
         }
     }
 
-    private fun playPlaylist(id: String, name: String): List<Track>? {
+    private suspend fun playPlaylist(id: String, name: String): List<Track>? {
         if (playlistCache == null) {
             // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
-            val content =
-                serviceScope.future {
-                    callWithErrorHandling { musicService.getPlaylist(id, name) }
-                }.get()
+            val content = withContext(Dispatchers.IO) {
+                callWithErrorHandling { musicService.getPlaylist(id, name) }
+            }
             playlistCache = content?.getTracks()
         }
         if (playlistCache != null) return playlistCache!!
         return null
     }
 
-    private fun playPlaylistSong(id: String, name: String, songId: String): List<Track>? {
+    private suspend fun playPlaylistSong(id: String, name: String, songId: String): List<Track>? {
         if (playlistCache == null) {
             // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
-            val content = serviceScope.future {
+            val content = withContext(Dispatchers.IO) {
                 callWithErrorHandling { musicService.getPlaylist(id, name) }
-            }.get()
+            }
             playlistCache = content?.getTracks()
         }
         val song = playlistCache?.firstOrNull { x -> x.id == songId }
@@ -1147,13 +1158,13 @@ class MediaLibrarySessionCallback :
         return null
     }
 
-    private fun playAlbum(id: String, name: String?): List<Track>? {
+    private suspend fun playAlbum(id: String, name: String?): List<Track>? {
         val songs = listSongsInMusicService(id, name)
         if (songs != null) return songs.getTracks()
         return null
     }
 
-    private fun playAlbumSong(id: String, name: String?, songId: String): List<Track>? {
+    private suspend fun playAlbumSong(id: String, name: String?, songId: String): List<Track>? {
         val songs = listSongsInMusicService(id, name)
         val song = songs?.getTracks()?.firstOrNull { x -> x.id == songId }
         if (song != null) return listOf(song)
@@ -1164,9 +1175,7 @@ class MediaLibrarySessionCallback :
         val mediaItems: MutableList<MediaItem> = ArrayList()
 
         return mainScope.future {
-            val songs = serviceScope.future {
-                listStarredSongsInMusicService()
-            }.await()
+            val songs = listStarredSongsInMusicService()
 
             if (songs != null) {
                 if (songs.songs.count() > 1) {
@@ -1188,7 +1197,7 @@ class MediaLibrarySessionCallback :
         }
     }
 
-    private fun playStarredSongs(): List<Track>? {
+    private suspend fun playStarredSongs(): List<Track>? {
         if (starredSongsCache == null) {
             // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
             val content = listStarredSongsInMusicService()
@@ -1198,7 +1207,7 @@ class MediaLibrarySessionCallback :
         return null
     }
 
-    private fun playStarredSong(songId: String): List<Track>? {
+    private suspend fun playStarredSong(songId: String): List<Track>? {
         if (starredSongsCache == null) {
             // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
             val content = listStarredSongsInMusicService()
@@ -1237,13 +1246,13 @@ class MediaLibrarySessionCallback :
         }
     }
 
-    private fun playRandomSongs(): List<Track>? {
+    private suspend fun playRandomSongs(): List<Track>? {
         if (randomSongsCache == null) {
             // This can only happen if Android Auto cached items, but Ultrasonic has forgot them
             // In this case we request a new set of random songs
-            val content = serviceScope.future {
+            val content = withContext(Dispatchers.IO) {
                 callWithErrorHandling { musicService.getRandomSongs(DISPLAY_LIMIT) }
-            }.get()
+            }
             randomSongsCache = content?.getTracks()
         }
         if (randomSongsCache != null) return randomSongsCache!!
@@ -1259,22 +1268,23 @@ class MediaLibrarySessionCallback :
         return null
     }
 
-    private fun listSongsInMusicService(id: String, name: String?): MusicDirectory? =
-        serviceScope.future {
+    private suspend fun listSongsInMusicService(id: String, name: String?): MusicDirectory? =
+        withContext(Dispatchers.IO) {
             if (ActiveServerProvider.shouldUseId3Tags()) {
                 callWithErrorHandling { musicService.getAlbumAsDir(id, name, false) }
             } else {
                 callWithErrorHandling { musicService.getMusicDirectory(id, name, false) }
             }
-        }.get()
-
-    private fun listStarredSongsInMusicService(): SearchResult? = serviceScope.future {
-        if (ActiveServerProvider.shouldUseId3Tags()) {
-            callWithErrorHandling { musicService.getStarred2() }
-        } else {
-            callWithErrorHandling { musicService.getStarred() }
         }
-    }.get()
+
+    private suspend fun listStarredSongsInMusicService(): SearchResult? =
+        withContext(Dispatchers.IO) {
+            if (ActiveServerProvider.shouldUseId3Tags()) {
+                callWithErrorHandling { musicService.getStarred2() }
+            } else {
+                callWithErrorHandling { musicService.getStarred() }
+            }
+        }
 
     private fun MutableList<MediaItem>.add(
         title: String,
@@ -1350,6 +1360,9 @@ class MediaLibrarySessionCallback :
         // TODO Implement better error handling
         return try {
             function()
+        } catch (cancelled: CancellationException) {
+            // Cancellation (a superseded request, a timeout, service teardown) must propagate.
+            throw cancelled
         } catch (all: Exception) {
             Timber.i(all)
             null
@@ -1481,6 +1494,9 @@ class MediaLibrarySessionCallback :
 
 /** Longest a playback request waits for the playback infrastructure before it proceeds anyway. */
 internal const val PLAYBACK_INFRASTRUCTURE_TIMEOUT_MS = 5_000L
+
+/** Longest a media-item resolution may take before its request fails (never left pending). */
+internal const val RESOLUTION_TIMEOUT_MS = 20_000L
 
 /** Longest a resumption request may wait for the saved queue to be restored. */
 internal const val RESUMPTION_TIMEOUT_MS = 20_000L

@@ -609,3 +609,78 @@ nothing captures the player).
 ### 20.6 Remaining
 AA-06, AA-07, AA-08 and the other findings are unchanged. The unused `androidx.car.app` dependency can be dropped
 in a separate change.
+
+## 21. AA-08 fix: no blocking server waits on the main thread (2026-10-24)
+
+### 21.1 Original implementation and blocking call sites
+Media3 runs `MediaLibrarySession.Callback` methods on the session's application looper, which is the main
+looper here. Two callbacks resolved the selected media id with helper functions that did
+`serviceScope.future { ...network... }.get()` - a blocking wait for the server on that thread:
+- `onGetItem` -> `tracksFromMediaId` (Android Auto calls it for every node it browses, folders included; for album
+  and playlist ids this reaches `playAlbum`/`playPlaylist`);
+- `onAddMediaItems` legacy path (`onAddLegacyAutoItems`, taken by every media-id-only selection from the car) ->
+  `playAlbum`, `playAlbumSong`, `playPlaylist`, `playPlaylistSong`, `playStarredSong(s)`, `playRandomSongs`,
+  `playSearch`, all through `listSongsInMusicService`, `listStarredSongsInMusicService` and the playlist/random
+  `.get()` bridges.
+Albums are cache-first (`CachedMusicService` reads the persisted rows), so the common case blocked for tens of ms;
+playlists, liked songs and random songs, and any album not cached, waited for the network. A Navidrome that is slow
+or unreachable therefore froze the main thread for as long as OkHttp's timeouts, an ANR risk. The browse methods
+(`onGetChildren`) already used `mainScope.future { ...await() }` and never blocked. `onPlaybackResumption` was
+already asynchronous and bounded (#37).
+
+### 21.2 Baseline and what was not reproduced
+No ANR could be provoked: the real server answers in milliseconds (playlist and album requests on Tailscale), and no
+safe way to add latency to it was used (the server, VPN and network were not touched). So the blocking is
+established from the code and the callback contract, and the new tests, not from a device ANR. Pre-fix device timing
+(Pixel 7, DHU, same scenario run before and after, debug builds): a song tapped in a playlist, "Play All" of a
+playlist and a song tapped in an album took 0.90 s, 1.67 s and 0.44 s from `onAddMediaItems` to the first
+`isPlaying=true`. Post-fix: 0.82 s, 0.81 s and 0.45 s. These are single runs; the differences (the 1.67 s baseline
+looks like an outlier) are not claimed as an improvement. A callback's entry-to-return time was not measured on the
+device; by construction it was the whole resolution time before and is a constant now.
+
+### 21.3 Change
+All resolution is suspend code on `Dispatchers.IO` driven from `mainScope.future`, so Media3 gets a pending future
+at once and it completes on the main thread:
+- `listSongsInMusicService`, `listStarredSongsInMusicService`, `playPlaylist`, `playPlaylistSong`, `playAlbum`,
+  `playAlbumSong`, `playStarredSong(s)`, `playRandomSongs` and `tracksFromMediaId` are `suspend` (no `.get()`).
+- `onGetItem` and the legacy `onAddMediaItems` path run `withTimeout(RESOLUTION_TIMEOUT_MS = 20 s)`. `onGetItem`
+  answers `ERROR_BAD_VALUE` for an unresolvable id or a timeout. A playback selection that cannot be resolved
+  (timeout, nothing found, malformed id, server switched meanwhile) now fails its future with a controlled
+  exception instead of returning the unresolved items (which the player could not play) or throwing from the
+  callback. Exception text stays in the log; no server address reaches the car.
+- Cancellation: `callWithErrorHandling` no longer swallows `CancellationException`; cancelling a future cancels the
+  coroutine behind it. The newest playback request supersedes (cancels) one still resolving, so a late answer for an
+  older tap cannot replace the queue the user asked for last (Media3 itself provides no such ordering across two
+  concurrent requests).
+- Server switch: the active server id is captured when the request starts and compared on completion; a result for
+  the previous server is rejected.
+- Service destruction: `MediaLibrarySessionCallback.release()` (called from `PlaybackService.releasePlayerAndSession`)
+  cancels the IO and main job, so no request outlives the session.
+- Untouched: the AA-01 start of the playback infrastructure, resumption, browse tree, flags, caches (AA-06), queue
+  shape (AA-07), search (AA-09), artwork.
+
+### 21.4 Tests
+`AndroidAutoItemResolutionTest` (13), with a fake resolver that stays unresolved until the test releases it (no sleeps
+or network): the callback returns a pending future while the "server" has not answered; two concurrent resolutions
+finish independently; nothing found, timeout (virtual time), malformed id and an unresolvable `onGetItem` id fail
+cleanly; a newer request cancels the older one and the late answer produces nothing; cancelling a request cancels
+its work; a server switch rejects the old server's tracks; releasing the callback cancels in-flight work; album
+order is kept; an item that already carries its URI is not resolved; an empty selection touches nothing. Removing
+the supersede step and the server check makes two of them fail. `:ultrasonic` 1767 tests, 0 failures. Gates:
+`assembleDebug`, `assembleRelease`, `lintDebug` (no new issues), `lintVitalRelease` pass; detekt stays at 42 + 1.
+
+### 21.5 Pixel 7 + DHU (debug build; release untouched; no data cleared)
+Same scripted scenario before and after: Taki is listed, Playlists -> a playlist -> a song and Play All, Albums ->
+an album -> a song all play, queue and metadata correct, 3 scrobbles, queue checkpoints written, repeat stays Off
+(no AA-03/AA-04 regression), one manager start for the cold session (AA-01 holds), no ANR and no Taki frame-skip
+warnings (two `Choreographer` warnings in the capture belong to another process). Missing track (the album whose
+file the server no longer has): the metadata resolved, the stream failed with the same single "Source error", Taki's
+error handling ran (cache invalidation, no retry loop, no queue advance), and a following valid track played
+normally. PSS 168 MB in that session (car only).
+Not tested on the device: slow or unreachable server (deterministic tests only), concurrent controllers, a server
+switch or service destruction during a request.
+
+### 21.6 Remaining
+`playlistCache` and the other in-memory caches are still unkeyed (AA-06) and, now that resolution is asynchronous,
+two overlapping requests can share them; the playlist caches are written without synchronisation (AA-06 scope).
+`playFromSearch` still throws on an empty result (AA-09) but now fails its future instead of the callback.
