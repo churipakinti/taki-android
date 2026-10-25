@@ -107,3 +107,40 @@ No new issue is warranted: the persistence work is already **#47** (this audit s
 `POST46_AUDIT_COMPLETE = YES`
 
 `PUBLIC_BETA_READY = NO` (blocked by #36 and the P1 items above; no security blocker remains known)
+
+
+## 7. #47 implementation: durable playback state (2026-10-25)
+
+Baseline `9189d686`. The saved queue (`downloadstate.ser`) and the equalizer preset (`equalizer.dat`) now live in `filesDir`, are written through `androidx.core.util.AtomicFile`, and are migrated once from the old `cacheDir` copy. The change is confined to `FileUtil.serialize/deserialize` (the only two callers are `PlaybackStateSerializer` and `EqualizerController`, so neither was edited), two backup XML files and tests. Serialization format, `serialVersionUID`s, the 100-track queue cap, file names and the Media3/Android Auto code are untouched.
+
+### 7.1 Behaviour
+
+- **Write:** `AtomicFile.startWrite` -> `ObjectOutputStream` -> `finishWrite` (fsync, then replace). An exception calls `failWrite`, which restores the previous generation; the call returns `false` and logs (file name only, never contents). After a successful write any leftover `cacheDir` copy is deleted, because the newer state supersedes it.
+- **Read order:** current file (`AtomicFile.openRead` also repairs an interrupted write by restoring the backup generation) -> if absent or unreadable, the legacy `cacheDir` copy -> otherwise nothing. A missing, truncated or garbage file returns `null` with a warning; nothing crashes and nothing blocks.
+- **Migration:** legacy file read -> new file written -> new file read back successfully -> only then the legacy file is deleted. Repeating it is harmless. If the new write fails, the legacy copy is kept (and still used) for the next start. If the new file is already valid, the legacy file is never read (no stale resurrection) and is removed. A corrupt legacy file is neither migrated nor deleted. Reads and writes share one lock.
+- **Backup:** `filesDir` would otherwise be picked up by device-to-device transfer (it includes everything not excluded), so `backup_rules.xml` excludes both files for device transfer; cloud backup and the legacy descriptor only include shared prefs and databases and are guarded by a test. The queue still is not carried to another device (it refers to server ids that are not transferred either).
+- **Single global slot, not per server (unchanged policy):** tracks carry `serverId`; switching library keeps the live queue; playing something replaces the saved queue by design.
+
+### 7.2 Tests (16 new, 0 failures; 12 of the 15 `DurableStateFileTest` fail on the old code)
+
+`DurableStateFileTest`: round trip of songs/index/position/shuffle/repeat; missing file; clearing the cache directory keeps the queue; valid legacy migrated and removed, repeatable; new state wins over a stale legacy copy; writing discards an unread legacy copy; corrupt legacy neither migrated nor deleted; failed migration keeps the legacy copy and succeeds on the next run; interruption after the new file was written; interrupted write (`startWrite` + partial bytes, no finish) keeps the last good state; a write failure keeps the last good state; truncated or garbage current file fails safely; an empty queue never brings back an older one; the real `PlaybackStateSerializer` through the durable file; the equalizer preset (same helper, migration and cache wipe). `ReleaseHygieneInvariantsTest`: backup rules keep the state files out of device transfer and never add the `file` domain to cloud/legacy includes.
+
+### 7.3 Validation
+
+- Automated: **1889 tests, 0 failures** (1873 before + 16); `assembleDebug`, `assembleRelease`; `lintDebug` and `lintVitalRelease` report no new issues; `detekt` 42 (`ultrasonic`) + 1 (`subsonic-api`), identical to the baseline; `git diff --check` clean. Unchanged and passing: AA-05 `ControllerAuthorizationTest`, #46 `PlaybackSourcePolicyTest`, `QueueRestoreRoundTripTest`, the AA-01..AA-10 suites.
+- Emulator (`Pixel_7` AVD, fake Subsonic server, fixtures; the Pixel 7 was not touched): the pre-#47 build wrote `cache/downloadstate.ser` (1634 bytes); upgrading with `adb install -r` left it in place until first launch, then `FileUtil: Deserialized object` and an identical 1634-byte `files/downloadstate.ser` appeared with the cache copy removed; `pm trim-caches` (the OS reclaim reproduced in section 1) emptied `cache/` but the queue survived and a cold start by media button logged `Restoring 3 songs` at the saved position and played; a second `install -r` kept the file. The queue of the same fixture session therefore reproduces E1 as fixed.
+- Not exercised on hardware: Android Auto/DHU and offline playback were not re-run on a device; they are covered by the unchanged automated suites (the change does not touch playback, browse or session code).
+
+### 7.4 Test-device backup procedure (for any session that switches servers or plays fixtures)
+
+Back up **all** app state, not only databases: `databases/`, `shared_prefs/`, `files/` (now includes `downloadstate.ser` and `equalizer.dat`) **and, for installs older than this change, `cache/downloadstate.ser`**. Verify the archive by listing it and, when possible, by restoring into a throw-away profile before the destructive session. Matching database sizes is not proof of a full restore. Never test on the user's phone data without this.
+
+### 7.5 Residual risks
+
+- Two simultaneous process instances writing the same file are not coordinated beyond `AtomicFile` (not a supported configuration).
+- A completed write that is later corrupted by the storage layer leaves no older generation (AtomicFile keeps one only during a write).
+- Queue stays a single slot shared by all servers (policy above).
+
+`ISSUE_47_ACCEPTANCE = MET` for the automated and emulator criteria; hardware smoke tests stay with the beta release checklist.
+
+`PUBLIC_BETA_READY = NO` (unchanged: #35, #36 and the release checklist remain).

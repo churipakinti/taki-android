@@ -21,4 +21,7 @@
     <exclude domain="database" path="ultrasonic-database-wal"/>
     <exclude domain="database" path="ultrasonic-database-shm"/>
     <exclude domain="database" path="ultrasonic-database-journal"/>
+
+    <!-- The saved playback queue and equalizer preset live in filesDir (#47); the "file" domain is
+         deliberately not included above, so they stay out of legacy backups too. -->
 </full-backup-content>

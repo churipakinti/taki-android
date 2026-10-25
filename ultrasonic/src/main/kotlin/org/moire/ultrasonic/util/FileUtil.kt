@@ -10,9 +10,11 @@ package org.moire.ultrasonic.util
 import android.content.Context
 import android.text.TextUtils
 import android.util.Pair
+import androidx.core.util.AtomicFile
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.IOException
@@ -476,39 +478,91 @@ object FileUtil {
     fun getCompleteFile(name: String): String =
         String.format(Locale.ROOT, "%s.complete.%s", getBaseName(name), getExtension(name))
 
+    // Serialized app state (playback queue, equalizer) lives in filesDir, not cacheDir: the OS and
+    // "Clear cache" reclaim the latter (#47). Writes go through AtomicFile so an interrupted write
+    // never replaces the last good state; the old cacheDir copy is migrated on first read.
+    private val stateFileLock = Any()
+
+    private fun stateFile(context: Context, fileName: String) = File(context.filesDir, fileName)
+
+    private fun legacyStateFile(context: Context, fileName: String) = File(context.cacheDir, fileName)
+
     @JvmStatic
-    fun <T : Serializable?> serialize(context: Context, obj: T, fileName: String): Boolean {
-        val file = File(context.cacheDir, fileName)
-        var out: ObjectOutputStream? = null
-        return try {
-            out = ObjectOutputStream(FileOutputStream(file))
-            out.writeObject(obj)
-            Timber.i("Serialized object to %s", file)
-            true
-        } catch (ignored: Exception) {
-            Timber.w("Failed to serialize object to %s", file)
-            false
-        } finally {
-            out.safeClose()
+    fun <T : Serializable?> serialize(context: Context, obj: T, fileName: String): Boolean =
+        synchronized(stateFileLock) {
+            val written = writeState(stateFile(context, fileName), obj)
+            // A newer state supersedes a legacy copy that was never read (e.g. a fresh session)
+            if (written) legacyStateFile(context, fileName).delete()
+            written
         }
-    }
 
     @Suppress("UNCHECKED_CAST")
     @JvmStatic
-    fun <T : Serializable?> deserialize(context: Context, fileName: String): T? {
-        val file = File(context.cacheDir, fileName)
-        if (!file.exists() || !file.isFile) {
-            return null
+    fun <T : Serializable?> deserialize(context: Context, fileName: String): T? =
+        synchronized(stateFileLock) {
+            val file = stateFile(context, fileName)
+            val legacy = legacyStateFile(context, fileName)
+
+            // The current state always wins; AtomicFile restores the previous generation itself when
+            // the last write was interrupted.
+            val current = readState(file)
+            if (current != null) {
+                // Never let an older, already migrated copy resurface later
+                if (legacy.exists()) legacy.delete()
+                return@synchronized current.value as T?
+            }
+
+            if (!legacy.isFile) return@synchronized null
+
+            // One-time migration: write the new file, verify it reads back, only then drop the old one
+            val old = readLegacyState(legacy) ?: return@synchronized null
+            if (writeState(file, old.value) && readState(file) != null) {
+                legacy.delete()
+                Timber.i("Migrated %s from the cache directory", fileName)
+            } else {
+                Timber.w("Could not migrate %s yet, keeping the cache copy", fileName)
+            }
+            old.value as T?
         }
+
+    // Wraps the value so a stored null is distinguishable from "nothing readable"
+    private class StateValue(val value: Any?)
+
+    private fun writeState(file: File, obj: Any?): Boolean {
+        val atomic = AtomicFile(file)
+        var stream: FileOutputStream? = null
+        return try {
+            stream = atomic.startWrite()
+            val out = ObjectOutputStream(stream)
+            out.writeObject(obj)
+            out.flush()
+            atomic.finishWrite(stream)
+            Timber.i("Serialized object to %s", file.name)
+            true
+        } catch (all: Exception) {
+            Timber.w(all, "Failed to serialize object to %s", file.name)
+            atomic.failWrite(stream)
+            false
+        }
+    }
+
+    private fun readState(file: File): StateValue? =
+        readObject(file.name) { AtomicFile(file).openRead() }
+
+    private fun readLegacyState(file: File): StateValue? =
+        readObject(file.name) { FileInputStream(file) }
+
+    private fun readObject(name: String, open: () -> InputStream): StateValue? {
         var inStream: ObjectInputStream? = null
         return try {
-            inStream = ObjectInputStream(FileInputStream(file))
-            val readObject = inStream.readObject()
-            val result = readObject as T
-            Timber.i("Deserialized object from %s", file)
+            inStream = ObjectInputStream(open())
+            val result = StateValue(inStream.readObject())
+            Timber.i("Deserialized object from %s", name)
             result
+        } catch (ignored: FileNotFoundException) {
+            null
         } catch (all: Throwable) {
-            Timber.w(all, "Failed to deserialize object from %s", file)
+            Timber.w(all, "Failed to deserialize object from %s", name)
             null
         } finally {
             inStream.safeClose()

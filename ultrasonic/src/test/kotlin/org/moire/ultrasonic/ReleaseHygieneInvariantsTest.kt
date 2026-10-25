@@ -72,6 +72,23 @@ class ReleaseHygieneInvariantsTest {
     }
 
     @Test
+    fun `the saved queue and equalizer files are never backed up or transferred (#47)`() {
+        // device transfer includes everything it does not exclude, so it must exclude them explicitly
+        val transfer = File(module, "src/main/res/xml/backup_rules.xml").readText()
+            .substringAfter("<device-transfer>").substringBefore("</device-transfer>")
+        for (state in listOf("downloadstate.ser", "equalizer.dat")) {
+            assertTrue("device-transfer must exclude $state", transfer.contains("<exclude domain=\"file\" path=\"$state\"/>"))
+        }
+        // cloud backup and the legacy descriptor only include shared prefs and databases: the "file"
+        // domain (where the state now lives) must never be added to their includes
+        for (file in listOf("src/main/res/xml/backup_rules.xml", "src/main/res/xml/backup_descriptor.xml")) {
+            val includes = Regex("<include domain=\"([a-z]+)\"").findAll(File(module, file).readText())
+                .map { it.groupValues[1] }.toSet()
+            assertEquals(setOf("sharedpref", "database"), includes)
+        }
+    }
+
+    @Test
     fun `the playback command receiver is internal only (AA-05)`() {
         // Any app could otherwise start, skip or stop playback and feed it KeyEvents through it. Its
         // only legitimate sender is BluetoothIntentReceiver (explicit, same package).

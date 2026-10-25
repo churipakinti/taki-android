@@ -20,6 +20,11 @@
         <exclude domain="database" path="ultrasonic-database-journal"/>
     </cloud-backup>
     <device-transfer>
+        <!-- The saved playback queue and equalizer preset live in filesDir (#47). They belong to this
+             installation and its server ids, so they are not carried to another device (cloud backup
+             already excludes the files domain through its explicit includes). -->
+        <exclude domain="file" path="downloadstate.ser"/>
+        <exclude domain="file" path="equalizer.dat"/>
         <!-- Specifying nothing here means: Include all: https://developer.android.com/guide/topics/data/autobackup#include-exclude-android-11 -->
         <!-- Same exclusion as cloud-backup above: device-to-device transfer must not carry
              plaintext server credentials either. -->
