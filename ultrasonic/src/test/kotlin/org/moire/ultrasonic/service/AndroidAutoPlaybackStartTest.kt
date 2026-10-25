@@ -43,7 +43,10 @@ class AndroidAutoPlaybackStartTest {
 
     private val lifecycleSupport: MediaPlayerLifecycleSupport = mock()
     private val session: MediaSession = mock()
-    private val controller: MediaSession.ControllerInfo = mock()
+    // Taki's own controller: only it may supply a playback source uri (#46); media ids work for any.
+    private val controller: MediaSession.ControllerInfo = mock<MediaSession.ControllerInfo>().also {
+        whenever(it.uid).thenReturn(android.os.Process.myUid())
+    }
 
     private lateinit var callback: MediaLibrarySessionCallback
 

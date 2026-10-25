@@ -47,6 +47,15 @@ internal object ControllerPolicy {
             controller.uid == Process.myUid() ||
             session.isMediaNotificationController(controller)
 
+    /**
+     * May this controller choose what Taki's player opens? Only Taki's own process: its items carry the
+     * internal "id|bitrate|path" source (which resolves to a local file or the Subsonic stream), built by
+     * the app itself. Android Auto and every other controller send media ids, which Taki resolves
+     * against the active server; a source URI they supply is ignored (#46).
+     */
+    fun maySupplyPlaybackSource(controller: MediaSession.ControllerInfo): Boolean =
+        controller.uid == Process.myUid()
+
     fun isMutatingCustomAction(action: String): Boolean = action in mutatingCustomActions
 
     /** Session commands for [controller]: untrusted controllers get no rating command. */

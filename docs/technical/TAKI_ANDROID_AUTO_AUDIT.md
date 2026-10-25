@@ -1384,3 +1384,79 @@ This section updates the **release-gate status** after the security fix and on-d
 `URI_ACCESS_SECURITY_REVIEW = OPEN (#46)`
 
 `PUBLIC_BETA_READY = NO` (until #46 and other independent gates are assessed; no public beta or release was published)
+
+
+## 31. #46 assessment: controller-supplied `mediaUri` and URI access (2026-10-25)
+
+Baseline `e0a0da6b`. Environment: `Pixel_7` AVD (Android 37.1), Taki debug, a separate-UID probe app (Java, `MediaController`, own `ContentProvider`), a fake Subsonic server and a second controlled HTTP endpoint (both on the host, reached through `adb reverse`), fixture WAV files. No production Navidrome, Tailscale peer or real user file was touched. Raw before/after probe logs were kept outside the repository.
+
+### 31.1 Suspected boundary and Media3 contract
+
+`resolveMediaItems()` copied `requestMetadata.mediaUri` into the playable item. A controller's own `localConfiguration.uri` is never used by Taki (an item without `requestMetadata.mediaUri` is rebuilt from its media id; verified, 31.3), so `requestMetadata.mediaUri` was the only way for a controller to name a source, and the session decides what to do with it in `onAddMediaItems`/`onSetMediaItems`. Any app can connect (AA-05 section 29 keeps browse/transport open to everyone).
+
+### 31.2 Actual playback URI flow (code trace)
+
+1. Controller calls `setMediaItems`/`addMediaItems` -> `onSetMediaItems`/`onAddMediaItems` -> `requestPlayback` -> `resolveMediaItems`.
+2. An item with `mediaUri` becomes `item.setUri(mediaUri)`; items without it (Android Auto, voice) go through `onAddLegacyAutoItems`, which resolves the **media id** on the active server (`tracksFromMediaId`) and builds Taki's own items.
+3. ExoPlayer is built with `CachedDataSource` -> `ResolvingDataSource` -> `OkHttpDataSource`. **There is no `DefaultDataSource`**: no `file`, `content`, `asset` or generic HTTP source exists. `CachedDataSource.open()` treats *every* item URI as Taki's internal `id|bitrate|path` string: it splits on `|` and uses `components[2]` as a **local file path** (`JavaFile.getFromPath(path) = File(path)`, any absolute path). On a cache miss it passes the spec to the resolver, which discards the URL host entirely and calls `getStreamUrl(id, bitrate)` against the **configured Subsonic server**.
+4. Taki's own `Track.toMediaItem()` produces exactly that internal string (`id|bitrate|filePath`) in `requestMetadata.mediaUri`; Taki's own `MediaController` is the only legitimate user of this field.
+
+Consequence: real URLs are never fetched by this path, but a *crafted internal string* is attacker-chosen input to a file open.
+
+### 31.3 Separate-UID results before the fix (probe uid 10230; Taki trusts nobody by uid)
+
+| Scenario | Result before the fix |
+|---|---|
+| T01 valid media id | resolved on the (fake) server, plays |
+| T02/T03/T05 https, http (`set` and `add`) URI | **no request to the controlled endpoint** (log 0 lines); `ERROR_CODE_IO_UNSPECIFIED`, `IndexOutOfBoundsException: Index: 2, Size: 1` from `CachedDataSource` |
+| T06 `file://` fixture, T07 `content://` (provider not exported, no grant), T11 `ftp://`, T12 malformed, T13 200k-character URI | same safe error; the provider was never opened; no crash, no ANR |
+| T10 redirects (same host, to another local port) | never followed, because no HTTP request is ever made |
+| `setMediaItem(uri)` via `localConfiguration.uri` (queue emptied first, fixed build) | not used: no request, `items=0` |
+| T14 valid media id + unrelated `mediaUri` | the URI won; same error |
+| C3 crafted `fx1|128|/nonexistent` | falls through to the Subsonic stream request for id `fx1` (same as playing that id) |
+| C4 id with `&` characters | percent-encoded (`id=fx1%2526format...`); no parameter injection |
+| **C1 crafted `http://x/|128|/data/local/tmp/fx.wav`** | **Taki opened and played the file** |
+| **C2 crafted path to a Taki private file (`shared_prefs`)** | Taki opened it; controller observed `ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED` with the extractor sniff-failure list |
+| **C5 crafted path to a private WAV in Taki's data dir** (probe gets `Permission denied` reading it) | **Taki opened, decoded and played it; the controller observed `duration=60000`, state and position** |
+
+### 31.4 Impact classification (observed, not inferred)
+
+- **Unauthorized request initiation to arbitrary hosts / SSRF: NOT OBSERVED** (0 requests to the controlled endpoint across every URL scheme; redirects, loopback and private-network-like cases are moot because no HTTP source is reachable). Credentials: none attached to any foreign URL (never contacted); Subsonic credentials only ever go to the configured server, and the only controller-chosen part is the track `id`, which is exactly what media-id playback already allows.
+- **Unauthorized file access: CONFIRMED.** A controller with no storage access made Taki open an arbitrary path readable by Taki (including Taki's private data directory) through the crafted `id|bitrate|path` string.
+- **Response disclosure: LIMITED, observed.** No bytes are returned to the controller. It can learn existence, whether Taki can read it, whether it parses as one of ExoPlayer's containers (error code and the extractor list), and for a playable file its duration, position and any embedded metadata. Playing a private audio file is audible on the device.
+- **Content providers: NOT REACHABLE** (no content data source). **Credential exposure, persistent state change, queue/position leakage: NOT OBSERVED.** Queue replacement by an untrusted controller is normal Media3 transport behaviour and is unchanged (not a separate defect).
+- **Severity: low-to-medium confused-deputy defect** (a bounded file-open/metadata oracle with no byte disclosure, no write, no credential or network reach), yet a genuine trust-boundary bypass that is trivial to remove. A fix was justified.
+
+### 31.5 Fix
+
+- `ControllerPolicy.maySupplyPlaybackSource(controller) = controller.uid == Process.myUid()`.
+- `resolveMediaItems(items, honorSourceUri)`: the `mediaUri` branch is honored only for Taki's own controller. Every other controller, trusted or not (it is irrelevant that `isTrusted` may be true), is resolved by media id exactly like Android Auto: a supplied URI is ignored, an unknown id fails with the existing "Nothing to play" error and the queue is left alone. Applies to `onSetMediaItems` and `onAddMediaItems` (both go through `requestPlayback`). Voice `searchQuery` handling is unchanged.
+- No hostname/scheme filtering engine was built; the unnecessary capability is rejected at the trust boundary. `CachedDataSource` itself is unchanged.
+
+### 31.6 Tests
+
+`PlaybackSourcePolicyTest` (9 tests; 5 fail on the old code): own controller keeps `set` and `add` with the internal source; foreign and foreign-trusted controllers have the URI ignored and the media id resolved (set, add, mixed queue); unknown id with only a URI fails and the URI is never reinterpreted as an id; ten URI shapes (http, https, file, content, ftp, malformed, crafted internal string, non-numeric bitrate, 200k characters, empty) never reach the queue; the session player is never touched on a rejection; id-only items behave identically for all controllers. Three AA suites (`AndroidAutoContextualPlaybackTest`, `AndroidAutoItemResolutionTest`, `AndroidAutoPlaybackStartTest`) legitimately exercised the "item carries its own uri" path with a non-own mock controller; their mock controller now reports Taki's UID, which is the real caller of that path. AA-05 tests are unchanged and pass.
+
+### 31.7 Emulator results after the fix
+
+With the queue emptied first, every URI-only request from the separate-UID probe (http, `add`, file, content, crafted path to a world-readable file, crafted path to Taki's private WAV via `set` and `add`, crafted Subsonic id) leaves **`items=0`** (nothing opened, no request to either server, `Nothing to play` in Taki). A valid media id with a crafted source plays the server's own track (`stream.view?id=fx1`), i.e. the media id is authoritative. A controller disconnecting mid-request caused no crash or ANR and playback continued. Taki's own UI playback (Daily Mix) still plays through the internal source (`CachedDataSource` open of `fx1|0|<path>` + fixture stream), skip works, no crash.
+
+### 31.8 Device validation status
+
+A short Pixel 7 + DHU media-id regression was **not performed**: the change only alters behaviour for a `mediaUri` supplied by a non-Taki controller, Android Auto sends media ids only (`onAddLegacyAutoItems`, covered by the AA-07/AA-08/AA-09 suites), and the earlier DHU run exercised exactly that path. The earlier validated behaviour is expected to be unchanged; this is stated as a judgement, not a measurement. Not required for #46 closure.
+
+### 31.9 Residual risk and follow-ups
+
+- Any app can still browse, control transport, replace the queue by valid media ids and cause playback of server tracks; unchanged platform behaviour.
+- A track's `path` comes from the configured server (`FileUtil.getSongFile(track)`) and is joined into a local path by Taki; a malicious or compromised *user-configured server* could therefore influence a local path. This is the user's own server trust boundary (not reachable by other apps) and is not changed here; a containment check in `CachedDataSource` is a possible hardening.
+- Not exercised: `https` against a trusted certificate chain (no network source is reachable), Jukebox backend (separate implementation, not reachable by this field), Android Auto on hardware after this specific change.
+
+### 31.10 Public-beta implication
+
+`URI_ACCESS_SECURITY_REVIEW = RESOLVED` (file-access defect fixed and covered; no SSRF, credential or content-provider exposure demonstrated)
+
+`PUBLIC_BETA_READY = NO` (unchanged: #36 and the other independent gates still apply)
+
+### 31.11 Gates
+
+1873 `ultrasonic` unit tests, 0 failures (1864 before + 9 new); `assembleDebug` and `assembleRelease`; `lintDebug` and `lintVitalRelease` report no new issues; `detekt` 42 (`ultrasonic`) + 1 (`subsonic-api`), identical to the historical baseline; `git diff --check` clean.

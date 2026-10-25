@@ -628,7 +628,7 @@ class MediaLibrarySessionCallback :
         // Appending a song (as opposed to starting playback of it) adds that song only.
         return supersedePending(
             Futures.transform(
-                requestPlayback(mediaItems),
+                requestPlayback(mediaItems, ControllerPolicy.maySupplyPlaybackSource(controller)),
                 { it.itemsToAdd() },
                 MoreExecutors.directExecutor()
             )
@@ -659,7 +659,7 @@ class MediaLibrarySessionCallback :
 
         return supersedePending(
             Futures.transform(
-                requestPlayback(mediaItems),
+                requestPlayback(mediaItems, ControllerPolicy.maySupplyPlaybackSource(controller)),
                 {
                     // Items the controller built itself keep the start it asked for.
                     MediaSession.MediaItemsWithStartPosition(
@@ -680,7 +680,10 @@ class MediaLibrarySessionCallback :
         return request
     }
 
-    private fun requestPlayback(mediaItems: MutableList<MediaItem>): ListenableFuture<ResolvedPlayback> {
+    private fun requestPlayback(
+        mediaItems: MutableList<MediaItem>,
+        honorSourceUri: Boolean
+    ): ListenableFuture<ResolvedPlayback> {
         // A playback request is the moment the playback infrastructure (MediaPlayerManager and its
         // controller: stall watchdog, network recovery, scrobbling, queue persistence, error
         // handling) is needed. Browsing and connecting do not start it. Without this, a cold,
@@ -696,13 +699,20 @@ class MediaLibrarySessionCallback :
         }
         return Futures.transformAsync(
             ready,
-            { resolveMediaItems(mediaItems) },
+            { resolveMediaItems(mediaItems, honorSourceUri) },
             MoreExecutors.directExecutor()
         )
     }
 
+    /**
+     * [honorSourceUri] is false for every controller but Taki's own process (#46): the playback source
+     * of an item is Taki's internal "id|bitrate|path" string, which makes the data source open a
+     * *file path*, so a foreign app must never be able to choose it. Such a controller is resolved by
+     * its media id only, exactly like Android Auto.
+     */
     private fun resolveMediaItems(
-        mediaItems: MutableList<MediaItem>
+        mediaItems: MutableList<MediaItem>,
+        honorSourceUri: Boolean
     ): ListenableFuture<ResolvedPlayback> {
         // Return early if its a search
         if (mediaItems[0].requestMetadata.searchQuery != null) {
@@ -711,7 +721,7 @@ class MediaLibrarySessionCallback :
 
         val updatedMediaItems: List<MediaItem> =
             mediaItems.mapNotNull { mediaItem ->
-                if (mediaItem.requestMetadata.mediaUri != null) {
+                if (honorSourceUri && mediaItem.requestMetadata.mediaUri != null) {
                     mediaItem.buildUpon()
                         .setUri(mediaItem.requestMetadata.mediaUri)
                         .build()
