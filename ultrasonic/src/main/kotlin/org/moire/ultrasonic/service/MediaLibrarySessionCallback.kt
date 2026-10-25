@@ -137,7 +137,8 @@ class MediaLibrarySessionCallback :
     // is random or changes on the server meanwhile. Keyed by server AND list identity, immutable
     // values, written only by a browse that succeeded; playback resolution never writes it.
     private val shownLists = ShownLists()
-    private var searchSongsCache: List<Track>? = null
+    private val searchTracks = SearchTracks()
+    private val searchSnapshots = SearchSnapshots()
 
     internal var ioDispatcher: kotlinx.coroutines.CoroutineDispatcher = Dispatchers.IO
     internal var musicServiceProvider: () -> MusicService = { MusicServiceFactory.getMusicService() }
@@ -642,11 +643,7 @@ class MediaLibrarySessionCallback :
     ): ListenableFuture<ResolvedPlayback> {
         // Return early if its a search
         if (mediaItems[0].requestMetadata.searchQuery != null) {
-            return Futures.transform(
-                playFromSearch(mediaItems[0].requestMetadata.searchQuery!!),
-                { ResolvedPlayback(it, startIndex = null) },
-                MoreExecutors.directExecutor()
-            )
+            return playFromSearch(mediaItems[0].requestMetadata.searchQuery!!)
         }
 
         val updatedMediaItems: List<MediaItem> =
@@ -758,63 +755,145 @@ class MediaLibrarySessionCallback :
         }
     }
 
-    private fun playFromSearch(query: String): ListenableFuture<List<MediaItem>> {
-        Timber.w("App state: %s", UApp.instance != null)
+    /**
+     * Voice play-from-search (`requestMetadata.searchQuery`): resolves one playable result on the active
+     * server, off the main thread, bounded by [resolutionTimeoutMs]. Policy (server order is kept):
+     * exact song title, else exact album name (the whole album), else the server's top song, else its top
+     * album. Fails in a controlled way (never plays something unrelated) when the query is blank, nothing
+     * matches, the server fails or answers after the server changed.
+     */
+    private fun playFromSearch(query: String): ListenableFuture<ResolvedPlayback> {
+        Timber.i("AutoMediaBrowserService play from search")
+        val term = searchTerm(query)
+        val serverAtRequest = activeServerId()
 
-        Timber.i("AutoMediaBrowserService onSearch query: %s", query)
-        val mediaItems: MutableList<MediaItem> = ArrayList()
+        return mainScope.future {
+            check(term != null) { "Empty search query" }
+            val tracks = try {
+                withTimeout(resolutionTimeoutMs) { tracksForVoiceSearch(term) }
+            } catch (e: TimeoutCancellationException) {
+                throw IllegalStateException("The search timed out", e)
+            }
+            check(activeServerId() == serverAtRequest) { "The server changed while searching" }
+            check(!tracks.isNullOrEmpty()) { "Nothing found for the search" }
+            ResolvedPlayback(tracks.map { it.toMediaItem() }, startIndex = null)
+        }
+    }
 
-        // Only accept query with pattern "play [Title]" or "[Title]"
-        // Where [Title]: must be exactly matched
-        // If no media with exact name found, play a random media instead
-        val mediaTitle = if (query.startsWith(PLAY_COMMAND, ignoreCase = true)) {
+    private suspend fun tracksForVoiceSearch(term: String): List<Track>? {
+        val result = searchLibrary(term) ?: return null
+        result.songs.firstOrNull { it.title.equals(term, ignoreCase = true) }?.let { return listOf(it) }
+        result.albums.firstOrNull {
+            (it.title ?: it.name).equals(term, ignoreCase = true)
+        }?.let { return playAlbum(it.id, it.name) }
+        result.songs.firstOrNull()?.let { return listOf(it) }
+        return result.albums.firstOrNull()?.let { playAlbum(it.id, it.name) }
+    }
+
+    /** The query without Android Auto's "play" prefix, or null when nothing is left to search for. */
+    private fun searchTerm(query: String): String? {
+        val term = if (query.startsWith(PLAY_COMMAND, ignoreCase = true)) {
             query.drop(PLAY_COMMAND.length)
         } else {
             query
         }
+        return term.trim().takeIf { it.isNotEmpty() }
+    }
 
-        return serviceScope.future {
-            val criteria = SearchCriteria(mediaTitle, SEARCH_LIMIT, SEARCH_LIMIT, SEARCH_LIMIT)
-            val searchResult = callWithErrorHandling { musicService.search(criteria) }
+    /** One server search; remembers the found songs by (server, id) so a tapped row needs no new request. */
+    private suspend fun searchLibrary(term: String): SearchResult? {
+        val server = activeServerId()
+        val result = withContext(ioDispatcher) {
+            callWithErrorHandling {
+                musicService.search(SearchCriteria(term, SEARCH_LIMIT, SEARCH_LIMIT, SEARCH_LIMIT))
+            }
+        } ?: return null
+        result.songs.forEach { searchTracks.put(server, it) }
+        return result
+    }
 
-            // TODO Add More... button to categories
-            if (searchResult != null) {
-                searchResult.albums.map { album ->
-                    mediaItems.add(
-                        album.title ?: "",
-                        listOf(MEDIA_ALBUM_ITEM, album.id, album.name)
-                            .joinToString("|")
-                    )
-                }
-
-                // TODO Commented out, as there is no playFromArtist function implemented yet.
-//                searchResult.artists.map { artist ->
-//                    mediaItems.add(
-//                        artist.name ?: "",
-//                        listOf(MEDIA_ARTIST_ITEM, artist.id, artist.name).joinToString("|"),
-//                        FOLDER_TYPE_ARTISTS
-//                    )
-//                }
-
-                searchSongsCache = searchResult.songs
-                searchResult.songs.map { song ->
-                    mediaItems.add(
-                        song.toMediaItem(
-                            listOf(MEDIA_SEARCH_SONG_ITEM, song.id).joinToString("|")
-                        )
-                    )
+    /** Media3 browse search: runs the search, then tells the controller how many results there are. */
+    @OptIn(UnstableApi::class)
+    override fun onSearch(
+        session: MediaLibraryService.MediaLibrarySession,
+        browser: MediaSession.ControllerInfo,
+        query: String,
+        params: MediaLibraryService.LibraryParams?
+    ): ListenableFuture<LibraryResult<Void>> {
+        Timber.i("onSearch")
+        return mainScope.future {
+            val items = searchItems(query)
+            when {
+                items == null -> LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
+                items.isError -> LibraryResult.ofError(SessionError.ERROR_IO)
+                else -> {
+                    session.notifySearchResultChanged(browser, query, items.list.size, params)
+                    LibraryResult.ofVoid()
                 }
             }
-
-            // TODO This just picks the first result and plays it.
-            // We could make this more advanced.
-            val firstItem = mediaItems.first()
-            val tracks = tracksFromMediaId(firstItem.mediaId)
-            Timber.i("Found media id: %s", firstItem.mediaId)
-            val result = tracks?.map { it.toMediaItem() }
-            Timber.i("Result size: %d", result?.size ?: 0)
-            return@future result ?: listOf()
         }
+    }
+
+    @OptIn(UnstableApi::class)
+    override fun onGetSearchResult(
+        session: MediaLibraryService.MediaLibrarySession,
+        browser: MediaSession.ControllerInfo,
+        query: String,
+        page: Int,
+        pageSize: Int,
+        params: MediaLibraryService.LibraryParams?
+    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+        Timber.i("onGetSearchResult")
+        return mainScope.future {
+            val items = searchItems(query)
+            when {
+                items == null -> LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
+                items.isError -> LibraryResult.ofError(SessionError.ERROR_IO)
+                else -> {
+                    val size = items.list.size.toLong()
+                    val from = (page.toLong() * pageSize).coerceAtMost(size).toInt()
+                    val to = (from.toLong() + pageSize).coerceAtMost(size).toInt()
+                    LibraryResult.ofItemList(ImmutableList.copyOf(items.list.subList(from, to)), params)
+                }
+            }
+        }
+    }
+
+    private class SearchItems(val list: List<MediaItem>, val isError: Boolean = false)
+
+    /**
+     * The result rows (songs, then albums, in server order) for [query] on the active server: the
+     * remembered snapshot of this very query, else a bounded server search. Null for a blank query.
+     * Searching never touches the player.
+     */
+    private suspend fun searchItems(query: String): SearchItems? {
+        val term = searchTerm(query) ?: return null
+        val server = activeServerId()
+        searchSnapshots.get(server, term)?.let { return SearchItems(it) }
+
+        val result = try {
+            withTimeout(resolutionTimeoutMs) { searchLibrary(term) }
+        } catch (e: TimeoutCancellationException) {
+            Timber.w(e, "Search timed out")
+            null
+        }
+        if (result == null || activeServerId() != server) return SearchItems(emptyList(), isError = true)
+
+        val rows = ArrayList<MediaItem>()
+        result.songs.forEach { song ->
+            rows.add(song.toMediaItem(listOf(MEDIA_SEARCH_SONG_ITEM, song.id).joinToString("|")))
+        }
+        result.albums.forEach { album ->
+            rows.add(
+                buildMediaItem(
+                    album.title ?: "",
+                    listOf(MEDIA_ALBUM_ITEM, album.id, album.name).joinToString("|"),
+                    isPlayable = false
+                )
+            )
+        }
+        searchSnapshots.put(server, term, rows)
+        return SearchItems(rows)
     }
 
     @Suppress("MagicNumber", "ComplexMethod")
@@ -861,13 +940,12 @@ class MediaLibrarySessionCallback :
         }
     }
 
-    private fun playSearch(id: String): List<Track>? {
-        // If there is no cache, we can't play the selected song.
-        if (searchSongsCache != null) {
-            val song = searchSongsCache!!.firstOrNull { x -> x.id == id }
-            if (song != null) return listOf(song)
-        }
-        return null
+    /** A search-result row is the song with that id on the active server (no "latest search" state). */
+    private suspend fun playSearch(id: String): List<Track>? {
+        val server = activeServerId()
+        searchTracks.get(server, id)?.let { return listOf(it) }
+        val song = withContext(ioDispatcher) { callWithErrorHandling { musicService.getSong(id) } }
+        return song?.also { searchTracks.put(server, it) }?.let { listOf(it) }
     }
 
     private fun getRootItems(): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
@@ -1656,3 +1734,45 @@ internal fun selectedIndexOf(mediaId: String, tracks: List<Track>): Int {
 }
 
 private const val PLAYLIST_SHOWN_AT_PART = 4
+
+/** Songs seen in search results, by (server, song id): a tapped result is that very song, whatever was searched later. */
+internal class SearchTracks(private val limit: Int = SEARCH_TRACKS_LIMIT) {
+    private val tracks = object : LinkedHashMap<String, Track>(INITIAL_CAPACITY, LOAD_FACTOR, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Track>?) = size > limit
+    }
+
+    @Synchronized
+    fun get(server: Int, id: String): Track? = tracks["$server|$id"]
+
+    @Synchronized
+    fun put(server: Int, track: Track) {
+        tracks["$server|${track.id}"] = track
+    }
+
+    private companion object {
+        const val SEARCH_TRACKS_LIMIT = 64
+        const val INITIAL_CAPACITY = 16
+        const val LOAD_FACTOR = 0.75f
+    }
+}
+
+/** The result rows of the last few browse searches, by (server, query); immutable values, bounded. */
+internal class SearchSnapshots(private val limit: Int = SEARCH_SNAPSHOTS_LIMIT) {
+    private val snapshots = object : LinkedHashMap<String, List<MediaItem>>(INITIAL_CAPACITY, LOAD_FACTOR, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<MediaItem>>?) = size > limit
+    }
+
+    @Synchronized
+    fun get(server: Int, query: String): List<MediaItem>? = snapshots["$server|${query.lowercase()}"]
+
+    @Synchronized
+    fun put(server: Int, query: String, rows: List<MediaItem>) {
+        snapshots["$server|${query.lowercase()}"] = rows.toList()
+    }
+
+    private companion object {
+        const val SEARCH_SNAPSHOTS_LIMIT = 4
+        const val INITIAL_CAPACITY = 8
+        const val LOAD_FACTOR = 0.75f
+    }
+}

@@ -893,3 +893,88 @@ at the saved position, a later user seek is not overwritten. Existing `QueueRest
 ### 24.5 Remaining
 A completed track near its end resumes at the saved position (Media3 handles a position past the end); not tested on
 the device. Ordinary (non-force-stop) process death could not be provoked on the device.
+
+## 25. AA-09 fix: search and voice play-from-search (2026-10-24)
+
+**Status: resolved for the application code. Voice end-to-end through the Assistant is UNTESTED (see 25.7).**
+
+### 25.1 Original architecture
+`MediaLibrarySessionCallback` did not override `onSearch`/`onGetSearchResult`. Voice play-from-search
+(`requestMetadata.searchQuery`) ran `playFromSearch` on `serviceScope` (IO): one `musicService.search` (10 artists /
+albums / songs), built a list of album rows then song rows, took `mediaItems.first()` and played it. Song rows were
+`MEDIA_SEARCH_SONG_ITEM|<songId>`, resolved through `searchSongsCache`, a single mutable, unkeyed list overwritten by
+every search. The comment claimed an exact match with a random fallback; the code did neither.
+
+### 25.2 Platform contract (Media3 1.10.1, checked with `javap` on the installed jar)
+`MediaLibrarySession.Callback.onSearch(session, browser, query, params): ListenableFuture<LibraryResult<Void>>` and
+`onGetSearchResult(session, browser, query, page, pageSize, params): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>`
+exist (defaults answer `ERROR_NOT_SUPPORTED`), plus `MediaLibrarySession.notifySearchResultChanged(browser, query,
+itemCount, params)`: the app answers `onSearch` and tells the controller the count; the controller then pages
+`getSearchResult`. The legacy browser-service stub (what Android Auto uses) also exposes `onPlayFromSearch`, which
+reaches `onSetMediaItems` with `requestMetadata.searchQuery` (the existing voice path).
+
+### 25.3 What the Android Auto host actually does (observed on the DHU 2.0 / Android Auto 17.8)
+- Taki's browse screens show the host's search button. It opens a host-drawn search screen with an on-screen keyboard
+  and a microphone button; typing calls `onSearch` and `onGetSearchResult` **on every keystroke** (5 calls for
+  "roses"), and shows "Search results for ...". Text search is therefore supported by the host.
+- A tapped result arrives as a legacy media-id-only selection (`MEDIA_SEARCH_SONG_ITEM|id`).
+- The microphone button / voice: see 25.7.
+
+### 25.4 Reproduced failures (new tests against the original code: 12 of 21 failed)
+No result -> `NoSuchElementException: List is empty` (the audited exception, as a failed future, from `first()`);
+server error -> the same; blank/"play " query reached the server; no timeout (a search that never answers hung);
+a result arriving after a server switch was accepted; no exact-title policy (an album always won, then the first
+row); an earlier search's result can only be resolved from the single overwritten `searchSongsCache` (by inspection; that test failed on the original code because browse search did not exist); `onSearch` /
+`onGetSearchResult` returned `ERROR_NOT_SUPPORTED`. Not reproduced through the DHU before the fix (the DHU was not
+used on the original code for search).
+
+### 25.5 Change
+- Voice: `playFromSearch` now runs on `mainScope` with the AA-08 pattern (off-main server call via `ioDispatcher`,
+  `withTimeout(resolutionTimeoutMs)`, server-switch check, newest request wins through the existing pending-request
+  handling). Policy, server order kept: exact song title, else exact album name (the whole album), else the top
+  song, else the top album. Blank query, no match, server error, timeout or server switch fail with a controlled
+  `IllegalStateException` and play/queue nothing. The "play " prefix is still stripped.
+- Browse: `onSearch` searches (bounded, off-main) and calls `notifySearchResultChanged`; `onGetSearchResult` returns
+  songs then albums in server order, correctly paged (page, pageSize). A blank query is `ERROR_BAD_VALUE`, a failing
+  or timed-out search `ERROR_IO`. Neither touches the player (no playback, no infrastructure start).
+- Identity/cache: `searchSongsCache` is gone. Result rows are `MEDIA_SEARCH_SONG_ITEM|<songId>` and a row is *that
+  song on the active server*: `SearchTracks` (bounded 64, key `server|id`) remembers songs seen in results, a miss
+  asks the server (`getSong`); there is no "latest search" state, so a later or concurrent search can not substitute
+  another song and another server never matches. `SearchSnapshots` (bounded 4, key `server|query`) holds the result
+  rows of the last browse searches so the host's paging does not repeat the request. Failed or cancelled searches
+  store nothing. Not `ShownLists` (its snapshot semantics are per displayed list).
+- Selecting a result is still single-song playback (AA-07); album rows are the existing browse rows.
+
+### 25.6 Tests
+`AndroidAutoSearchTest` (21): exact/prefix/multiple/duplicate-title/album policy, no match, blank query (no server
+call), server error, timeout, server switch, newer search wins, result identity after later searches, missing and
+other-server results, malformed id, `onSearch` notifies the count and starts no playback, paging and order, query
+isolation, blank/failing browse search. Full `:ultrasonic` suite: 1833 tests, 0 failures; assembleDebug/Release,
+lintDebug, lintVitalRelease pass (a first run found `UnsafeOptInUsageError` on `SessionError`; fixed with
+`@OptIn(UnstableApi::class)`); detekt count unchanged (42, same finding set). No `Settings.*` or Koin leakage:
+`startKoin`/`stopKoin`, caches and the callback are restored in `tearDown`.
+
+### 25.7 Pixel 7 / DHU (debug build; release untouched; no data cleared)
+- Text search "roses": host search screen, results with artwork, OutKast / Livin' Blues / Angus & Julia Stone
+  "Roses" (same title, different songs); no playback and an empty queue while searching.
+- Select result: queue of exactly 1, the tapped song (also the second "Roses": Livin' Blues, not OutKast).
+- No results ("zzqxj"): "No items", the playing song and queue untouched, no crash/exception in the log.
+- Playing before a search: unaffected by search and by a no-result search.
+- Cold start (process force-stopped, search + select from the car): `MediaPlayerController started` once, queue 1,
+  checkpoint, scrobble 200 (AA-01).
+- DHU reconnect: same process, still paused, same queue/position, no new controller. Resumption after force-stop +
+  play key: saved 14175 ms restored (cf1d4a39 behaviour intact).
+- Voice: **UNTESTED end to end.** The DHU's bundled voice samples are navigation-only. A spoken "play Roses..." was
+  synthesized with Windows speech and sent with `mic begin` / `mic play`: the Assistant took audio focus and listened
+  but no play-from-search request reached Taki (log), so this is inconclusive, not a pass. The code path is covered
+  only by the deterministic tests; `onPlayFromSearch` is the legacy-stub entry point (decompiled signature).
+- Ambiguity on the device: the three "Roses" are distinct rows with distinct ids; the voice tie-break (exact title,
+  server order) is unit-tested only.
+- Numbers (log timestamps): server `search3` 29-677 ms (first call includes the connection), 5 requests for a
+  5-letter query, 0 `getSong` requests (rows were remembered), tap to PLAYING 0.89 s on a cold process; no frame-skip
+  or ANR lines from the app's process. No before/after memory or latency comparison was made.
+
+### 25.8 Remaining
+Voice via the Assistant is unverified (needs a working Assistant/voice-match setup on the phone and a real utterance);
+the host searches on each keystroke (one server request per distinct prefix; not debounced by Taki); artist search
+and playlists are not offered; `getSong` fallback is one request per tapped row after a process restart.
