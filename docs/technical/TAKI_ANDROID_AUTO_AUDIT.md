@@ -1264,7 +1264,7 @@ Do **not** publish a public beta or GitHub Release based only on section 27's re
 
 ## 29. AA-05 fix: untrusted Media3 controllers and exported command entry points (2026-10-25)
 
-Issue **#45**. Baseline `bb033b3e` (develop, remote in sync, tree clean). **Status: code fix implemented and verified on an Android emulator with a genuinely separate-UID controller. The Pixel 7 + DHU validation that #45 requires could not be run (no physical device was attached), so the gate stays OPEN.**
+Issue **#45**. Baseline `bb033b3e` (develop, remote in sync, tree clean). **Status: code fix implemented; verified with a genuinely separate-UID controller on an emulator (29.8) and on the real Pixel 7 + DHU (29.9).**
 
 ### 29.1 Original trust boundary
 
@@ -1322,7 +1322,7 @@ The A2DP/ACL actions are *protected broadcasts*: the OS refused a shell-UID `am 
 
 `ControllerAuthorizationTest` (14 tests) and `ReleaseHygieneInvariantsTest` (exported set updated, plus a new "receiver is internal" test). Against the original `MediaLibrarySessionCallback.kt` and manifest **9 tests failed**; all pass after the fix. They prove: untrusted controllers are offered no rating/heart command; they keep browse/search/transport and shuffle/repeat; they cannot star, unstar or rate (current item or arbitrary id, heart or star rating); heart custom commands are denied and the custom layout stays untouched; no `MediaItem` change, no `RatingManager.lastUpdate`, and no `star`/`unstar`/`setRating` call on the `MusicService`; unknown and placeholder commands fail safely; trusted controllers, Taki's own UID and the notification controller keep rating; authorization is per controller; oversized or odd media ids do not crash; no current item is still denied.
 
-Gates: **1861 `ultrasonic` unit tests, 0 failures**; debug and release assemble; `lintDebug` and `lintVitalRelease` report no new issues; `detekt` 42 (`ultrasonic`) + 1 (`subsonic-api`), identical to the historical baseline; `git diff --check` clean.
+Gates: **1864 `ultrasonic` unit tests, 0 failures** (incl. `BluetoothIntentReceiverTest`, 3); debug and release assemble; `lintDebug` and `lintVitalRelease` report no new issues; `detekt` 42 (`ultrasonic`) + 1 (`subsonic-api`), identical to the historical baseline; `git diff --check` clean.
 
 ### 29.8 Emulator validation (Pixel_7 AVD, Android 37.1; fake server; no production data)
 
@@ -1332,9 +1332,26 @@ Trusted paths: with "Fixture Song 3" playing, tapping the heart on the system me
 
 Internal delivery: with a **temporary** debug hook (reverted, never committed) a shell broadcast to the exported `BluetoothIntentReceiver` produced Taki's own explicit `CMD_RESUME_OR_PLAY`, which `UltrasonicIntentReceiver` handled; a shell broadcast addressed directly to `UltrasonicIntentReceiver` was dropped. The probe app, fake server and `adb reverse` were temporary.
 
-### 29.9 Not validated here (blockers for closing #45)
+### 29.9 Pixel 7 + DHU validation (2026-10-25, Android 17, Android Auto host + DHU 2.0, debug build `f8417b5f`)
 
-No physical Pixel 7 or DHU was attached, so these are **not tested**: Android Auto browse, contextual playback, Heart, shuffle/repeat and search through the real Android Auto host (including whether `com.google.android.projection.gearhead` is attested as trusted on that device; the 2026-10-24 audit observed that it was); Bluetooth/headset hardware controls; phone/car handoff; scrobbling/checkpoints observed on device; Assistant voice. #45 requires the Pixel 7 debug validation without clearing data, so it remains open.
+**Data safety.** Before anything else the debug app's `databases/`, `shared_prefs/` and `files/` were backed up (tar via `run-as`). The debug app was pointed at a **fake Subsonic server** (adb reverse; 3 fixture songs) so Heart, scrobbles and search never touched the real Navidrome, and no real favorite was changed. The release app was not touched (same `lastUpdateTime` before and after, never launched). Afterwards the debug data was restored from the backup (database file sizes identical to the original listing) and the app was confirmed back on the real library (`100.80.152.121`, Daily Mix of 30 songs). The probe app, `adb forward/reverse` and the fake server were removed.
+
+| Check | Result |
+|---|---|
+| A. Genuinely untrusted controller (`probe.aa05`, uid 10351, installed on the Pixel 7 and uninstalled afterwards) | connect OK; `SET_RATING` not advertised; browse OK (4 items); every `setRating` (heart/star, current item and arbitrary id) and `HEART_ON/OFF` -> `-4` permission denied; shuffle and repeat succeed; `pause()` issued; explicit `CMD_*` broadcasts not delivered; unknown commands rejected; **zero mutation requests** at the fake server, with Android Auto connected at the same time |
+| B/H. Trusted phone controller and notification controls | the media card's heart sent `star.view`; play, next work |
+| C. Android Auto browse | Media Library, Artists, Albums, Playlists tabs; Random songs listed from the server; also after a cold start (process force-stopped) |
+| D. Contextual playback | tapping Fixture Song 2 in Random queued the 3-song list at that song; tapping a song in the restored 34-item queue jumped to it without replacing the queue |
+| E. **Android Auto Heart** | works: `HEART_OFF` -> `unstar.view`, `HEART_ON` -> `star.view`, heart icon and button state toggled. Android Auto is attested as trusted on this device without any package allowlist |
+| F. Shuffle / repeat | `SHUFFLE` and three `REPEAT_MODE` taps executed; play/pause/next from the DHU worked |
+| G. Search | the DHU keyboard issued `search3` per keystroke (f, fi, fix) |
+| I. Media buttons | `KEYCODE_MEDIA_PLAY_PAUSE` pause/resume, `NEXT` advanced to the next song, `PLAY` after process death started the service |
+| K/M/N. Cold start, queue resumption, saved position | after `force-stop`, a media-button play recreated the service and resumed playback near the saved position; the Android Auto browse tree loaded on a cold service |
+| L. Phone/car handoff | closing the DHU left the queue and position intact (Android Auto paused playback on projection end, as before); reconnecting showed the same state; `PLAY` on the phone resumed |
+| O. Scrobbling | `scrobble.view` (now-playing) requests for each new song reached the server during Android Auto playback |
+| J. Bluetooth/headset hardware | **not exercised on hardware** (an A2DP device was already connected; toggling Bluetooth on the user's phone was out of scope). Covered by `BluetoothIntentReceiverTest` (A2DP connect/disconnect relay a same-package `CMD_RESUME_OR_PLAY`/`CMD_PAUSE`; any other action is ignored) and by the emulator relay test in 29.8 |
+
+Not tested: Assistant voice, a real car, projection with the screen off for long periods.
 
 ### 29.10 Remaining accepted access and residual risk
 
@@ -1346,8 +1363,8 @@ No physical Pixel 7 or DHU was attached, so these are **not tested**: Android Au
 
 ### 29.11 Public-beta readiness implication
 
-`AA_05_CODE_FIX = IMPLEMENTED_AND_EMULATOR_VERIFIED`
+`AA_05_CODE_FIX = IMPLEMENTED`
 
-`AA_05_PUBLIC_BETA_SECURITY_GATE = OPEN (needs the Pixel 7 + DHU compatibility run, #45)`
+`AA_05_PUBLIC_BETA_SECURITY_GATE = PASS, one hardware path unexercised: a real Bluetooth device connect/disconnect` (separate-UID blocked on emulator and Pixel 7; Android Auto, notification, media-button and resumption paths unchanged; automated gates green)
 
-`PUBLIC_BETA_READY = NO` (unchanged; #36 and the other gates are independent)
+`PUBLIC_BETA_READY = NO` (unchanged: AA-05 was one independent gate; #36 and the others still apply; residual risks in 29.10)
