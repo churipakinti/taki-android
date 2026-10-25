@@ -1051,3 +1051,177 @@ Host presentation of errors and of `notifyChildrenChanged` is unverified; there 
 changes (new playlists/albums appear on the next open of a detail screen; the host keeps tab lists until it reloads
 them); the keystroke-per-request search behaviour (AA-09), `getArtists` staying cached, and the inner `serviceScope`
 requests that a timeout does not cancel (they end at the HTTP client's own timeout) are unchanged.
+
+
+## 27. Phase D: final validation, security review and audit closure (2026-10-24)
+
+This section is the final consolidation. Sections 18-26 stay as the audit trail of the individual corrections.
+Where a statement in an earlier section was corrected by newer evidence it is noted here.
+
+### 27.A Scope and B. Baseline
+Scope: the Android Auto integration (phone projection through the Desktop Head Unit) on the Pixel 7, Android Auto
+17.8, DHU 2.0, Media3 1.10.1, Navidrome over Tailscale. Source under test: `develop` at `c3ad6147`; no production
+code changed in this phase (a temporary diagnostic log line was added twice to read controller trust and the
+refresh notification, then reverted; the final debug build installed on the phone is `c3ad6147`). Automated gates
+for that commit (run for AA-10, source unchanged since): 1846 `:ultrasonic` tests, 0 failures; `assembleDebug`,
+`assembleRelease`, `lintDebug`, `lintVitalRelease` pass; detekt count 42 (historical baseline, plus 1 in
+subsonic-api). Devices: debug package only; release package and both data sets untouched. The debug app was left on
+the server library (not Offline); the per-app network setting that was tried in AA-10 is `allow`.
+
+### 27.C Original 20-scenario matrix (section 15) with the final evidence
+Result key: PASS / PARTIAL (the core behaviour was observed, a stated part was not) / UNTESTED. All runs below are
+Phase D device runs on the final build unless a commit is named.
+
+| # | Scenario | Related | Automated | Device evidence (this phase) | Result | Limitation |
+|---|---|---|---|---|---|---|
+| 1 | Discovery, every row clickable | AA-02 | flags unchanged | Taki listed twice (release + debug); tabs, Artists letter index, artist, album, track, playlists, Liked, Random, search results all opened | PASS | AA-02 not reproduced, no change made |
+| 2 | Cold start, no phone UI | AA-01 | AndroidAutoPlaybackStartTest | process force-stopped, car browse then tap: `MediaPlayerController started` once, checkpoint, scrobble (two runs) | PASS | |
+| 3 | Library browsing | AA-10 | AndroidAutoBrowseErrorTest | all tabs load, API 24-232 ms | PASS | |
+| 4 | Artists | | | letter index (>100 artists), A, artist, album, track | PASS | |
+| 5 | Albums + Show More | AA-14 | | page 1 ends with "Show More", page 2 requests `offset=100` and continues alphabetically | PARTIAL | not paged to the end of the library |
+| 6 | Playlists | AA-06/07 | AndroidAutoContextualPlaybackTest | Recently Added (100 songs): Play All queue 100; middle tap queue 100 index 1; A->B->A then Play All = A | PASS | no playlist > 100 on the device (unit tests) |
+| 7 | Favorites | AA-07 | AA07-12/13/14 | 76 favorites: Play All queue 76; tap keeps the 76 queue | PASS | > 100 only in unit tests |
+| 8 | Search / voice | AA-09 | AndroidAutoSearchTest | host text search, 3 same-titled results, correct one plays (queue 1); no-result "No items", playback untouched | PARTIAL | voice through the Assistant UNTESTED |
+| 9 | Artwork | AA-11 | | now-playing cover shown; song rows have art; album/artist/playlist rows have none | PASS | cosmetic gap = AA-11 |
+| 10 | Transport | | | play/pause/next/previous, no queue change | PASS | |
+| 11 | Shuffle / repeat | AA-04 | AndroidAutoRepeatModeTest | repeat set in the car stays through selections and 3 reconnects; shuffle keeps the tapped song first (AA-07 run) | PASS | |
+| 12 | Background playback, screen off | | | phone-only: 11.8 min (708 s) screen-off playback, 1 natural transition + 2 skips, no stall/error, PSS 143-148 MB; projected: 8.2 min sustained (screen awake) after one unexplained drop at 2.5 min | PARTIAL | no 10+ min projected run with the screen really off |
+| 13 | Disconnect / reconnect | AA-03 | AndroidAutoRepeatModeTest | 3 cycles: same process, queue 100, repeat All kept, 0 new controller starts | PASS | |
+| 14 | Offline | AA-10 | | switched to the app's Offline library: root shows Artists and Playlists only, downloaded artists listed, downloaded track plays from the local file (album queue 12, index 1, no stream request) | PASS | airplane mode itself not used (system setting) |
+| 15 | Missing/unavailable track | AA-08 | PlaybackErrorRecoveryTest | a track whose id the server no longer knew: host shows a "Source error" page, the player stays in error, no silent advance | PASS | found by accident (27.O, AA-16), not created |
+| 16 | Large library speed | AA-08 | | multi-thousand-album library, pages of 100: server 24-232 ms, no ANR / frame-skip lines from the app | PASS | |
+| 17 | Return to phone | | | phone app opened with the car's session: same song and queue | PASS | |
+| 18 | Continue after AA disconnect | | | on disconnect Android Auto itself sends `KEYCODE_MEDIA_PAUSE` (`CAR.CAM` log); playback is paused, queue and position kept, a play key resumes | PARTIAL | host behaviour, not Taki; "continues on phone" is not what the host does |
+| 19 | Stale playlist | AA-06 | AndroidAutoPlaylistCacheTest | A -> B -> A -> Play All plays A | PASS | |
+| 20 | Idle then play | AA-08 | AndroidAutoItemResolutionTest | Liked Songs open for 15 min idle, tap: playing in 0.91 s, queue 76 index 1, no freeze | PASS | |
+
+Totals: **PASS 16, PARTIAL 4 (#5, #8, #12, #18), FAIL 0, UNTESTED 0, NOT_APPLICABLE 0**.
+
+### 27.E/F Completed corrections and final status of AA-01..AA-14
+| ID | Final classification | Notes |
+|---|---|---|
+| AA-01 | FIXED_AND_VALIDATED | cold start x2 this phase, plus 46013405 evidence |
+| AA-02 | EXPECTED_PLATFORM_BEHAVIOR (not reproduced) | every row type opened; flags left as they are |
+| AA-03 | FIXED_AND_VALIDATED | reconnect x3, no accumulation |
+| AA-04 | FIXED_AND_VALIDATED | repeat persists |
+| AA-05 | ACCEPTED_FOR_BETA (P3), hardening deferred | see 27.G |
+| AA-06 | FIXED_AND_VALIDATED | A/B/A |
+| AA-07 | FIXED_AND_VALIDATED | > 100 favorites unit-test only |
+| AA-08 | FIXED_AND_VALIDATED | idle 15 min then play; timeout/cancel in unit tests |
+| AA-09 | FIXED_AND_VALIDATED for text search; voice UNTESTED | |
+| AA-10 | FIXED_AND_VALIDATED for error mapping; host refresh limitation (27.J) | |
+| AA-11 | DEFERRED_POST_BETA (P3) | no artwork on album/artist/playlist rows; cosmetic |
+| AA-12 | DEFERRED_POST_BETA (P3) | by code reading only: a `\|` in a name breaks a song id and fails in a controlled way (no crash) |
+| AA-13 | DEFERRED_POST_BETA (P3) | custom-button labels ("Love", "Shuffle", "Repeat One/All/None") and one notification-channel name are English literals |
+| AA-14 | ACCEPTED_FOR_BETA (P3) | Show More works; page size is ignored by design |
+| AA-15 (new) | ACCEPTED_FOR_BETA (P3) | host keeps its root/tab layout after a server or offline switch (27.J) |
+| AA-16 (new) | ACCEPTED_FOR_BETA (P3) | stale cached ids after a library rescan fail once, then self-heal (27.O) |
+
+### 27.G AA-05 security assessment
+Facts established on the device and in code:
+- `PlaybackService` is exported with the Media3 / `MediaBrowserService` actions and no permission; `onConnect`
+  accepts every caller with the default session/player commands plus Taki's custom commands. `MediaButtonReceiver`,
+  `UltrasonicIntentReceiver` (play/pause/next/... broadcasts) and `BluetoothIntentReceiver` are exported too, so
+  an app can already control playback without binding the service. `AlbumArtContentProvider` is exported (hardened
+  earlier).
+- Who connects: temporary logging showed `com.google.android.projection.gearhead` (Android Auto host, legacy
+  controller) and Taki's own UI and notification controller, all with `ControllerInfo.isTrusted = true`.
+  Android's trust is system UID, `MEDIA_CONTENT_CONTROL` or an enabled notification listener.
+- What an arbitrary installed app can do: read browse metadata (titles, artists, album ids, artwork URIs),
+  control playback and the queue, play any track id, star/unstar tracks (rating and heart commands) and change
+  repeat/shuffle.
+- What it cannot do: no credentials, tokens or server URLs are exposed. Browse items carry a local pseudo URI
+  (`id|bitrate|path`), the Subsonic token is only added at request time inside Taki. A forged `mediaUri` makes
+  `CachedDataSource` open a local path as audio (it fails to decode; nothing is returned to the caller) or ask the
+  server for a track id.
+Assessment: this is the platform's default contract for an exported media service and the same capability the
+legacy broadcast receivers already give; it is not a credential or file leak. The realistic abuse is a
+malicious co-installed app listing the library's metadata, pausing/skipping or starring tracks. Severity P3, not
+beta-blocking. No restriction was added: a package allow-list is not appropriate, and rejecting untrusted
+controllers could break Android Auto where the host is not an enabled notification listener (not testable here).
+Recommended post-beta hardening (separate issue): for controllers with `isTrusted == false`, drop the rating and
+custom commands (still allowing browse and playback) so Android Auto keeps working and star tampering is closed.
+Unverified: behaviour with a genuinely untrusted third-party controller (none installed, none installed for the
+test); Assistant and Wear controllers.
+
+### 27.H-J Browse, playback, search, errors, refresh (device)
+- Browse and playback: sections 18-26 plus the table above. Contextual queues, Play All, Random Mix snapshot
+  (the host reloads the Random Mix list when re-entering it, as designed), Favorites, single-song search playback,
+  Next/Previous (restart after 3 s, previous within 3 s), repeat/shuffle all verified.
+- Search: the host sends one search per keystroke (5 requests for "roses", 29-677 ms each, the first includes the
+  connection); no sluggishness or accumulation was observed, so no debouncing was added.
+- Voice: untested end to end (27.O).
+- Errors: a real server-side failure occurred on the device and confirmed AA-10 and the host presentation. An
+  album id that the server no longer knew gave Subsonic error 70; Taki answered the browse with an error result
+  and the host drew "No items" (a plain empty-looking list, no distinct message). A track the server no longer
+  knew failed to stream (`application/json` instead of audio): the host shows the playback-error page ("Source
+  error"), the queue is not advanced.
+- Catalog refresh: switching the app to Offline and back fires `notifyChildrenChanged` for 12 nodes 230-250 ms
+  after `setActiveServerById` (measured with a temporary log line). **The host did not re-query the root**: its
+  2-tab offline layout stayed on screen after the app was back online, even after re-entering Taki from the
+  launcher (only the four tab nodes were re-requested, the root children were not). The notification therefore does
+  not refresh the host on Android Auto 17.8 / DHU 2.0; a reconnect shows the right tabs (AA-15). The code is
+  harmless and kept (other controllers may honour it).
+
+### 27.K Lifecycle and resumption
+Cold start, phone to car, car to phone, reconnect x3, force-stop plus play key (index and position restored: see
+section 24), paused state kept across reconnect, scrobbling (3 starts + 1 submission in 12 min, no duplicates),
+queue checkpoints (148 writes in 708 s, none at index 0 / position 0 during a restore), one controller per process
+in every run, no autoplay from connecting or browsing. Mechanisms exercised: process force-stop (`am force-stop`),
+DHU disconnect, app re-install (kills the process), media-button play. Not exercised: ordinary (non-force-stop)
+background process death and a real vehicle.
+Projected run (#12), repeated: DHU connected, album queue of 12 playing for 491 s (8.2 min), two natural
+transitions, `dhu_alive` and PLAYING at every 30 s sample, no errors, no `Failed to read from transport`, 7 scrobble
+requests = a "now playing" and a "submission" per track with no duplicates. Caveat: the phone reported
+`mWakefulness=Awake` during this run (screen kept on by the charging/projection state), so it was not a true screen-off
+run. A true screen-off run was done phone-only (708 s, dozing). The earlier projected run that lost the DHU transport
+2.5 min after the screen-off key was not reproduced.
+
+### 27.L Resources and performance
+Time from tap to PLAYING: warm 0.54 s, cold process 0.89-1.15 s, after 15 min idle 0.91 s. Browse server latency
+24-232 ms; Show More 116 ms. PSS 125-157 MB (143-148 MB steady over a 12 min session). Controller creations: 1 per
+process. Checkpoints about every 5 s while playing. Network errors: none except the stale-id cases; retry activity
+none. Frame-skip lines from the app's process: none (the one `Choreographer` message belonged to another package).
+Comparisons with earlier phases were not made because the conditions differ.
+
+### 27.M Regression testing
+All Android Auto test classes (AA-01, 03/04, 06, 07, 08, 09, 10), `PlaybackRestorePositionTest` and the queue /
+resumption tests pass in the 1846-test run. No test-order dependency reappeared.
+
+### 27.N Platform limitations
+Voice through the Assistant, a real head unit/vehicle, airplane mode and host error text were not controllable on this
+setup. Android Auto pauses the session when projection ends. The host caches the tab layout and ignores
+`notifyChildrenChanged` for it (AA-15).
+
+### 27.O Remaining defects and new findings
+- AA-15 (P3): host keeps stale tabs after a server/offline switch while projecting.
+- AA-16 (P3): after a library rescan on the server, cached artist/album ids can be stale for a while. The first
+  open of such an album returns an error ("No items") or its track fails ("Source error"); the existing cache
+  invalidation after a playback error (issue #18) then makes the next browse use fresh ids, which was observed
+  (the same artist returned a new album id on the next open). No code change; documented.
+- Unexplained observation: the first screen-off run with projection lost the DHU transport about 2.5 min after
+  the screen turned off (`Failed to read from transport`), while the system killed many cached processes
+  (lmkd) in the same second; Taki's process survived and the host forwarded a pause. One occurrence, not
+  reproduced by the 8.2 min repeat (27.K); cause unknown (environment suspected: USB/adb transport or phone memory
+  pressure), recorded rather than dismissed.
+- Voice: UNTESTED.
+
+### 27.P Beta-blocking findings
+None.
+
+### 27.Q Deferred post-beta work
+Android Auto hardening for untrusted controllers (AA-05), artwork/subtitle on browse rows (AA-11), `|` in names and
+parsing hardening (AA-12), localisation of the custom action labels (AA-13), refreshing the root after a server
+switch if a supported host path appears (AA-15), a smoke test on a real head unit with a real Assistant request.
+
+
+### 27.R Explicit Android Auto beta-readiness decision
+**READY_FOR_ANDROID_AUTO_BETA** (for the application, on this test setup).
+Basis: scenarios 16 PASS / 4 PARTIAL / 0 FAIL; no P0-P2 open; no data-loss or queue-corruption found (queue index and
+position restored, checkpoint not clobbered); no ANR; one controller per process; no autoplay; no retry storms;
+AA-05 assessed as the platform default with no credential exposure (P3); all deferred items are P3.
+Conditions of the decision: the four PARTIAL items and these unverified items are accepted for an initial beta and
+should be re-checked in the beta checklist (a separate phase): voice through the Assistant, a real head unit or
+vehicle, a projected run with the screen really off for 10+ min, airplane mode, behaviour of a genuinely untrusted
+controller, favorites or playlists larger than 100 on a device.
+Not decided here: publishing the beta, release notes or the release checklist.
