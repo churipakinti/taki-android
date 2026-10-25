@@ -29,6 +29,11 @@ import timber.log.Timber
  */
 class BluetoothIntentReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // This receiver is exported (the Bluetooth stack delivers these protected broadcasts to it) and
+        // an app can also address it explicitly: it can only ever resume or pause playback, and only for
+        // the A2DP connection action it is registered for (AA-05).
+        if (intent.action != A2DP_CONNECTION_STATE_CHANGED) return
+
         val state = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, -1)
         val device = intent.getBluetoothDevice()
         val action = intent.action
@@ -55,6 +60,11 @@ class BluetoothIntentReceiver : BroadcastReceiver() {
                     .setPackage(context.packageName)
             )
         }
+    }
+
+    private companion object {
+        const val A2DP_CONNECTION_STATE_CHANGED =
+            "android.bluetooth.a2dp.profile.action.CONNECTION_STATE_CHANGED"
     }
 
     private fun BluetoothDevice?.getNameSafely(): String? {

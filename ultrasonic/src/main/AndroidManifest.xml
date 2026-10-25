@@ -91,9 +91,11 @@
             </intent-filter>
         </service>
 
+        <!-- AA-05: internal only. The one legitimate sender is BluetoothIntentReceiver (an explicit,
+             same-package broadcast); an exported, permission-less receiver let any app start, skip
+             or stop playback and feed it key events. Media buttons go through MediaButtonReceiver. -->
         <receiver android:name=".receiver.UltrasonicIntentReceiver"
-            android:exported="true"
-            tools:ignore="ExportedReceiver">
+            android:exported="false">
             <intent-filter>
                 <action android:name="org.moire.ultrasonic.CMD_TOGGLEPAUSE"/>
                 <action android:name="org.moire.ultrasonic.CMD_PLAY"/>

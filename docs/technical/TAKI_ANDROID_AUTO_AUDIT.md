@@ -1260,3 +1260,94 @@ Not decided here: publishing the beta, release notes or the release checklist.
 `PUBLIC_BETA_READY = NO`
 
 Do **not** publish a public beta or GitHub Release based only on section 27's readiness declaration. Once #45 is demonstrably resolved, reassess the rest of the public-beta gates; do not automatically mark the overall product ready.
+
+
+## 29. AA-05 fix: untrusted Media3 controllers and exported command entry points (2026-10-25)
+
+Issue **#45**. Baseline `bb033b3e` (develop, remote in sync, tree clean). **Status: code fix implemented and verified on an Android emulator with a genuinely separate-UID controller. The Pixel 7 + DHU validation that #45 requires could not be run (no physical device was attached), so the gate stays OPEN.**
+
+### 29.1 Original trust boundary
+
+`PlaybackService` is exported (Android Auto, system UI, Assistant and legacy `MediaBrowser` clients need it). `onConnect` returned Media3's default command set (which includes `COMMAND_SET_RATING`) and added Taki's custom commands (heart on/off, shuffle, repeat) for **every** controller, trusted or not. `onSetRating` (both overloads) and the heart custom commands had no caller check, and the `onSetRating(session, controller, mediaId, rating)` overload rates **any** media id.
+
+### 29.2 Actual observed untrusted-controller behaviour (before the fix)
+
+Test rig (all temporary, removed afterwards): the `Pixel_7` AVD (Android 37.1, Google APIs Play Store), Taki debug installed in place, a throw-away probe app `probe.aa05` (uid 10231, a different UID from Taki) acting as a `MediaBrowser`, and a **fake Subsonic server** on the host (reached via `adb reverse`) that logs every request, so no real library or Navidrome was touched. Results:
+
+| Probe action (from uid 10231) | Result before the fix |
+|---|---|
+| connect | accepted; `SET_RATING` advertised, custom commands `HEART_ON/HEART_OFF/SHUFFLE/REPEAT_MODE` advertised |
+| browse root + children | allowed (4 items) |
+| `setRating("PROBE_TRACK_123", Heart true/false)` | **success**; server received `star.view?id=PROBE_TRACK_123` and `unstar.view?id=PROBE_TRACK_123` |
+| `setRating(id, StarRating(5))` | **success**; server received `setRating.view?id=PROBE_TRACK_123&rating=5` |
+| `setRating(current, ...)`, `HEART_ON/OFF` custom | reached Taki's handler (no current item in that run, so a no-op) |
+| SHUFFLE / REPEAT_MODE custom | success |
+| unadvertised/unknown custom command | rejected by Media3 |
+| explicit broadcasts `CMD_PAUSE`, `CMD_NEXT`, `CMD_PROCESS_KEYCODE` | delivered to `UltrasonicIntentReceiver` -> `MediaPlayerLifecycleSupport.receiveIntent` |
+
+Confirmed vulnerability: **any installed app could star/unstar/rate arbitrary tracks on the user's server**, and (separately) start/skip/stop playback by broadcast. No credential, token, server-URL or file disclosure was observed or is claimed.
+
+### 29.3 Media3 1.10.1 authorization model used
+
+The default `Callback.onConnect` accepts every controller with the default session/player commands; the default `onSetRating`/`onCustomCommand` return `ERROR_NOT_SUPPORTED`, so the exposure came from Taki overriding them. `ControllerInfo.isTrusted` is platform-attested (the caller holds `MEDIA_CONTENT_CONTROL` or has an enabled notification listener; same-UID/system callers also qualify); it does **not** mean "is Taki". Media3 itself rejects a command a controller was not offered. `MediaSession.isMediaNotificationController` identifies Taki's own notification controller. No package allowlist is used for Android Auto.
+
+### 29.4 Selected command policy (`ControllerPolicy`)
+
+- **May change favorites/ratings** iff `controller.isTrusted` **or** `controller.uid == Process.myUid()` **or** `session.isMediaNotificationController(controller)`.
+- **Everyone** (trusted or not) keeps browse, search, ordinary transport and queue commands and the shuffle/repeat custom commands; untrusted controllers are not rejected.
+- **Untrusted** controllers are not offered `COMMAND_CODE_SESSION_SET_RATING` nor the `HEART_ON/HEART_OFF` custom commands.
+
+### 29.5 Changes
+
+1. `onConnect`: removes `SET_RATING` and the heart custom commands for controllers that may not mutate.
+2. Execution-time checks, **before any side effect**: both `onSetRating` overloads and `onCustomCommand` for the heart actions answer `SessionError.ERROR_PERMISSION_DENIED` without touching the `MediaItem` extras, the derived `Track`, `RatingManager`, the server, or the custom-layout/heart-button state. Unknown custom commands still fall through to Media3's `ERROR_NOT_SUPPORTED`.
+3. `UltrasonicIntentReceiver` is now **`android:exported="false"`**. Its only legitimate sender is `BluetoothIntentReceiver`, which already used an explicit same-package broadcast; there is no other in-repo sender (no widget or PendingIntent). Third-party automation via `org.moire.ultrasonic.CMD_*` broadcasts no longer works; that was an unauthenticated playback API.
+4. `BluetoothIntentReceiver` stays `exported="true"` (the Bluetooth stack delivers its broadcasts) but now ignores every action except `android.bluetooth.a2dp.profile.action.CONNECTION_STATE_CHANGED`.
+5. `MediaButtonReceiver` and `AlbumArtContentProvider` are unchanged (see 29.6).
+
+### 29.6 Exported component inventory
+
+| Component | Exported | Intended sender | Capability | Decision |
+|---|---|---|---|---|
+| `NavigationActivity` | yes | launcher | UI | unchanged |
+| `PlaybackService` | yes | Android Auto, System UI, Assistant, MediaBrowser clients | browse/playback; rating **now trusted-only** | gated by `ControllerPolicy` |
+| `UltrasonicIntentReceiver` | **no (was yes)** | `BluetoothIntentReceiver` (same package) | play/pause/next/prev/stop and playback key events (star keycodes were removed earlier) | made internal |
+| `BluetoothIntentReceiver` | yes | Bluetooth stack | resume/pause only | action guard |
+| `androidx.media3.session.MediaButtonReceiver` | yes | system media-button routing | playback keys via the session | required by the platform contract; no rating path |
+| `AlbumArtContentProvider` | yes | launcher/widget artwork | read-only artwork; path hardened 2026-08, only (id, key) pairs Taki minted | unchanged |
+
+The A2DP/ACL actions are *protected broadcasts*: the OS refused a shell-UID `am broadcast` of them ("not allowed to send broadcast"), so a third-party app cannot forge those actions. Before this change it could still address the receiver explicitly with any other action plus an `EXTRA_STATE` extra.
+
+### 29.7 Tests
+
+`ControllerAuthorizationTest` (14 tests) and `ReleaseHygieneInvariantsTest` (exported set updated, plus a new "receiver is internal" test). Against the original `MediaLibrarySessionCallback.kt` and manifest **9 tests failed**; all pass after the fix. They prove: untrusted controllers are offered no rating/heart command; they keep browse/search/transport and shuffle/repeat; they cannot star, unstar or rate (current item or arbitrary id, heart or star rating); heart custom commands are denied and the custom layout stays untouched; no `MediaItem` change, no `RatingManager.lastUpdate`, and no `star`/`unstar`/`setRating` call on the `MusicService`; unknown and placeholder commands fail safely; trusted controllers, Taki's own UID and the notification controller keep rating; authorization is per controller; oversized or odd media ids do not crash; no current item is still denied.
+
+Gates: **1861 `ultrasonic` unit tests, 0 failures**; debug and release assemble; `lintDebug` and `lintVitalRelease` report no new issues; `detekt` 42 (`ultrasonic`) + 1 (`subsonic-api`), identical to the historical baseline; `git diff --check` clean.
+
+### 29.8 Emulator validation (Pixel_7 AVD, Android 37.1; fake server; no production data)
+
+After the fix the same probe (uid 10231): connect OK; `SET_RATING` **not** advertised; browse works (4 items); every `setRating` (heart/star, current/arbitrary id) and `HEART_ON/OFF` returns `-4` (`PERMISSION_DENIED`); `SHUFFLE`/`REPEAT_MODE` still succeed; `pause()` and `setShuffleModeEnabled()` are still issued; the probe's explicit broadcasts were **not delivered**; the **fake server received zero mutation requests** (also while a track was playing).
+
+Trusted paths: with "Fixture Song 3" playing, tapping the heart on the system media card (System UI controller) ran `onCustomCommand HEART_ON` and the server received `star.view?id=fx3`. Media-button pause and play through the system worked; a **cold start** (process force-stopped, then `KEYCODE_MEDIA_PLAY`) created the service and resumed at the saved position (PLAYING, about 58 s).
+
+Internal delivery: with a **temporary** debug hook (reverted, never committed) a shell broadcast to the exported `BluetoothIntentReceiver` produced Taki's own explicit `CMD_RESUME_OR_PLAY`, which `UltrasonicIntentReceiver` handled; a shell broadcast addressed directly to `UltrasonicIntentReceiver` was dropped. The probe app, fake server and `adb reverse` were temporary.
+
+### 29.9 Not validated here (blockers for closing #45)
+
+No physical Pixel 7 or DHU was attached, so these are **not tested**: Android Auto browse, contextual playback, Heart, shuffle/repeat and search through the real Android Auto host (including whether `com.google.android.projection.gearhead` is attested as trusted on that device; the 2026-10-24 audit observed that it was); Bluetooth/headset hardware controls; phone/car handoff; scrobbling/checkpoints observed on device; Assistant voice. #45 requires the Pixel 7 debug validation without clearing data, so it remains open.
+
+### 29.10 Remaining accepted access and residual risk
+
+- Any app may still **browse metadata** and **control playback and the queue** (play/pause/seek/shuffle/repeat, replace the queue): the platform contract for an exported media service. A controller can also queue items carrying its own `requestMetadata.mediaUri`, which Taki will play. That does not touch the server's favorites, but it lets any app make Taki fetch an arbitrary media URL. It is a candidate follow-up hardening; it was not exploited and no credential leak through it is claimed.
+- "Trusted" includes apps the user granted notification access or `MEDIA_CONTENT_CONTROL`.
+- If a head unit's controller is **not** attested trusted on some device, its Heart button would be denied (browse, shuffle and repeat unaffected). The Pixel 7/DHU run must confirm this; if it fails, fix it with Media3's attestation signals, not a package allowlist.
+- `BluetoothIntentReceiver` is exported; its worst case is resume/pause.
+- Other trust boundaries were not audited exhaustively; no claim of absence of vulnerabilities is made.
+
+### 29.11 Public-beta readiness implication
+
+`AA_05_CODE_FIX = IMPLEMENTED_AND_EMULATOR_VERIFIED`
+
+`AA_05_PUBLIC_BETA_SECURITY_GATE = OPEN (needs the Pixel 7 + DHU compatibility run, #45)`
+
+`PUBLIC_BETA_READY = NO` (unchanged; #36 and the other gates are independent)

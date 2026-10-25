@@ -63,13 +63,20 @@ class ReleaseHygieneInvariantsTest {
             setOf(
                 ".activity.NavigationActivity", // launcher
                 ".service.PlaybackService", // MediaBrowser/MediaLibrary clients (Android Auto, system UI)
-                ".receiver.UltrasonicIntentReceiver", // legacy remote-control broadcast actions
                 ".receiver.BluetoothIntentReceiver", // system Bluetooth broadcasts
                 "androidx.media3.session.MediaButtonReceiver", // media buttons
                 ".provider.AlbumArtContentProvider", // widget/launcher artwork (path hardened in 2026-08)
             ).toSortedSet(),
             exported,
         )
+    }
+
+    @Test
+    fun `the playback command receiver is internal only (AA-05)`() {
+        // Any app could otherwise start, skip or stop playback and feed it KeyEvents through it. Its
+        // only legitimate sender is BluetoothIntentReceiver (explicit, same package).
+        val receiver = attrs("receiver").single { nameOf(it) == ".receiver.UltrasonicIntentReceiver" }
+        assertTrue(receiver.contains("android:exported=\"false\""))
     }
 
     @Test

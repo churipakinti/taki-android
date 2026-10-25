@@ -257,11 +257,18 @@ class MediaLibrarySessionCallback :
         Timber.i("onConnect")
 
         val connectionResult = super.onConnect(session, controller)
-        val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
+        // AA-05: every controller may browse and control playback (shuffle/repeat included), but only a
+        // trusted one is offered the commands that change favorites/ratings. See ControllerPolicy.
+        val mayMutate = ControllerPolicy.mayMutateUserState(session, controller)
+        val availableSessionCommands = ControllerPolicy
+            .restrict(connectionResult.availableSessionCommands, mayMutate)
+            .buildUpon()
 
         for (commandButton in allCustomCommands) {
             // Add custom command to available session commands.
-            commandButton.sessionCommand?.let { availableSessionCommands.add(it) }
+            commandButton.sessionCommand
+                ?.takeIf { mayMutate || !ControllerPolicy.isMutatingCustomAction(it.customAction) }
+                ?.let { availableSessionCommands.add(it) }
         }
 
         // Connecting a controller (Android Auto, the notification, the phone UI) never touches the
@@ -494,6 +501,15 @@ class MediaLibrarySessionCallback :
         args: Bundle
     ): ListenableFuture<SessionResult> {
         Timber.i("onCustomCommand %s", customCommand.customAction)
+
+        // Enforced here, before any side effect, not only by what onConnect advertised.
+        if (ControllerPolicy.isMutatingCustomAction(customCommand.customAction) &&
+            !ControllerPolicy.mayMutateUserState(session, controller)
+        ) {
+            Timber.w("Denied %s for an untrusted controller", customCommand.customAction)
+            return ControllerPolicy.denied()
+        }
+
         var customCommandFuture: ListenableFuture<SessionResult>? = null
 
         when (customCommand.customAction) {
@@ -542,6 +558,9 @@ class MediaLibrarySessionCallback :
         controller: MediaSession.ControllerInfo,
         rating: Rating
     ): ListenableFuture<SessionResult> {
+        // Before touching the MediaItem, the Track or the RatingManager.
+        if (!ControllerPolicy.mayMutateUserState(session, controller)) return ControllerPolicy.denied()
+
         val mediaItem = session.player.currentMediaItem
 
         if (mediaItem != null) {
@@ -571,8 +590,10 @@ class MediaLibrarySessionCallback :
         mediaId: String,
         rating: Rating
     ): ListenableFuture<SessionResult> {
-        // TODO: Through this methods it is possible to set a rating on an arbitrary MediaItem.
-        // Right now the ratings are submitted, yet the underlying track is only updated when
+        // Any media id can be rated through this overload, so it is the one that must be gated.
+        if (!ControllerPolicy.mayMutateUserState(session, controller)) return ControllerPolicy.denied()
+
+        // Note: the ratings are submitted, yet the underlying track is only updated when
         // coming from the other onSetRating(session, controller, rating)
         return serviceScope.future {
             Timber.i(controller.packageName)
