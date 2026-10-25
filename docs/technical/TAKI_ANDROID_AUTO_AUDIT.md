@@ -978,3 +978,76 @@ lintDebug, lintVitalRelease pass (a first run found `UnsafeOptInUsageError` on `
 Voice via the Assistant is unverified (needs a working Assistant/voice-match setup on the phone and a real utterance);
 the host searches on each keystroke (one server request per distinct prefix; not debounced by Taki); artist search
 and playlists are not offered; `getSong` fallback is one request per tapped row after a process restart.
+
+## 26. AA-10 fix: browse errors are errors; catalog reload on server change (2026-10-24)
+
+**Status: resolved for the application code. Device-level failure injection and the host's refresh behaviour were NOT exercised (see 26.6).**
+
+### 26.1 Original behaviour
+Every browse getter (`getArtists`, `getAlbumsForArtist`, `getSongsForAlbum`, `getAlbums`, `getPlaylists`,
+`getPlaylist`, `getStarredSongs`, `getRandomSongs`) fetched through `callWithErrorHandling`, which logs an exception and
+returns `null`; each getter then answered `LibraryResult.ofItemList(<empty list>)`, so a server failure was a
+successful, empty folder. Browse futures had no timeout, no server-switch check, and an unknown parent id also
+returned an empty success. Nothing called `notifyChildrenChanged`, so a server (or offline) change left the host
+showing the old server's catalog.
+
+### 26.2 Media3 contract used (1.10.1, `javap` on the installed jar)
+`LibraryResult.ofItemList` with zero items is the successful empty result; failures are `LibraryResult.ofError(
+SessionError.*)`: `ERROR_IO` (server failed / timed out), `ERROR_BAD_VALUE` (an id Taki did not create),
+`ERROR_INVALID_STATE` (the active server changed while loading). `MediaLibrarySession.notifyChildrenChanged(parentId,
+itemCount, params)` asks subscribed controllers to reload a node. Android Auto does not draw Taki-defined error UI;
+what the host shows for these codes was not observed (26.6).
+
+### 26.3 Reproduction (new tests against the original code: 7 of 13 failed)
+Server error answered success/empty (expected `ERROR_IO`); a request that never answers hung; a response arriving
+after a server switch was published; an unknown or malformed parent id was an empty success; a server change
+notified nobody. A valid empty playlist, a playlist with tracks, per-server content and out-of-order completion of two
+nodes already behaved correctly.
+
+### 26.4 Change
+- `onGetChildren` goes through `guardedBrowse`: bounded by `resolutionTimeoutMs` (the existing 20 s), compares the
+  active server before and after, maps `BrowseFailure` / timeout to `ERROR_IO`, a malformed id to `ERROR_BAD_VALUE`,
+  a changed server to `ERROR_INVALID_STATE`. Cancellation propagates (a timeout cancels the pending request).
+- Each browse getter throws the private `BrowseFailure` when its server call returned `null` (an exception), so only
+  a real empty collection is an empty success. Unknown parent ids are `ERROR_BAD_VALUE`.
+- `notifyCatalogChanged(session)` calls `notifyChildrenChanged` once for each catalog node (root, Media Library,
+  Artists, Albums, Playlists, Liked, Random, the five album lists), driven by the existing events
+  `RxBus.activeServerChangedObservable` (this also covers offline, which is an "active server" in Taki) and
+  `RxBus.musicFolderChangedEventObservable`, subscribed in `PlaybackService`. A plain browse never notifies, there is
+  no polling and no retry loop.
+- Nothing touches the player, the queue or the shown lists. A failed browse writes no `ShownLists` entry, so a tap
+  still plays the list that was last shown (tested). Server keys are unchanged (AA-06). Failed requests cache nothing
+  (`CachedMusicService` only stores successes).
+
+### 26.5 Tests
+`AndroidAutoBrowseErrorTest` (13): listing, valid empty = success, server error, timeout, unknown/malformed ids,
+recovery on the next browse, a failed refresh not replacing the tappable list (no extra request), per-server
+content, stale response after a server switch, two nodes completing out of order, browse never starts playback,
+notification of the catalog nodes (each once) and no notification from plain browsing. Full `:ultrasonic` suite:
+1846 tests, 0 failures; AA-01/06/07/08/09 and resumption tests unchanged and passing; lint
+(a first run needed `@OptIn(UnstableApi::class)` on `onLoadChildren`), builds pass; detekt 42 (baseline). Tests use
+`get(timeout)` on futures and restore Koin/caches in `tearDown`.
+
+### 26.6 Pixel 7 / DHU (debug build; release untouched; no data cleared)
+- Normal browsing: root, Media Library, Artists, Albums, Playlists, Liked Songs, Random Mix, playlists load as before;
+  requests while opening four tabs: `getAlbumList2` (94 ms) and `getPlaylists` (232 ms), artists came from cache.
+- Browsing during playback: music keeps playing, queue (76) and index unchanged, nothing starts by browsing.
+- Cold start (process force-stopped): the host's old screen keeps working, browsing a playlist works, nothing plays.
+- Regression: tapping a middle song of a playlist: queue 100, index 1 (AA-07/AA-06); host search "roses": 3 results,
+  tap plays 1 song (AA-09); DHU reconnect: same process, paused, same queue/position; force-stop + play key: saved
+  8931 ms restored (cf1d4a39). PSS about 125-156 MB.
+- **Failure injection was not possible safely.** `cmd connectivity set-package-networking-enabled false` on the debug
+  package did not block the app's Tailscale-routed traffic (requests still returned 200, even after a force-stop),
+  and the only other client-side options (system Wi-Fi/data, VPN, server configuration) are system or credential
+  changes that were out of bounds. The server-error, timeout, recovery and stale-response cases are therefore
+  verified by deterministic tests only; the host's presentation of `ERROR_IO` and of a reload after
+  `notifyChildrenChanged` was **not observed** (also no safe way to trigger a server change: there is only one
+  server). The host cached the Playlists tab and did not re-request it when re-selected, which is expected host behaviour;
+  detail screens (playlist, album, ...) are requested on each open.
+- The networking setting was restored (`allow`) after the attempt.
+
+### 26.7 Remaining
+Host presentation of errors and of `notifyChildrenChanged` is unverified; there is no event for server-side library
+changes (new playlists/albums appear on the next open of a detail screen; the host keeps tab lists until it reloads
+them); the keystroke-per-request search behaviour (AA-09), `getArtists` staying cached, and the inner `serviceScope`
+requests that a timeout does not cancel (they end at the HTTP client's own timeout) are unchanged.

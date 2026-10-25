@@ -214,6 +214,13 @@ class PlaybackService :
             actualBackend?.let { updateBackend(it) }
             // Set the player wake mode
             (player as? ExoPlayer)?.setWakeMode(getWakeModeFlag())
+            // Tell Android Auto (and other browsers) to reload the catalog of the new server
+            librarySessionCallback.notifyCatalogChanged(mediaLibrarySession)
+        }
+
+        // Another music folder shows other artists and albums: reload the catalog as well
+        rxBusSubscription += RxBus.musicFolderChangedEventObservable.subscribe {
+            librarySessionCallback.notifyCatalogChanged(mediaLibrarySession)
         }
 
         // Set a listener to reset the ShuffleOrder

@@ -442,7 +442,49 @@ class MediaLibrarySessionCallback :
         params: MediaLibraryService.LibraryParams?
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
         Timber.i("onLoadChildren")
-        return onLoadChildren(parentId)
+        return guardedBrowse { onLoadChildren(parentId) }
+    }
+
+    /**
+     * A browse request is bounded and honest (AA-10): it fails with [SessionError.ERROR_IO] when the server
+     * failed or did not answer within [resolutionTimeoutMs] (a failure is never reported as an empty
+     * folder), with [SessionError.ERROR_INVALID_STATE] when the active server changed while it was loading
+     * (the old server's answer is never published for the new one) and with [SessionError.ERROR_BAD_VALUE]
+     * for an id Taki did not create. A valid empty collection stays a successful empty result.
+     */
+    @OptIn(UnstableApi::class)
+    @Suppress("TooGenericExceptionCaught")
+    private fun guardedBrowse(
+        load: () -> ListenableFuture<LibraryResult<ImmutableList<MediaItem>>>
+    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+        val serverAtRequest = activeServerId()
+        return mainScope.future {
+            try {
+                val result = withTimeout(resolutionTimeoutMs) { load().await() }
+                if (activeServerId() != serverAtRequest) {
+                    LibraryResult.ofError(SessionError.ERROR_INVALID_STATE)
+                } else {
+                    result
+                }
+            } catch (e: TimeoutCancellationException) {
+                Timber.w(e, "Browse timed out")
+                LibraryResult.ofError(SessionError.ERROR_IO)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: BrowseFailure) {
+                Timber.i(e, "Browse failed on the server")
+                LibraryResult.ofError(SessionError.ERROR_IO)
+            } catch (e: IndexOutOfBoundsException) {
+                Timber.w(e, "Malformed browse id")
+                LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
+            } catch (e: NumberFormatException) {
+                Timber.w(e, "Malformed browse id")
+                LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
+            } catch (e: Exception) {
+                Timber.w(e, "Browse failed")
+                LibraryResult.ofError(SessionError.ERROR_UNKNOWN)
+            }
+        }
     }
 
     override fun onCustomCommand(
@@ -702,6 +744,7 @@ class MediaLibrarySessionCallback :
         }
     }
 
+    @OptIn(UnstableApi::class)
     @Suppress("ReturnCount", "ComplexMethod")
     private fun onLoadChildren(
         parentId: String
@@ -751,7 +794,7 @@ class MediaLibrarySessionCallback :
 
             MEDIA_ALBUM_ITEM -> getSongsForAlbum(parentIdParts[1], parentIdParts[2])
 
-            else -> Futures.immediateFuture(LibraryResult.ofItemList(listOf(), null))
+            else -> Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
         }
     }
 
@@ -1104,6 +1147,7 @@ class MediaLibrarySessionCallback :
                     }
                 }
             }
+            if (artists == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1132,6 +1176,7 @@ class MediaLibrarySessionCallback :
                         .joinToString("|")
                 )
             }
+            if (albums == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1186,6 +1231,7 @@ class MediaLibrarySessionCallback :
                 }
             }
 
+            if (songs == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1238,6 +1284,7 @@ class MediaLibrarySessionCallback :
                 )
             }
 
+            if (albums == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1258,6 +1305,7 @@ class MediaLibrarySessionCallback :
                     mediaType = MEDIA_TYPE_PLAYLIST
                 )
             }
+            if (playlists == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1299,6 +1347,7 @@ class MediaLibrarySessionCallback :
                     )
                 }
             }
+            if (content == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1353,6 +1402,7 @@ class MediaLibrarySessionCallback :
                     )
                 }
             }
+            if (songs == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1391,6 +1441,7 @@ class MediaLibrarySessionCallback :
                     )
                 }
             }
+            if (songs == null) throw BrowseFailure()
             return@future LibraryResult.ofItemList(mediaItems, null)
         }
     }
@@ -1536,6 +1587,15 @@ class MediaLibrarySessionCallback :
      * notification instead of only changes made through the custom commands.
      */
     fun refreshCustomLayout(session: MediaSession) = session.updateCustomCommands()
+
+    /**
+     * The active server (or offline mode) changed: everything the host shows came from the old one, so ask
+     * subscribed controllers to reload each catalog node once. Event driven (no polling), touches no player
+     * state and no cached shown list (those are keyed by server).
+     */
+    internal fun notifyCatalogChanged(session: MediaLibraryService.MediaLibrarySession) {
+        CATALOG_NODES.forEach { session.notifyChildrenChanged(it, 0, null) }
+    }
 
     fun updateCustomHeartButton(session: MediaSession, isHeart: Boolean) {
         with(session) {
@@ -1776,3 +1836,22 @@ internal class SearchSnapshots(private val limit: Int = SEARCH_SNAPSHOTS_LIMIT) 
         const val LOAD_FACTOR = 0.75f
     }
 }
+
+/** The browse nodes the host may show and subscribe to; each is reloaded once when the server changes. */
+private val CATALOG_NODES = listOf(
+    MEDIA_ROOT_ID,
+    MEDIA_LIBRARY_ID,
+    MEDIA_ARTIST_ID,
+    MEDIA_ALBUM_ID,
+    MEDIA_PLAYLIST_ID,
+    MEDIA_SONG_STARRED_ID,
+    MEDIA_SONG_RANDOM_ID,
+    MEDIA_ALBUM_FREQUENT_ID,
+    MEDIA_ALBUM_NEWEST_ID,
+    MEDIA_ALBUM_RECENT_ID,
+    MEDIA_ALBUM_RANDOM_ID,
+    MEDIA_ALBUM_STARRED_ID
+)
+
+/** A browse request whose server call failed (as opposed to returning an empty collection). */
+private class BrowseFailure : Exception("The server request failed")
