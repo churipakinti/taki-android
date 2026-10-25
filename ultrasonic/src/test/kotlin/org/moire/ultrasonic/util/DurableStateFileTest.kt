@@ -16,6 +16,7 @@ import java.io.Serializable
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -167,6 +168,46 @@ class DurableStateFileTest {
 
         File(context.filesDir, "nodir").deleteRecursively()
         File(context.cacheDir, "nodir").deleteRecursively()
+    }
+
+    @Test
+    fun `a corrupt current file falls back to the old copy and then repairs itself`() {
+        FileUtil.serialize(context, state("new"), name)
+        current.writeText("garbage")
+        writeLegacy(state("old"))
+
+        assertEquals("the only readable state is used", listOf("old"), ids(read()))
+        assertFalse(legacy.exists())
+        assertEquals("and the current file is valid again", listOf("old"), ids(read()))
+    }
+
+    @Test
+    fun `concurrent saves and restores never see a missing or partial state`() {
+        FileUtil.serialize(context, state("seed"), name)
+        val failures = java.util.concurrent.ConcurrentLinkedQueue<String>()
+        val pool = java.util.concurrent.Executors.newFixedThreadPool(5)
+        try {
+            val jobs = (1..3).map { writer ->
+                pool.submit {
+                    repeat(40) { n ->
+                        if (!FileUtil.serialize(context, state("w$writer", "n$n", index = n % 2), name)) failures += "write failed"
+                    }
+                }
+            } + (1..2).map {
+                pool.submit {
+                    repeat(80) {
+                        val restored = read()
+                        if (restored == null || restored.songs.isEmpty()) failures += "unreadable state"
+                    }
+                }
+            }
+            jobs.forEach { it.get(60, java.util.concurrent.TimeUnit.SECONDS) }
+        } finally {
+            pool.shutdownNow()
+        }
+
+        assertTrue(failures.toString(), failures.isEmpty())
+        assertNotNull(read())
     }
 
     @Test
