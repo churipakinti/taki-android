@@ -1368,3 +1368,19 @@ Not tested: Assistant voice, a real car, projection with the screen off for long
 `AA_05_PUBLIC_BETA_SECURITY_GATE = PASS, one hardware path unexercised: a real Bluetooth device connect/disconnect` (separate-UID blocked on emulator and Pixel 7; Android Auto, notification, media-button and resumption paths unchanged; automated gates green)
 
 `PUBLIC_BETA_READY = NO` (unchanged: AA-05 was one independent gate; #36 and the others still apply; residual risks in 29.10)
+
+
+## 30. Public-beta security-gate update: AA-05 closed, URI trust review opened (2026-10-25)
+
+This section updates the **release-gate status** after the security fix and on-device verification; it does **not** rewrite the 20-scenario functional evidence in sections 27–29.
+
+- **AA-05 (#45) RESOLVED and CLOSED.** [f8417b5f](https://github.com/churipakinti/taki-android/commit/f8417b5fb1e1269fa8386736544613e7cd8d5b10) implemented the controller-command and exported-receiver protections. [7cf12764](https://github.com/churipakinti/taki-android/commit/7cf1276467b5406da931e7ac944c985065e2bc84) added 3 A2DP-receiver tests and actual Pixel 7 + Android Auto DHU validation. A genuinely separate-UID, untrusted probe on emulator **and the real Pixel 7** was denied rating/heart mutations, including concurrent Android Auto use; fake Subsonic received zero unauthorized mutation calls. Android Auto Heart worked both ways and trusted media notification, search, playback, queue, handoff, cold resume and scrobbling remained functional. The 1,864-test unit suite, builds, lint and historical detekt baseline were reported passing.
+- **Accepted AA-05 limitation:** no physical Bluetooth headset/car A2DP device **connect/disconnect** was exercised after the fix, because changing Bluetooth state on the user's Pixel was out of scope. The A2DP receiver action guard and explicit same-package relay passed deterministic tests and emulator-path verification. This is a **documented compatibility smoke-test gap**, carried into the release checklist in #44; it is not evidence of a continuing AA-05 favorites/rating authorization defect.
+- **Separate follow-up security assessment #46 (OPEN, pre-public-beta):** untrusted controller-supplied `requestMetadata.mediaUri` is copied into the playback item by `MediaLibrarySessionCallback.resolveMediaItems()`. A caller might induce URI loads using Taki's app/network context. **Concrete unauthorized access, SSRF, file disclosure or credential theft has NOT been demonstrated.** #46 requires controlled separate-UID + fake-endpoint validation and, if necessary, a narrow compatible mitigation. It is a distinct release decision, not a reason to mislabel AA-05's tested authorization fix as unresolved.
+- **Wider product beta:** listening audit #36 and its linked playback-quality work remain independent; completed Android Auto functional audit #43 stays closed. A closed AA-05 does **not** imply publication authorization.
+
+`AA_05_PUBLIC_BETA_SECURITY_GATE = PASS` (with documented physical Bluetooth test limitation)
+
+`URI_ACCESS_SECURITY_REVIEW = OPEN (#46)`
+
+`PUBLIC_BETA_READY = NO` (until #46 and other independent gates are assessed; no public beta or release was published)
