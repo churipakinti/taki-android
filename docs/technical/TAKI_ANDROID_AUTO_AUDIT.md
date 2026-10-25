@@ -1460,3 +1460,22 @@ A short Pixel 7 + DHU media-id regression was **not performed**: the change only
 ### 31.11 Gates
 
 1873 `ultrasonic` unit tests, 0 failures (1864 before + 9 new); `assembleDebug` and `assembleRelease`; `lintDebug` and `lintVitalRelease` report no new issues; `detekt` 42 (`ultrasonic`) + 1 (`subsonic-api`), identical to the historical baseline; `git diff --check` clean.
+
+
+## 32. Post-#46 validation incident: saved debug queue lost (2026-10-25)
+
+**Recorded separately from the successful #46 security fix:** during an attempted (then aborted) optional Pixel 7/DHU regression after commit `447148d8`, the agent reported that the debug app's previously saved **34-track Stromae "Cheese" queue** had been overwritten by fake-server fixture playback. The backup taken for the security tests covered `databases/`, `shared_prefs/` and `files/`, **not `cache/`**, although the actual queue checkpoint was `cache/downloadstate.ser`. After the stale fixture checkpoint was deleted, the debug installation had an empty queue. **The previous saved queue was not recovered.** The debug databases/settings were restored; the release installation and its data were not touched and production Navidrome was not contacted. A Home loading-skeleton/tap problem was observed during the aborted attempt, but its cause is unconfirmed.
+
+This is an **actual test-workflow state-loss incident** and exposes an independent durability concern. It does **not** demonstrate that the #46 playback-source authorization fix corrupted state, or that Android deleted the file through automatic cache reclamation.
+
+**Verified code path:** `PlaybackStateSerializer.serializeNow()` calls `FileUtil.serialize(context, state, Constants.FILENAME_PLAYLIST_SER)`; `FileUtil.serialize()` writes `File(context.cacheDir, fileName)` directly using `FileOutputStream`, and the deserialize method reads from `cacheDir`. Android's cache directory is disposable and may be cleared by the operating system (https://developer.android.com/training/data-storage/app-specific). An interrupted direct overwrite may also deserve controlled testing; corruption during an actual process kill has not been demonstrated.
+
+**Follow-up:** **#47**, P2 PRE_PUBLIC_BETA_FIX, owns the queue durability, atomic-write/migration, failure recovery and non-destructive fixture-test backup/restore review; it is **not** the cross-client sync feature #12. The listening audit #36 remains open. Security issue **#46 remains closed** as the separate-UID unauthorized local-file-access correction was tested in an emulator. Its closure should not obscure the data-loss incident.
+
+`AA_05_SECURITY_GATE = PASS`
+
+`URI_ACCESS_SECURITY_GATE_46 = PASS`
+
+`PLAYBACK_QUEUE_DURABILITY_REVIEW_47 = OPEN`
+
+`PUBLIC_BETA_READY = NO` (queue durability and other listening/release gates pending)
