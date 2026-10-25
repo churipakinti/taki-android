@@ -1225,3 +1225,38 @@ should be re-checked in the beta checklist (a separate phase): voice through the
 vehicle, a projected run with the screen really off for 10+ min, airplane mode, behaviour of a genuinely untrusted
 controller, favorites or playlists larger than 100 on a device.
 Not decided here: publishing the beta, release notes or the release checklist.
+
+
+## 28. Public-beta release gate: AA-05 promoted to P2 (2026-10-24)
+
+**Product decision (supersedes release-scope assumptions in section 27, without changing its test evidence):** Taki's target is an **open PUBLIC beta**, not a closed/invite-only beta. The section 27 result `READY_FOR_ANDROID_AUTO_BETA` applies only to **functional compatibility on Pixel 7 + Android Auto 17.8 + DHU 2.0**, where 16 original scenarios passed and 4 were partial. It is **not permission to publish** an open beta.
+
+**PUBLIC_BETA_READY = NO** until AA-05 is fixed and validated in **#45**, alongside all other independent public-beta release gates (including the broader listening assessment #36). The completed Android Auto functional-audit issue **#43 remains CLOSED**; this new security-release gate is tracked independently. No production changes were made in the AA-05 reclassification.
+
+### 28.1 Reclassification and basis
+
+- **AA-05: P3 / post-beta -> P2 / PRE_PUBLIC_BETA_BLOCKER.** This is a deliberate stricter release acceptance criterion for public distribution, not a newly proven remote exploit.
+- Section 27.G established that the exported Media3 service accepts any controller with default plus Taki custom commands, and that a co-installed application can access library metadata and potentially modify persistent favorites/ratings. Several exported broadcast/media entry points require additional review. No credentials, server tokens, or arbitrary file disclosure were demonstrated.
+- Trusted Android Auto, phone UI and notification controllers worked on Pixel 7; a genuinely untrusted third-party controller was **not tested**. Trust treatment must be confirmed without disrupting Android Auto on other devices.
+- **Implementation owner: #45**. Inspect `onConnect`, standard and custom commands, execution-time authorization and all exported receiver routes; apply least privilege and add non-trusted caller integration tests. Do not use blanket controller rejection or hardcoded Android Auto package allowlists.
+- **Acceptance:** block unauthorized persistent library/server mutations through all entry points; preserve legitimate playback, browsing, Android Auto, notification, Bluetooth/headset, media resumption, queue, repeat/shuffle and scrobbling; pass full regression/build/lint gates and real-device checks. Until supported by evidence, do not mark AA-05 resolved.
+
+### 28.2 Tracking and residual risks
+
+- **#45 (OPEN):** dedicated security fix and mandatory public-beta gate, AA-05.
+- **#44 (OPEN):** genuine post-beta P3 issues AA-11/12/13/15/16 and separately documented device-validation gaps; AA-05 is **not** deferred here anymore.
+- **#43 (CLOSED):** completed functional Android Auto audit, not reopened just to change the public release criterion.
+- **#36 (OPEN):** the separate, broader listening-experience audit retains its own beta decision; this section does not assert its readiness.
+- The unexplained one-off DHU transport disconnect, end-to-end Assistant voice, real car, screen-off projection duration, airplane mode, large collections on-device, and eventual reliability on diverse Android devices remain accurately classified as **untested/partial observations**, not passes or newly proven blockers.
+
+### 28.3 Release-state interpretation
+
+`ANDROID_AUTO_AUDIT_COMPLETE = YES` (historical final functional audit)
+
+`ANDROID_AUTO_FUNCTIONALLY_BETA_READY_ON_TESTED_SETUP = YES` (with section 27's stated limitations)
+
+`AA_05_PUBLIC_BETA_SECURITY_GATE = OPEN (#45)`
+
+`PUBLIC_BETA_READY = NO`
+
+Do **not** publish a public beta or GitHub Release based only on section 27's readiness declaration. Once #45 is demonstrably resolved, reassess the rest of the public-beta gates; do not automatically mark the overall product ready.
