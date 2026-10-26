@@ -129,6 +129,13 @@ internal fun networkRecoveryDelayMs(
 }
 
 /**
+ * Issue #35: whether a scheduled recovery attempt should still run when its backoff elapses. The
+ * decision to retry is taken when the error arrives ([networkRecoveryDelayMs]); the user may pause
+ * during the wait, and a pending attempt must then be dropped instead of re-preparing the player.
+ */
+internal fun shouldRunNetworkRecovery(playWhenReady: Boolean): Boolean = playWhenReady
+
+/**
  * The Media Player Manager can forward commands to the Media3 controller as
  * well as switch between different player interfaces (local, remote, cast etc).
  * This class contains everything that is necessary for the Application UI
@@ -226,6 +233,13 @@ class MediaPlayerManager(
     }
     private val networkErrorRetryRunnable = Runnable {
         val c = controller ?: return@Runnable
+        // The user paused while this attempt was waiting: there is nothing left to recover, and a
+        // paused player must not keep hitting the network (#35). Play re-prepares an idle player.
+        if (!shouldRunNetworkRecovery(c.playWhenReady)) {
+            Timber.i("Network-error recovery: skipped, playback was paused meanwhile")
+            cancelNetworkErrorRecovery()
+            return@Runnable
+        }
         Timber.i(
             "Network-error recovery: re-preparing (attempt %d/%d)",
             networkErrorRetryCount,

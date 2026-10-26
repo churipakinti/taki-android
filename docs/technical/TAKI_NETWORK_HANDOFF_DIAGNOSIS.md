@@ -434,3 +434,66 @@ hi-res FLAC buffer memory, cellular data metering.
 
 Status: DEGRADED_ASSOCIATED_WIFI_REPRODUCED = NO; EARLY_UNUSABLE_WIFI_ASSOCIATION_REPRODUCED = NO;
 AUTOMATIC_VS_MANUAL_HANDOFF_COMPARED = NO; ISSUE_35_COMPLETE = NO.
+
+
+## Phase 3: controlled client-side reproduction and the HTTP-status fix (2026-10-25)
+
+Baseline `5407357b`. Phases 2A-2C could not reproduce a degraded Wi-Fi link on the Pixel 7. This phase takes a different, *emulator-only* route: instead of imitating the radio, it controls what the server (and therefore the TCP connection) does, which isolates Taki's own handling from the OS route selection. Nothing here touches the Pixel 7, Navidrome or Tailscale.
+
+### Rig
+
+`Pixel_7` AVD (Android 37.1), Taki debug, a fake Subsonic server whose `stream.view` can be switched at run time (normal, connection refused, black hole, mid-stream stall, any HTTP status with an optional `Retry-After`) and a separate-UID probe controller that logs a timestamped player timeline (state, position, errors) next to the server's request log. Tracks are 10-minute 22.05 kHz/16-bit WAV files (about MP3-320 bandwidth), so the initial reserve is about 70 s. Every scenario starts playback, seeks beyond the buffer at T+10 (so a **new** Range request is needed while the fault is active) and records what Taki does. Interfaces are not switched: the emulator reaches the server through `adb reverse`, which is independent of its Wi-Fi/cellular interfaces, so **a real Wi-Fi <-> mobile handoff is not represented** and is not claimed as validated.
+
+### Finding (reproduced, attributable to Taki's policy)
+
+A reverse proxy, tunnel or restarting Navidrome answers a stream request with **502/503/504 or 429** for some seconds. Media3's default load policy retried those like any error: 4 requests in ~3 s (delays 0 / 1 / 2 s), then a fatal `ERROR_CODE_IO_BAD_HTTP_STATUS`. Taki then classified every bad status as `TRACK_UNAVAILABLE` (no #19 retry, "track unavailable" message, album cache invalidated) and the player stayed in `STATE_IDLE` **for good**:
+
+| Scenario (before) | Result |
+|---|---|
+| HTTP 503 for ~7 s | error at T+13.2 (3.2 s after the seek), IDLE until the end of the run (>= 37 s) although the server was back 0.3 s after the last retry |
+| HTTP 503 for 20 s, HTTP 429 `Retry-After: 3` for 20 s | same: error at T+13.2, stuck, 4 requests |
+| HTTP 401 / 404 for 20 s | same 4 requests, error (correct for a permanent status) |
+
+### Behaviours that were already correct (unchanged by this phase)
+
+| Scenario (new request needed) | Before == after |
+|---|---|
+| connection refused 5 s | Media3's retries recover by themselves, resumes at T+13.3 (3 requests) |
+| connection refused 25 s | Media3 gives up at T+13.2, #19 re-prepares at +2 s / +4 s / +8 s, resumes at T+33.6 (0.2 s after the third attempt), same queue and position |
+| connection refused 70 s | bounded: 4 error rounds, 16 requests, then the existing error at T+36.5 and idle; no loop |
+| black hole (no response) 6 s | recovers at T+20.2: the 10 s OkHttp read timeout is the cost (7.8 s after the server returned) |
+| mid-stream stall 6 s | same 10 s read-timeout cost, then recovers |
+
+### Fix (two small changes, nothing new in the architecture)
+
+1. `PlaybackLoadErrorPolicy` (a `DefaultLoadErrorHandlingPolicy` subclass given to the `DefaultMediaSourceFactory`; Media3's own loader does the retrying, in place): statuses **429, 502, 503, 504** are retried with a doubling backoff **1 / 2 / 4 / 8 / 8 / 8 s (31 s in total)**; a numeric `Retry-After` is honoured but capped at 10 s and never shortens the backoff. Every other error keeps the stock behaviour (at most three attempts), which includes 401/403/404/410/500 and connection errors, so #19 is untouched. The budget cannot loop: after 6 retries the existing error handling runs.
+2. A recovery attempt scheduled by #19 is **dropped if the user paused during its backoff** (`shouldRunNetworkRecovery`), instead of re-preparing the player and hitting the network. Resuming is unaffected (Play re-prepares an idle player).
+
+### Results after the fix (same scenarios)
+
+| Scenario | After |
+|---|---|
+| HTTP 503 for 20 s | no error; retries at +0 / 1 / 3 / 7 / 15 s; resumes at T+33.3, 6.8 s after the server returned (the last backoff step); same item and position |
+| HTTP 503 for 45 s (beyond the budget) | bounded: 7 requests over ~31 s, then the same error as before (T+41.3), idle; no loop |
+| HTTP 429 `Retry-After: 3` for 20 s | requests spaced 3 s apart (header honoured), resumes at T+28.2 |
+| HTTP 401 / 404 for 20 s | unchanged: 4 requests, error |
+| connection refused 5 / 25 / 70 s, black hole, stall | identical to before (same events, same request counts) |
+| refused 25 s, user pauses at T+20 | the third re-prepare is skipped, 8 fault requests instead of 12; the player stays paused and nothing resumes |
+
+### Tests
+
+`PlaybackLoadErrorPolicyTest` (8): backoff sequence and 31 s budget for 429/502/503/504; the loader may retry that long and no longer; `Retry-After` honoured, capped, case-insensitive, bad values ignored; permanent statuses and connection errors identical to the stock policy (compared against `DefaultLoadErrorHandlingPolicy`); parser/file-not-found still not retried; pure backoff capped; the policy is wired into the player. `NetworkRecoveryDelayTest` gained 2 tests for the pause gate (and that it precedes `prepare()`).
+
+### Not established / not validated
+
+- **Real Wi-Fi <-> mobile handoff and degraded-but-associated Wi-Fi: NOT validated** (no interface switching in the emulator, no radio control on the Pixel). The user's original field case therefore stays open as in Phase 2C; the cause of long silences there (OS route selection vs a stale 10 s read) is still undetermined. The 10 s read timeout was **not** changed.
+- Android Auto and Bluetooth behaviour was not re-run on a device; the changes do not touch those paths and the automated suites are green.
+- Screen-off network change, a fully cached track under a fault, and hardware measurements were not exercised in this phase (earlier phases measured cached/offline playback on the Pixel).
+- A persistent 5xx still ends in the "track unavailable" message and an album-cache invalidation (the classification of an error that outlives the budget was not changed); a mislabelled message is a possible follow-up, not a loop.
+- Two near-simultaneous Range requests appear when a seek starts while the previous connection is being replaced; this is identical before and after and was not investigated.
+
+### Gates (this phase)
+
+1907 `ultrasonic` unit tests, 0 failures, 0 skipped (1897 + 10 new); suites that guard neighbouring behaviour all green: `PlaybackLoadControlTest` 8, `PlaybackStallWatchdogTest` 18, `PlaybackErrorRecoveryTest` 14, `DurableStateFileTest` 17, `EqualizerPersistenceTest` 6, `ControllerAuthorizationTest` 14, `PlaybackSourcePolicyTest` 9, `BluetoothIntentReceiverTest` 3 and the seven `AndroidAuto*` suites (97 tests). `assembleDebug`, `assembleRelease`; `lintDebug` / `lintVitalRelease` no new issues; `detekt` 42 + 1 (baseline); `git diff --check` clean.
+
+`ISSUE_35_STATE = a reproduced client-side defect is fixed; the original field case (degraded Wi-Fi, real handoff) is NOT validated, so #35 stays open`

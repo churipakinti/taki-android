@@ -74,4 +74,25 @@ class NetworkRecoveryDelayTest {
         playWhenReady: Boolean = true,
         trackUnavailable: Boolean = false
     ): Long? = networkRecoveryDelayMs(errorCode, trackUnavailable, playWhenReady, attemptsSoFar)
+
+    // ---- #35: a scheduled attempt is dropped when the user paused during its backoff ----
+
+    @Test
+    fun `a scheduled attempt still runs while the user wants playback and is dropped after a pause`() {
+        assertEquals(true, shouldRunNetworkRecovery(playWhenReady = true))
+        assertEquals(false, shouldRunNetworkRecovery(playWhenReady = false))
+    }
+
+    @Test
+    fun `the scheduled attempt consults that gate before it re-prepares the player`() {
+        val source = java.io.File("src/main/kotlin/org/moire/ultrasonic/service/MediaPlayerManager.kt").readText()
+        val runnable = source.substringAfter("private val networkErrorRetryRunnable = Runnable {")
+            .substringBefore("private fun cancelNetworkErrorRecovery")
+        assertEquals(true, runnable.contains("shouldRunNetworkRecovery(c.playWhenReady)"))
+        assertEquals(
+            "the gate must come before prepare()",
+            true,
+            runnable.indexOf("shouldRunNetworkRecovery") < runnable.indexOf("c.prepare()")
+        )
+    }
 }

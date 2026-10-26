@@ -336,7 +336,11 @@ class PlaybackService :
             .setWakeMode(getWakeModeFlag())
             .setHandleAudioBecomingNoisy(true)
             .setLoadControl(createPlaybackLoadControl())
-            .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
+            .setMediaSourceFactory(
+                // #35: transient HTTP statuses (502/503/504/429) are retried for a bounded time
+                DefaultMediaSourceFactory(cacheDataSourceFactory)
+                    .setLoadErrorHandlingPolicy(PlaybackLoadErrorPolicy())
+            )
             .setSeekBackIncrementMs(Settings.SEEK_INTERVAL.toLong())
             .setSeekForwardIncrementMs(Settings.SEEK_INTERVAL.toLong())
             .build()
