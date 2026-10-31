@@ -291,11 +291,16 @@ class AlbumListViewModel(application: Application) :
             null
         }
         if (result == null) return onLoadFailed(append = false)
-        allAlbums = result
+        allAlbums = result.distinctBy { it.id }
         publish()
     }
 
-    private suspend fun loadPaged(type: AlbumListType, refresh: Boolean, append: Boolean) {
+    private suspend fun loadPaged(
+        type: AlbumListType,
+        refresh: Boolean,
+        append: Boolean,
+        duplicateOnlyPages: Int = 0,
+    ) {
         // Legacy `fetchAlbums(append = true)` never touches `swipeRefresh.isRefreshing` - only
         // an explicit (non-append) refresh does. isLoading drives the pull-to-refresh spinner,
         // so it stays untouched here too; an append failure/success only ever changes the rows.
@@ -329,12 +334,30 @@ class AlbumListViewModel(application: Application) :
 
         if (fetched == null) return onLoadFailed(append)
 
+        // The end of the collection is judged on what the server sent, never on what was new.
         if (append && fetched.isEmpty()) hasMorePages = false
 
-        allAlbums = if (append) allAlbums + fetched else fetched
+        // loadedUntil still advances by the page received, not by how many rows were new, so
+        // de-duplication can never make the next request repeat a page (issue #50).
+        val added = applyPage(fetched, append)
         loadedUntil = offset
 
         publish()
+
+        if (shouldFetchNextAfterDuplicateOnlyPage(append, fetched.size, added, duplicateOnlyPages)) {
+            loadPaged(type, refresh, append = true, duplicateOnlyPages = duplicateOnlyPages + 1)
+        }
+    }
+
+    /**
+     * Puts a fetched page into [allAlbums] and returns how many albums it added. Offset paging over a
+     * collection that changes between requests (a library scan, a recent/frequent order) may repeat an
+     * album across pages (issue #50); the grid is keyed by album id, so the rows must hold each id once.
+     */
+    private fun applyPage(fetched: List<Album>, append: Boolean): Int {
+        val before = if (append) allAlbums.size else 0
+        allAlbums = if (append) mergeAlbumPage(allAlbums, fetched) else fetched.distinctBy { it.id }
+        return allAlbums.size - before
     }
 
     /** A failed fetch (#31): with nothing loaded it is the error state (inline error + Retry,
@@ -460,4 +483,33 @@ class AlbumListViewModel(application: Application) :
     private companion object {
         const val DEFAULT_PAGE_SIZE = 20
     }
+}
+
+/**
+ * A page made only of albums already shown adds no row, so the screen has nothing new to trigger the
+ * next load on: fetch the next page without waiting for a scroll, but only [MAX_DUPLICATE_ONLY_PAGES]
+ * times in a row. A page the server sent empty is the end of the list and never continues.
+ */
+internal fun shouldFetchNextAfterDuplicateOnlyPage(
+    append: Boolean,
+    received: Int,
+    added: Int,
+    consecutive: Int,
+): Boolean = append && received > 0 && added == 0 && consecutive < MAX_DUPLICATE_ONLY_PAGES
+
+/** Consecutive duplicate-only pages that are still fetched without a user scroll. */
+private const val MAX_DUPLICATE_ONLY_PAGES = 3
+
+/**
+ * Appends [page] to [existing] without repeating an album id (issue #50). An id identifies one album
+ * for the active server and list, so identity is the id alone, never title, artist or cover. The
+ * first occurrence wins: an album already on screen keeps its row (position and content) even if a
+ * later page carries newer metadata for it, which only a refresh picks up. Within [page] the first
+ * occurrence of an id wins too. Order is the existing rows, then the new albums in server order.
+ */
+internal fun mergeAlbumPage(existing: List<Album>, page: List<Album>): List<Album> {
+    val seen = HashSet<String>(existing.size + page.size)
+    existing.mapTo(seen) { it.id }
+    val added = page.filter { seen.add(it.id) }
+    return if (added.isEmpty()) existing else existing + added
 }

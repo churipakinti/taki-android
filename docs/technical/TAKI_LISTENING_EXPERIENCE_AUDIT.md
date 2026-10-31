@@ -12,9 +12,8 @@ BETA_PLAYBACK_READY                 = NO   (no blocker found, but the gate needs
 PUBLIC_BETA_READY                   = NO
 ```
 
-Nothing found in Phase 1 is a `PRE_BETA_BLOCKER`. After the swipe-away work (#49, section 12) the open
-finding that could be a `PRE_BETA_FIX` is F-1 / #50 (album-list duplicate-key crash), proposed, owner to
-confirm. "Not ready" here means *unverified on hardware in the listed areas*, not *known broken*.
+Nothing found in Phase 1 is a `PRE_BETA_BLOCKER`. After the swipe-away work (#49, section 12) the
+album-list crash (#50) was also fixed (section 13); no `PRE_BETA_FIX` is open. "Not ready" here means *unverified on hardware in the listed areas*, not *known broken*.
 
 ## 1. Baseline
 
@@ -164,11 +163,11 @@ Coverage: A = automated, E = emulator, P = physical. Priority is the classificat
 ## 7. Findings and classification
 
 **No `PRE_BETA_BLOCKER`.** Nothing reproducible loses data, blocks playback, skips unexpectedly or fails to
-recover. F-1 (#50) is proposed as `PRE_BETA_FIX`; F-3 (swipe-away) is fixed (#49).
+recover. F-1 (#50, album-list crash) and F-3 (#49, swipe-away) are fixed.
 
 | ID | Finding | Evidence | Class |
 |---|---|---|---|
-| F-1 | **#50.** The Albums list crashes with `IllegalArgumentException: Key "<id>" was already used` (Compose `LazyGrid`, key = album id) when two pages of the paged load contain the same album. The Phase 1 crash came from a fake server that ignored `offset` (invalid). It was then **reproduced with fully valid responses**: a server honouring `type`/`size`/`offset` whose library gains one album between page 1 and page 2 (page 2 repeats the last album of page 1; `Key "gen17"`). The UI and the playback service share one process, so the crash also stops playback (the queue is restored from #47 state). `AlbumListViewModel` appends with no de-duplication | logcat, 2026-10-31; real Navidrome not tried | Proposed `PRE_BETA_FIX` (deterministic crash from valid responses, small fix); owner confirms |
+| F-1 | **#50, fixed (section 13).** The Albums list crashed with `Key "<id>" was already used` when two pages of the paged load contained the same album; the UI and the playback service share one process, so the music stopped too. Reproduced with valid responses, then fixed by de-duplicating by album id in `AlbumListViewModel` | logcat before/after on the emulator, 2026-10-31 | `PRE_BETA_FIX`, **done**; physical confirmation is not needed for the list logic |
 | F-2 | `#37` stale Quick Settings media card: Android-managed history is plausible; not examined here | #37 | `POST_BETA` unless it proves to be a live duplicate session |
 | F-3 | Swiping Taki from recents **stopped playback and removed the notification** (inherited `onTaskRemoved`) | source + emulator A/B (section 12) | **Fixed in #49** (policy decided by the owner); physical confirmation pending in Phase 2 block C |
 | F-4 | #41 / #42 hi-res FLAC follow-ups (packet message at ~154.2 s, 24->16 bit output) | FLAC doc §21-22 | `POST_BETA` |
@@ -233,7 +232,7 @@ acceptable workaround. `ACCEPTED_AS_IS` = Android behaviour or documented limita
 ## 10. Minimum next steps
 1. ~~Owner decision on F-3~~ done: policy approved and implemented in #49; block C now confirms it on hardware.
 2. Run Phase 2 blocks A-E on the Pixel 7 with a verified backup, then F as a field walk.
-3. Owner to confirm the classification of #50 (album list duplicate keys) and decide whether it is fixed before the beta; optionally open one issue for first-audible-audio measurement.
+3. ~~#50~~ done (section 13); optionally open one issue for first-audible-audio measurement.
 4. Update this document with the Phase 2 results and set the two statuses.
 
 ## 11. Reproducing the emulator work
@@ -298,3 +297,57 @@ at the saved position was validated in Phase 1 (E7); that path is unchanged.
 
 **Pending on hardware (#36 Phase 2, block C):** a real finger swipe from Recents, the Quick Settings media
 card after removal (#37), whether a paused session leaves a stale notification, and behaviour under real Doze.
+
+## 13. Album list duplicate-key crash (#50)
+
+**Root cause.** `AlbumListViewModel.loadPaged` appended each page with `allAlbums + fetched`, and the grid and
+list are keyed by album id. Offset paging over a collection that changes between two requests (a library scan
+adds an album that sorts first, or a recent/frequent order moves while listening) returns the last album of page
+1 again at the start of page 2. Compose throws `IllegalArgumentException: Key "<id>" was already used`, the
+process dies and the playback service dies with it.
+
+**Fix (one view model, no change to the paging system).**
+- `mergeAlbumPage(existing, page)` appends only ids not yet shown; the first occurrence wins, so a row already
+  on screen is never replaced or moved, and newer metadata for an album already shown is picked up by a refresh,
+  not mid-scroll. Identity is the album id alone: two different albums with the same title/artist are both kept.
+- A first page (and the unpaged "by artist" result) is de-duplicated by id too.
+- The offset is unchanged: each successful page advances it by one page size, **independent of how many rows
+  were new**, so de-duplication can never make the next request repeat a page (20 received, 19 new -> next
+  offset 40, not 39). The end of the list is still a page the server sent empty, never "nothing new".
+- A page made only of albums already shown adds no row, so the screen has nothing new to trigger the next load
+  on; the view model then asks for the next page itself, at most 3 times in a row, then waits for the next scroll.
+  Bounded: it cannot loop.
+- Limitation that cannot be removed: offset paging over a mutable collection can still **miss** an album (one
+  that moved from page 2 to page 1 after page 1 was read). It is never shown twice; a refresh shows the current
+  library. The existing page-size-based offset (rather than the received count) is kept because an existing
+  test pins it; the two differ only when a server returns short pages mid-collection, which is a separate,
+  unchanged behaviour.
+
+**Tests.** `AlbumListPaginationTest` (13) drives the real view model against an in-memory server that honours
+`size`/`offset`: ordinary pages; a duplicate across pages; inside one page; same title with different ids;
+the documented scenario (page size 20, 28 albums, an album inserted before page 2, `gen17` once, offsets 0/20/40,
+refresh shows the inserted album); offset after de-duplication; a duplicates-only page is bounded (0/20/40/60/80)
+and is not the end of the list; an empty page is; refresh after several pages; first-wins merge; rows already
+on screen are not replaced; a response for the previous sort order never reaches the new list. Against the old
+merge 5 of the 13 fail. The existing `AlbumListViewModelTest` tests are unchanged and green.
+
+**Emulator (2026-10-31, `Pixel_7` AVD, fake server honouring `type`/`size`/`offset`, music playing).**
+
+| Build | Result |
+|---|---|
+| Baseline `c219a95c` | page 1, the server inserts an album sorting first on the page-2 request, scroll to the boundary: `Key "gen16" was already used`, process 12048 died, the music stopped (session `NONE`) |
+| Fixed | same procedure: no crash, same process (12878) the whole time, session `PLAYING` throughout, 29 distinct titles across the whole scroll (the 29 original albums; the inserted one appears after a refresh), requests 0/20/40 and then no more, open an album and back, pull to refresh: the inserted album is now first and paging restarts at offset 0 |
+
+**Other lists.** No other screen has the pattern (append without de-duplication + id keys): the create-playlist
+song list already de-duplicates by id (and advances its offset by the received count); the legacy
+`AlbumListModel` is not used by any screen. Lists built from a single response are not paged. Not changed.
+
+**Gates (final code).** 1948 tests, 0 failures (1935 + 13); lintDebug and lintVitalRelease with no new issues;
+assembleDebug and assembleRelease green; detekt 42 + 1, the same as before. The emulator run above used the
+build made before a behaviour-preserving refactor (the merge bookkeeping and the skip-ahead rule were moved into
+small helpers to keep `loadPaged` under the detekt complexity limit); the 13 tests and the existing view-model
+tests pass on the final code, but the emulator was not re-run on the very last build. One earlier full run had a
+single failure in an unrelated test (`SheetInteractionAuditTest.createPlaylistName`: "uncaught exceptions before
+the test started", caused by a leaked `Scrobbler` coroutine from an earlier test class with no Koin); it did not
+recur on the next full run and does not involve the album list, so it is recorded as a pre-existing timing flake,
+not investigated further here.
