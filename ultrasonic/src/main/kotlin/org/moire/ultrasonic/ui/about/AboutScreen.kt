@@ -7,7 +7,6 @@
 
 package org.moire.ultrasonic.ui.about
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,14 +14,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -70,7 +70,7 @@ fun AboutScreen(
                     style = TakiTheme.type.hero,
                     modifier = Modifier.semantics { heading() },
                 )
-                Spacer(Modifier.height(TakiTheme.spacing.xxs))
+                Spacer(Modifier.height(TakiTheme.spacing.xs))
                 Text(
                     text = stringResource(R.string.about_version, versionName),
                     style = TakiTheme.type.caption,
@@ -102,18 +102,24 @@ private fun aboutBodyText(): String {
     return HtmlCompat.fromHtml(raw, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
 }
 
+/** The same plain, container-less row Settings uses: a hairline above, a 48dp+ target, the label
+ *  on the screen's own left edge. A secondary action, so no fill and no elevation. */
 @Composable
 private fun AboutActionRow(label: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(TakiTheme.dimensions.rowSm)
-            .clip(TakiTheme.shapes.xs)
-            .background(TakiTheme.colors.surfaceHigh)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = TakiTheme.spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(text = label, style = TakiTheme.type.title)
+    Column(Modifier.fillMaxWidth()) {
+        HorizontalDivider(
+            thickness = TakiTheme.dimensions.borderThin,
+            color = TakiTheme.colors.divider,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = TakiTheme.dimensions.touchTargetMin)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(vertical = TakiTheme.spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = label, style = TakiTheme.type.title)
+        }
     }
 }
