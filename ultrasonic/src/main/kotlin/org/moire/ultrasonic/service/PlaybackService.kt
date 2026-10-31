@@ -109,7 +109,19 @@ class PlaybackService :
         mediaLibrarySession
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        Timber.i("Stopping the playback because we were swiped away")
+        // Swiping Taki out of Recents is not an order to stop the music (#36). The Media3 default
+        // would pause everything unless Player.isPlaying(), which is false while buffering.
+        if (shouldContinuePlaybackAfterTaskRemoved(
+                playWhenReady = player.playWhenReady,
+                playbackState = player.playbackState,
+                mediaItemCount = player.mediaItemCount,
+                networkRecoveryPending = mediaPlayerManager.isNetworkRecoveryPending
+            )
+        ) {
+            Timber.i("Task removed, but playback is wanted: keeping the session running")
+            return
+        }
+        Timber.i("Task removed and nothing is playing: finishing the session")
         releasePlayerAndSession()
         super.onTaskRemoved(rootIntent)
     }

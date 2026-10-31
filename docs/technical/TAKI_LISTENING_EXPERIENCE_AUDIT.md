@@ -12,8 +12,9 @@ BETA_PLAYBACK_READY                 = NO   (no blocker found, but the gate needs
 PUBLIC_BETA_READY                   = NO
 ```
 
-Nothing found in Phase 1 is a `PRE_BETA_BLOCKER` or `PRE_BETA_FIX`. "Not ready" here means *unverified on
-hardware in the listed areas*, not *known broken*.
+Nothing found in Phase 1 is a `PRE_BETA_BLOCKER`. After the swipe-away work (#49, section 12) the open
+finding that could be a `PRE_BETA_FIX` is F-1 / #50 (album-list duplicate-key crash), proposed, owner to
+confirm. "Not ready" here means *unverified on hardware in the listed areas*, not *known broken*.
 
 ## 1. Baseline
 
@@ -45,7 +46,7 @@ Evidence classes used below: `VERIFIED_AUTOMATED`, `VERIFIED_EMULATOR`, `VERIFIE
 | MediaSession / controls | `MediaLibrarySessionCallback` (controller authorization #45/#46), `BluetoothIntentReceiver` (A2DP connect resumes, disconnect pauses) | Media3 handles media buttons |
 | Hi-res FLAC | `HiResFlacRenderers` (NextLib FFmpeg) | #17 |
 | Sleep timer | `SleepTimerController` | Not touched by #48 |
-| Swiped from recents | `PlaybackService.onTaskRemoved` -> `releasePlayerAndSession()` | **Stops playback and removes the notification** (see F-3) |
+| Removed from Recents | `PlaybackService.onTaskRemoved` + `shouldContinuePlaybackAfterTaskRemoved` (#49) | Continues while the user wants playback; finishes cleanly otherwise (section 12). Before #49 it always stopped playback |
 
 ## 3. Existing evidence (what is already verified, not repeated here)
 
@@ -120,8 +121,8 @@ Observations that are **not** conclusions:
   the broadcast). A process kill (E7) restores normally. An earlier audit saw a force-stop cold start work in
   a different setup, so this is recorded as platform behaviour, `ACCEPTED_AS_IS`, with a physical re-check
   (low priority).
-- The swipe-from-recents check could not be driven on this emulator (the task switcher did not open), so it
-  is `NOT_TESTED`; only the source is known (F-3).
+- The swipe-from-recents check could not be driven in Phase 1 (the task switcher did not open), so it was
+  `NOT_TESTED` there; it is now covered by section 12 (#49).
 
 **Emulator limitations (explicit).** No real Wi-Fi/mobile handoff, no Bluetooth or wired route, no Doze or
 battery accounting, no audible-output measurement, no real call/assistant audio stack beyond the telephony
@@ -146,7 +147,7 @@ Coverage: A = automated, E = emulator, P = physical. Priority is the classificat
 | Pause during an interruption / permanent loss | No surprise resume | Watchdog tests (intent dropped) | A | Med | P: block B | Blocker if it auto-resumes |
 | Screen off / background / return | Keeps playing, state intact | Pixel 57 min soak, 13 min release (§21.3, §22); E11 | P+E | Low | 10 min locked in block A on the final build | Fix |
 | Process death / restore | Queue and position restored, no unwanted play | #47 suites; E7/E12 | A+E | Med | P: one kill + resume in block C | Blocker if the queue is lost |
-| Swiped from recents | Product decision | `onTaskRemoved` stops playback (F-3) | code only | **Med** | P: observe, then decide (block C) | Post-beta or Fix by decision |
+| Removed from Recents | Playing/buffering continue; paused/idle finish cleanly | #49 fix: A/B on the emulator (section 12), policy unit tests | A+E | Med | P: confirm on the Pixel 7 with a real swipe (block C) | Fix |
 | Notification / lock-screen controls | Work, stale card not harmful | Pixel §21.4; #37 open | P | Low | observe #37 in block C | Post-beta |
 | Bluetooth connect/disconnect, media buttons | Connect resumes, disconnect pauses | Receiver unit tests; emulator relay; **no hardware** | A+E | **Med** | P: block D | Fix |
 | Wired headset unplug / output change | Pauses (Media3 noisy) | flag pinned by new test | A(config) | Med | P: block D if a headset exists | Fix |
@@ -162,14 +163,14 @@ Coverage: A = automated, E = emulator, P = physical. Priority is the classificat
 
 ## 7. Findings and classification
 
-**No `PRE_BETA_BLOCKER`. No `PRE_BETA_FIX`.** Nothing reproducible in Phase 1 loses data, blocks playback,
-skips unexpectedly or fails to recover.
+**No `PRE_BETA_BLOCKER`.** Nothing reproducible loses data, blocks playback, skips unexpectedly or fails to
+recover. F-1 (#50) is proposed as `PRE_BETA_FIX`; F-3 (swipe-away) is fixed (#49).
 
 | ID | Finding | Evidence | Class |
 |---|---|---|---|
-| F-1 | **New, not a playback defect:** the Albums list can crash with `IllegalArgumentException: Key "al1" was already used` (Compose `LazyGrid`, key = album id) when two pages of the paged load contain the same album. Reproduced here only because my fake server ignores the `offset` parameter; a real server could trigger it if the library changes between page loads. The `AlbumListViewModel` appends pages with no de-duplication and the grid uses `key = { it.id }` | Logcat stack, 2026-10-31, `063e8ef8` | `POST_BETA` (UI robustness; propose a narrow issue: de-duplicate by id when appending) |
+| F-1 | **#50.** The Albums list crashes with `IllegalArgumentException: Key "<id>" was already used` (Compose `LazyGrid`, key = album id) when two pages of the paged load contain the same album. The Phase 1 crash came from a fake server that ignored `offset` (invalid). It was then **reproduced with fully valid responses**: a server honouring `type`/`size`/`offset` whose library gains one album between page 1 and page 2 (page 2 repeats the last album of page 1; `Key "gen17"`). The UI and the playback service share one process, so the crash also stops playback (the queue is restored from #47 state). `AlbumListViewModel` appends with no de-duplication | logcat, 2026-10-31; real Navidrome not tried | Proposed `PRE_BETA_FIX` (deterministic crash from valid responses, small fix); owner confirms |
 | F-2 | `#37` stale Quick Settings media card: Android-managed history is plausible; not examined here | #37 | `POST_BETA` unless it proves to be a live duplicate session |
-| F-3 | Swiping Taki from recents **stops playback and removes the notification** (`onTaskRemoved`, log "Stopping the playback because we were swiped away"). Inherited behaviour; many players keep playing | source | **Needs a product decision** (`POST_BETA` if kept, `PRE_BETA_FIX` if the owner wants playback to continue). Observe on the Pixel first |
+| F-3 | Swiping Taki from recents **stopped playback and removed the notification** (inherited `onTaskRemoved`) | source + emulator A/B (section 12) | **Fixed in #49** (policy decided by the owner); physical confirmation pending in Phase 2 block C |
 | F-4 | #41 / #42 hi-res FLAC follow-ups (packet message at ~154.2 s, 24->16 bit output) | FLAC doc §21-22 | `POST_BETA` |
 | F-5 | Force-stop then media key does not restart the app (emulator) | E-notes | `ACCEPTED_AS_IS` (Android stopped state) |
 | F-6 | Time to first audible audio is not measured anywhere | this audit | metric gap, not a defect |
@@ -230,12 +231,70 @@ failed recovery. `PRE_BETA_FIX` = significant, reproducible everyday friction. `
 acceptable workaround. `ACCEPTED_AS_IS` = Android behaviour or documented limitation.
 
 ## 10. Minimum next steps
-1. Owner decision on F-3 (swipe from recents) so block C tests the intended behaviour.
+1. ~~Owner decision on F-3~~ done: policy approved and implemented in #49; block C now confirms it on hardware.
 2. Run Phase 2 blocks A-E on the Pixel 7 with a verified backup, then F as a field walk.
-3. Open one narrow issue for F-1 (album list duplicate keys) and, if wanted, one for first-audible-audio measurement.
+3. Owner to confirm the classification of #50 (album list duplicate keys) and decide whether it is fixed before the beta; optionally open one issue for first-audible-audio measurement.
 4. Update this document with the Phase 2 results and set the two statuses.
 
 ## 11. Reproducing the emulator work
 Throw-away host scripts (not committed): a fake Subsonic server with `/_ctl?mode=<status|black>&for=<s>`
 and one always-404 track, a `dumpsys media_session` / `media.audio_flinger` poller, and an action log. They
 were removed with the emulator and the server at the end of the run; `adb reverse` was cleared.
+
+## 12. Playback continuity after removing the task (#49)
+
+**Previous behaviour.** `onTaskRemoved()` always called `releasePlayerAndSession()`: music stopped and the
+notification disappeared. Reproduced on the emulator with the old build: log "Stopping the playback because we
+were swiped away", media session and foreground notification gone, output frames stop.
+
+**Approved policy.**
+
+| State when the task is removed | Result |
+|---|---|
+| PLAYING | music continues |
+| BUFFERING with play intent (including a pending #19 network recovery and a transient focus suppression) | session continues and keeps recovering |
+| PAUSED | service finishes cleanly; nothing plays on reopen |
+| IDLE with no recovery pending / ENDED / empty queue | service finishes |
+| Force Stop | Android stops the app (not prevented) |
+
+**What Media3 1.10.1 does by default (disassembled, not assumed).** `MediaSessionService.onTaskRemoved`
+calls `pauseAllPlayersAndStopSelf()` unless `isPlaybackOngoing()` (foreground notification started) **and** some
+session's `Player.isPlaying()`. `pauseAllPlayersAndStopSelf()` first runs `setPlayWhenReady(false)` on every
+player. `isPlaying()` is false while BUFFERING and while focus-suppressed, so the default would stop those
+sessions and also discard the user's play intent. Deleting the override would therefore not satisfy the policy.
+
+**Implementation (small, no new manager or service).** `PlaybackTaskRemovalPolicy.kt`:
+`shouldContinuePlaybackAfterTaskRemoved(playWhenReady, playbackState, mediaItemCount, networkRecoveryPending)`.
+`PlaybackService.onTaskRemoved` returns without releasing (and without calling `super`, which would pause)
+when it is true; otherwise it runs the existing `releasePlayerAndSession()` path unchanged.
+`MediaPlayerManager.isNetworkRecoveryPending` exposes the existing #19 retry counter (cleared when playback
+resumes or the budget is spent, so a dead network cannot pin the service). Queue/position persistence (#47),
+the media session, controllers, the sleep timer and audio focus are untouched.
+
+**Tests.** `PlaybackTaskRemovalPolicyTest` (14): the whole policy table, and the pending-recovery flag driven
+through the real player listener (scheduled by a transient error, cleared when playback returns, not pending
+after the budget is spent, not started when paused). A wiring guard in `PlaybackPolicyInvariantsTest` checks
+that the policy is consulted before the release and that the continue branch returns before `super`. Mutation
+check: dropping `BUFFERING` from the policy fails the buffering test. **Limitation:** a Robolectric test of the
+real service is not possible here (`object Settings` and the player/session stack do not class-load in the unit
+environment), so the service lifecycle is validated on the emulator.
+
+**Emulator validation (2026-10-31, `Pixel_7` AVD, fake server, synthetic data).** The Recents card could not be
+dismissed with a synthetic fling, so the task was removed with `cmd activity stack remove <taskId>` (the
+activity-manager path that removes a task and notifies its services; not Force Stop).
+
+| Scenario | Observed | Result |
+|---|---|---|
+| A. Playing, task removed | log "Task removed, but playback is wanted"; same process; session `PLAYING`; foreground notification (id 1001) and media session kept; output frames kept advancing (+372096 in ~7 s); reopening showed the next queued track playing at 1:21 | PASS |
+| B. Paused, task removed | "Task removed and nothing is playing: finishing the session"; session and notification gone; reopening restored `PAUSED` at 4940 ms with **no** audio frames | PASS |
+| C. BUFFERING (server 503 for 22 s), task removed | session kept; loader retries at +0.1/2.2/4.2/8.2/16.2/24.2 s; `PLAYING` at +24.4 s without any UI; audio frames flowing | PASS |
+| D1. Queue cleared (stopped), task removed | "nothing is playing: finishing"; session and notification gone | PASS |
+| D2. Force Stop while playing | process gone, no session, no notification, no audio, not restarted in 8 s | PASS (Android policy) |
+| Before/after | old build, scenario A: stops, notification gone, silent | confirms the fix |
+
+Audio output: verified as frames reaching the AudioFlinger output thread plus the session state. The emulator
+has no audio device, so audibility is **not** verified here. A process kill (not Force Stop) restoring the queue
+at the saved position was validated in Phase 1 (E7); that path is unchanged.
+
+**Pending on hardware (#36 Phase 2, block C):** a real finger swipe from Recents, the Quick Settings media
+card after removal (#37), whether a paused session leaves a stale notification, and behaviour under real Doze.

@@ -61,4 +61,17 @@ class PlaybackPolicyInvariantsTest {
         assertTrue(service.contains("android:foregroundServiceType=\"mediaPlayback\""))
         assertTrue(manifest.contains("android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"))
     }
+
+    @Test
+    fun `removing the task consults the policy first and never stops playback unconditionally`() {
+        val body = playbackService.substringAfter("override fun onTaskRemoved").substringBefore("private fun releasePlayerAndSession")
+        val policy = body.indexOf("shouldContinuePlaybackAfterTaskRemoved(")
+        val release = body.indexOf("releasePlayerAndSession()")
+        assertTrue("onTaskRemoved must ask the policy", policy >= 0)
+        assertTrue("the release must come after the policy", release > policy)
+        // the continue branch returns before the release and before super (which pauses every player)
+        val keepBranch = body.substring(policy, release)
+        assertTrue(keepBranch.contains("return"))
+        assertTrue(!keepBranch.contains("super.onTaskRemoved"))
+    }
 }

@@ -219,6 +219,9 @@ class MediaPlayerManager(
     // Cleared the moment playback actually resumes.
     private var networkErrorRetryCount = 0
 
+    /** A bounded #19 recovery attempt is scheduled or in flight (used by the task-removal policy). */
+    internal val isNetworkRecoveryPending: Boolean get() = networkErrorRetryCount > 0
+
     private val playbackErrorReportGate = PlaybackErrorReportGate()
 
     /** Test seam for the user-visible playback-error message. */
