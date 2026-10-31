@@ -27,3 +27,22 @@ Visual-only. No playback, networking, persistence, auth or server code touched.
 ## Residual
 - Library Hub / Settings subtitles still use 12sp Light caption; revisit only if device QA shows legibility problems.
 - Other `DropdownMenu` users (album list, artist list, sort, folder selector) still use Material defaults; migrating them is a one-line swap each.
+
+## Emulator QA (2026-10-31, baseline `ac7eaa29`)
+
+Rig: `Pixel_7` AVD (API 37, 1080x2400 @ 420 dpi), debug build installed over `adb`, a throw-away **fake Subsonic server** on the host (synthetic artists/albums/WAV tone/generated PNG covers, reached through `adb reverse`; app data on the emulator wiped first). The physical Pixel 7, the user's Navidrome and Tailscale were not touched. Second configuration: 360x640 dp (`wm size 1080x1920`, density 480) with `font_scale 1.5`. Server, `adb reverse`, display and font overrides were reverted afterwards. Screenshots: `docs/technical/evidence/48-emulator/` (real device captures, no generated images).
+
+| Area | Result |
+|---|---|
+| Now Playing / album / track menus | Surface, `radius_md` corners, dividers, 48dp rows, destructive tint (unit golden), anchoring, Back and outside-tap dismissal, and actions (Go to Album, Play Next) all correct. 1.5x font: no clipping. |
+| Typography | Settings, Playback settings, Library Hub, Album Detail hero, track rows: title/subtitle gap reads cleanly; `caption` token left unchanged (legible). |
+| Sleep Timer | Four presets, end-of-song, cancel, off/timed/end-of-song states, 360x640 + 1.5x font: no clipping; tiles measured 48dp on the device; playback stayed `PLAYING` through every selection. |
+| About | Hierarchy and spacing good; "Report a problem" only opens the project URL in the browser (nothing sent); still reachable by scroll at 1.5x. |
+| Share Card | Preview and exported PNG (1080x1920, pulled from `cache/share`) match; signature centred above the cover; long title/artist/album ellipsise inside the card; no-cover + no-album card renders the fallback tile; Share button visible at 360x640 / 1.5x. |
+
+### Defect found and fixed
+- **Track context menu touched the left screen edge** (anchored to the full-width row, long-press). Fix: `TakiDropdownMenu(offset = ...)`, track menu passes a 16dp gutter (`AlbumDetailScreen`). Before/after: `menu_track_emulator_before_fix.png` / `menu_track_emulator.png`. No unit test: Robolectric does not report a popup window's screen offset (a bounds test read 16dp with and without the offset), so the emulator evidence is the proof.
+
+### Not covered
+- **TalkBack: NOT_TESTED** (semantics covered by Compose tests: selected state, radio role, headings, 48dp). Android "Display size" larger than default: not exercised (360x640 dp at density 480 and 1.5x font were).
+- Fallback share tile plus the signature both show the "t" symbol when there is no cover (by design; noted, not changed).

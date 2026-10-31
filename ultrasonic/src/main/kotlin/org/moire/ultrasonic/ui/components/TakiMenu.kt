@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.ui.theme.TakiTheme
 
@@ -32,18 +33,21 @@ private const val MENU_LABEL_MAX_LINES = 2
  * The one popup menu surface for overflow and context menus: a neutral, flat `surfaceHigh`
  * panel with the `radius_md` corner, a hairline tonal edge instead of a shadow, and a width
  * band wide enough for long labels. Anchoring, dismissal and accessibility are Material's
- * [DropdownMenu] untouched - only the surface is Taki's.
+ * [DropdownMenu] untouched - only the surface is Taki's. A menu anchored to a full-width row
+ * (a track row) passes an [offset] of the screen gutter so it never touches the screen edge.
  */
 @Composable
 fun TakiDropdownMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    offset: DpOffset = DpOffset.Zero,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
+        offset = offset,
         modifier = modifier.widthIn(min = MENU_MIN_WIDTH, max = MENU_MAX_WIDTH),
         shape = TakiTheme.shapes.md,
         containerColor = TakiTheme.colors.surfaceHigh,

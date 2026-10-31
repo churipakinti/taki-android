@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import kotlinx.collections.immutable.persistentListOf
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.ui.components.DetailPrimaryPlayButton
@@ -503,7 +504,12 @@ private fun TrackContextMenu(
     onDismiss: () -> Unit,
     onAction: (TrackContextAction) -> Unit,
 ) {
-    TakiDropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+    TakiDropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        // Anchored to a full-width row: keep a screen gutter instead of touching the edge.
+        offset = DpOffset(TakiTheme.spacing.lg, DpOffset.Zero.y),
+    ) {
         ContextMenuItem(R.string.common_play_now) { onAction(TrackContextAction.PLAY_NOW) }
         ContextMenuItem(R.string.common_play_next) { onAction(TrackContextAction.PLAY_NEXT) }
         ContextMenuItem(R.string.common_play_last) { onAction(TrackContextAction.PLAY_LAST) }
