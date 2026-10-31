@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Density
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -80,5 +83,27 @@ class SleepTimerSheetScreenshotTest {
     @Test
     fun sleepTimerEndOfSongActive() = capture("sleep_timer_end_of_song_active") {
         Sheet(SleepTimerState.EndOfTrack)
+    }
+
+    @Test
+    fun sleepTimerLargeFontSmallScreen() {
+        compose.setContent {
+            val base = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(base.density, fontScale = 1.5f)) {
+                TakiTheme {
+                    Box(Modifier.testTag("sleep_timer_font_1_50_small").fillMaxSize().background(TakiTheme.colors.black)) {
+                        SleepTimerSheet(
+                            visible = true,
+                            state = SleepTimerState.EndOfTrack,
+                            hasCurrentTrack = true,
+                            actions = SleepTimerActions.Noop,
+                            nowMs = { 0L },
+                        )
+                    }
+                }
+            }
+        }
+        compose.onNodeWithTag("sleep_timer_font_1_50_small")
+            .captureRoboImage("src/test/screenshots/sleep_timer_font_1_50_small.png")
     }
 }

@@ -15,7 +15,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,8 +35,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,12 +42,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.moire.ultrasonic.R
@@ -167,15 +170,15 @@ private fun SleepTimerSheetContent(
             style = TakiTheme.type.title,
             modifier = Modifier.semantics { heading() },
         )
-        Spacer(Modifier.height(TakiTheme.spacing.xxs))
+        Spacer(Modifier.height(TakiTheme.spacing.xs))
         StatusLine(state, nowMs)
-        Spacer(Modifier.height(TakiTheme.spacing.lg))
+        Spacer(Modifier.height(TakiTheme.spacing.xl))
         // A 2x2 grid, not a single row of four: "45 minutes"/"60 minutes" (the plural label,
         // kept verbatim rather than abbreviated to "45m" for a clearer accessibility label)
         // does not fit four-across on a phone width.
         SLEEP_TIMER_PRESET_MINUTES.chunked(PRESET_GRID_COLUMNS).forEach { rowMinutes ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(TakiTheme.spacing.sm),
             ) {
                 rowMinutes.forEach { minutes ->
@@ -184,7 +187,7 @@ private fun SleepTimerSheetContent(
                         label = label,
                         selected = state is SleepTimerState.Duration && state.presetMinutes == minutes,
                         onClick = { actions.onSelectDuration(minutes) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
                     )
                 }
             }
@@ -195,13 +198,14 @@ private fun SleepTimerSheetContent(
             selected = state is SleepTimerState.EndOfTrack,
             onClick = actions.onSelectEndOfTrack,
             enabled = hasCurrentTrack,
-            modifier = Modifier.testTag(SLEEP_TIMER_END_OF_SONG_TEST_TAG),
+            modifier = Modifier.fillMaxWidth().testTag(SLEEP_TIMER_END_OF_SONG_TEST_TAG),
         )
         if (state != SleepTimerState.Off) {
             Spacer(Modifier.height(TakiTheme.spacing.lg))
             TextButton(
                 onClick = actions.onCancel,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin)
                     .testTag(SLEEP_TIMER_CANCEL_TEST_TAG),
             ) {
@@ -245,9 +249,14 @@ private fun StatusLine(state: SleepTimerState, nowMs: () -> Long) {
         }
     }
     val color = if (state == SleepTimerState.Off) TakiTheme.colors.gray else TakiTheme.colors.accent
-    Text(text = text, style = TakiTheme.type.caption.copy(color = color))
+    Text(text = text, style = TakiTheme.type.body.copy(color = color))
 }
 
+/**
+ * One duration / end-of-song option: a soft `radius_lg` tile on a neutral surface. The selected
+ * tile is told apart by an accent outline and label (the accent is a state colour, never a
+ * fill), not by a green fill. A single-choice radio semantic, so TalkBack announces "selected".
+ */
 @Composable
 private fun PresetChip(
     label: String,
@@ -256,23 +265,36 @@ private fun PresetChip(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        enabled = enabled,
-        label = { Text(label, style = TakiTheme.type.titleSmall) },
+    val colors = TakiTheme.colors
+    Box(
         modifier = modifier
             .defaultMinSize(minHeight = TakiTheme.dimensions.touchTargetMin)
-            .semantics { this.selected = selected },
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = TakiTheme.colors.surfaceHigh,
-            labelColor = TakiTheme.colors.ivory,
-            selectedContainerColor = TakiTheme.colors.selectedContainer,
-            selectedLabelColor = TakiTheme.colors.accent,
-        ),
-    )
+            .clip(TakiTheme.shapes.lg)
+            .background(colors.surfaceHigh)
+            .border(
+                width = if (selected) SELECTED_BORDER_WIDTH else 0.dp, // taki-raw-ok: no border
+                color = if (selected) colors.accent else Color.Transparent,
+                shape = TakiTheme.shapes.lg,
+            )
+            .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = TakiTheme.spacing.lg, vertical = TakiTheme.spacing.sm),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            style = TakiTheme.type.titleSmall,
+            color = when {
+                !enabled -> colors.gray.copy(alpha = DISABLED_ALPHA)
+                selected -> colors.accent
+                else -> colors.ivory
+            },
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
+private val SELECTED_BORDER_WIDTH = 1.5.dp // taki-raw-ok: state outline, between hairline and 2dp
+private const val DISABLED_ALPHA = 0.5f
 private const val SCRIM_ALPHA = 0.6f
 private const val DRAG_HANDLE_ALPHA = 0.4f
 private val SHEET_CORNER_RADIUS = 20.dp // taki-raw-ok: radius_lg's value, top corners only
