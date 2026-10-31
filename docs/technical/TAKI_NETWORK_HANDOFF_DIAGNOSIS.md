@@ -497,3 +497,52 @@ A reverse proxy, tunnel or restarting Navidrome answers a stream request with **
 1907 `ultrasonic` unit tests, 0 failures, 0 skipped (1897 + 10 new); suites that guard neighbouring behaviour all green: `PlaybackLoadControlTest` 8, `PlaybackStallWatchdogTest` 18, `PlaybackErrorRecoveryTest` 14, `DurableStateFileTest` 17, `EqualizerPersistenceTest` 6, `ControllerAuthorizationTest` 14, `PlaybackSourcePolicyTest` 9, `BluetoothIntentReceiverTest` 3 and the seven `AndroidAuto*` suites (97 tests). `assembleDebug`, `assembleRelease`; `lintDebug` / `lintVitalRelease` no new issues; `detekt` 42 + 1 (baseline); `git diff --check` clean.
 
 `ISSUE_35_STATE = a reproduced client-side defect is fixed; the original field case (degraded Wi-Fi, real handoff) is NOT validated, so #35 stays open`
+
+
+## Phase 4: physical validation on the Pixel 7 (2026-10-31)
+
+Baseline `cc7837af`, no code change in this phase. Pixel 7, Android 17, Wi-Fi `3a-sk`, Tailscale VPN active, LTE available, the debug build of the Phase 3 fix, a real streamed library (FLAC; `maxBitrateWifi` unlimited, `maxBitrateMobile` 320). Tracks were short real library tracks chosen from the metadata cache (not downloaded, so every byte is streamed).
+
+### Protection of the device data
+
+Before installing anything the debug app's `databases/`, `shared_prefs/`, `files/` **and** `cache/` were archived (the #47 procedure, which includes the queue file) and the archive was verified by extracting it and running `PRAGMA integrity_check` on the databases. The Phase 3 build was installed with `adb install -r` (data preserved). After the runs the app's data was restored from that archive and the file sizes were compared with the archive (identical, queue file back to its original empty 222 bytes); the probe app was uninstalled. The release app was never touched. Scrobbling in Taki cannot be switched off, so playing real tracks sent transient "now playing" updates to the server; no track was played to its natural end, so no play was submitted. No setting of the phone was changed by tooling: **every Wi-Fi/data/airplane change was made by the person holding the phone**.
+
+### Method (reproducible)
+
+- A separate-UID probe controller (same as Phase 3) logs a 1 s timeline (state, position, buffered position, errors) plus every event, and accepts commands sent with `adb shell am start ... --es cmd <newtrack:ID | pause | play | next>`.
+- A host-side poller records, every 2 s, the default network, Wi-Fi/mobile/VPN presence from `dumpsys connectivity` (read only). Network times in this section come from that poller, not from the person's reports.
+- Taki's own log lines (`Transient network error`, `Network-error recovery`) are captured with URLs, hosts, IPs and token parameters redacted.
+- The person performs each change when asked and confirms; right after the confirmation a command that **needs the network** is sent (a track not yet buffered), so the result does not depend on how fast the person is.
+
+### Runs that did NOT measure a handoff (disclosed)
+
+The first attempt used timed on-screen prompts (A1-A7). The poller shows no network change inside any of those windows, because a person cannot follow 20-second prompts, so those runs are only stable-network baselines and are **not counted**. A second finding from them: on this phone **airplane mode keeps Wi-Fi connected** (default network stayed Wi-Fi with airplane on), so airplane mode alone is not an outage; a real total outage needs airplane mode **and** Wi-Fi off.
+
+### Results
+
+| ID | Scenario (physical) | Result | Evidence |
+|---|---|---|---|
+| H1 | Wi-Fi -> mobile while playing a long track | **PASS, weak**: no event, no error, position continuous; the whole track was already buffered, so the stream did not need the network | default network 199 (Wi-Fi) -> 200 (mobile) at 11:05:54; samples advance 1 s per second until the end |
+| N1a | mobile only, new track not buffered | **PASS**: audio 0.6 s after the command (cold request over LTE + Tailscale) | CMD -> `READY`/`isPlaying` within 0.6 s |
+| N1b | mobile -> Wi-Fi, new track not buffered | **PASS**: audio 0.8 s after the command | default network 202 (Wi-Fi) |
+| E1 | **total outage 180 s** (airplane + Wi-Fi off, 11:10:24-11:13:24), track requested during it | **PASS** (bounded, automatic): `BUFFERING` without `onPlayerError`, then `ERROR_CODE_IO_NETWORK_CONNECTION_FAILED`, #19 recovery attempts 1/3, 2/3, 3/3 (the 3rd at 11:13:11); **audio at 11:13:23.6, about 0-1 s after the network returned (11:13:24)**; no manual action, same item, no queue loss | player events, Taki recovery log lines, poller |
+| E2 | total outage 123 s (11:15:43-11:17:46), user pauses at +16 s of the outage | **PASS**: after the network returned the player reached `READY` (11:17:45) but stayed **paused** for more than 90 s, no sound; a manual `Play` resumed at once | `playing=false pwr=false` samples, then `isPlaying=true` on the command |
+| E3 | total outage 47 s (11:19:48-11:20:35), track C requested, then a different track D | **PASS**: D played at 11:20:33 (about 2 s of poll resolution from the return at 11:20:35); C never started | only D appears in the timeline after the outage |
+| E2a | a *track not cached by the process* requested during an outage | by design: its media-id resolution needs the server, times out after 20 s (`Resolving the selected item timed out`) and the player keeps the **previous queue** untouched | controller state reverts to the existing item |
+
+### Not validated (kept open, with the protocol to close it)
+
+- **Degraded-but-associated Wi-Fi (the primary field case, leaving/arriving home): NOT TESTED.** It cannot be produced from USB without router/AP control. The only way is a field walk: with the Phase 3 build and the probe installed, start a track, walk away from (or toward) the router until the Wi-Fi bars drop while still associated, and let the host poller log the default-network change and the probe log the timeline for 3 round trips; also repeat once turning the failing Wi-Fi off by hand (the user's own observation) to compare. A decision rule for the 10 s read timeout needs those numbers.
+- **Brief interruption (< 10 s): NOT TESTED** cleanly (a person cannot reliably restore a radio in under 10 s; a 4 s Wi-Fi blip during an airplane toggle at 11:09:03 happened while the log was being cleared, so it is not claimed).
+- **Screen-off handoff: NOT TESTED.**
+- **A handoff that happens exactly when the buffer is exhausted** (in-flight read on the old route): not reproduced; H1 had the track fully buffered. Needs a track long enough not to buffer completely (the Phase 2A/2B method).
+- **Next/Skip with a two-track queue during recovery** was tested as a track change (E3), not through the Next command.
+- Android Auto/DHU and Bluetooth hardware were not exercised in this phase.
+
+### Conclusion of this phase
+
+No defect attributable to Taki was reproduced physically: clean Wi-Fi <-> mobile changes and total outages of 47-180 s recover automatically within about a second or two of the network returning, the retry budget (#19, Phase 3 policy) is bounded, the queue and the same/last-requested track are preserved, and a paused player stays paused. **#35 cannot be closed**: its primary field scenario (degraded Wi-Fi) and the screen-off and short-interruption cases remain unvalidated.
+
+### Gates (this phase, no code change)
+
+1907 `ultrasonic` unit tests, 0 failures, 0 skipped; `PlaybackLoadErrorPolicyTest` 8, `NetworkRecoveryDelayTest` 6, `ControllerAuthorizationTest` 14, `PlaybackSourcePolicyTest` 9, `BluetoothIntentReceiverTest` 3, `DurableStateFileTest` 17, `EqualizerPersistenceTest` 6, seven `AndroidAuto*` suites 97 tests, all green. `assembleDebug`, `assembleRelease`, `lintDebug`, `lintVitalRelease` pass; `detekt` 42 + 1 (baseline); `git diff --check` clean. These are automated results only; the hardware results are the table above.
