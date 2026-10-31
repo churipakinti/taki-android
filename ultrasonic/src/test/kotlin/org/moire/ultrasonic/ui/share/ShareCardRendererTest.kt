@@ -110,7 +110,7 @@ class ShareCardRendererTest {
         assertTrue(title.bottom <= artist.top)
         assertTrue(artist.bottom <= album.top)
         assertTrue(layout.artwork.bottom <= title.top)
-        assertTrue(album.bottom <= layout.brand.top)
+        assertTrue(layout.brand.bottom <= layout.artwork.top)
     }
 
     @Test
@@ -142,34 +142,35 @@ class ShareCardRendererTest {
     }
 
     @Test
-    fun `the signature is a footer anchored to the bottom edge`() {
-        val brand = renderer.layout(short).brand
-        assertEquals(ShareCardSpec.HEIGHT - ShareCardSpec.BRAND_BOTTOM_MARGIN, brand.bottom, 0.5f)
-        assertEquals(124f, ShareCardSpec.BRAND_BOTTOM_MARGIN, 0f)
-        assertEquals(1740f, brand.top, 0.5f)
-        assertEquals(540f, brand.centerX(), 1f)
-        // Fully inside the exported image, with a deliberate margin (not hugging the edge).
-        assertTrue(brand.left >= 0f && brand.right <= ShareCardSpec.WIDTH)
-        assertTrue(brand.bottom <= ShareCardSpec.HEIGHT - 100f)
-    }
-
-    @Test
-    fun `the footer is clearly detached from the music block`() {
-        for (content in listOf(short, long)) {
+    fun `the signature sits centred above the cover and outside it`() {
+        for (content in listOf(short, long, ShareCardContent("Song", null, null))) {
             val layout = renderer.layout(content)
-            val lowest = listOfNotNull(layout.title, layout.artist, layout.album).maxOf { it.bottom }
-            assertTrue("gap ${layout.brand.top - lowest}", layout.brand.top - lowest >= 200f)
+            val brand = layout.brand
+            assertEquals(540f, brand.centerX(), 1f)
+            assertTrue("brand overlaps the cover", brand.bottom <= layout.artwork.top)
+            assertEquals(ShareCardSpec.GAP_BRAND_ARTWORK, layout.artwork.top - brand.bottom, 0.5f)
+            assertTrue("brand above the safe top", brand.top >= ShareCardSpec.SAFE_TOP - 0.5f)
         }
     }
 
     @Test
-    fun `the music block did not move`() {
+    fun `the whole block is centred in the safe zone and the metadata is grouped under the cover`() {
         val layout = renderer.layout(short)
-        // Unchanged geometry of the cover and text for the short sample (centred in 250..1470).
-        assertEquals(333f, layout.artwork.top, 1f)
-        assertEquals(1113f, layout.artwork.bottom, 1f)
-        assertEquals(150f, layout.artwork.left, 0.5f)
-        assertEquals(1113f + ShareCardSpec.GAP_ARTWORK_TEXT, layout.title.top, 0.5f)
+        val lowest = listOfNotNull(layout.title, layout.artist, layout.album).maxOf { it.bottom }
+        val topGap = layout.brand.top - ShareCardSpec.SAFE_TOP
+        val bottomGap = ShareCardSpec.CONTENT_BOTTOM - lowest
+        assertEquals(topGap, bottomGap, 1f)
+        assertEquals(layout.artwork.bottom + ShareCardSpec.GAP_ARTWORK_TEXT, layout.title.top, 0.5f)
+        assertEquals(170f, layout.artwork.left, 0.5f)
+        assertEquals(ShareCardSpec.ARTWORK_SIZE, layout.artwork.width(), 0.5f)
+    }
+
+    @Test
+    fun `the title outranks the artist which outranks the album`() {
+        val layout = renderer.layout(short)
+        assertTrue(layout.title.height() > layout.artist!!.height())
+        assertTrue(layout.artist!!.height() > layout.album!!.height())
+        assertTrue(layout.artist!!.bottom <= layout.album!!.top)
     }
 
     @Test
@@ -179,7 +180,7 @@ class ShareCardRendererTest {
         // The "t" symbol is 232 x 238 units: roughly square, and nowhere near the width of the old
         // symbol + "aki" lockup (which was about 2.2x wider than tall).
         assertTrue("width ${brand.width()}", brand.width() < brand.height() * 1.1f)
-        assertTrue(brand.height() in 50f..60f)
+        assertTrue(brand.height() in 44f..56f)
     }
 
     /** A flat mid-grey cover makes the atmosphere a plain vertical gradient, so the same row is the
@@ -259,7 +260,7 @@ class ShareCardRendererTest {
     }
 
     private fun assertBounded(layout: ShareCardLayout) {
-        val rects = listOfNotNull(layout.artwork, layout.title, layout.artist, layout.album)
+        val rects = listOfNotNull(layout.brand, layout.artwork, layout.title, layout.artist, layout.album)
         for (r in rects) {
             assertTrue("$r above safe top", r.top >= ShareCardSpec.SAFE_TOP - 0.5f)
             assertTrue("$r below content bottom", r.bottom <= ShareCardSpec.CONTENT_BOTTOM + 0.5f)

@@ -50,12 +50,12 @@ object ShareCardSpec {
 
     const val SAFE_TOP = 250f
 
-    /** Lowest y the cover + text block (the music) may reach. The signature is not part of it. */
+    /** Lowest y the whole block (signature, cover and text) may reach. */
     const val CONTENT_BOTTOM = 1470f
 
-    const val ARTWORK_SIZE = 780f
+    const val ARTWORK_SIZE = 740f
     const val ARTWORK_CORNER = 24f
-    const val GAP_ARTWORK_TEXT = 64f
+    const val GAP_ARTWORK_TEXT = 56f
     const val GAP_TITLE_ARTIST = 20f
     const val GAP_ARTIST_ALBUM = 12f
 
@@ -76,14 +76,13 @@ object ShareCardSpec {
     const val SCRIM_ALPHA_TOP = 0.22f
     const val SCRIM_ALPHA_BOTTOM = 0.70f
 
-    /** The bottom signature: just the Taki "t" symbol, neutral and quiet. Independent of the
-     *  missing-artwork tile, which has its own size and tint. */
-    const val BRAND_SYMBOL_HEIGHT = 56f
-    const val BRAND_ALPHA = 0.40f
+    /** The signature: just the Taki "t" symbol, neutral and quiet, centred above the cover and
+     *  never over it. Independent of the missing-artwork tile, which has its own size and tint. */
+    const val BRAND_SYMBOL_HEIGHT = 48f
+    const val BRAND_ALPHA = 0.50f
 
-    /** The signature is a footer anchored to the bottom edge, not positioned relative to the
-     *  music: its top is `HEIGHT - BRAND_BOTTOM_MARGIN - BRAND_SYMBOL_HEIGHT`. */
-    const val BRAND_BOTTOM_MARGIN = 124f
+    /** Clear space between the signature's bottom and the cover's top. */
+    const val GAP_BRAND_ARTWORK = 44f
 }
 
 /** Where everything landed, in canvas pixels - what the layout tests assert on. */
@@ -144,14 +143,17 @@ class ShareCardRenderer(private val colors: TakiColors = TakiColors()) {
         var textHeight = title.height.toFloat()
         if (artist != null) textHeight += ShareCardSpec.GAP_TITLE_ARTIST + artist.height
         if (album != null) textHeight += ShareCardSpec.GAP_ARTIST_ALBUM + album.height
-        val blockHeight = ShareCardSpec.ARTWORK_SIZE + ShareCardSpec.GAP_ARTWORK_TEXT + textHeight
+        val blockHeight = ShareCardSpec.BRAND_SYMBOL_HEIGHT + ShareCardSpec.GAP_BRAND_ARTWORK +
+            ShareCardSpec.ARTWORK_SIZE + ShareCardSpec.GAP_ARTWORK_TEXT + textHeight
 
-        // Centre the cover + text block in the safe zone; never above SAFE_TOP.
+        // Centre the signature + cover + text block in the safe zone; never above SAFE_TOP.
         val available = ShareCardSpec.CONTENT_BOTTOM - ShareCardSpec.SAFE_TOP
         val top = ShareCardSpec.SAFE_TOP + max(0f, (available - blockHeight) / 2f)
         val left = (ShareCardSpec.WIDTH - ShareCardSpec.ARTWORK_SIZE) / 2f
 
-        val artworkRect = RectF(left, top, left + ShareCardSpec.ARTWORK_SIZE, top + ShareCardSpec.ARTWORK_SIZE)
+        val brand = brandRect(top)
+        val artworkTop = brand.bottom + ShareCardSpec.GAP_BRAND_ARTWORK
+        val artworkRect = RectF(left, artworkTop, left + ShareCardSpec.ARTWORK_SIZE, artworkTop + ShareCardSpec.ARTWORK_SIZE)
         var y = artworkRect.bottom + ShareCardSpec.GAP_ARTWORK_TEXT
         val titleRect = textRect(left, y, title)
         y = titleRect.bottom
@@ -167,7 +169,7 @@ class ShareCardRenderer(private val colors: TakiColors = TakiColors()) {
             albumRect = textRect(left, y, album)
         }
         return Composed(
-            ShareCardLayout(artworkRect, titleRect, artistRect, albumRect, brandRect()),
+            ShareCardLayout(artworkRect, titleRect, artistRect, albumRect, brand),
             title,
             artist,
             album,
@@ -199,7 +201,7 @@ class ShareCardRenderer(private val colors: TakiColors = TakiColors()) {
             this.typeface = typeface
         }
         return StaticLayout.Builder.obtain(text, 0, text.length, paint, width)
-            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+            .setAlignment(Layout.Alignment.ALIGN_CENTER)
             .setTextDirection(TextDirectionHeuristics.FIRSTSTRONG_LTR)
             .setBreakStrategy(LineBreaker.BREAK_STRATEGY_BALANCED)
             .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE)
@@ -356,14 +358,12 @@ class ShareCardRenderer(private val colors: TakiColors = TakiColors()) {
 
     // region Taki mark
 
-    /** The signature's footprint: exactly the symbol, centred horizontally and anchored to the
-     *  bottom edge by [ShareCardSpec.BRAND_BOTTOM_MARGIN]. */
-    private fun brandRect(): RectF {
+    /** The signature's footprint: exactly the symbol, centred horizontally with its top at [top]. */
+    private fun brandRect(top: Float): RectF {
         val scale = ShareCardSpec.BRAND_SYMBOL_HEIGHT / SYMBOL_HEIGHT
         val width = (LOGO_SYMBOL_RIGHT - LOGO_LEFT) * scale
         val left = (ShareCardSpec.WIDTH - width) / 2f
-        val bottom = ShareCardSpec.HEIGHT - ShareCardSpec.BRAND_BOTTOM_MARGIN
-        return RectF(left, bottom - ShareCardSpec.BRAND_SYMBOL_HEIGHT, left + width, bottom)
+        return RectF(left, top, left + width, top + ShareCardSpec.BRAND_SYMBOL_HEIGHT)
     }
 
     /** The existing Taki symbol (Taki_Logo_Primary.svg, without its lettering) as a single
