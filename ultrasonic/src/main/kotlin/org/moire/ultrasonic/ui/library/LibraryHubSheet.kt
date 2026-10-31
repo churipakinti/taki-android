@@ -10,7 +10,9 @@ package org.moire.ultrasonic.ui.library
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -80,6 +82,7 @@ fun LibraryHubSheet(
                 .padding(vertical = TakiTheme.spacing.sm),
         ) {
             Text(text = currentLabel, style = TakiTheme.type.caption, color = TakiTheme.colors.gray)
+            Spacer(Modifier.height(TakiTheme.spacing.xs))
             Text(
                 text = currentLibraryName,
                 style = TakiTheme.type.body,

@@ -194,6 +194,7 @@ private fun ChoiceRow(row: SettingsRowState.ChoiceRow, actions: SettingsActions)
             Text(text = stringResource(row.item.titleRes), style = TakiTheme.type.title)
             val summary = selectedLabel ?: row.item.summaryRes?.let { stringResource(it) }
             if (summary != null) {
+                Spacer(Modifier.height(TakiTheme.spacing.xs))
                 Text(text = summary, style = TakiTheme.type.caption)
             }
         }
@@ -252,6 +253,7 @@ private fun RowSummary(staticRes: Int?, dynamicRes: Int?, dynamicArgs: List<Any>
         else -> null
     }
     if (!text.isNullOrEmpty()) {
+        Spacer(Modifier.height(TakiTheme.spacing.xs))
         Text(text = text, style = TakiTheme.type.caption, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }

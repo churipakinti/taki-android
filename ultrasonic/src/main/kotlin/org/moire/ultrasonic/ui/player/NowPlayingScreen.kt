@@ -30,8 +30,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,7 +81,10 @@ import kotlinx.coroutines.launch
 import org.moire.ultrasonic.R
 import org.moire.ultrasonic.service.SleepTimerState
 import org.moire.ultrasonic.ui.components.TakiArtwork
+import org.moire.ultrasonic.ui.components.TakiDropdownMenu
 import org.moire.ultrasonic.ui.components.TakiIconButton
+import org.moire.ultrasonic.ui.components.TakiMenuDivider
+import org.moire.ultrasonic.ui.components.TakiMenuItem
 import org.moire.ultrasonic.ui.components.TakiScaffold
 import org.moire.ultrasonic.ui.components.TakiScreenHeader
 import org.moire.ultrasonic.ui.playback.PlaybackPhase
@@ -257,32 +258,34 @@ private fun NowPlayingOverflowMenu(
         actions.onOverflowItem(item)
     }
 
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+    TakiDropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         if (state.hasCurrentTrack) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.download_menu_show_artist)) },
+            TakiMenuItem(
+                text = stringResource(R.string.download_menu_show_artist),
                 onClick = { fire(NowPlayingOverflowItem.GO_TO_ARTIST) },
             )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.download_menu_show_album)) },
+            TakiMenuItem(
+                text = stringResource(R.string.download_menu_show_album),
                 onClick = { fire(NowPlayingOverflowItem.GO_TO_ALBUM) },
             )
+            TakiMenuDivider()
         }
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.download_menu_save)) },
+        TakiMenuItem(
+            text = stringResource(R.string.download_menu_save),
             onClick = { fire(NowPlayingOverflowItem.SAVE_PLAYLIST) },
         )
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.download_menu_clear_playlist)) },
+        TakiMenuItem(
+            text = stringResource(R.string.download_menu_clear_playlist),
             onClick = { fire(NowPlayingOverflowItem.CLEAR_PLAYLIST) },
         )
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.download_menu_lyrics)) },
+        TakiMenuDivider()
+        TakiMenuItem(
+            text = stringResource(R.string.download_menu_lyrics),
             onClick = { fire(NowPlayingOverflowItem.LYRICS) },
         )
         if (actions.equalizerAvailable()) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.download_menu_equalizer)) },
+            TakiMenuItem(
+                text = stringResource(R.string.download_menu_equalizer),
                 onClick = { fire(NowPlayingOverflowItem.EQUALIZER) },
             )
         }
@@ -291,8 +294,8 @@ private fun NowPlayingOverflowMenu(
         } else {
             R.string.download_menu_screen_on
         }
-        DropdownMenuItem(
-            text = { Text(stringResource(screenOnLabel)) },
+        TakiMenuItem(
+            text = stringResource(screenOnLabel),
             onClick = { fire(NowPlayingOverflowItem.TOGGLE_SCREEN_ON) },
         )
     }

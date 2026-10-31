@@ -27,8 +27,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,7 +62,10 @@ import org.moire.ultrasonic.ui.components.LoadErrorState
 import org.moire.ultrasonic.ui.components.TakiArtwork
 import org.moire.ultrasonic.ui.components.TakiDiscHeader
 import org.moire.ultrasonic.ui.components.TakiEntryRow
+import org.moire.ultrasonic.ui.components.TakiDropdownMenu
 import org.moire.ultrasonic.ui.components.TakiIconButton
+import org.moire.ultrasonic.ui.components.TakiMenuDivider
+import org.moire.ultrasonic.ui.components.TakiMenuItem
 import org.moire.ultrasonic.ui.components.TakiScaffold
 import org.moire.ultrasonic.ui.components.TakiTrackRow
 import org.moire.ultrasonic.ui.theme.TakiTheme
@@ -211,12 +212,12 @@ private fun AlbumDetailHero(state: AlbumDetailUiState, actions: AlbumDetailActio
                     .semantics { heading() },
             )
             if (state.artist.isNotEmpty()) {
-                Spacer(Modifier.height(TakiTheme.spacing.xxs))
+                Spacer(Modifier.height(TakiTheme.spacing.xs))
                 ArtistLine(state, actions)
             }
             val metadata = metadataLine(state)
             if (metadata.isNotEmpty()) {
-                Spacer(Modifier.height(TakiTheme.spacing.xxs))
+                Spacer(Modifier.height(TakiTheme.spacing.xs))
                 Text(
                     text = metadata,
                     style = TakiTheme.type.caption,
@@ -325,37 +326,30 @@ private fun OverflowAction(state: AlbumDetailUiState, actions: AlbumDetailAction
             contentDescription = stringResource(R.string.album_more_description),
             iconSize = TakiTheme.dimensions.iconSm,
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            if (state.artistId != null) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.album_go_to_artist)) },
-                    onClick = {
-                        expanded = false
-                        actions.onOverflowItem(AlbumOverflowItem.GO_TO_ARTIST)
-                    },
-                )
+        TakiDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            fun fire(item: AlbumOverflowItem) {
+                expanded = false
+                actions.onOverflowItem(item)
             }
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.common_play_next)) },
-                onClick = {
-                    expanded = false
-                    actions.onOverflowItem(AlbumOverflowItem.PLAY_NEXT)
-                },
+            if (state.artistId != null) {
+                TakiMenuItem(
+                    text = stringResource(R.string.album_go_to_artist),
+                    onClick = { fire(AlbumOverflowItem.GO_TO_ARTIST) },
+                )
+                TakiMenuDivider()
+            }
+            TakiMenuItem(
+                text = stringResource(R.string.common_play_next),
+                onClick = { fire(AlbumOverflowItem.PLAY_NEXT) },
             )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.common_play_last)) },
-                onClick = {
-                    expanded = false
-                    actions.onOverflowItem(AlbumOverflowItem.PLAY_LAST)
-                },
+            TakiMenuItem(
+                text = stringResource(R.string.common_play_last),
+                onClick = { fire(AlbumOverflowItem.PLAY_LAST) },
             )
             if (state.radioAvailable) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.song_start_radio)) },
-                    onClick = {
-                        expanded = false
-                        actions.onOverflowItem(AlbumOverflowItem.START_RADIO)
-                    },
+                TakiMenuItem(
+                    text = stringResource(R.string.song_start_radio),
+                    onClick = { fire(AlbumOverflowItem.START_RADIO) },
                 )
             }
         }
@@ -509,13 +503,14 @@ private fun TrackContextMenu(
     onDismiss: () -> Unit,
     onAction: (TrackContextAction) -> Unit,
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+    TakiDropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         ContextMenuItem(R.string.common_play_now) { onAction(TrackContextAction.PLAY_NOW) }
         ContextMenuItem(R.string.common_play_next) { onAction(TrackContextAction.PLAY_NEXT) }
         ContextMenuItem(R.string.common_play_last) { onAction(TrackContextAction.PLAY_LAST) }
         ContextMenuItem(R.string.common_play_from_here) {
             onAction(TrackContextAction.PLAY_FROM_HERE)
         }
+        TakiMenuDivider()
         ContextMenuItem(R.string.song_start_radio) { onAction(TrackContextAction.START_RADIO) }
         if (menuState.canAddToPlaylist) {
             ContextMenuItem(R.string.playlist_add_to_title) {
@@ -526,14 +521,17 @@ private fun TrackContextMenu(
             ContextMenuItem(R.string.common_download) { onAction(TrackContextAction.DOWNLOAD) }
         }
         if (menuState.canDelete) {
-            ContextMenuItem(R.string.common_delete) { onAction(TrackContextAction.DELETE) }
+            TakiMenuDivider()
+            ContextMenuItem(R.string.common_delete, destructive = true) {
+                onAction(TrackContextAction.DELETE)
+            }
         }
     }
 }
 
 @Composable
-private fun ContextMenuItem(labelRes: Int, onClick: () -> Unit) {
-    DropdownMenuItem(text = { Text(stringResource(labelRes)) }, onClick = onClick)
+private fun ContextMenuItem(labelRes: Int, destructive: Boolean = false, onClick: () -> Unit) {
+    TakiMenuItem(text = stringResource(labelRes), onClick = onClick, destructive = destructive)
 }
 
 @Composable
