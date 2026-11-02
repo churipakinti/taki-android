@@ -190,3 +190,12 @@ ruled out, and the root cause is **undetermined**. Recommendation: `RECOMMEND_DO
 
 The APK (`2cb375a3…15ce7a0`), `versionCode 132` and the signature are unchanged; nothing was rebuilt, tagged, released or
 uploaded. The release install on the Pixel was not touched by the diagnostic.
+
+## 14. Published (2026-11-02 UTC)
+
+- Release (prerelease, not latest-stable): https://github.com/churipakinti/taki-android/releases/tag/v0.1.0-beta.2
+- Tag `v0.1.0-beta.2` -> `6cae5c16` (documentation-only commits after the RC code `e26349ed`; nothing packaged changed).
+- Assets: `taki-0.1.0-beta.2.apk` (30,340,341 bytes) and `SHA256SUMS.txt`.
+- SHA-256 of the publicly downloaded APK equals the approved `2cb375a3…15ce7a0`; certificate `66b7c716…7125`.
+- Known limitations in the notes: #35, #37, #51 (all open). The #51 seek delay was accepted as a limitation.
+- Not done on purpose: no Reddit post, no Instagram/WhatsApp post.
