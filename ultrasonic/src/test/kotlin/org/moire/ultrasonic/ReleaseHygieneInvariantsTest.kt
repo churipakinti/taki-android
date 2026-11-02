@@ -33,7 +33,9 @@ class ReleaseHygieneInvariantsTest {
     @Test
     fun `the installable identity and version are the audited ones`() {
         assertTrue(buildGradle.contains("applicationId \"io.github.churipakinti.taki\""))
-        assertTrue(buildGradle.contains("versionName \"0.1.0-beta\""))
+        assertTrue(buildGradle.contains("versionName \"0.1.0-beta.2\""))
+        // must stay above the published 0.1.0-beta.1 (131) so installs update in place
+        assertTrue(buildGradle.contains("versionCode 132"))
         // debug builds install side by side and never reuse the release id
         assertTrue(buildGradle.contains("applicationIdSuffix = '.debug'"))
     }
