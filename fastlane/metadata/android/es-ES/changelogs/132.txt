@@ -1,0 +1,9 @@
+Segunda beta pública de Taki.
+
+- Tarjeta para compartir: convierte Reproduciendo ahora en una imagen
+- Me gusta en álbumes completos
+- Reproducción de FLAC de alta resolución
+- Mejoras en Android Auto
+- La música sigue sonando al quitar Taki de Recientes
+- Cola guardada más segura y reproducción más estable con redes inestables
+- Interfaz más serena, centrada en las portadas

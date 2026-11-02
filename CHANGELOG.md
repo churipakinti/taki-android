@@ -4,6 +4,8 @@ Notable changes to Taki are documented here.
 
 ## [Unreleased]
 
+## 0.1.0-beta.2
+
 ### Added
 
 - Like or unlike a whole album from the album screen; the state syncs through Navidrome/OpenSubsonic to other clients.

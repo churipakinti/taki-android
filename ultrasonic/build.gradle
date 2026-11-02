@@ -34,8 +34,8 @@ android {
         // changes. Existing installs under the old id (including test devices) cannot update in
         // place and need a clean reinstall.
         applicationId "io.github.churipakinti.taki"
-        versionCode 131
-        versionName "0.1.0-beta"
+        versionCode 132
+        versionName "0.1.0-beta.2"
 
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk

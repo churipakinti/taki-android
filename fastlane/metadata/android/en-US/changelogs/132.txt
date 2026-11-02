@@ -1,0 +1,9 @@
+Second public beta of Taki.
+
+- Share Card: turn Now Playing into an image to share
+- Like or unlike whole albums
+- Hi-res FLAC playback
+- Android Auto improvements
+- Music keeps playing when Taki is swiped out of Recents
+- Safer saved queue, steadier playback on flaky networks
+- Calmer, artwork-first interface
