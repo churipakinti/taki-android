@@ -1,19 +1,23 @@
-# Taki listening-experience audit (issue #36) — Phase 1
+# Taki listening-experience audit (issue #36) — Phase 1 + Phase 2
 
-Phase 1 = reconnaissance, automated audit, emulator validation and a prepared (not executed) Pixel 7
-protocol. **No production code was changed. The Pixel 7 was not used. No production server was contacted.**
-Phase 2 (physical validation) is not started.
+Phase 1 = reconnaissance, automated audit, emulator validation and a prepared Pixel 7 protocol. Phase 2
+(section 14) = the physical validation on the owner's Pixel 7, run on 2026-11-01. **No production code was
+changed in either phase. No production server was contacted by the emulator work; the Pixel used the owner's
+own library (normal scrobbling).**
 
 ## 0. Status
 
 ```text
-LISTENING_EXPERIENCE_AUDIT_COMPLETE = NO   (physical blocks in section 8 not run)
-BETA_PLAYBACK_READY                 = NO   (no blocker found, but the gate needs the Phase 2 evidence)
-PUBLIC_BETA_READY                   = NO
+LISTENING_EXPERIENCE_AUDIT_COMPLETE = NO   (two documented gaps: block F field walk not attempted;
+                                            real incoming call and notification-sound focus not exercised)
+BETA_PLAYBACK_READY                 = YES  (no PRE_BETA_BLOCKER / PRE_BETA_FIX; see 14.9 for the one owner
+                                            decision attached to it: accepting the #35 residual risk)
+PUBLIC_BETA_READY                   = NO   (belongs to the full release checklist)
 ```
 
-Nothing found in Phase 1 is a `PRE_BETA_BLOCKER`. After the swipe-away work (#49, section 12) the
-album-list crash (#50) was also fixed (section 13); no `PRE_BETA_FIX` is open. "Not ready" here means *unverified on hardware in the listed areas*, not *known broken*.
+Nothing found in Phase 1 or Phase 2 is a `PRE_BETA_BLOCKER` or `PRE_BETA_FIX`. The album-list crash (#50) and
+the swipe-away stop (#49) are fixed, and #49 is now confirmed with a real finger swipe on the phone (14.5).
+"Not complete" means *two scenarios have no evidence*, not *known broken*.
 
 ## 1. Baseline
 
@@ -169,7 +173,7 @@ recover. F-1 (#50, album-list crash) and F-3 (#49, swipe-away) are fixed.
 |---|---|---|---|
 | F-1 | **#50, fixed (section 13).** The Albums list crashed with `Key "<id>" was already used` when two pages of the paged load contained the same album; the UI and the playback service share one process, so the music stopped too. Reproduced with valid responses, then fixed by de-duplicating by album id in `AlbumListViewModel` | logcat before/after on the emulator, 2026-10-31 | `PRE_BETA_FIX`, **done**; physical confirmation is not needed for the list logic |
 | F-2 | `#37` stale Quick Settings media card: Android-managed history is plausible; not examined here | #37 | `POST_BETA` unless it proves to be a live duplicate session |
-| F-3 | Swiping Taki from recents **stopped playback and removed the notification** (inherited `onTaskRemoved`) | source + emulator A/B (section 12) | **Fixed in #49** (policy decided by the owner); physical confirmation pending in Phase 2 block C |
+| F-3 | Swiping Taki from recents **stopped playback and removed the notification** (inherited `onTaskRemoved`) | source + emulator A/B (section 12) | **Fixed in #49** (policy decided by the owner); **confirmed on the Pixel 7 with a real finger swipe (section 14.5)** |
 | F-4 | #41 / #42 hi-res FLAC follow-ups (packet message at ~154.2 s, 24->16 bit output) | FLAC doc §21-22 | `POST_BETA` |
 | F-5 | Force-stop then media key does not restart the app (emulator) | E-notes | `ACCEPTED_AS_IS` (Android stopped state) |
 | F-6 | Time to first audible audio is not measured anywhere | this audit | metric gap, not a defect |
@@ -177,7 +181,7 @@ recover. F-1 (#50, album-list crash) and F-3 (#49, swipe-away) are fixed.
 Related issues (none modified or closed): #17 (closed, FLAC), #19 (closed, retry), #30/#32 (closed, error
 contract), #34 (closed, focus), #35 (open, field case), #37 (open), #45/#46/#47 (closed), #44 (open P3).
 
-## 8. Pixel 7 protocol (prepared, not executed)
+## 8. Pixel 7 protocol (executed in Phase 2, results in section 14)
 
 ### 8.1 Principles
 - **Duration is justified by risk, not a fixed number.** The watchdog ticks every 5 s, the buffer holds 30-50 s,
@@ -231,7 +235,7 @@ acceptable workaround. `ACCEPTED_AS_IS` = Android behaviour or documented limita
 
 ## 10. Minimum next steps
 1. ~~Owner decision on F-3~~ done: policy approved and implemented in #49; block C now confirms it on hardware.
-2. Run Phase 2 blocks A-E on the Pixel 7 with a verified backup, then F as a field walk.
+2. ~~Run Phase 2 blocks A-E on the Pixel 7~~ done (section 14). Still open: F as a field walk, or the owner's written acceptance of its limitation.
 3. ~~#50~~ done (section 13); optionally open one issue for first-audible-audio measurement.
 4. Update this document with the Phase 2 results and set the two statuses.
 
@@ -351,3 +355,94 @@ single failure in an unrelated test (`SheetInteractionAuditTest.createPlaylistNa
 the test started", caused by a leaked `Scrobbler` coroutine from an earlier test class with no Koin); it did not
 recur on the next full run and does not involve the album list, so it is recorded as a pre-existing timing flake,
 not investigated further here.
+
+
+## 14. Phase 2: physical validation on the Pixel 7 (2026-11-01)
+
+### 14.1 Setup and data safety
+| Item | Value |
+|---|---|
+| Device | Pixel 7 (`panther`), Android 17 / SDK 37, build `CP3A.261005.002.A1`, 1080x2400; identified by ADB serial and used only through `adb -s <serial>` |
+| Build under test | debug app `io.github.churipakinti.taki.debug`, `0.1.0-beta` (131) built from `develop` @ `4c2c5b5c`, installed with `adb install -r` (same signature); the release app was not modified (last update 2026-10-18) |
+| Audio route | JBL Live 770NC over A2DP (also the built-in speaker in block D) |
+| Network | home Wi-Fi + Tailscale VPN, mobile data on; library on the owner's Navidrome (normal scrobbling accepted) |
+| Backup | `run-as ... tar` of the whole private dir (`databases/`, `shared_prefs/`, `files/`, `cache/` incl. `downloadstate.ser`, 6.4 MB) stored outside the repo; verified by extracting it, matching SHA-256 of the key files against the live ones, and `PRAGMA integrity_check` = ok on all four databases. The tar's own SHA-256 was recorded next to it |
+| Data preserved | yes: preferences file byte-identical after the update; downloads (23 files, ~970 MB) untouched; no `pm clear`, no uninstall. The saved queue was replaced by test queues (it was empty before), which is normal use |
+| Emulator #50 recheck | final build `4c2c5b5c` on the isolated AVD with the fake server: page 2 returned shifted after an album insert, no crash, no duplicate row, playback stayed `PLAYING` |
+
+Method: a small host script sampled `dumpsys media_session` (restricted to Taki's own session), `dumpsys audio`
+(started `AudioTrack`, focus requests/abandons with timestamps) and `dumpsys connectivity` every ~0.15-30 s.
+Only package names, positions and titles were recorded; no URLs, tokens or hostnames. The person performed every
+physical action and confirmed audibility by ear: **Media3 `READY`/`PLAYING` and a started `AudioTrack` were never
+taken as proof of sound.** Times measured from an ADB command include about 0.2-0.3 s of ADB overhead.
+
+### 14.2 Results matrix
+| Block | Scenario | Result | Evidence |
+|---|---|---|---|
+| A | Start from Home (Daily Mix), Album, Playlist | PASS | tap to `PLAYING` + `AudioTrack` started in 0.6-1.0 s (3 entries); heard |
+| A | Play/Pause, Next, Previous, seek | PASS | resume 0.55 s at the same position; next 0.6-1.0 s; previous > 3 s restarts the song (standard); seek buffers ~0.4-1.0 s and resumes; all heard |
+| A | Natural transitions, queue edit (Play Last 5 to 6), screen-off, app switch, reopen | PASS | 5+ automatic transitions with no skip; queue grew without a glitch; 60 s locked, then 4 min locked: `PLAYING`, position advancing in real time; Taki to Settings and back: same item, continuous position |
+| B1 | Permanent focus loss (YouTube, `req=1` GAIN) | ACCEPTED_AS_IS | Taki paused and abandoned focus, did **not** resume: correct for a permanent loss |
+| B1 | Temporary focus loss (Clock alarm, `req=4`) | PASS | paused at the request, resumed ~0.1 s after the alarm released focus, same item, 173.1 to 173.3 s |
+| B2 | User pause during an interruption | PASS | paused while the alarm rang, stayed paused after dismiss (no audio track) |
+| B3 | Google Assistant | PASS | paused on the assistant request, resumed ~0.3 s after it released focus, same position |
+| B3 | Real incoming call, notification sound | UNAVAILABLE | no real call placed; no notification-sound source exercised |
+| C1 | Real finger swipe from Recents while playing | PASS | `removeGroupTaskInternal` + `onTaskRemoved` for the Taki task logged; music continued and moved to the next song with no pause; process, foreground service (id 1001) and notification stayed; session `active`; reopen: same 100-item queue, same item, continuous position |
+| C2 | Swipe while paused | PASS | no sound; the session, service and notification were removed (not stale); reopen restored the same item at the identical position (73366 ms) |
+| C3 | Quick Settings card | PASS with a cosmetic note | normal playing/paused states correct; after the service stops Android keeps a dimmed resumption card (Play only); tapping Play restarted the service and restored the song at 73.4 s in 3.4 s; the session briefly (~0.3 s) published queue item 0's metadata before the restored item. Related to #37, not modified |
+| C4 | Screen off / idle | PASS | `PLAYING` for 4 min with the screen off; `PAUSED` for 2.5 min with the screen off: no spontaneous resume. No Doze forcing, USB attached (so Doze/battery effects are not claimed) |
+| C | Process kill (`run-as kill -9`, not Force Stop) | PASS | the system restarted the process; a media-button Play restored the same item at 120.3 s (120.5 s before), queue of 12, `PLAYING` in 2.2 s |
+| D | Headset buttons (Play/Pause, Next, Previous) | PASS | each press matched the log |
+| D | Disconnect (headphones off) | PASS | paused 0.37 s after the route dropped; nothing on the speaker |
+| D | Speaker, then reconnect | PASS | played on the speaker; on reconnect the same `AudioTrack` moved to the Bluetooth device while `PLAYING` with no pause or reset |
+| D | Lock-screen controls (Pause, Play, Next) | PASS | all worked without unlocking |
+| D | Wired headset, reconnect while paused | NOT_TESTED | no device / not exercised |
+| D | Android Auto | REUSED | AA-05/07/09/10 and the final AA audit (`bb63ae60`); not repeated |
+| E | Offline (Wi-Fi and mobile off, `Network is unreachable`, no default network) | PASS | downloaded album: kept playing, natural transition, seek, pause, resume; no errors; back online: queue intact (12), playback continued; connectivity restored to the original configuration |
+| F | Degraded Wi-Fi field walk (#35) | NOT_TESTED | the owner could not do the walk; not attempted |
+
+Note found while running E: with airplane mode on, Android keeps Wi-Fi up (`wifi_on=2`), so the phone stayed
+online until Wi-Fi was turned off explicitly (confirmed by ping before counting the test).
+
+### 14.3 Metrics
+- Tap to first `PLAYING` with a started `AudioTrack`: 0.6-1.0 s over three entry points (includes ADB overhead).
+  First *audible* audio was confirmed by ear but not timed to sub-second precision (a person cannot time it).
+- Unrequested skips: 0. Unexpected silences: 0 (only the expected 0.4-1.0 s seek rebuffer). Unrequested
+  pauses or resumes: 0 (every pause/resume followed a focus event or an action). Unexpected interruptions: 0.
+- Errors in the session (`error=`): none in any block.
+
+### 14.4 Findings
+| ID | Finding | Class |
+|---|---|---|
+| P2-1 | After the service stops, Android shows a dimmed media-resumption card; its Play works. Brief (~0.3 s) wrong-title flash on resume | `POST_BETA` (#37; platform-managed card) |
+| P2-2 | A permanent focus loss (another media app) leaves Taki paused with no auto-resume | `ACCEPTED_AS_IS` (Android policy) |
+| P2-3 | First-audible time is not logged by the app | `POST_BETA` metric gap (F-6) |
+| P2-4 | #35 degraded-Wi-Fi case unverified on hardware | residual risk, see 14.9 |
+
+No defect reproduced that interrupts music, changes the queue or needs an app restart.
+
+### 14.5 #49 on hardware
+The earlier A/B was an emulator `stack remove`. On the Pixel a real finger swipe removed the task and playback
+continued (C1); a paused swipe stops cleanly and restores exactly (C2). The first C1 attempt swiped the
+Assistant's floating card by mistake (the logcat showed the removed task id was not Taki's), so it was discarded
+and repeated; the evidence above is from the repeat.
+
+### 14.6 Reused evidence
+Automated: 1948 tests, 0 failures, debug and release builds, lint and detekt unchanged (section 13). Streaming:
+the 57 min soak (2026-10-18) and #35 Phases 3-4. Android Auto: AA-05/07/09/10 and `bb63ae60`. New in this phase:
+the manual Pixel runs above.
+
+### 14.7 Not tested
+Block F field walk; real call; notification sound; wired headset; reconnect while paused; hi-res FLAC mix in
+block A; sustained 10 min locked playback beyond the 4 min sampled here (covered by the 57 min soak).
+
+### 14.8 Restoration
+The Pixel's configuration was restored (airplane off, Wi-Fi on, mobile data on, Tailscale connected, Bluetooth
+connected). Test queues remain in the debug app (the original saved queue was empty and is in the backup).
+
+### 14.9 Decision
+`BETA_PLAYBACK_READY = YES` by the Phase 2 definition (no blocker or everyday defect). The doc's own criteria also
+ask for #35's residual risk to be accepted by the owner when block F is not run; that acceptance is the owner's
+decision and is not assumed here. `LISTENING_EXPERIENCE_AUDIT_COMPLETE` stays `NO` until block F is attempted
+or its limitation is accepted in writing, and the call/notification focus cases are run or accepted. Next:
+`BETA_RELEASE_GATES_REVIEW`.
