@@ -180,3 +180,13 @@ ranged from about 3 s to 30 s or more (one track stayed unseekable for 28 s or m
 tracks seek immediately. Streaming data-source code is unchanged since beta.1 apart from #39, so this is probably not
 introduced by beta.2, but beta.1 could not be run against the same server to prove it. Cause not isolated (likely the
 server stream's length/range behaviour); needs an issue and a decision.
+
+## 13. Publication status: ON HOLD pending owner decision (2026-11-01)
+
+Publication of beta.2 is stopped while the owner decides about the late seek on streamed tracks (section 12). A diagnostic
+is in `docs/technical/TAKI_STREAMING_SEEK_DIAGNOSTIC.md`: the delay was **not reproduced** in three controlled runs
+(including the exact release APK), HTTP range support, transcoding, extractor seek maps and Taki's `onConnect` policy were
+ruled out, and the root cause is **undetermined**. Recommendation: `RECOMMEND_DOCUMENT_AND_RELEASE`.
+
+The APK (`2cb375a3…15ce7a0`), `versionCode 132` and the signature are unchanged; nothing was rebuilt, tagged, released or
+uploaded. The release install on the Pixel was not touched by the diagnostic.
