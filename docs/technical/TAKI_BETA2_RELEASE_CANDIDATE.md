@@ -152,3 +152,31 @@ PUBLIC_BETA_READY           = NO
    `docs/technical/TAKI_BETA_RELEASE_GATES_REVIEW.md` section 9 (update the size to ~29 MB), the staged APK renamed
    `taki-0.1.0-beta.2.apk`, and `SHA256SUMS.txt`.
 5. Post the community message after the release exists.
+
+## 12. Physical validation of the release APK (2026-11-01)
+
+The owner accepted the missing-backup risk for an in-place update of the official signed APK. The staged APK
+(SHA-256 `2cb375a3…15ce7a0`, certificate `66b7c716…7125`) was installed on the Pixel 7 with `adb -s <serial> install -r`.
+
+| Check | Result |
+|---|---|
+| Update 131 -> 132 | `Success`; `versionCode 132`, `0.1.0-beta.2`; `firstInstallTime` unchanged (2026-10-18) |
+| Data preserved | opened on Home with the library, no onboarding; saved queue and position restored; external data folder unchanged (6.8 MB); downloads still available offline |
+| Debug package | untouched (`.debug`, 131, last update 2026-10-31) |
+| Playback, pause/resume, next/previous, screen off, lock-screen controls | PASS (owner heard audio) |
+| Seek on streamed tracks | **PARTIAL**, see below |
+| Lifecycle (real swipe from Recents) | PASS: same process kept playing, track/queue/position preserved |
+| Bluetooth (route, play/pause, disconnect, reconnect) | PASS, 4 of 4 steps |
+| Offline (Wi-Fi and data off, verified no active network) | PASS: next, seek, pause/resume on downloaded tracks, no errors |
+| Share Card (Instagram, WhatsApp) | PASS (owner-confirmed, nothing published or sent) |
+| Crashes / ANRs | 0 (logcat checked) |
+| Device configuration | Wi-Fi/data restored, airplane off, no adb reverse/forward left |
+
+### Seek on streamed tracks
+
+On streamed (not downloaded) tracks the seek bar can be ignored for the first seconds: the session lacks the seek action
+and Media3 logs `Controller isn't allowed to call command= 5`. Observed delay before seeking becomes available
+ranged from about 3 s to 30 s or more (one track stayed unseekable for 28 s or more), after which it works; downloaded
+tracks seek immediately. Streaming data-source code is unchanged since beta.1 apart from #39, so this is probably not
+introduced by beta.2, but beta.1 could not be run against the same server to prove it. Cause not isolated (likely the
+server stream's length/range behaviour); needs an issue and a decision.
