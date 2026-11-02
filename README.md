@@ -8,7 +8,7 @@
 
 Taki is a focused Android music player for [Navidrome](https://www.navidrome.org/) and other OpenSubsonic/Subsonic-compatible servers. Its goal is deliberately simple: open your library, find music, press play, and keep a few things available offline.
 
-Taki is intentionally **music-only**. It leaves out chat, social features, sharing, podcasts, and day-to-day server administration so the player can stay centered on focused listening.
+Taki is intentionally **music-only**. It leaves out chat, social feeds, server-side share links, podcasts, and day-to-day server administration so the player can stay centered on focused listening.
 
 > **Beta:** Taki is currently in public beta. Official builds are available through this repository's [GitHub Releases](https://github.com/churipakinti/taki-android/releases).
 
@@ -28,13 +28,14 @@ Taki is intentionally **music-only**. It leaves out chat, social features, shari
 - Download music for offline playback
 - Search across your library and connect multiple compatible servers
 - Integrate with Android media controls and Android Auto
+- Share what you are listening to as an image card (generated on your phone; nothing is uploaded)
 - Keep everyday listening separate from server administration
 
 During normal online playback, Taki reports Now Playing and qualifying completed plays to the connected server using the Subsonic/OpenSubsonic scrobble API. Server-side forwarding to services such as Last.fm, when configured, is controlled by the server. See [Default behavior](docs/DEFAULT_BEHAVIOR.md) for Taki's other automatic behaviors and defaults.
 
 ## What it deliberately leaves out
 
-Taki is built around simplification rather than feature accumulation. Chat, social feeds, sharing features, podcasts, and similar extras are intentionally outside the listening experience. The aim is a small, direct player for people who mainly want to listen to their own music.
+Taki is built around simplification rather than feature accumulation. Chat, social feeds, server-side share links, podcasts, and similar extras are intentionally outside the listening experience. The aim is a small, direct player for people who mainly want to listen to their own music.
 
 ## Requirements
 
@@ -43,6 +44,10 @@ Taki is built around simplification rather than feature accumulation. Chat, soci
 - Taki currently uses a portrait-only phone interface
 
 Compatibility varies between server implementations and API versions. Navidrome is the primary compatibility target for the beta.
+
+## Getting started
+
+Taki is a player, not a music store: it needs a server that already holds your music. On first launch, enter your server's address (for example `https://music.example.com` or `http://192.168.1.10:4533`), your username and your password, then tap **Connect**. Plain `http://` addresses work, which is common on a home network; use `https://` whenever the server is reachable from the internet.
 
 ## Install / Download
 
@@ -60,7 +65,7 @@ The APK is generated under `ultrasonic/build/outputs/apk/debug/`. The module and
 
 ## Reporting bugs
 
-Use the [issue tracker](https://github.com/churipakinti/taki-android/issues) for reproducible problems. Do not post credentials, private server URLs, or sensitive logs. Security and privacy concerns should follow [SECURITY.md](SECURITY.md).
+Use the [issue tracker](https://github.com/churipakinti/taki-android/issues) for reproducible problems. Please include the Taki version (the "Your library" menu, then About), your Android version, the server type and version (for example Navidrome 0.5x), and the steps that trigger it. You usually do not need to attach logs; if a log is requested, remove your server address, username and any token or `u=`, `p=`, `t=`, `s=` query values first. Do not post credentials, private server URLs, or sensitive logs. Security and privacy concerns should follow [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
