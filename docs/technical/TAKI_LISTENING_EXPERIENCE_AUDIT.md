@@ -8,16 +8,16 @@ own library (normal scrobbling).**
 ## 0. Status
 
 ```text
-LISTENING_EXPERIENCE_AUDIT_COMPLETE = NO   (two documented gaps: block F field walk not attempted;
-                                            real incoming call and notification-sound focus not exercised)
-BETA_PLAYBACK_READY                 = YES  (no PRE_BETA_BLOCKER / PRE_BETA_FIX; see 14.9 for the one owner
-                                            decision attached to it: accepting the #35 residual risk)
+LISTENING_EXPERIENCE_AUDIT_COMPLETE = YES  (A-E verified; block F and selected focus cases explicitly
+                                            NOT_TESTED / UNAVAILABLE; residual risk accepted in 14.9)
+BETA_PLAYBACK_READY                 = YES  (no PRE_BETA_BLOCKER / PRE_BETA_FIX; #35 risk accepted for beta)
 PUBLIC_BETA_READY                   = NO   (belongs to the full release checklist)
 ```
 
 Nothing found in Phase 1 or Phase 2 is a `PRE_BETA_BLOCKER` or `PRE_BETA_FIX`. The album-list crash (#50) and
 the swipe-away stop (#49) are fixed, and #49 is now confirmed with a real finger swipe on the phone (14.5).
-"Not complete" means *two scenarios have no evidence*, not *known broken*.
+Unverified scenarios remain explicitly identified; audit closure reflects an owner-delegated beta-risk acceptance,
+not a PASS for those scenarios. See section 14.9.
 
 ## 1. Baseline
 
@@ -212,9 +212,10 @@ contract), #34 (closed, focus), #35 (open, field case), #37 (open), #45/#46/#47 
 | **E Offline** (~5 min) | **Mandatory, short** | downloaded album in airplane mode: play, seek, natural transition, Next; go online mid-playback | no HTTP, states | plays and transitions with no error | error, skip |
 | **F Network gaps only** (~30 min field walk) | Attempt once; **deferrable only with a justification** | degraded-but-associated Wi-Fi: leave/arrive home x3 with the debug logger, plus the manual Wi-Fi-off comparison (#35 plan); optionally a < 10 s blip and a handoff while the buffer is nearly empty | sanitized timeline: usable-route restored -> `READY` -> audio | recovers within the existing budget without manual action | silence that does not self-recover |
 
-Deferring F beyond the beta is acceptable **only if** F was attempted, did not reproduce a long silence, and
-the limitation is documented (see 9). A walk that cannot be done is `NOT_TESTED` and keeps
-`LISTENING_EXPERIENCE_AUDIT_COMPLETE = NO`.
+The normal gate is to attempt F and document the outcome before deferring it. If the field walk cannot be run,
+F remains `NOT_TESTED` and the audit is incomplete **unless an explicit, documented project-owner risk exception
+is accepted**. The owner-delegated exception for the beta is recorded in section 14.9; it does not satisfy #35's
+technical acceptance criteria or establish that degraded-Wi-Fi handoff works.
 
 ## 9. Completion criteria
 
@@ -441,8 +442,15 @@ The Pixel's configuration was restored (airplane off, Wi-Fi on, mobile data on, 
 connected). Test queues remain in the debug app (the original saved queue was empty and is in the backup).
 
 ### 14.9 Decision
-`BETA_PLAYBACK_READY = YES` by the Phase 2 definition (no blocker or everyday defect). The doc's own criteria also
-ask for #35's residual risk to be accepted by the owner when block F is not run; that acceptance is the owner's
-decision and is not assumed here. `LISTENING_EXPERIENCE_AUDIT_COMPLETE` stays `NO` until block F is attempted
-or its limitation is accepted in writing, and the call/notification focus cases are run or accepted. Next:
-`BETA_RELEASE_GATES_REVIEW`.
+**Risk acceptance — 2026-11-01, product decision delegated by the project owner.** Accept the residual #35 risk
+**for a beta release**, not as a claim that the degraded-but-associated Wi-Fi handoff is fixed or verified. A real
+field walk was **NOT_TESTED**; prolonged silence at Wi-Fi range boundaries remains possible. Existing Pixel
+results cover clean handoffs, prolonged outages and A-E everyday listening, with no newly reproduced blocker.
+Leave #35 **OPEN** for targeted field validation and beta feedback. If a reproducible, significant silence
+recurs, reclassify and prioritize it as a pre-beta/severity-appropriate playback defect before broader rollout.
+The real incoming-call and notification-sound focus cases remain **UNAVAILABLE**, not PASS; temporary focus,
+Assistant, permanent focus loss and user-pause behavior did pass physically.
+
+This explicit, scoped exception closes the audit's evidence/decision gate without rewriting untested scenarios
+as passing: `LISTENING_EXPERIENCE_AUDIT_COMPLETE = YES`, `BETA_PLAYBACK_READY = YES`, and
+`PUBLIC_BETA_READY = NO` (release gates still pending). Next: `BETA_RELEASE_GATES_REVIEW`.
